@@ -1,0 +1,8 @@
+---
+name:
+  'Blitz Statistics'
+
+default: 
+  prefix : '!' # deprecated
+  lang   : 'ru'
+  region : 'eu'
