@@ -53,16 +53,13 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
 
         for i, j in enumerate(tanks):
             tank = j
-            if tank.all.battles == 0:
-                data.data.tank_stats.pop(i)
-                continue
 
             if tank.all.battles != 0:
                 tank.all.winrate = round((tank.all.wins / tank.all.battles) * 100, 2)
+                tank.all.avg_damage = tank.all.damage_dealt // tank.all.battles
             else:
                 tank.all.winrate = 0
-
-            tank.all.avg_damage = tank.all.damage_dealt // tank.all.battles
+            
             tanks.insert(i, tank)
             data.data.tank_stats.pop(i)
             data.data.tank_stats = tanks
@@ -111,7 +108,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
             
             old_tank.all.winarte = round((old_tank.all.wins / old_tank.all.battles) * 100, 2)
             new_tank.all.winarte = round((new_tank.all.wins / new_tank.all.battles) * 100, 2)
-            t_diff_winrate = old_tank.all.winarte - new_tank.all.winarte
+            t_diff_winrate = new_tank.all.winarte - old_tank.all.winarte
             
             t_avg_damage_before = old_tank.all.damage_dealt // old_tank.all.battles
             t_avg_damage_after = new_tank.all.damage_dealt // new_tank.all.battles
@@ -161,7 +158,7 @@ def _search_max_diff_battles_tank(data_old: PlayerGlobalData, data_new: PlayerGl
             battles_before = tanks_old[i].all.battles
             battles_after = tanks[i].all.battles
             diff_battles = battles_after - battles_before
-        except KeyError:
+        except IndexError:
             continue
         
         if diff_battles == 0:
