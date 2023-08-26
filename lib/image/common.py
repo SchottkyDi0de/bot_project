@@ -286,10 +286,11 @@ class ImageGen():
             return bin_image
             
         bin_image = None
+        self.data = data
         self.values = Values(data)
-        self.stat_all = data.all
-        self.stat_rating = data.rating
-        self.achievements = data.achievements
+        self.stat_all = data.data.statistics.all
+        self.stat_rating = data.data.statistics.rating
+        self.achievements = data.data.achievements
 
         self.image = Image.open('res/image/default_image/common_stats.png')
         self.img_size = self.image.size
@@ -301,7 +302,7 @@ class ImageGen():
         self.draw_common_labels(img_draw)
         self.draw_rating_labels(img_draw)
         self.draw_main_labels(img_draw)
-        self.draw_rating_icon(img_draw)
+        self.draw_rating_icon()
         self.draw_nickname(img_draw)
         
         self.draw_main_stats(img_draw)
@@ -329,7 +330,7 @@ class ImageGen():
     def draw_rating_icon(self) -> None:
         rt_img = self.leagues.empty
         rating = self.stat_rating.rating
-        calibration_left = self.data.rating.calibration_battles_left
+        calibration_left = self.stat_rating.calibration_battles_left
         
         if calibration_left == 0:
             if rating >= 3000 and rating < 4000:
@@ -416,9 +417,9 @@ class ImageGen():
         
     def _rating_label_handler(self, img):
         rating = self.data.data.statistics.rating.rating
-        if self.data.rating.calibration_battles_left == 10:
+        if self.stat_rating.calibration_battles_left == 10:
             text = self.text.data.for_image.no_rating
-        elif self.data.rating.calibration_battles_left > 0:
+        elif self.stat_rating.calibration_battles_left > 0:
             text = self.text.data.for_image.leagues.calibration
         elif rating >= 3000 and rating < 4000:
             text = self.text.data.for_image.leagues.gold
@@ -468,7 +469,7 @@ class ImageGen():
         for i in self.coord.medals_count.keys():
             img.text(
                 self.coord.medals_count[i],
-                text=str(getattr(self.data.achievements, i)),
+                text=str(getattr(self.achievements, i)),
                 font=self.fonts.roboto_small2,
                 anchor='ma',
             )

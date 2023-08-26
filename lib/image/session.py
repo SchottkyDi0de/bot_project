@@ -12,6 +12,7 @@ if __name__ == '__main__':
 
 from PIL import Image, ImageDraw, ImageFont
 
+from lib.exceptions.database import TankNotFoundInTankopedia
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.data_classes.session import SesionDiffData
 from lib.database.discorddb import ServerDB
@@ -21,6 +22,48 @@ from lib.locale.locale import Text
 from lib.logger import logger
 
 _log = logger.get_logger(__name__, 'ImageSessionLogger', 'logs/image_session.log')
+
+
+class ImageCache():
+    cache: dict = {}
+    cache_ttl: int = 60 # seconds
+    cache_size: int = 40 # items
+    
+    def check_item(self, key):
+        if key in self.cache.keys():
+            return True
+        return False
+        
+    def _overflow_handler(self):
+        overflow = len(self.cache.keys()) - self.cache_size
+        if overflow > 0:
+            for i in range(overflow):
+                key = list(self.cache.keys())[i]
+                self.cache.pop(key)
+                
+    def del_item(self, key):
+        del self.cache[key]
+        
+    def check_timestamp(self, key):
+        current_time = datetime.now().timestamp()
+        time_stamp = self.cache[key]['timestamp']
+        time_delta = current_time - time_stamp
+        if time_delta > self.cache_ttl:
+            del self.cache[key]
+            return False
+        else:
+            return True
+        
+    def add_item(self, item):
+        self._overflow_handler()
+        self.cache[item['id']] = item
+        
+    def get_item(self, key):
+        if self.check_item(key):
+            if self.check_timestamp(key):
+                return self.cache[key]
+        
+        raise KeyError('Cache miss')
 
 
 class Fonts():
@@ -96,48 +139,6 @@ class Coordinates():
         }
 
 
-class ImageCache():
-    cache: dict = {}
-    cache_ttl: int = 60 # seconds
-    cache_size: int = 40 # items
-    
-    def check_item(self, key):
-        if key in self.cache.keys():
-            return True
-        return False
-        
-    def _overflow_handler(self):
-        overflow = len(self.cache.keys()) - self.cache_size
-        if overflow > 0:
-            for i in range(overflow):
-                key = list(self.cache.keys())[i]
-                self.cache.pop(key)
-                
-    def del_item(self, key):
-        del self.cache[key]
-        
-    def check_timestamp(self, key):
-        current_time = datetime.now().timestamp()
-        time_stamp = self.cache[key]['timestamp']
-        time_delta = current_time - time_stamp
-        if time_delta > self.cache_ttl:
-            del self.cache[key]
-            return False
-        else:
-            return True
-        
-    def add_item(self, item):
-        self._overflow_handler()
-        self.cache[item['id']] = item
-        
-    def get_item(self, key):
-        if self.check_item(key):
-            if self.check_timestamp(key):
-                return self.cache[key]
-        
-        raise KeyError('Cache miss')
-
-
 class DiffValues():
     def __init__(self, diff_data: SesionDiffData) -> None:
         self.val_normalizer = ValueNormalizer()
@@ -203,7 +204,12 @@ class ImageGen():
         self.data = data
         self.diff_values = DiffValues(diff_data)
         self.values = Values(data, self.diff_data.tank_index)
-        self.curr_tank_name = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['name']
+        
+        try:
+            self.curr_tank_name = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['name']
+        except TankNotFoundInTankopedia:
+            self.curr_tank_name = 'Unknown'
+
         strt_time = time()
         self.leagues = Leagues()
         need_caching = False

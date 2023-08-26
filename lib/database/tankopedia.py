@@ -1,6 +1,7 @@
 import elara
 
 from lib.logger import logger
+from lib.exceptions.database import TankNotFoundInTankopedia
 
 _log = logger.get_logger(__name__, 'TankopediaLogger', 'logs/tankopedia.log')
 
@@ -18,7 +19,10 @@ class TanksDB():
         self.db['root'] = data
         self.db['root']['id_list'] = list(data['data'].keys())
         self.db.commit()
-        
+
     def get_tank_by_id(self, id: str) -> dict:
         _log.debug(f'Retrieving tank with id {id}')
-        return self.db['root']['data'][id]
+        if id in self.db['root']['id_list']:
+            return self.db['root']['data'][id]
+        else:
+            raise TankNotFoundInTankopedia

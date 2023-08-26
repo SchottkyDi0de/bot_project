@@ -6,3 +6,6 @@ class MemberNotFound(DatabaseError):
 
 class LastStatsNotFound(DatabaseError):
     pass
+
+class TankNotFoundInTankopedia(DatabaseError):
+    pass
