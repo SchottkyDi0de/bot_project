@@ -16,7 +16,7 @@ st = settings.SttInit().get()
 class App():
     def __init__(self):
         self.intents = Intents.default()
-        self.bot = commands.Bot(intents=self.intents)
+        self.bot = commands.Bot(intents=self.intents, command_prefix='!')
         self.bot.remove_command('help')
         
         for filename in os.listdir("./cogs"):

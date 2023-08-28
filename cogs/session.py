@@ -21,7 +21,7 @@ class Session(commands.Cog):
         self.err_msg = errors.ErrorMSG()
         self.api = API()
         
-    @commands.slash_command(guild_only=True)
+    @commands.slash_command(guild_only=True, description=Text().data.cmd_description.start_session)
     async def start_session(self, ctx):
         await ctx.defer()
         if self.db.check_member(ctx.author.id):
@@ -38,7 +38,7 @@ class Session(commands.Cog):
 
         await ctx.respond(embed=InfoMSG.player_not_registred_session)
 
-    @commands.slash_command(guild_only=True)
+    @commands.slash_command(guild_only=True, description=Text().data.cmd_description.get_session)
     async def get_session(self, ctx):
         await ctx.defer()
         if self.db.check_member(ctx.author.id):
