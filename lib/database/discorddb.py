@@ -138,7 +138,7 @@ class ServerDB():
         now_time = datetime.now().timestamp()
         member = self.get_member(member_id)
         try:
-            if (member['last_stats']['timestamp'] - now_time) > 43200:
+            if (now_time - member['last_stats']['timestamp']) > 43200:
                 self.delete_member_last_stats(member_id)
         except (KeyError, ValueError, AttributeError) as e:
             raise database.LastStatsNotFound(e)

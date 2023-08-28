@@ -48,6 +48,7 @@ class Session(commands.Cog):
                 stats = await self.api.get_stats(member['nickname'], member['region'])
             except api.APIError:
                 ctx.respond(embed=ErrorMSG.api_error)
+                return
             
             try:
                 last_stats = PlayerGlobalData(self.db.get_member_last_stats(member['id']))
