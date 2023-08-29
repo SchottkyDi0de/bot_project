@@ -76,6 +76,7 @@ cmd_description:
   astats: Показать статистику игрока без ввода данных.
   nickname: Никнейм игрока.
   region: Регион поиска.
+  get_session: Получит сессию.
   start_session: Запуск сесии.
   stop_session: Остановка сесии.
   lang: Язык локализации
