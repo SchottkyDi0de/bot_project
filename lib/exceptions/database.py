@@ -9,3 +9,6 @@ class LastStatsNotFound(DatabaseError):
 
 class TankNotFoundInTankopedia(DatabaseError):
     pass
+
+class ServerNotFound(DatabaseError):
+    pass

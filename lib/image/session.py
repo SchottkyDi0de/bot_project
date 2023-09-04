@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 from lib.exceptions.database import TankNotFoundInTankopedia
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.data_classes.session import SesionDiffData
-from lib.database.discorddb import ServerDB
+from lib.database.players import PlayersDB
 from lib.database.tankopedia import TanksDB
 from lib.image.common import Colors, Fonts, ValueNormalizer
 from lib.locale.locale import Text
@@ -228,7 +228,7 @@ class ImageGen():
             _log.debug('Image was sent in %s sec.', round(time() - strt_time, 4))
             return bin_image
         
-        self.text = Text()
+        self.text = Text().get()
         self.image = Image.open('res/image/default_image/session_stats.png')
         self.img_size = self.image.size
         self.coord = Coordinates(self.img_size)
@@ -284,7 +284,7 @@ class ImageGen():
         for i in self.coord.category_labels.keys():
             img.text(
                 self.coord.category_labels[i],
-                text=getattr(self.text.data.for_image, i),
+                text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small,
                 anchor='mm',
                 fill=self.colors.blue
@@ -294,7 +294,7 @@ class ImageGen():
         for i in self.coord.main_labels.keys():
             img.text(
                 self.coord.main_labels[i],
-                text=getattr(self.text.data.for_image, i),
+                text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small,
                 anchor='ma',
                 align='center',
@@ -335,7 +335,7 @@ class ImageGen():
         for i in self.coord.rating_labels.keys():
             img.text(
                 self.coord.rating_labels[i],
-                text=getattr(self.text.data.for_image, i),
+                text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small,
                 anchor='ma',
                 align='center',
@@ -377,17 +377,17 @@ class ImageGen():
     def _rating_label_handler(self, img: ImageDraw.ImageDraw):
         rating = self.data.data.statistics.rating.rating
         if self.data.data.statistics.rating.calibration_battles_left == 10:
-            text = self.text.data.for_image.no_rating
+            text = self.text.for_image.no_rating
         elif self.data.data.statistics.rating.calibration_battles_left > 0:
-            text = self.text.data.for_image.leagues.calibration
+            text = self.text.for_image.leagues.calibration
         elif rating >= 3000 and rating < 4000:
-            text = self.text.data.for_image.leagues.gold
+            text = self.text.for_image.leagues.gold
         elif rating >= 4000 and rating < 5000:
-            text = self.text.data.for_image.leagues.platinum
+            text = self.text.for_image.leagues.platinum
         elif rating > 5000:
-            text = self.text.data.for_image.leagues.brilliant
+            text = self.text.for_image.leagues.brilliant
         else:
-            text = self.text.data.for_image.leagues.no_league
+            text = self.text.for_image.leagues.no_league
 
         img.text(
             self.coord.rating_league_label,
@@ -462,6 +462,6 @@ if __name__ == '__main__':
     from lib.data_parser import parse_data
     data = async_wotb_api.test('cnJIuHTeP_KPbIca', region='ru', save_to_database=False)
     diff_data = parse_data.get_session_stats(
-        PlayerGlobalData(ServerDB().get_member_last_stats(766019191836639273)), data)
+        PlayerGlobalData(PlayersDB().get_member_last_stats(766019191836639273)), data)
     ImageGen().test(data, diff_data)
     input()

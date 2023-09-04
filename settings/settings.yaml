@@ -3,6 +3,6 @@ name:
   'Blitz Statistics'
 
 default: 
-  prefix : '!' # deprecated
-  lang   : 'ru'
-  region : 'eu'
+  prefix : '!'
+  lang: 'en'
+  available_locales: ['ru', 'en', 'pl', 'ua']

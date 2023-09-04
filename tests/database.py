@@ -6,11 +6,14 @@ from datetime import datetime
 import elara
 import json
 
-db = db = elara.exe('database/serever_settings.eldb')
+db = elara.exe('database/players.eldb')
+sdb = elara.exe('database/servers.eldb')
 
-def db_to_json():
-    with open('database_copy.json', 'w') as f:
-        f.write(json.dumps(db['members'], indent=4))
+def db_to_json(db_name: str = 'players'):
+    db_name += '.json'
+    with open(db_name, 'w') as f:
+        f.write(json.dumps(db['members'] if , indent=4))
+        print('database written to json')
 
 def members_count():
     print(f'Registered members count: {db.db["members"].keys().__len__()}')
@@ -37,4 +40,4 @@ User_game_nickname: {db['members'][j]['nickname']}\n\
 Expiried at: {expiried_at}")
 
 if __name__ == '__main__':
-    timestamp_check_all()
+    db_to_json()

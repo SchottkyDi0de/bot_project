@@ -1,19 +1,24 @@
-import os.path, sys
+import traceback
 
-from discord import File, Option
+from discord import Option
 from discord.ext import commands
 
-from lib.exceptions import database
-from lib.database import discorddb
+from lib.exceptions.database import DatabaseError
+from lib.database.players import PlayersDB
+from lib.database.servers import ServersDB
 from lib.locale.locale import Text
-from lib.embeds import errors, info
+from lib.embeds.errors import ErrorMSG
+from lib.embeds.info import InfoMSG
+from lib.logger.logger import get_logger
+
+_log = get_logger(__name__, 'CogSetLogger', 'logs/cog_set.log')
+
 
 class Set(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
-        self.db = discorddb.ServerDB()
-        self.inf_msg = info.InfoMSG()
-        self.err_msg = errors.ErrorMSG()
+        self.db = PlayersDB()
+        self.sdb = ServersDB()
         
     @commands.slash_command(guild_only=True)
     async def set_lang(self, ctx, 
@@ -24,7 +29,14 @@ class Set(commands.Cog):
                 required=True
             )
         ):
-        pass  # Не забудь...
+
+        try:
+            Text().load(self.sdb.safe_get_lang(ctx.guild.id))
+            self.sdb.set_lang(ctx.guild.id, lang, ctx.guild.name)
+            await ctx.respond(embed=InfoMSG().set_lang_ok)
+        except Exception:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=ErrorMSG().unknown_error)
         
     @commands.slash_command(guild_only=True)
     async def set_player(self, ctx, 
@@ -42,9 +54,17 @@ class Set(commands.Cog):
                 required=True
             )
         ):
-        await ctx.defer()
-        self.db.set_member(ctx.author.id, nickname, region)
-        await ctx.respond(embed=self.inf_msg.set_player_ok)
+
+        try:
+            await ctx.defer()
+            Text().load(self.sdb.safe_get_lang(ctx.guild.id))
+            ErrorMSG().update_locale()
+
+            self.db.set_member(ctx.author.id, nickname, region)
+            await ctx.respond(embed=InfoMSG().set_player_ok)
+        except Exception :
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=ErrorMSG().unknown_error)
         
 
     

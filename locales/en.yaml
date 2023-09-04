@@ -1,0 +1,121 @@
+---
+for_image:
+  main: STATISTICS
+  winrate: WINNINGS
+  avg_damage: |-
+    AVERGE
+    DAMAGE
+  battles: BATTLES
+  medals: MEDALS
+  mainGun: |-
+    HIGH
+    CALIBRE
+  medalKolobanov: KOLOBANOV'S
+  warrior: TOP GUN
+  medalRadleyWalters: |-
+    RADLEY
+    WALTERS
+  markOfMastery: MASTERT BADGE
+  rating: RANKING
+  personal_rating: |-
+        PERSONAL
+        RANKING
+  rating_battles: |-
+      BATTLES
+      RANKING
+  no_rating: NO POINTS
+  tank: 'TANK'
+  leagues:
+    gold: GOLD
+    platinum: PLATINUM
+    brilliant: DIAMOND
+    no_league: |-
+      NO
+      LIGS
+    calibration: QUALIFICATION
+  total: TOTAL
+  kills_per_battle: |-
+    KILLS PER BATTLE
+  max_frags: |-
+    MOST KILLS
+  enemies_destroyed: |-
+    DESTROYED
+    ENEMIES
+  destruction_ratio: |-
+        DESTRUCTION RATIO
+  damage_caused: |-
+    DAMAGE CAUSED
+  damage_ratio: |-
+   DAMAGE RATIO
+  average_spotted: |-
+    AVERAGE SPOTTED ENEMIES
+  battles_survived: |-
+    BATTLES SURVIVED
+  all_xp: |-
+    TOTAL EXPERIENCE
+  max_xp: |-
+   MAXIMUM EXPERIENCE
+  shots: SHOTS
+  accuracy: |-
+    ACCURACY
+  no_clan: WITHOUT CLAN
+  no_data: NO DATA
+
+cmd_description:
+  stats: View player statistics.
+  astats: Display of player statistics without entering any data.
+  nickname: Player nickname.
+  region: Search region.
+  start_session: Start of session.
+  stop_session: End of session.
+  lang: Language.
+
+common:
+  nickname: Nickname
+  region: Region
+  regions:
+  - ru
+  - eu
+  - na
+  - asia
+  langs:
+  - ru
+  - en
+  - pl
+  - ua
+
+sesiion:
+  
+
+setup:
+  setup: Customise
+  server_lang: Specify the language the bot will use on the server.
+  channel_lang: Specify the language that the bot will use in this channel.
+  server_reg: 'Specify the default search region for this server: '
+  channel_reg: 'Specify the default search region for this channel: '
+
+info:
+  info: Info
+  set_player_ok: 'Player information has been successfully saved, you can now use `/astats` to automatically display statistics based on the saved data.'
+  player_not_registred: 'To request statistics without entering data, first save the data using the `/set_player` command.'
+  session_started: 'The session has started, now play a few battles to generate a session'
+  player_not_registred_session: 'To use the session, save the data using the `/set_player` command.'
+  set_lang_ok: 'Язык локализации успешно изменён'
+
+errors:
+  error: Error
+  parser_error: Server data processing error
+  no_battles: Not enough battles to generate statistics!
+  player_not_found: No player with this nickname has been found.
+  api_error: Internal API error
+  unknown_error: Unknown error.
+  incorrect_name: |-
+    Incorrect nickname.
+    An alias can only consist of the letters of the alphabet A-Z, '_', the numbers 0-9 and be between 3 and 24 characters long.
+  incorrect_region: "You have specified an invalid region to search for a player. To learn more about regions type the command `/help regions`."
+  session_not_found: 'Session data not found, perhaps the session has not been started or it has been more than 12 hours since the session was last started.'
+  session_not_updated: 'No change in stats detected, perhaps you have not played any battles or the API has not updated the data, try again later.'
+
+help:
+  help: Help
+  common: Потом напишу, отстаньте...

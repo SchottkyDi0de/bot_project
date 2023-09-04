@@ -1,0 +1,121 @@
+---
+for_image:
+  main: STATYSTYKI
+  winrate: ZWYCIĘSTWA
+  avg_damage: |-
+    ŚREDNIE
+    USZKODZENIA
+  battles: BITWY
+  medals: MEDALE
+  mainGun: |-
+    DUŻY
+    KALIBER
+  medalKolobanov: KOŁOBANOW
+  warrior: SPECJALISTA
+  medalRadleyWalters: |-
+    RADLEY
+    WALTERS
+  markOfMastery: ODZNAKI MISTRZOWSKIE
+  rating: RANKING
+  personal_rating: |-
+    OCENA
+    OSOBISTA
+  rating_battles: |-
+    BITWY
+    RANKINGOWE
+  no_rating: BRAK PUNKTACJI
+  tank: 'CZOŁG'
+  leagues:
+    gold: ZŁOTA
+    platinum: PLATYNOWA
+    brilliant: DIAMENTOWA
+    no_league: |-
+      BRAK
+      LIGI
+    calibration: KWALIFIKACJA
+  total: ŁĄCZNIE
+  kills_per_battle: |-
+    ZNISZCZENIA NA BITWĘ
+  max_frags: |-
+    NAJWIEKSZA ILOŚĆ ZNISZCZEŃ
+  enemies_destroyed: |-
+    ZNISZCZENI
+    PRZECIWNICY
+  destruction_ratio: |-
+        WSPÓŁCZYNNIK ZNISZCZENIA
+  damage_caused: |-
+    ZADANE USZKODZENIA
+  damage_ratio: |-
+   WSPÓŁCZYNNIK USZKODZEŃ
+  average_spotted: |-
+    ŚREDNIO WYKRYCI PRZECIWNICY
+  battles_survived: |-
+    BITWY PRZETRWANE
+  all_xp: |-
+    ŁACZNA ILOŚĆ DOŚWIADCZENIA
+  max_xp: |-
+    MAKSYMALNA ILOŚĆ DOŚWIADCZENIA
+  shots: STRZAŁY
+  accuracy: |-
+    CELNOŚĆ
+  no_clan: BEZ KLANU
+  no_data: BRAK DANYCH
+
+cmd_description:
+  stats: Wyświetl statystyki gracza.
+  astats: Wyświetlanie statystyk gracza bez wprowadzania jakichkolwiek danych.
+  nickname: Pseudonim gracza.
+  region: Wyszukaj region.
+  start_session: Rozpoczęcie sesji.
+  stop_session: Zakończenie sesji.
+  lang: Język.
+
+common:
+  nickname: Pseudonim
+  region: Region
+  regions:
+  - ru
+  - eu
+  - na
+  - asia
+  langs:
+  - ru
+  - en
+  - pl
+  - ua
+
+sesiion:
+  
+
+setup:
+  setup: Dostosuj
+  server_lang: Określ język, którego bot będzie używał na serwerze.
+  channel_lang: Określ język, którego bot będzie używał w tym kanale.
+  server_reg: 'Określ domyślny region wyszukiwania dla tego serwera: '
+  channel_reg: 'Określ domyślny region wyszukiwania dla tego kanału: '
+
+info:
+  info: Informacje
+  set_player_ok: 'Informacje o graczu zostały pomyślnie zapisane, teraz możesz użyć `/astats` do automatycznego wyświetlania statystyk na podstawie zapisanych danych.'
+  player_not_registred: 'Aby zażądać statystyk bez wprowadzania danych, najpierw zapisz dane za pomocą komendy `/set_player`'
+  session_started: 'Sesja się rozpoczęła, teraz rozegraj kilka bitew, aby wygenerować sesję.'
+  player_not_registred_session: 'Aby skorzystać z sesji, należy zapisać dane za pomocą komendy `/set_player`'
+  set_lang_ok: 'Язык локализации успешно изменён'
+
+errors:
+  error: Błąd
+  parser_error: Błąd przetwarzania danych z serwera
+  no_battles: Za mało bitew, by wygenerować statystyki!
+  player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
+  api_error: Wewnętrzny błąd API
+  unknown_error: Nieznany błąd.
+  incorrect_name: |-
+    Nieprawidłowy pseudonim.
+    Pseudonim może składać się wyłącznie z liter alfabetu A-Z, '_', cyfr 0-9 i mieć długość od 3 do 24 znaków.
+  incorrect_region: "Określono nieprawidłowy region żeby wyszukać gracza. Aby dowiedzieć się więcej o regionach, wpisz polecenie `/help regions`"
+  session_not_found: 'Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęło więcej niż 12 godzin od ostatniego uruchomienia sesji.'
+  session_not_updated: 'Nie wykryto zmian w statystykach, być może nie zagrałeś żadnych bitew lub API nie zaktualizowało danych, spróbuj ponownie później.'
+
+help:
+  help: Pomoc
+  common: Потом напишу, отстаньте...

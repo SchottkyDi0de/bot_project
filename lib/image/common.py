@@ -252,7 +252,7 @@ class Colors():
 
 
 class ImageGen():
-    text = Text()
+    text = None
     fonts = Fonts()
     colors = Colors()
     leagues = Leagues()
@@ -268,7 +268,7 @@ class ImageGen():
     coord = None
     
     def generate(self, data: PlayerGlobalData):
-
+        self.text = Text().get()
         strt_time = time()
         need_caching = False
         try:
@@ -364,7 +364,7 @@ class ImageGen():
         for i in self.coord.category_labels.keys():
             img.text(
                 self.coord.category_labels[i],
-                text=getattr(self.text.data.for_image, i),
+                text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small,
                 anchor='mm',
                 fill=self.colors.blue
@@ -374,7 +374,7 @@ class ImageGen():
         for i in self.coord.medals_labels.keys():
             img.text(
                 self.coord.medals_labels[i],
-                text=getattr(self.text.data.for_image, i),
+                text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
@@ -385,7 +385,7 @@ class ImageGen():
         for i in self.coord.common_stats_labels.keys():
             img.text(
                 self.coord.common_stats_labels[i],
-                text=getattr(self.text.data.for_image, i),
+                text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
@@ -396,7 +396,7 @@ class ImageGen():
         for i in self.coord.main_labels.keys():
             img.text(
                 self.coord.main_labels[i],
-                text=getattr(self.text.data.for_image, i),
+                text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
@@ -407,7 +407,7 @@ class ImageGen():
         for i in self.coord.rating_labels.keys():
             img.text(
                 self.coord.rating_labels[i],
-                text=getattr(self.text.data.for_image, i),
+                text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
@@ -418,17 +418,17 @@ class ImageGen():
     def _rating_label_handler(self, img):
         rating = self.data.data.statistics.rating.rating
         if self.stat_rating.calibration_battles_left == 10:
-            text = self.text.data.for_image.no_rating
+            text = self.text.for_image.no_rating
         elif self.stat_rating.calibration_battles_left > 0:
-            text = self.text.data.for_image.leagues.calibration
+            text = self.text.for_image.leagues.calibration
         elif rating >= 3000 and rating < 4000:
-            text = self.text.data.for_image.leagues.gold
+            text = self.text.for_image.leagues.gold
         elif rating >= 4000 and rating < 5000:
-            text = self.text.data.for_image.leagues.platinum
+            text = self.text.for_image.leagues.platinum
         elif rating > 5000:
-            text = self.text.data.for_image.leagues.brilliant
+            text = self.text.for_image.leagues.brilliant
         else:
-            text = self.text.data.for_image.leagues.no_league
+            text = self.text.for_image.leagues.no_league
 
         img.text(
             self.coord.rating_league_label,

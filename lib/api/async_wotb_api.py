@@ -11,18 +11,18 @@ if __name__ == '__main__':
     sys.path.insert(0, path)
 
 from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.palyer_clan_stats import ClanStats
 from lib.data_classes.player_achievements import Achievements
 from lib.data_classes.player_stats import PlayerStats
-from lib.data_classes.palyer_clan_stats import ClanStats
 from lib.data_classes.tanks_stats import TankStats
 from lib.data_parser.parse_data import get_normalized_data
-from lib.database.discorddb import ServerDB
+from lib.database.players import PlayersDB
 from lib.exceptions import api as api_exceptions
-from lib.logger import logger
+from lib.logger.logger import get_logger
 from lib.settings import settings
 from lib.yaml.yaml2object import Parser
 
-_log = logger.get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
+_log = get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
 st = settings.SttInit()
 
 
@@ -272,7 +272,7 @@ class API():
 
 
 def test(nickname = 'cnJIuHTeP_KPbIca', region = 'ru', save_to_database: bool = False):
-    db = ServerDB()
+    db = PlayersDB()
     api = API()
     data = asyncio.run(api.get_stats(nickname, region))
 

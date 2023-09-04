@@ -6,17 +6,18 @@ from discord.ext import commands
 from lib.api import async_wotb_api
 from lib.database import tankopedia
 from lib.logger import logger
-from lib.settings import settings
+from lib.settings.settings import SttInit
 
 _log = logger.get_logger(__name__, 'MainLogger', 'logs/main.log')
 
-st = settings.SttInit().get()
+st = SttInit().get()
 
 
 class App():
     def __init__(self):
         self.intents = Intents.default()
-        self.bot = commands.Bot(intents=self.intents, command_prefix='!')
+        self.intents.message_content = True
+        self.bot = commands.Bot(intents=self.intents, command_prefix=st.default.prefix)
         self.bot.remove_command('help')
         
         for filename in os.listdir("./cogs"):
@@ -31,7 +32,7 @@ class App():
             api = async_wotb_api.API()
             tanks_data = await api.get_tankopedia()
             tp.set_tankopedia(tanks_data)
-            _log.debug('Tankopedia set successfull')
+            _log.debug('Tankopedia set successfull\nBot started: %s', self.bot.user)
 
         self.bot.run(st.DISCORD_TOKEN)
 
