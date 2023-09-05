@@ -1,17 +1,15 @@
 import os
 import sys
-from datetime import datetime
-from lib.exceptions.database import ServerNotFound
 
 import elara
 
+from lib.exceptions.database import ServerNotFound
+from lib.settings.settings import SttObject
+from lib.utils.singleton_factory import singleton
 
+
+@singleton
 class ServersDB():
-    def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(ServersDB, cls).__new__(cls)
-        return cls.instance
-    
     def __init__(self) -> None:
         self.db = elara.exe('database/servers.eldb')
         self.defauls_server_settings = {
@@ -49,13 +47,11 @@ class ServersDB():
         
     def set_lang(self, server_id: int, lang: str, server_name: str) -> None:
         server_id = str(server_id)
-        if self.check_server(server_id):
-            self.db.db['servers'][server_id]['settings']['lang'] = lang
-            self.db.commit()
-        else:
+        if not self.check_server(server_id):
             self.set_new_server(server_id, server_name)
-            self.db.db['servers'][server_id]['settings']['lang'] = lang
-            self.db.commit()
+
+        self.db.db['servers'][server_id]['settings']['lang'] = lang
+        self.db.commit()
 
     def get_lang(self, server_id: int):
         server_id = str(server_id)
@@ -69,4 +65,4 @@ class ServersDB():
         if self.check_server(server_id):
             return self.db.db['servers'][server_id]['settings']['lang']
         else:
-            return 'en'
+            return SttObject().get().default.lang

@@ -8,14 +8,11 @@ from lib.locale.locale import Text
 
 
 class CommonMSG():
-    text = Text().get()
-    
-    help = Embed(
-        title=text.help.help,
-        description=text.help.common,
-        colour=Colour.blurple()
-    )
-
-    def update_locale(self):
-        self.text = Text().get()
-
+    def __init__(self):
+        text = Text().get()
+        
+        self.help = Embed(
+            title=text.help.help,
+            description=text.help.common,
+            colour=Colour.blurple()
+        )

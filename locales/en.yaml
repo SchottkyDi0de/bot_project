@@ -1,60 +1,68 @@
 ---
 for_image:
-  main: STATISTICS
-  winrate: WINNINGS
+  main: MAIN
+  winrate: WINRATE
   avg_damage: |-
-    AVERGE
+    AVERAGE
     DAMAGE
   battles: BATTLES
   medals: MEDALS
   mainGun: |-
     HIGH
-    CALIBRE
+    CALIBER
   medalKolobanov: KOLOBANOV'S
   warrior: TOP GUN
   medalRadleyWalters: |-
     RADLEY
     WALTERS
-  markOfMastery: MASTERT BADGE
-  rating: RANKING
+  markOfMastery: MASTER
+  rating: RATING
   personal_rating: |-
-        PERSONAL
-        RANKING
+    PERSONAL
+    RATING
   rating_battles: |-
-      BATTLES
-      RANKING
-  no_rating: NO POINTS
-  tank: 'TANK'
+    BATTLES
+  no_rating: NO RATING
+  tank: "TANK"
+
   leagues:
     gold: GOLD
     platinum: PLATINUM
-    brilliant: DIAMOND
+    brilliant: BRILLIANT
     no_league: |-
       NO
-      LIGS
-    calibration: QUALIFICATION
+      LEAGUE
+    calibration: CALIBRATION
   total: TOTAL
   kills_per_battle: |-
-    KILLS PER BATTLE
+    KILLS PER 
+    BATTLE
   max_frags: |-
     MOST KILLS
   enemies_destroyed: |-
     DESTROYED
     ENEMIES
   destruction_ratio: |-
-        DESTRUCTION RATIO
+    DESTRUCTION
+    RATIO
   damage_caused: |-
-    DAMAGE CAUSED
+    DAMAGE
+    CAUSED
   damage_ratio: |-
-   DAMAGE RATIO
+    DAMAGE
+    RATIO
   average_spotted: |-
-    AVERAGE SPOTTED ENEMIES
+    AVG
+    SPOTTED
   battles_survived: |-
-    BATTLES SURVIVED
+    BATTLES
+    SURVIVED
   all_xp: |-
-    TOTAL EXPERIENCE
+    TOTAL
+    EXP
   max_xp: |-
-   MAXIMUM EXPERIENCE
+    MAX
+    EXP
   shots: SHOTS
   accuracy: |-
     ACCURACY
@@ -66,6 +74,7 @@ cmd_description:
   astats: Display of player statistics without entering any data.
   nickname: Player nickname.
   region: Search region.
+  get_session: "Get session"
   start_session: Start of session.
   stop_session: End of session.
   lang: Language.
@@ -74,33 +83,32 @@ common:
   nickname: Nickname
   region: Region
   regions:
-  - ru
-  - eu
-  - na
-  - asia
+    - ru
+    - eu
+    - na
+    - asia
   langs:
-  - ru
-  - en
-  - pl
-  - ua
+    - ru
+    - en
+    - pl
+    - ua
 
 sesiion:
-  
 
 setup:
   setup: Customise
   server_lang: Specify the language the bot will use on the server.
   channel_lang: Specify the language that the bot will use in this channel.
-  server_reg: 'Specify the default search region for this server: '
-  channel_reg: 'Specify the default search region for this channel: '
+  server_reg: "Specify the default search region for this server: "
+  channel_reg: "Specify the default search region for this channel: "
 
 info:
   info: Info
-  set_player_ok: 'Player information has been successfully saved, you can now use `/astats` to automatically display statistics based on the saved data.'
-  player_not_registred: 'To request statistics without entering data, first save the data using the `/set_player` command.'
-  session_started: 'The session has started, now play a few battles to generate a session'
-  player_not_registred_session: 'To use the session, save the data using the `/set_player` command.'
-  set_lang_ok: 'Язык локализации успешно изменён'
+  set_player_ok: "Player information has been successfully saved, you can now use `/astats` to automatically display statistics based on the saved data."
+  player_not_registred: "To request statistics without entering data, first save the data using the `/set_player` command."
+  session_started: "The session has started, now play a few battles to generate a session"
+  player_not_registred_session: "To use the session, save the data using the `/set_player` command."
+  set_lang_ok: "Localization language changed successfully."
 
 errors:
   error: Error
@@ -113,9 +121,9 @@ errors:
     Incorrect nickname.
     An alias can only consist of the letters of the alphabet A-Z, '_', the numbers 0-9 and be between 3 and 24 characters long.
   incorrect_region: "You have specified an invalid region to search for a player. To learn more about regions type the command `/help regions`."
-  session_not_found: 'Session data not found, perhaps the session has not been started or it has been more than 12 hours since the session was last started.'
-  session_not_updated: 'No change in stats detected, perhaps you have not played any battles or the API has not updated the data, try again later.'
+  session_not_found: "Session data not found, perhaps the session has not been started or it has been more than 12 hours since the session was last started."
+  session_not_updated: "No change in stats detected, perhaps you have not played any battles or the API has not updated the data, try again later."
 
 help:
   help: Help
-  common: Потом напишу, отстаньте...
+  common: Coming soon...

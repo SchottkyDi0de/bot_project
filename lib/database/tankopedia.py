@@ -2,15 +2,13 @@ import elara
 
 from lib.logger import logger
 from lib.exceptions.database import TankNotFoundInTankopedia
+from lib.utils.singleton_factory import singleton
 
 _log = logger.get_logger(__name__, 'TankopediaLogger', 'logs/tankopedia.log')
 
+
+@singleton
 class TanksDB():
-    def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(TanksDB, cls).__new__(cls)
-        return cls.instance
-    
     def __init__(self) -> None:
         _log.debug('Takopedia database initialized')
         self.db = elara.exe('database/tankopedia.eldb')

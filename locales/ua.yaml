@@ -76,6 +76,7 @@ cmd_description:
   astats: Показати статистику гравця без вводу даних.
   nickname: Нікнейм гравця.
   region: Регіон пошуку.
+  get_session: 'Get session'
   start_session: Запуск сесії.
   stop_session: Зупинка сесії.
   lang: Мова локалізації
@@ -109,7 +110,7 @@ info:
   player_not_registred: 'Для запиту статистики без вводу даних спочатку збережіть свої дані командою `/set_player`'
   session_started: 'Cесію запущено, тепер зіграйте декілька боїв для генерації сесії.'
   player_not_registred_session: 'Для використання сесії збережіть свої дані командою `/set_player`'
-  set_lang_ok: 'Язык локализации успешно изменён'
+  set_lang_ok: 'Localization language changed successfully' # Need tranlate!!!
 
 errors:
   error: Помилка
@@ -129,4 +130,4 @@ errors:
 help:
   help: Допомога
 
-  common: Потом напишу, отстаньте...
+  common: Coming soon...

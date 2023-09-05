@@ -10,6 +10,7 @@ from lib.locale.locale import Text
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.logger.logger import get_logger
+from lib.settings.settings import SttObject
 
 _log = get_logger(__name__, 'CogSetLogger', 'logs/cog_set.log')
 
@@ -25,13 +26,13 @@ class Set(commands.Cog):
             lang: Option(
                 str,
                 description=Text().data.cmd_description.lang,
-                choices=Text().data.common.langs,
+                choices=SttObject().get().default.available_locales,
                 required=True
             )
         ):
 
+        Text().load(lang)
         try:
-            Text().load(self.sdb.safe_get_lang(ctx.guild.id))
             self.sdb.set_lang(ctx.guild.id, lang, ctx.guild.name)
             await ctx.respond(embed=InfoMSG().set_lang_ok)
         except Exception:

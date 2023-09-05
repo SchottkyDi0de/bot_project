@@ -11,8 +11,14 @@ sdb = elara.exe('database/servers.eldb')
 
 def db_to_json(db_name: str = 'players'):
     db_name += '.json'
-    with open(db_name, 'w') as f:
-        f.write(json.dumps(db['members'] if , indent=4))
+    with open(db_name, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(db['members'], indent=4))
+        print('database written to json')
+    
+def sdb_to_json(db_name: str = 'servers'):
+    db_name += '.json'
+    with open(db_name, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(sdb['servers'], indent=4))
         print('database written to json')
 
 def members_count():
@@ -40,4 +46,4 @@ User_game_nickname: {db['members'][j]['nickname']}\n\
 Expiried at: {expiried_at}")
 
 if __name__ == '__main__':
-    db_to_json()
+    sdb_to_json()

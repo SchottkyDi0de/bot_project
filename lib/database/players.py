@@ -9,14 +9,11 @@ if __name__ == '__main__':
     sys.path.insert(0, path)
 
 from lib.exceptions import database
+from lib.utils.singleton_factory import singleton
 
 
+@singleton
 class PlayersDB():
-    def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(PlayersDB, cls).__new__(cls)
-        return cls.instance
-
     def __init__(self) -> None:
         self.db = elara.exe('database/players.eldb')
 

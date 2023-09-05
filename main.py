@@ -6,11 +6,11 @@ from discord.ext import commands
 from lib.api import async_wotb_api
 from lib.database import tankopedia
 from lib.logger import logger
-from lib.settings.settings import SttInit
+from lib.settings.settings import SttObject
 
 _log = logger.get_logger(__name__, 'MainLogger', 'logs/main.log')
 
-st = SttInit().get()
+st = SttObject().get()
 
 
 class App():

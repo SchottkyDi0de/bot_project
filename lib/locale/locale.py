@@ -2,29 +2,29 @@
 import os.path
 import sys
 
-# path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# sys.path.insert(0, path)
-
-from lib.settings.settings import SttInit
+from lib.utils.singleton_factory import singleton
+from lib.settings.settings import SttObject
 from lib.yaml.yaml2object import Parser
 
-
+@singleton
 class Text():
-    def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(Text, cls).__new__(cls)
-        return cls.instance
+    def __init__(self) -> None:
+        self.default_lang = SttObject().get().default.lang
+        self.current_lang = self.default_lang
+        self.parser = Parser()
+        self.data = self.parser.parse_file(f'locales/{self.default_lang}.yaml')
+        self.load(self.default_lang)
 
     def load(self, lang: str) -> None:
-        if lang in SttInit().get().default.available_locales:
-            self.data = self.parser.parse(f'locales/{lang}.yaml')
+        if self.current_lang == lang:
+            return
+        
+        if lang in SttObject().get().default.available_locales:
+            self.data = self.parser.parse_file(f'locales/{lang}.yaml')
+            self.current_lang = lang
         else:
             raise ValueError(f'Invalid lang code: {lang}')
         
     def get(self) -> object:
         return self.data
 
-    def __init__(self) -> None:
-        self.current_lang = 'ru'
-        self.parser = Parser()
-        self.load(self.current_lang)

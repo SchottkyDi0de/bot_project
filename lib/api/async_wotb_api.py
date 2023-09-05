@@ -23,7 +23,7 @@ from lib.settings import settings
 from lib.yaml.yaml2object import Parser
 
 _log = get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
-st = settings.SttInit()
+st = settings.SttObject()
 
 
 class APICache():
