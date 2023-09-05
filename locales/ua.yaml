@@ -110,7 +110,7 @@ info:
   player_not_registred: 'Для запиту статистики без вводу даних спочатку збережіть свої дані командою `/set_player`'
   session_started: 'Cесію запущено, тепер зіграйте декілька боїв для генерації сесії.'
   player_not_registred_session: 'Для використання сесії збережіть свої дані командою `/set_player`'
-  set_lang_ok: 'Localization language changed successfully' # Need tranlate!!!
+  set_lang_ok: 'Localization language changed successfully' # Need translate!!!
 
 errors:
   error: Помилка
