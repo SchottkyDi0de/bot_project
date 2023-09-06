@@ -102,6 +102,10 @@ setup:
   server_reg: "Specify the default search region for this server: "
   channel_reg: "Specify the default search region for this channel: "
 
+time_units:
+  hours: h.
+  minuts: m.
+
 info:
   info: Info
   set_player_ok: "Player information has been successfully saved, you can now use `/astats` to automatically display statistics based on the saved data."
@@ -109,6 +113,12 @@ info:
   session_started: "The session has started, now play a few battles to generate a session"
   player_not_registred_session: "To use the session, save the data using the `/set_player` command."
   set_lang_ok: "Localization language changed successfully."
+
+session_state:
+  started: Session started.
+  not_started: Session not started.
+  player_not_registred: The user is not registered, use `/astats` to save their data.'
+  age: 'Duration of the session: '
 
 errors:
   error: Error

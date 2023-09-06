@@ -102,6 +102,10 @@ setup:
   server_reg: 'Określ domyślny region wyszukiwania dla tego serwera: '
   channel_reg: 'Określ domyślny region wyszukiwania dla tego kanału: '
 
+time_units: # Need translate!!!
+  hours: h.
+  minuts: m.
+
 info:
   info: Informacje
   set_player_ok: 'Informacje o graczu zostały pomyślnie zapisane, teraz możesz użyć `/astats` do automatycznego wyświetlania statystyk na podstawie zapisanych danych.'
@@ -109,6 +113,12 @@ info:
   session_started: 'Sesja się rozpoczęła, teraz rozegraj kilka bitew, aby wygenerować sesję.'
   player_not_registred_session: 'Aby skorzystać z sesji, należy zapisać dane za pomocą komendy `/set_player`'
   set_lang_ok: 'Localization language changed successfully' # Need translate!!!
+
+session_state: # Need translate!!!
+  started: Session started.
+  not_started: Session not started.
+  player_not_registred: The user is not registered, use `/astats` to save their data.'
+  age: 'Duration of the session: '
 
 errors:
   error: Błąd

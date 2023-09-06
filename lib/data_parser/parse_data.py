@@ -79,6 +79,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
         tank_data = _search_max_diff_battles_tank(data_old, data_new)
 
         if tank_data is None:
+            _log.debug('Different data generating error: player data not updated')
             raise data_parser.NoDiffData('Different data generating error: player data not updated')
 
         tank_id = tank_data[0]
@@ -102,51 +103,87 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
         r_diff_battles = data_new_shorted.rating.battles - data_old_shorted.rating.battles
         r_diff_rating = data_new_shorted.rating.rating - data_old_shorted.rating.rating
         r_diff_winrate = data_new_shorted.rating.winrate - data_old_shorted.rating.winrate
+
+        if r_diff_battles != 0:
+            r_session_winrate = round((data_new_shorted.rating.wins / data_new_shorted.rating.battles) * 100, 2)
+            r_session_rating = (data_new_shorted.rating.mm_rating - data_old_shorted.rating.mm_rating) * 10
+        else:
+            r_session_winrate = 0
+            r_session_rating = 0
         
         if not battles_not_updated:
+            diff_battles = data_new_shorted.all.battles - data_old_shorted.all.battles
+            diff_winrate = round(data_new_shorted.all.winrate - data_old_shorted.all.winrate, 2)
+            diff_avg_damage = data_new_shorted.all.avg_damage - data_old_shorted.all.avg_damage
+
             t_diff_battles = new_tank.all.battles - old_tank.all.battles
             
-            old_tank.all.winarte = round((old_tank.all.wins / old_tank.all.battles) * 100, 2)
-            new_tank.all.winarte = round((new_tank.all.wins / new_tank.all.battles) * 100, 2)
-            t_diff_winrate = new_tank.all.winarte - old_tank.all.winarte
+            old_tank.all.winrate = round((old_tank.all.wins / old_tank.all.battles) * 100, 2)
+            new_tank.all.winrate = round((new_tank.all.wins / new_tank.all.battles) * 100, 2)
+            t_diff_winrate = new_tank.all.winrate - old_tank.all.winrate
             
             t_avg_damage_before = old_tank.all.damage_dealt // old_tank.all.battles
             t_avg_damage_after = new_tank.all.damage_dealt // new_tank.all.battles
             t_diff_avg_damage = t_avg_damage_after - t_avg_damage_before
+
+            session_winrate = round((data_new_shorted.all.wins - data_old_shorted.all.wins) // diff_battles * 100, 2)
+            session_avg_damage = (data_new_shorted.all.damage_dealt - data_old_shorted.all.damage_dealt) // diff_battles
+
+            t_session_winrate = round((new_tank.all.wins - old_tank.all.wins) // t_diff_battles * 100, 2)
+            t_session_avg_damage = (new_tank.all.damage_dealt - old_tank.all.damage_dealt) // t_diff_battles
             
-            diff_battles = data_new_shorted.all.battles - data_old_shorted.all.battles
-            diff_winrate = round(data_new_shorted.all.winrate - data_old_shorted.all.winrate, 2)
-            diff_avg_damage = data_new_shorted.all.avg_damage - data_old_shorted.all.avg_damage
             
             diff_data_dict = {
-                'main' : {
+                'main_diff' : {
                     'winrate': diff_winrate,
                     'avg_damage': diff_avg_damage,
                     'battles': diff_battles
                 },
-                'rating' : {
+
+                'main_session' : {
+                    'winrate': session_winrate,
+                    'avg_damage': session_avg_damage,
+                    'battles': diff_battles
+                },
+
+                'rating_diff' : {
                     'winrate' : r_diff_winrate,
                     'rating' : r_diff_rating,
                     'battles' : r_diff_battles
                 },
-                'tank' : {
+
+                'rating_session' : {
+                    'winrate' : r_session_winrate,
+                    'rating' : r_session_rating,
+                    'battles' : r_diff_battles
+                },
+
+                'tank_diff' : {
                     'winrate' : t_diff_winrate,
                     'avg_damage' : t_diff_avg_damage,
                     'battles' : t_diff_battles
                 },
+
+                'tank_session' : {
+                    'winrate' : t_session_winrate,
+                    'avg_damage' : t_session_avg_damage,
+                    'battles' : t_diff_battles
+                },
+
                 'tank_id' : tank_id,
                 'tank_index' : tank_index
             }
 
         else:
+            _log.debug('Different data generating error: player data not updated')
             raise data_parser.NoDiffData('Different data generating error: player data not updated')
 
     except KeyError as e:
         raise data_parser.DataParserError(e)
-    
+
     else:
         return SesionDiffData(diff_data_dict)
-    
+
 def _search_max_diff_battles_tank(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> tuple[int, int]:
     max_diff_battles = 0
     max_tank_id = None
@@ -160,10 +197,10 @@ def _search_max_diff_battles_tank(data_old: PlayerGlobalData, data_new: PlayerGl
             diff_battles = battles_after - battles_before
         except IndexError:
             continue
-        
+
         if diff_battles == 0:
             continue
-        
+
         if diff_battles > max_diff_battles:
             max_diff_battles = diff_battles
             max_tank_id = j.tank_id

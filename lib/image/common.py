@@ -24,17 +24,35 @@ _log = logger.get_logger(__name__, 'ImageCommonLogger',
                          'logs/image_common.log')
 
 
+from datetime import datetime
+
 class ImageCache():
-    cache: dict = {}
-    cache_ttl: int = 60  # seconds
-    cache_size: int = 40  # items
+    """
+    A class for caching images.
+    """
+
+    cache: dict = {}  # The cache dictionary
+    cache_ttl: int = 60  # The time-to-live for cache items in seconds
+    cache_size: int = 40  # The maximum number of items in the cache
 
     def check_item(self, key):
+        """
+        Check if an item exists in the cache.
+
+        Args:
+            key: The key to check.
+
+        Returns:
+            True if the item exists in the cache, False otherwise.
+        """
         if key in self.cache.keys():
             return True
         return False
 
     def _overflow_handler(self):
+        """
+        Handle cache overflow by removing the oldest items.
+        """
         overflow = len(self.cache.keys()) - self.cache_size
         if overflow > 0:
             for i in range(overflow):
@@ -42,9 +60,24 @@ class ImageCache():
                 self.cache.pop(key)
 
     def del_item(self, key):
+        """
+        Delete an item from the cache.
+
+        Args:
+            key: The key of the item to delete.
+        """
         del self.cache[key]
 
     def check_timestamp(self, key):
+        """
+        Check if the timestamp of an item in the cache is still valid.
+
+        Args:
+            key: The key of the item to check.
+
+        Returns:
+            True if the timestamp is still valid, False otherwise.
+        """
         current_time = datetime.now().timestamp()
         time_stamp = self.cache[key]['timestamp']
         time_delta = current_time - time_stamp
@@ -55,10 +88,28 @@ class ImageCache():
             return True
 
     def add_item(self, item):
+        """
+        Add an item to the cache.
+
+        Args:
+            item: The item to add to the cache.
+        """
         self._overflow_handler()
         self.cache[item['id']] = item
 
     def get_item(self, key):
+        """
+        Get an item from the cache.
+
+        Args:
+            key: The key of the item to get.
+
+        Returns:
+            The item if it exists in the cache and the timestamp is still valid.
+
+        Raises:
+            KeyError: If the item is not in the cache or the timestamp is not valid.
+        """
         if self.check_item(key):
             if self.check_timestamp(key):
                 return self.cache[key]
@@ -67,18 +118,38 @@ class ImageCache():
 
 
 class Fonts():
+    """Class that defines different fonts used in the application."""
+
     roboto = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=28)
+    """The Roboto font with a size of 28."""
+
     roboto_small = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=18)
+    """The Roboto font with a smaller size of 18."""
+
     roboto_small2 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=15)
+    """The Roboto font with an even smaller size of 15."""
+
     point = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=100)
+    """The Roboto font with a large size of 100."""
 
 
 class Leagues():
+    """Class that represents different leagues in the application."""
+
     empty = Image.open('res/image/leagues/no-rating.png', formats=['png'])
+    """Image representing an empty league."""
+
     gold = Image.open('res/image/leagues/gold.png', formats=['png'])
+    """Image representing a gold league."""
+
     platinum = Image.open('res/image/leagues/platinum.png', formats=['png'])
+    """Image representing a platinum league."""
+
     brilliant = Image.open('res/image/leagues/brilliant.png', formats=['png'])
+    """Image representing a brilliant league."""
+
     calibration = Image.open('res/image/leagues/calibr.png', formats=['png'])
+    """Image representing a calibration league."""
 
 
 class Coordinates():
@@ -178,24 +249,71 @@ class Coordinates():
 
 class ValueNormalizer():
     @staticmethod
-    def winrate(val):
+    def winrate(val, enable_null=False):
+        """
+        Normalizes a winrate value.
+        
+        Args:
+            val (float): The winrate value to normalize.
+        
+        Returns:
+            str: The normalized winrate value as a string.
+                  If val is 0, returns '—'.
+                  Otherwise, returns the winrate value formatted as '{:.2f} %'.
+        """
         if val == 0:
-            return '—'
+            if not enable_null:
+                return '—'
+            else:
+                return '0'
 
         return '{:.2f}'.format(val) + ' %'
 
     @staticmethod
-    def ratio(val):
+    def ratio(val, enable_null=False):
+        """
+        Normalizes a ratio value.
+        
+        Args:
+            val (float): The ratio value to normalize.
+        
+        Returns:
+            str: The normalized ratio value as a string.
+                  If val is 0, returns '—'.
+                  Otherwise, returns the ratio value formatted as '{:.2f}'.
+        """
         if val == 0:
-            return '—'
+            if not enable_null:
+                return '—'
+            else:
+                return '0'
 
         return '{:.2f}'.format(val)
 
     @staticmethod
-    def other(val):
+    def other(val, enable_null=False):
+        """
+        Normalizes a value.
+       льное, дательный п. 
+        Args:
+            val (float or int): The value to normalize.
+        
+        Returns:
+            str: The normalized value as a string.
+                  If val is 0, returns '—'.
+                  If val is a string, returns '—'.
+                  If val is between 100,000 and 1,000,000, returns the value divided by 1,000
+                    rounded to 2 decimal places and appended with 'K'.
+                  If val is greater than or equal to 1,000,000, returns the value divided by 1,000,000
+                    rounded to 2 decimal places and appended with 'M'.
+                  Otherwise, returns the value as a string.
+        """
         if val == 0:
-            return '—'
-
+            if not enable_null:
+                return '—'
+            else:
+                return '0'
+        
         if type(val) == str:
             return '—'
 
@@ -209,7 +327,6 @@ class ValueNormalizer():
             return str(val)
 
         return val
-
 
 class Values():
     def __init__(self, data: PlayerGlobalData) -> None:
@@ -244,14 +361,19 @@ class Values():
 
 
 class Colors():
-    blue = (0, 136, 252)
-    yellow = (255, 252, 0)
-    red = (192, 21, 21)
-    purple = (116, 30, 169)
-    orange = (205, 106, 29)
-    green = (30, 255, 38)
-    cyan = (30, 187, 169)
-    grey = (121, 121, 121)
+    """
+    A class that represents different colors.
+    """
+
+    blue = (0, 136, 252)     # Represents the color blue
+    yellow = (255, 252, 0)   # Represents the color yellow
+    red = (192, 21, 21)      # Represents the color red
+    purple = (116, 30, 169)  # Represents the color purple
+    orange = (205, 106, 29)  # Represents the color orange
+    green = (30, 255, 38)    # Represents the color green
+    cyan = (30, 187, 169)    # Represents the color cyan
+    grey = (121, 121, 121)   # Represents the color grey
+    l_grey = (200, 200, 200) # Represents the color light grey
 
 
 @singleton

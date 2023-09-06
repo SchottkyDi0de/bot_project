@@ -26,27 +26,60 @@ _log = logger.get_logger(__name__, 'ImageSessionLogger',
                          'logs/image_session.log')
 
 
+from typing import Dict
+
 class ImageCache():
-    cache: dict = {}
+    """
+    A class that represents an image cache.
+    """
+
+    cache: Dict[str, dict] = {}
     cache_ttl: int = 60  # seconds
     cache_size: int = 40  # items
 
-    def check_item(self, key):
+    def check_item(self, key: str) -> bool:
+        """
+        Check if an item exists in the cache.
+
+        Args:
+            key: The key to check.
+
+        Returns:
+            True if the item exists in the cache, False otherwise.
+        """
         if key in self.cache.keys():
             return True
         return False
 
-    def _overflow_handler(self):
+    def _overflow_handler(self) -> None:
+        """
+        Handle cache overflow by removing oldest items from the cache.
+        """
         overflow = len(self.cache.keys()) - self.cache_size
         if overflow > 0:
             for i in range(overflow):
                 key = list(self.cache.keys())[i]
                 self.cache.pop(key)
 
-    def del_item(self, key):
+    def del_item(self, key: str) -> None:
+        """
+        Delete an item from the cache.
+
+        Args:
+            key: The key of the item to delete.
+        """
         del self.cache[key]
 
-    def check_timestamp(self, key):
+    def check_timestamp(self, key: str) -> bool:
+        """
+        Check if an item in the cache has expired based on its timestamp.
+
+        Args:
+            key: The key of the item to check.
+
+        Returns:
+            True if the item has not expired, False otherwise.
+        """
         current_time = datetime.now().timestamp()
         time_stamp = self.cache[key]['timestamp']
         time_delta = current_time - time_stamp
@@ -56,11 +89,29 @@ class ImageCache():
         else:
             return True
 
-    def add_item(self, item):
+    def add_item(self, item: dict) -> None:
+        """
+        Add an item to the cache, handling cache overflow if necessary.
+
+        Args:
+            item: The item to add to the cache.
+        """
         self._overflow_handler()
         self.cache[item['id']] = item
 
-    def get_item(self, key):
+    def get_item(self, key: str) -> dict:
+        """
+        Get an item from the cache.
+
+        Args:
+            key: The key of the item to get.
+
+        Returns:
+            The item from the cache.
+
+        Raises:
+            KeyError: If the item does not exist in the cache or has expired.
+        """
         if self.check_item(key):
             if self.check_timestamp(key):
                 return self.cache[key]
@@ -69,95 +120,161 @@ class ImageCache():
 
 
 class Fonts():
-    roboto = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=28)
-    roboto_medium = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=22)
-    roboto_small = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=18)
-    roboto_small2 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=15)
-    point = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=100)
+    """A class that holds different font styles for the images."""
+
+    roboto = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=28)  # Roboto font with size 28
+    roboto_25 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=25)  # Roboto font with size 25
+    roboto_medium = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=22)  # Roboto font with size 22
+    roboto_small = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=18)  # Roboto font with size 18
+    roboto_small2 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=15)  # Roboto font with size 15
+    point = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=100)  # Roboto font with size 100
 
 
 class Leagues():
-    empty = Image.open('res/image/leagues/no-rating.png', formats=['png'])
-    gold = Image.open('res/image/leagues/gold.png', formats=['png'])
-    platinum = Image.open('res/image/leagues/platinum.png', formats=['png'])
-    brilliant = Image.open('res/image/leagues/brilliant.png', formats=['png'])
-    calibration = Image.open('res/image/leagues/calibr.png', formats=['png'])
+    """A class that holds different league images."""
+
+    empty = Image.open('res/image/leagues/no-rating.png', formats=['png'])  # Empty league image
+    gold = Image.open('res/image/leagues/gold.png', formats=['png'])  # Gold league image
+    platinum = Image.open('res/image/leagues/platinum.png', formats=['png'])  # Platinum league image
+    brilliant = Image.open('res/image/leagues/brilliant.png', formats=['png'])  # Brilliant league image
+    calibration = Image.open('res/image/leagues/calibr.png', formats=['png'])  # Calibration league image
 
 
 class Coordinates():
     def __init__(self, img_size):
+        """
+        Class to store coordinates for labels and stats in an image.
+
+        Args:
+        - img_size (tuple): Size of the image (width, height)
+        """
         _center_x = img_size[0] // 2
 
+        # Category labels
         self.category_labels = {
-            'main': (_center_x, 95),
-            'rating': (_center_x, 320)
+            'main': (_center_x, 100),  # Main category label
+            'rating': (_center_x, 360)  # Rating category label
         }
+
+        # Main labels
         self.main_labels = {
-            'winrate': (150, 230),
-            'avg_damage': (_center_x, 230),
-            'battles': (553, 230),
+            'winrate': (150, 275),  # Winrate label
+            'avg_damage': (_center_x, 275),  # Average damage label
+            'battles': (553, 275),  # Battles label
         }
+
+        # Main stats
         self.main_stats = {
-            'winrate': (150, 165),
-            'avg_damage': (_center_x, 165),
-            'battles': (553, 165),
+            'winrate': (150, 165),  # Winrate stat
+            'avg_damage': (_center_x, 165),  # Average damage stat
+            'battles': (553, 165),  # Battles stat
         }
+
+        # Main difference stats
         self.main_diff_stats = {
-            'winrate': (150, 195),
-            'avg_damage': (_center_x, 195),
-            'battles': (553, 195),
+            'winrate': (150, 240),  # Winrate difference stat
+            'avg_damage': (_center_x, 240),  # Average damage difference stat
+            'battles': (553, 240),  # Battles difference stat
         }
+
+        # Main session stats
+        self.main_session_stats = {
+            'winrate': (150, 205),  # Winrate session stat
+            'avg_damage': (_center_x, 205),  # Average damage session stat
+            'battles': (553, 205),  # Battles session stat
+        }
+
+        # Rating labels
         self.rating_labels = {
-            'rating_battles': (150, 475),
-            'winrate': (553, 475),
+            'rating_battles': (150, 560),  # Rating battles label
+            'winrate': (553, 560),  # Winrate label
         }
-        self.rating_league_label = _center_x, 470,
-        self.rating_league_icon = _center_x - Leagues.empty.size[0]//2, 340,
+
+        # Rating league label
+        self.rating_league_label = _center_x, 560,
+
+        # Rating league icon
+        self.rating_league_icon = _center_x - Leagues.empty.size[0]//2, 380,
+
+        # Rating stats
         self.rating_stats = {
-            'winrate': (150, 390),
-            'rating': (_center_x, 395),
-            'battles': (553, 390),
+            'winrate': (150, 425),  # Winrate stat
+            'rating': (_center_x, 440),  # Rating stat
+            'battles': (553, 425),  # Battles stat
         }
+
+        # Ratings session stats
+        self.rating_session_stats = {
+            'winrate': (150, 480),  # Winrate session stat
+            'rating': (_center_x, 480),  # Rating session stat
+            'battles': (553, 480),  # Battles session stat
+        }
+
+        # Rating difference stats
         self.rating_diff_stats = {
-            'winrate': (150, 425),
-            'rating': (_center_x, 425),
-            'battles': (553, 425),
+            'winrate': (150, 520),  # Winrate difference stat
+            'rating': (_center_x, 520),  # Rating difference stat
+            'battles': (553, 520),  # Battles difference stat
         }
-        self.tank_name = (_center_x, 570)
+
+        # Tank name
+        self.tank_name = (_center_x, 630)
+
+        # Tank stats
         self.tank_stats = {
-            'winrate': (150, 650),
-            'avg_damage': (_center_x, 650),
-            'battles': (553, 650)
+            'winrate': (150, 710),  # Winrate stat
+            'avg_damage': (_center_x, 710),  # Average damage stat
+            'battles': (553, 710)  # Battles stat
         }
+
+        # Tank difference stats
         self.tank_diff_stats = {
-            'winrate': (150, 690),
-            'avg_damage': (_center_x, 690),
-            'battles': (553, 690)
+            'winrate': (150, 795),  # Winrate difference stat
+            'avg_damage': (_center_x, 795),  # Average damage difference stat
+            'battles': (553, 795)  # Battles difference stat
         }
+
+        # Tank session stats
+        self.tank_session_stats = {
+            'winrate': (150, 755),  # Winrate session stat
+            'avg_damage': (_center_x, 755),  # Average damage session stat
+            'battles': (553, 755)  # Battles session stat
+        }
+
+        # Tank labels
         self.tank_labels = {
-            'winrate': (150, 730),
-            'avg_damage': (_center_x, 730),
-            'battles': (553, 730)
+            'winrate': (150, 830),  # Winrate label
+            'avg_damage': (_center_x, 830),  # Average damage label
+            'battles': (553, 830)  # Battles label
         }
 
 
 class DiffValues():
     def __init__(self, diff_data: SesionDiffData) -> None:
+        """
+        Initializes a DiffValues object with the given diff_data.
+
+        Args:
+            diff_data (SesionDiffData): The diff_data object containing the differences.
+
+        Returns:
+            None
+        """
         self.val_normalizer = ValueNormalizer()
         self.main = {
-            'winrate': self.value_colors(diff_data.main.winrate) + self.val_normalizer.winrate(diff_data.main.winrate),
-            'avg_damage': self.value_colors(diff_data.main.avg_damage) + self.val_normalizer.other(diff_data.main.avg_damage),
-            'battles': self.value_colors(diff_data.main.battles) + self.val_normalizer.other(diff_data.main.battles)
+            'winrate': self.value_colors(diff_data.main_diff.winrate) + self.val_normalizer.winrate(diff_data.main_diff.winrate),
+            'avg_damage': self.value_colors(diff_data.main_diff.avg_damage) + self.val_normalizer.other(diff_data.main_diff.avg_damage),
+            'battles': self.value_colors(diff_data.main_diff.battles) + self.val_normalizer.other(diff_data.main_diff.battles)
         }
         self.rating = {
-            'winrate': self.value_colors(diff_data.rating.winrate) + self.val_normalizer.winrate(diff_data.rating.winrate),
-            'rating': self.value_colors(diff_data.rating.rating) + self.val_normalizer.other(diff_data.rating.rating),
-            'battles': self.value_colors(diff_data.rating.battles) + self.val_normalizer.other(diff_data.rating.battles)
+            'winrate': self.value_colors(diff_data.rating_diff.winrate) + self.val_normalizer.winrate(diff_data.rating_diff.winrate),
+            'rating': self.value_colors(diff_data.rating_diff.rating) + self.val_normalizer.other(diff_data.rating_diff.rating),
+            'battles': self.value_colors(diff_data.rating_diff.battles) + self.val_normalizer.other(diff_data.rating_diff.battles)
         }
         self.tank = {
-            'winrate': self.value_colors(diff_data.tank.winrate) + self.val_normalizer.winrate(diff_data.tank.winrate),
-            'avg_damage': self.value_colors(diff_data.tank.avg_damage) + self.val_normalizer.other(diff_data.tank.avg_damage),
-            'battles': self.value_colors(diff_data.tank.battles) + self.val_normalizer.other(diff_data.tank.battles)
+            'winrate': self.value_colors(diff_data.tank_diff.winrate) + self.val_normalizer.winrate(diff_data.tank_diff.winrate),
+            'avg_damage': self.value_colors(diff_data.tank_diff.avg_damage) + self.val_normalizer.other(diff_data.tank_diff.avg_damage),
+            'battles': self.value_colors(diff_data.tank_diff.battles) + self.val_normalizer.other(diff_data.tank_diff.battles)
         }
 
     def value_colors(self, value: int | float) -> str:
@@ -166,24 +283,58 @@ class DiffValues():
         else:
             return ''
 
+class SessionValues():
+    def __init__(self, session_data: SesionDiffData) -> None:
+        self.val_normalizer = ValueNormalizer()
+        self.main = {
+            'winrate': self.val_normalizer.winrate(session_data.main_session.winrate, True),
+            'avg_damage': self.val_normalizer.other(session_data.main_session.avg_damage, True),
+            'battles': self.val_normalizer.other(session_data.main_session.battles, True)
+        }
+
+        self.rating = {
+            'winrate': self.val_normalizer.winrate(session_data.rating_session.winrate, True),
+            'rating': self.val_normalizer.other(session_data.rating_session.rating, True),
+            'battles': self.val_normalizer.other(session_data.rating_session.battles, True)
+        }
+
+        self.tank = {
+            'winrate': self.val_normalizer.winrate(session_data.tank_session.winrate, True),
+            'avg_damage': self.val_normalizer.other(session_data.tank_session.avg_damage, True),
+            'battles': self.val_normalizer.other(session_data.tank_session.battles, True)
+        }
+
 
 class Values():
     def __init__(self, data: PlayerGlobalData, tank_index: int) -> None:
+        """
+        Initializes a Values object.
+
+        Args:
+            data (PlayerGlobalData): The player's global data.
+            tank_index (int): The index of the tank in the tankopedia_db list.
+        """
         self.val_normalizer = ValueNormalizer()
         stats_data = data.data.statistics
         tank_data = data.data.tank_stats
+
+        # Define the main statistics
         self.main = {
             'winrate': self.val_normalizer.winrate(stats_data.all.winrate),
             'avg_damage': self.val_normalizer.other(stats_data.all.avg_damage),
             'battles': self.val_normalizer.other(stats_data.all.battles)
         }
+
+        # Define the rating statistics
         self.rating = {
             'winrate': self.val_normalizer.winrate(stats_data.rating.winrate),
             'rating': self.val_normalizer.other(stats_data.rating.rating),
             'battles': self.val_normalizer.other(stats_data.rating.battles)
         }
+
+        # Define the tank statistics
         self.tank = {
-            'winrate': self.val_normalizer.winrate(tank_data[tank_index].all.winarte),
+            'winrate': self.val_normalizer.winrate(tank_data[tank_index].all.winrate),
             'avg_damage': self.val_normalizer.other(tank_data[tank_index].all.avg_damage),
             'battles': self.val_normalizer.other(tank_data[tank_index].all.battles)
         }
@@ -194,20 +345,33 @@ class ImageGen():
     cache = ImageCache()
     colors = Colors()
     fonts = Fonts()
-    coord = None
+    session_values = None
     diff_values = None
     diff_data = None
     img_size = None
     leagues = None
     values = None
+    coord = None
     image = None
     data = None
     text = None
 
-    def generate(self, data: PlayerGlobalData, diff_data: SesionDiffData):
+    def generate(self, data: PlayerGlobalData, diff_data: SesionDiffData, test = False):
+        """
+        Generate the image for the given player's session stats.
+
+        Args:
+            test (bool): If True, the image will be displayed for testing purposes.
+            data (PlayerGlobalData): The global data of the player.
+            diff_data (SesionDiffData): The diff data of the session.
+
+        Returns:
+            BytesIO: The image generated for the session stats.
+        """
         self.diff_data = diff_data
         self.data = data
         self.diff_values = DiffValues(diff_data)
+        self.session_values = SessionValues(diff_data)
         self.values = Values(data, self.diff_data.tank_index)
 
         try:
@@ -251,17 +415,23 @@ class ImageGen():
 
         self.draw_rating_stats(img_draw)
         self.draw_rating_icon(img_draw)
+        self.draw_rating_session_stats(img_draw)
 
         self.draw_main_stats(img_draw)
         self.draw_main_diff_stats(img_draw)
+        self.draw_main_session_stats(img_draw)
 
         self.draw_tank_name(img_draw)
         self.draw_tank_stats(img_draw)
         self.draw_tank_diff_stats(img_draw)
+        self.draw_tank_session_stats(img_draw)
         self.draw_tank_labels(img_draw)
 
         return_data = {'img': self.image, 'timestamp': datetime.now(
         ).timestamp(), 'id': str(data.id)}
+
+        if test:
+            self.image.show()
 
         if need_caching:
             self.cache.add_item(return_data)
@@ -326,8 +496,18 @@ class ImageGen():
                 font=self.fonts.roboto_medium,
                 anchor='ma',
                 align='center',
-                fill=self.value_colors(getattr(self.diff_data.main, i))
+                fill=self.value_colors(getattr(self.diff_data.main_diff, i))
             )
+    
+    def draw_main_session_stats(self, img: ImageDraw.ImageDraw):
+        for i in self.coord.main_session_stats.keys():
+            img.text(
+                self.coord.main_session_stats[i],
+                text=self.session_values.main[i],
+                font=self.fonts.roboto_25,
+                anchor='ma',
+                align='center',
+                fill=self.colors.l_grey)
 
     def draw_tank_name(self, img: ImageDraw.ImageDraw):
         img.text(
@@ -359,6 +539,16 @@ class ImageGen():
                 font=self.fonts.roboto,
                 anchor='ma',
                 align='center')
+            
+    def draw_rating_session_stats(self, img: ImageDraw.ImageDraw):
+        for i in self.coord.rating_session_stats.keys():
+            img.text(
+                self.coord.rating_session_stats[i],
+                text=self.session_values.rating[i],
+                font=self.fonts.roboto_25,
+                anchor='ma',
+                align='center',
+                fill=self.colors.l_grey)
 
     def draw_rating_icon(self, img: ImageDraw.ImageDraw) -> None:
         rt_img = self.leagues.empty
@@ -414,7 +604,7 @@ class ImageGen():
                 font=self.fonts.roboto_medium,
                 anchor='ma',
                 align='center',
-                fill=self.value_colors(getattr(self.diff_data.rating, i))
+                fill=self.value_colors(getattr(self.diff_data.rating_diff, i))
             )
         self._rating_label_handler(img)
 
@@ -436,8 +626,18 @@ class ImageGen():
                 font=self.fonts.roboto_medium,
                 anchor='ma',
                 align='center',
-                fill=self.value_colors(getattr(self.diff_data.tank, i))
+                fill=self.value_colors(getattr(self.diff_data.tank_diff, i))
             )
+
+    def draw_tank_session_stats(self, img: ImageDraw.ImageDraw):
+        for i in self.coord.tank_session_stats.keys():
+            img.text(
+                self.coord.tank_session_stats[i],
+                text=self.session_values.tank[i],
+                font=self.fonts.roboto_25,
+                anchor='ma',
+                align='center',
+                fill=self.colors.l_grey)
 
     def draw_tank_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.tank_labels.keys():
@@ -460,16 +660,13 @@ class ImageGen():
         if value == 0:
             return self.colors.grey
 
-    def test(self, data: object, diff_data: object) -> None:
-        return self.generate(data, diff_data)
-
 
 if __name__ == '__main__':
-    from lib.api import async_wotb_api
+
+    from lib.api.async_wotb_api import test
     from lib.data_parser import parse_data
-    data = async_wotb_api.test(
-        'cnJIuHTeP_KPbIca', region='ru', save_to_database=False)
-    diff_data = parse_data.get_session_stats(
-        PlayerGlobalData(PlayersDB().get_member_last_stats(766019191836639273)), data)
-    ImageGen().test(data, diff_data)
-    input()
+
+    data = test('cnJIuHTeP_KPbIca', region='ru')
+    player_stats = PlayerGlobalData(PlayersDB().get_member_last_stats(766019191836639273))
+    session_stats = parse_data.get_session_stats(player_stats, data)
+    ImageGen().generate(data=data, diff_data=session_stats, test=True)

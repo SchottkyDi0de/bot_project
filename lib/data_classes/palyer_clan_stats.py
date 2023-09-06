@@ -8,7 +8,7 @@ class Clan(JSONObject):
     members_count: int = None
     name: str = None
     created_at: int = None
-    tag: int = None
+    tag: str = None
     clan_id: int = None
     emblem_set_id: int = None
 

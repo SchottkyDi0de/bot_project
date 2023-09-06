@@ -104,6 +104,10 @@ setup:
   server_reg: 'Вкажіть регіон пошуку за замовчанням для цього серверу: '
   channel_reg: 'Вкажіть регіон пошуку за замовчанням для цього каналу: '
 
+time_units: # Need translate!!!
+  hours: h.
+  minuts: m.
+
 info:
   info: Інформація
   set_player_ok: 'Інформацію про гравця збережено, тепер можена використовувати `/astats` для автоматичного відображення статистики на основі збережених данных.'
@@ -111,6 +115,12 @@ info:
   session_started: 'Cесію запущено, тепер зіграйте декілька боїв для генерації сесії.'
   player_not_registred_session: 'Для використання сесії збережіть свої дані командою `/set_player`'
   set_lang_ok: 'Localization language changed successfully' # Need translate!!!
+
+session_state: # Need translate!!!
+  started: Session started.
+  not_started: Session not started.
+  player_not_registred: The user is not registered, use `/astats` to save their data.'
+  age: 'Duration of the session: '
 
 errors:
   error: Помилка

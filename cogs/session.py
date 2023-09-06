@@ -14,6 +14,8 @@ from lib.exceptions import api, data_parser, database
 from lib.image.session import ImageGen
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
+from lib.data_classes.api_data import PlayerGlobalData
+from datetime import datetime
 
 _log = get_logger(__name__, 'CogSessionLogger', 'logs/cog_session.log')
 
@@ -81,6 +83,35 @@ class Session(commands.Cog):
                 return
             
             await ctx.respond(embed=InfoMSG().player_not_registred_session)
+        except Exception:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=ErrorMSG().unknown_error)
+
+    @commands.slash_command(guild_only=True, description='None')
+    async def session_state(self, ctx):
+        try:
+            member_registred = self.db.check_member(ctx.author.id)
+            if member_registred:
+                session_started = self.db.check_member_last_stats(ctx.author.id)
+                if session_started:
+                    try:
+                        last_stats = self.db.get_member_last_stats(ctx.author.id)
+                    except database.LastStatsNotFound():
+                        _log.error(traceback.format_exc())
+                        await ctx.respond(embed=ErrorMSG().session_not_found)
+                        return
+                    
+                    session_timestamp = last_stats['timestamp']
+                    time_format = f'%H{Text().get().time_units.hours} : %M{Text().get().time_units.minuts}'
+                    session_age = datetime.utcfromtimestamp(datetime.now().timestamp() - session_timestamp).strftime(time_format)
+
+                    text = f'{Text().get().session_state.started}\n{Text().get().session_state.age}{session_age}'
+                    await ctx.respond(f'```{text}```')
+                else:
+                    await ctx.respond(f'```{Text().get().session_state.not_started}```')
+            else:
+                await ctx.respond(f'```{Text().get().session_state.player_not_registred}```')
+
         except Exception:
             _log.error(traceback.format_exc())
             await ctx.respond(embed=ErrorMSG().unknown_error)
