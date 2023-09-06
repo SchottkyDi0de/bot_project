@@ -61,7 +61,7 @@ class Stats(commands.Cog):
         try:
             await ctx.defer()
             if not self.db.check_member(ctx.author.id):
-                await ctx.respond(embed=self.inf_msg.player_not_registred)
+                await ctx.respond(embed=InfoMSG().player_not_registred)
                 
             else:
                 Text().load(self.sdb.safe_get_lang(ctx.guild.id))
