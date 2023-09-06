@@ -54,7 +54,7 @@ class Stats(commands.Cog):
                 img.close()
         except Exception:
             _log.error(traceback.format_exc())
-            await ctx.respond(embed=ErrorMSG.unknown_error)
+            await ctx.respond(embed=ErrorMSG().unknown_error)
 
     @commands.slash_command(description=Text().data.cmd_description.astats)
     async def astats(self, ctx):
