@@ -443,7 +443,7 @@ class ImageGen():
         for i in self.coord.tank_labels.keys():
             img.text(
                 self.coord.tank_labels[i],
-                text=getattr(self.text.data.for_image, i),
+                text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small,
                 anchor='ma',
                 align='center',

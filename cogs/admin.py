@@ -3,6 +3,7 @@ import traceback
 from discord.ext import commands
 from discord import Bot
 from lib.database.players import PlayersDB
+from lib.database.servers import ServersDB
 from datetime import datetime
 
 _admin_ids = [
@@ -66,9 +67,10 @@ class AdminCommand(commands.Cog):
     @commands.command()
     async def get_servers(self, ctx):
         try:
-            db = PlayersDB()
-            for i in db['servers']:
-                await ctx.author.send(f'```{i}```')
+            sdb = ServersDB()
+            for i, j in enumerate(sdb.db['servers']):
+                await ctx.author.send(f"```Server_id: {sdb.db['servers'][j]['id']}\n Server_name: {sdb.db['servers'][j]['name']}\nSettings: {sdb.db['servers'][j]['settings']}```")
+            await ctx.author.send(f"`count: {i+1}`")
         except Exception:
             await ctx.author.send(f'```{traceback.format_exc()}```')
 

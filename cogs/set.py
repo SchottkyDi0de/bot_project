@@ -59,7 +59,6 @@ class Set(commands.Cog):
         try:
             await ctx.defer()
             Text().load(self.sdb.safe_get_lang(ctx.guild.id))
-            ErrorMSG().update_locale()
 
             self.db.set_member(ctx.author.id, nickname, region)
             await ctx.respond(embed=InfoMSG().set_player_ok)

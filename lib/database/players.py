@@ -91,7 +91,7 @@ class PlayersDB():
             member_id = str(member_id)
             return self.db['members'][member_id]['last_stats']
         else:
-            raise database.DatabaseError('Player last stats not found')
+            raise database.LastStatsNotFound('Player last stats not found')
 
     def _check_data_timestamp(self, member_id: int) -> bool:
         now_time = datetime.now().timestamp()
