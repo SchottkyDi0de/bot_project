@@ -54,14 +54,14 @@ class Stats(commands.Cog):
                 img.close()
         except Exception:
             _log.error(traceback.format_exc())
-            await ctx.respond(embed=ErrorMSG.unknown_error)
+            await ctx.respond(embed=ErrorMSG().unknown_error)
 
     @commands.slash_command(description=Text().data.cmd_description.astats)
     async def astats(self, ctx):
         try:
             await ctx.defer()
             if not self.db.check_member(ctx.author.id):
-                await ctx.respond(embed=self.inf_msg.player_not_registred)
+                await ctx.respond(embed=InfoMSG().player_not_registred)
                 
             else:
                 Text().load(self.sdb.safe_get_lang(ctx.guild.id))
@@ -100,6 +100,6 @@ class Stats(commands.Cog):
         except Exception:
             _log.error(traceback.format_exc())
 
-    
+
 def setup(bot):
     bot.add_cog(Stats(bot))
