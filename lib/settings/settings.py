@@ -1,7 +1,7 @@
 import os
 
 import yaml
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 from lib.data_classes.settings import Settings
 from lib.utils.singleton_factory import singleton
@@ -9,7 +9,7 @@ from lib.utils.singleton_factory import singleton
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 
 
-if os.path.exists(dotenv_path):
+if os.path.exists(find_dotenv()):
     load_dotenv(dotenv_path)
 else:
     raise Exception(

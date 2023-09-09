@@ -19,11 +19,20 @@ class App():
         self.intents.message_content = True
         self.bot = commands.Bot(intents=self.intents, command_prefix=st.default.prefix)
         self.bot.remove_command('help')
+        self.extension_names = []
         
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py"):
-                self.bot.load_extension(f"cogs.{filename[:-3]}")
-        
+                self.extension_names.append(f"cogs.{filename[:-3]}")
+
+    def load_extension(self, extension_names: list):
+        for i in extension_names:
+            self.bot.load_extension(i)
+
+    def reload_extension(self, extension_names: list):
+        for i in extension_names:
+            self.bot.reload_extension(i)
+
     def main(self):
         @self.bot.event
         async def on_ready():
@@ -34,6 +43,7 @@ class App():
             tp.set_tankopedia(tanks_data)
             _log.debug('Tankopedia set successfull\nBot started: %s', self.bot.user)
 
+        self.load_extension(self.extension_names)
         self.bot.run(st.DISCORD_TOKEN)
 
 

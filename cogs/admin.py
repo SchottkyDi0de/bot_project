@@ -1,7 +1,9 @@
+import os
 import traceback
 
 from discord.ext import commands
 from discord import Bot
+from lib.logger.logger import get_logger
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from datetime import datetime
@@ -10,9 +12,17 @@ _admin_ids = [
     766019191836639273
 ]
 
+_log = get_logger(__name__, 'AdminLogger', 'logs/admin.log')
+
+
 class AdminCommand(commands.Cog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+        self.extension_names = []
+
+        for filename in os.listdir("./cogs"):
+            if filename.endswith(".py"):
+                self.extension_names.append(f"cogs.{filename[:-3]}")
 
     @commands.command()
     async def say_direct(self, ctx):
@@ -101,6 +111,22 @@ User_game_nickname: {db['members'][j]['nickname']}\n\
 Expiried at: {expiried_at}```")
             except Exception:
                 await ctx.author.send(f'```{traceback.format_exc()}```')
-            
+
+    @commands.command()
+    async def reload_ext(self, ctx, extension_name: str):
+        if ctx.author.id in _admin_ids:
+            self.bot.load_extension(extension_name)
+            await ctx.author.send(f'`Extension {extension_name} reloaded`')
+            _log.info(f'Extension {extension_name} reloaded!')
+
+    @commands.command()
+    async def reload_ext_all(self, ctx):
+        if ctx.author.id in _admin_ids:
+            for i in self.extension_names:
+                self.bot.reload_extension(i)
+
+            await ctx.author.send('`Extensions reloaded`')
+            _log.info('Extensions reloaded!')
+
 def setup(bot):
     bot.add_cog(AdminCommand(bot))
