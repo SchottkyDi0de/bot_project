@@ -62,7 +62,7 @@ class AdminCommand(commands.Cog):
         except Exception:
             await ctx.author.send(f'```{traceback.format_exc()}```')
         else:
-            ctx.author.senf('`Message sent successfully`')
+            ctx.author.send('`Message sent successfully`')
 
     @commands.command()
     async def get_members(self, ctx):
