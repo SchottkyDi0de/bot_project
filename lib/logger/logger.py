@@ -1,5 +1,5 @@
 import logging
-
+__name__
 
 def get_logger(python_name: str, logger_name: str, file_name: str):
 
