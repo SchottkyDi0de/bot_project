@@ -8,6 +8,7 @@ import json
 
 db = elara.exe('database/players.eldb')
 sdb = elara.exe('database/servers.eldb')
+tdb = elara.exe('database/tankopedia.eldb')
 
 def db_to_json(db_name: str = 'players'):
     db_name += '.json'
@@ -19,6 +20,12 @@ def sdb_to_json(db_name: str = 'servers'):
     db_name += '.json'
     with open(db_name, 'w', encoding='utf-8') as f:
         f.write(json.dumps(sdb['servers'], indent=4))
+        print('database written to json')
+
+def tdb_to_json(db_name: str = 'tankopedia'):
+    db_name += '.json'
+    with open(db_name, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(tdb['root']['data'], indent=4))
         print('database written to json')
 
 def members_count():
@@ -46,4 +53,4 @@ User_game_nickname: {db['members'][j]['nickname']}\n\
 Expiried at: {expiried_at}")
 
 if __name__ == '__main__':
-    db_to_json()
+    tdb_to_json('tankopedia')

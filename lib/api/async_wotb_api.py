@@ -91,11 +91,12 @@ class API():
                 case _:
                     raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
 
-    async def get_tankopedia(self) -> dict:
+    async def get_tankopedia(self, region: str = 'ru') -> dict:
+
         _log.debug('Get tankopedia data')
         url_get_tankopedia = (
-            f'https://api.wotblitz.ru/wotb/encyclopedia/vehicles/\
-            ?application_id=8d8f19528e1f057ddfa045a6d153d91e&fields=\
+            f'https://api.wotblitz.{region}/wotb/encyclopedia/vehicles/\
+            ?application_id={self._get_id_by_reg(region)}&fields=\
             -description%2C+-engines%2C+-guns%2C-next_tanks%2C+-prices_xp%2C+\
             -suspensions%2C+-turrets%2C+-cost%2C+-default_profile%2C+-modules_tree%2C+-images').strip()
         
@@ -106,6 +107,10 @@ class API():
                 
                 data = await response.text()
                 data = json.loads(data)
+
+                if data['status'] == 'error':
+                    _log.error(f'Error get tankopedia, bad response status: \n{data}')
+                    raise api_exceptions.APIError(f'Bad API response status {data}')
                         
                 await session.close()
                 return data

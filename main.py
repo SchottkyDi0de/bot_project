@@ -1,4 +1,5 @@
 import os
+import traceback
 
 from discord import Intents
 from discord.ext import commands
@@ -39,10 +40,23 @@ class App():
             _log.info('Bot started: %s', self.bot.user)
             tp = tankopedia.TanksDB()
             api = async_wotb_api.API()
-            tanks_data = await api.get_tankopedia()
-            tp.set_tankopedia(tanks_data)
-            _log.debug('Tankopedia set successfull\nBot started: %s', self.bot.user)
+            try:
+                tanks_data = await api.get_tankopedia()
+            except Exception:
+                _log.error(traceback.format_exc())
+                try:
+                    tanks_data = await api.get_tankopedia('eu')
+                except Exception:
+                    _log.error(traceback.format_exc())
+                    _log.error('Get tankopedia failed!')
+                    quit(1)
+                else:
+                    tp.set_tankopedia(tanks_data)
+            else:
+                tp.set_tankopedia(tanks_data)
 
+            _log.debug('Tankopedia set successfull\nBot started: %s', self.bot.user)
+            
         self.load_extension(self.extension_names)
         self.bot.run(st.DISCORD_TOKEN)
 
