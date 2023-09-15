@@ -424,6 +424,7 @@ class ImageGen():
         self.coord = Coordinates(self.img_size)
 
         img_draw = ImageDraw.Draw(self.image)
+
         self.draw_category_labels(img_draw)
         self.draw_medals_labels(img_draw)
         self.draw_common_labels(img_draw)
@@ -486,7 +487,7 @@ class ImageGen():
             text=f'ID: {str(self.data.id)}',
             font=self.fonts.roboto_small2,
             anchor='ma',
-            fill=self.colors.grey)
+            fill=self.colors.l_grey)
 
     def draw_category_labels(self, img: object):
         for i in self.coord.category_labels.keys():

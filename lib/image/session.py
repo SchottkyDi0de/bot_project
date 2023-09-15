@@ -456,7 +456,7 @@ class ImageGen():
             text=f'ID: {str(self.data.id)}',
             font=self.fonts.roboto_small2,
             anchor='ma',
-            fill=self.colors.grey)
+            fill=self.colors.l_grey)
 
     def draw_category_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.category_labels.keys():
