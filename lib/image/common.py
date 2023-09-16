@@ -3,7 +3,6 @@
 со статистикой.
 '''
 if __name__ == '__main__':
-
     import os
     import sys
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
@@ -131,6 +130,8 @@ class Fonts():
 
     point = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=100)
     """The Roboto font with a large size of 100."""
+
+    roboro_icon = ImageFont.truetype('res/fonts/Roboto-icons.ttf', size=28)
 
 
 class Leagues():
@@ -478,8 +479,8 @@ class ImageGen():
     def draw_nickname(self, img: Image.Image):
         img.text(
             (self.img_size[0]//2, 20),
-            text=self.data.data.name_and_tag,
-            font=self.fonts.roboto,
+            text=self.data.data.name_and_tag + 'ž  ſ Ž ż',
+            font=self.fonts.roboro_icon,
             anchor='ma',
             fill=self.colors.blue)
         img.text(
@@ -793,8 +794,8 @@ class ImageGen():
                 return self.colors.purple
 
     def test(self):
-        import api.async_wotb_api as async_wotb_api
-        self.generate_session(async_wotb_api.test('L3oN1_'), )
+        import lib.api.async_wotb_api as async_wotb_api
+        self.generate(async_wotb_api.test('rtx4080', 'eu'), )
         self.image.show()
         self.image.close()
         quit()

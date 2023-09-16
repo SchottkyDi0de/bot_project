@@ -127,6 +127,7 @@ class Fonts():
     roboto_medium = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=22)  # Roboto font with size 22
     roboto_small = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=18)  # Roboto font with size 18
     roboto_small2 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=15)  # Roboto font with size 15
+    roboto_icons = ImageFont.truetype('res/fonts/Roboto-icons.ttf', size=22)  # Roboto font with size 28
     point = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=100)  # Roboto font with size 100
 
 
@@ -374,9 +375,12 @@ class ImageGen():
         self.session_values = SessionValues(diff_data)
         self.values = Values(data, self.diff_data.tank_index)
 
+        tank_type = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['type']
+        tank_tier = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['tier']
+
         try:
-            self.curr_tank_name = TanksDB().get_tank_by_id(
-                str(self.diff_data.tank_id))['name']
+            self.curr_tank_name = self.tank_type_handler(tank_type) + TanksDB().get_tank_by_id(
+                str(self.diff_data.tank_id))['name'] + self.tank_tier_handler(tank_tier)
         except TankNotFoundInTankopedia:
             self.curr_tank_name = 'Unknown'
 
@@ -443,6 +447,46 @@ class ImageGen():
         _log.debug('Image was sent in %s sec.', round(time() - strt_time, 4))
 
         return bin_image
+    
+    def tank_type_handler(self, tank_type: str):
+        match tank_type:
+            case 'heavyTank':
+                return 'ﬄ • '
+            case 'mediumTank':
+                return 'ﬃ • '
+            case 'lightTank':
+                return 'ﬂ • '
+            case 'AT-SPG':
+                return 'ﬁ • '
+            case _:
+                _log.error(f'Ignoring Exception: Invalid tank type: {tank_type}')
+                return '� • '
+            
+    def tank_tier_handler(self, tier: int):
+        match tier:
+            case 1:
+                return ' • I'
+            case 2:
+                return ' • II'
+            case 3:
+                return ' • III'
+            case 4:
+                return ' • IV'
+            case 5:
+                return ' • V'
+            case 6:
+                return ' • VI'
+            case 7:
+                return ' • VII'
+            case 8:
+                return ' • VIII'
+            case 9:
+                return ' • IX'
+            case 10:
+                return ' • X'
+            case _:
+                _log.error(f'Invalid tank tier: {tier}')
+                return ' • ?'
 
     def draw_nickname(self, img: ImageDraw.ImageDraw):
         img.text(
@@ -513,7 +557,7 @@ class ImageGen():
         img.text(
             self.coord.tank_name,
             text=self.curr_tank_name,
-            font=self.fonts.roboto_medium,
+            font=self.fonts.roboto_icons,
             anchor='ma',
             align='center',
             fill=Colors.blue
@@ -666,7 +710,7 @@ if __name__ == '__main__':
     from lib.api.async_wotb_api import test
     from lib.data_parser import parse_data
 
-    data = test('cnJIuHTeP_KPbIca', region='ru')
-    player_stats = PlayerGlobalData(PlayersDB().get_member_last_stats(766019191836639273))
+    data = test('VegaS_202', region='eu')
+    player_stats = PlayerGlobalData(PlayersDB().get_member_last_stats(683407510820225098))
     session_stats = parse_data.get_session_stats(player_stats, data)
     ImageGen().generate(data=data, diff_data=session_stats, test=True)
