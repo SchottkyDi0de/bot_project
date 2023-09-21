@@ -479,7 +479,7 @@ class ImageGen():
     def draw_nickname(self, img: Image.Image):
         img.text(
             (self.img_size[0]//2, 20),
-            text=self.data.data.name_and_tag + 'ž  ſ Ž ż',
+            text=self.data.data.name_and_tag,
             font=self.fonts.roboro_icon,
             anchor='ma',
             fill=self.colors.blue)
