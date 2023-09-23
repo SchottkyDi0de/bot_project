@@ -32,3 +32,23 @@ class InfoMSG():
             description=text.info.set_lang_ok,
             color=Colour.green()
         )
+        self.help_syntax = Embed(
+            title=text.info.info,
+            description=text.help.syntax,
+            colour=Colour.blurple()
+        )
+        self.help_setup = Embed(
+            title=text.info.info,
+            description=text.help.setup,
+            colour=Colour.blurple()
+        )
+        self.help_statistics = Embed(
+            title=text.info.info,
+            description=text.help.statistics,
+            colour=Colour.blurple()
+        )
+        self.help_session = Embed(
+            title=text.info.info,
+            description=text.help.session,
+            colour=Colour.blurple()
+        )

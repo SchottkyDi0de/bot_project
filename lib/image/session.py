@@ -485,7 +485,7 @@ class ImageGen():
             case 10:
                 return ' • X'
             case _:
-                _log.error(f'Invalid tank tier: {tier}')
+                _log.error(f'Ignoring Exception: Invalid tank tier: {tier}')
                 return ' • ?'
 
     def draw_nickname(self, img: ImageDraw.ImageDraw):

@@ -80,6 +80,8 @@ cmd_description:
   start_session: Запуск сесії.
   stop_session: Зупинка сесії.
   lang: Мова локалізації
+  help: Help
+  help_types: Help category
 
 common:
   nickname: Нікнейм
@@ -139,5 +141,65 @@ errors:
 
 help:
   help: Допомога
-
-  common: Coming soon...
+  types: [syntax, setup, statistics, session]:
+  syntax: |-
+    > ***Command syntax***:
+    > ` `/command [arg_1] <arg_2> <arg_3[]>`
+    > - Some commands have arguments, which can be mandatory or optional, and can also be a list of ready-made parameters to choose from.
+    > `/command [arg]`
+    > - If an argument is specified in square brackets `[]`, it is mandatory.
+    > - If the argument is specified in triangle brackets `<>`, it is optional.
+    > - Arguments with square brackets after the name are a list.
+    > ` `[arg_name[]] <arg_name[]> - lists`
+    > ``[arg_name] <arg_name> - default``
+    > - They can also be mandatory or optional.
+    > 
+    > ***Example:***
+    > ` `/stats [nickname] [region[]]`
+    > - The `nickname` argument is mandatory.
+    > - The `region[]` argument is also mandatory, and contains a list of regions from which to select 1.
+  setup: |-
+    **Setup commands:**
+    > 1: `/set_lang [lang[]]`
+    > ***Arguments:***
+    > - `lang[]` List of available languages (string)
+    > ***What does:***
+    > - Sets the localization language for the bot on the server in which the command was called.
+    > 
+    > 2: `/set_player [nickname] [region[]]`
+    > ***Arguments:***
+    > - `nickname` The nickname of the player to save (string)
+    > - `region[]` Region to search (string)
+    > 3: ***What it does:***
+    > - Records the player in the database for later use in sessions and for the team 
+    > `/astats`
+  statistics: |-
+    > **Commands to call statistics:**
+    > 1: `/stats [nickname] [region[]]`
+    > ***Arguments:***
+    > - `nickname` The nickname of the player to search for (string)
+    > - `region[]` Region to search for (string)
+    > ***What does:***
+    > - Searches for a player with the given nickname in the given region. 
+    > If the player is found, a picture with detailed statistics is returned.
+    > Otherwise, an error is returned.
+    > 
+    > 2: `/astats
+    > ***What it does:***
+    > - Same as `/stats` but you don't need to enter the data, it is taken from the database after registering it with the command 
+    > `/set_player
+  session: |-
+    > Game session management commands:
+    > 1: `/start_session`.
+    > ***What it does:***
+    > - Starts a session, after starting a session you need to play a few fights to generate a session.
+    > To use, you need to save your data with `/set_player`
+    > 
+    > 2: `/get_session`
+    > ***What it does:***
+    > - Generates a player session and sends a picture of session stats in response.
+    > To use, save your data with `/set_player` and start the session with `/start_session`
+    > 
+    > 3: `/session_state`
+    > ***What it does:***
+    > - Displays whether the session is active and the time the session has been active.
