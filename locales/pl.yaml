@@ -137,7 +137,7 @@ errors:
 
 help:
   help: Pomoc
-  types: [syntax, setup, statistics, session]
+  types: [syntax, setup, statistics, session, all]
   syntax: |-
     > ***Command syntax***:
     > `/command [arg_1] <arg_2> <arg_3[]>`

@@ -52,3 +52,8 @@ class InfoMSG():
             description=text.help.session,
             colour=Colour.blurple()
         )
+        self.help_send_ok = Embed(
+            title=text.info.info,
+            description=text.help.send_ok,
+            colour=Colour.green()
+        )

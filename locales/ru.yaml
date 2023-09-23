@@ -142,7 +142,8 @@ errors:
 
 help:
   help: Помощь
-  types: [syntax, setup, statistics, session]
+  send_ok: Помощь была отправлена.
+  types: [syntax, setup, statistics, session, all]
   syntax: |-
     > ***Синтаксис команд***:
     > `/command [arg_1] <arg_2> <arg_3[]>`
