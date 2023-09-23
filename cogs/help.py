@@ -21,8 +21,8 @@ class Help(commands.Cog):
         ctx,
         h_type: Option(
             str,
-            description=Text().data.cmd_description.help_types,
-            choices=Text().data.help.types,
+            description=Text().get().cmd_description.help_types,
+            choices=Text().get().help.types,
             required=True
             )
         ):
