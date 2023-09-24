@@ -182,8 +182,7 @@ help:
     > 
     > 2: `/astats`
     > ***What it does:***
-    > - Same as `/stats` but you don't need to enter the data, it is taken from the database after registering it with the command 
-    > `/set_player`
+    > - Same as `/stats` but you don't need to enter the data, it is taken from the database after registering it with the command `/set_player`
   session: |-
     > Game session management commands:
     > 1: `/start_session`.

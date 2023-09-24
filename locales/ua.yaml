@@ -171,8 +171,7 @@ help:
     > - `nickname` The nickname of the player to save (string)
     > - `region[]` Region to search (string)
     > 3: ***What it does:***
-    > - Records the player in the database for later use in sessions and for the team 
-    > `/astats`
+    > - Records the player in the database for later use in sessions and for the team `/astats`
   statistics: |-
     > **Commands to call statistics:**
     > 1: `/stats [nickname] [region[]]`
