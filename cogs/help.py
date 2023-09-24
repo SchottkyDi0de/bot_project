@@ -5,12 +5,13 @@ from discord.ext import commands
 
 from lib.locale.locale import Text
 from lib.embeds.errors import ErrorMSG
+from lib.embeds.info import InfoMSG
 from lib.logger.logger import get_logger
 
 _logger = get_logger(__name__, 'CogHelpLogger', 'logs/cog_help.log')
 
 
-class Help():
+class Help(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
 
@@ -21,19 +22,39 @@ class Help():
         h_type: Option(
             str,
             description=Text().data.cmd_description.help_types,
-            choices=Text().data.common.help.types,
+            choices=Text().data.help.types,
             required=True
             )
         ):
         try:
             try:
-                await ctx.member.send(embed=getattr(Text().get(), h_type))
+                match h_type:
+                    case 'syntax':
+                        await ctx.user.send(embed=InfoMSG().help_syntax)
+                    case 'setup':
+                        await ctx.user.send(embed=InfoMSG().help_setup)
+                    case 'statistics':
+                        await ctx.user.send(embed=InfoMSG().help_statistics)
+                    case 'session':
+                        await ctx.user.send(embed=InfoMSG().help_session)
+                    case _:
+                        await ctx.respond(embed=ErrorMSG().unknown_error)
             except:
-                await ctx.respond(embed=getattr(Text().get(), h_type))
+                match h_type:
+                    case 'syntax':
+                        await ctx.respond(embed=InfoMSG().help_syntax)
+                    case 'setup':
+                        await ctx.respond(embed=InfoMSG().help_setup)
+                    case 'statistics':
+                        await ctx.respond(embed=InfoMSG().help_statistics)
+                    case 'session':
+                        await ctx.respond(embed=InfoMSG().help_session)
+                    case _:
+                        await ctx.respond(embed=ErrorMSG().unknown_error)
         except:
             _logger.error(traceback.format_exc())
             await ctx.respond(embed=ErrorMSG().unknown_error)
 
 
 def setup(bot):
-    bot.add_cog(Help())
+    bot.add_cog(Help(bot))

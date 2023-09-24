@@ -142,7 +142,7 @@ errors:
 
 help:
   help: Помощь
-  types: [syntax, setup, statistics, session]:
+  types: [syntax, setup, statistics, session]
   syntax: |-
     > ***Синтаксис команд***:
     > `/command [arg_1] <arg_2> <arg_3[]>`
