@@ -8,6 +8,8 @@ from lib.api import async_wotb_api
 from lib.database import tankopedia
 from lib.logger import logger
 from lib.settings.settings import SttObject
+from lib.embeds.errors import ErrorMSG
+from lib.exceptions.blacklist import UserBanned
 
 _log = logger.get_logger(__name__, 'MainLogger', 'logs/main.log')
 
@@ -56,7 +58,7 @@ class App():
                 tp.set_tankopedia(tanks_data)
 
             _log.debug('Tankopedia set successfull\nBot started: %s', self.bot.user)
-            
+
         self.load_extension(self.extension_names)
         self.bot.run(st.DISCORD_TOKEN)
 

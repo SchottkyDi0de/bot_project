@@ -127,6 +127,7 @@ errors:
   no_battles: Za mało bitew, by wygenerować statystyki!
   player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
   api_error: Wewnętrzny błąd API
+  user_banned: User banned!
   unknown_error: Nieznany błąd.
   incorrect_name: |-
     Nieprawidłowy pseudonim.

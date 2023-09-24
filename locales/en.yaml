@@ -128,6 +128,7 @@ errors:
   no_battles: Not enough battles to generate statistics!
   player_not_found: No player with this nickname has been found.
   api_error: Internal API error
+  user_banned: User banned!
   unknown_error: Unknown error.
   incorrect_name: |-
     Incorrect nickname.

@@ -3,7 +3,7 @@ from asyncio import sleep
 
 from discord import Option, errors
 from discord.ext import commands
-
+from lib.blacklist.blacklist import blacklist
 from lib.database.servers import ServersDB
 from lib.locale.locale import Text
 from lib.embeds.errors import ErrorMSG
@@ -29,7 +29,12 @@ class Help(commands.Cog):
             required=True
             )
         ):
+        if ctx.author.id in blacklist:
+            await ctx.respond(embed=ErrorMSG().user_banned)
+            return
+        
         try:
+        
             Text().load(self.sdb.safe_get_lang(ctx.guild.id))
             await ctx.defer()
             try:

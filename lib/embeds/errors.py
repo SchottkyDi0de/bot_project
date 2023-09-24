@@ -52,3 +52,8 @@ class ErrorMSG():
             description=text.errors.session_not_updated,
             colour=Colour.red()
         )
+        self.user_banned = Embed(
+            title=text.errors.error,
+            description=text.errors.user_banned,
+            colour=Colour.red()
+        )

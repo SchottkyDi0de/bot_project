@@ -11,6 +11,7 @@ from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
+from lib.blacklist.blacklist import blacklist
 from lib.logger.logger import get_logger
 
 _log = get_logger(__name__, 'CogStatsLogger', 'logs/cog_stats.log')
@@ -27,7 +28,7 @@ class Stats(commands.Cog):
     @commands.slash_command(description=Text().data.cmd_description.stats)
     async def stats(
             self, 
-            ctx,
+            ctx: commands.Context,
             nickname: Option(
                 str,
                 description=Text().data.cmd_description.nickname,
@@ -43,6 +44,10 @@ class Stats(commands.Cog):
             ),
         ):
         try:
+            if ctx.author.id in blacklist:
+                await ctx.respond(embed=ErrorMSG().user_banned)
+                return
+
             await ctx.defer()
             Text().load(self.sdb.safe_get_lang(ctx.guild.id))
             
@@ -59,6 +64,10 @@ class Stats(commands.Cog):
     @commands.slash_command(description=Text().data.cmd_description.astats)
     async def astats(self, ctx):
         try:
+            if ctx.author.id in blacklist:
+                await ctx.respond(embed=ErrorMSG().user_banned)
+                return
+
             await ctx.defer()
             if not self.db.check_member(ctx.author.id):
                 await ctx.respond(embed=InfoMSG().player_not_registred)

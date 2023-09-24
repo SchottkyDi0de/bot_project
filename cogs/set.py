@@ -9,6 +9,7 @@ from lib.database.servers import ServersDB
 from lib.locale.locale import Text
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
+from lib.blacklist.blacklist import blacklist
 from lib.logger.logger import get_logger
 from lib.settings.settings import SttObject
 
@@ -31,7 +32,12 @@ class Set(commands.Cog):
             )
         ):
 
+        if ctx.author.id in blacklist:
+            await ctx.respond(embed=ErrorMSG().user_banned)
+            return
+        
         Text().load(lang)
+        
         try:
             self.sdb.set_lang(ctx.guild.id, lang, ctx.guild.name)
             await ctx.respond(embed=InfoMSG().set_lang_ok)
@@ -56,7 +62,11 @@ class Set(commands.Cog):
             )
         ):
 
+        if ctx.author.id in blacklist:
+            await ctx.respond(embed=ErrorMSG().user_banned)
+            return
         try:
+            
             await ctx.defer()
             Text().load(self.sdb.safe_get_lang(ctx.guild.id))
 
