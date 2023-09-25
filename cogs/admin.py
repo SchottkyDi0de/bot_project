@@ -48,28 +48,41 @@ class AdminCommand(commands.Cog):
             except Exception:
                 await ctx.author.send(f'```{traceback.format_exc()}```')
 
+    async def show_blacklist(self, ctx: commands.Context):
+        msg = ctx.message.content
+        if len(msg) == 2:
+            if msg[1].lower() == 'this':
+                await ctx.reply('```' + '\n'.join(blacklist.data) + '```')
+            else:
+                await ctx.author.send('```' + '\n'.join(blacklist.data) + '```')
+            return
+        await ctx.send('```' + '\n'.join(blacklist.data) + '```')
+
     @commands.command()
     async def blacklist(self, ctx: commands.Context):
         if ctx.author.id in _admin_ids:
             try:
-                msg = ctx.message.content.split('->')
+                msg = ctx.message.content.split(' ')
                 if len(msg) > 3:
-                    await ctx.author.send('```Uncorrect command format\n!blacklist-> [ID: Integer]-> {Add|Remove: String}```')
+                    await ctx.author.send('```Uncorrect command format\n!blacklist [ID: Integer] {Add|Remove: Option(String)}```')
                     return
                 
                 elif len(msg) == 3:
                     if msg[2].lower == 'add':
                         blacklist.data.append(msg[1])
+                        ctx.author.send(f'`{msg[1]} added in blacklist`')
                     elif msg[2].lower == 'remove':
                         blacklist.data.remove(msg[1])
+                        ctx.author.send(f'`{msg[1]} removed in blacklist`')
                     blacklist.reload()
                 
                 elif len(msg) == 2:
                     blacklist.data.append(msg[1])
+                    ctx.author.send(f'`{msg[1]} added in blacklist`)')
                     blacklist.reload()
                 
                 else:
-                    await ctx.author.send('```Uncorrect command format\n!blacklist-> [ID: Integer]-> {Add|Remove: String}```')
+                    await ctx.author.send('```Uncorrect command format\n!blacklist [ID: Integer] {Add|Remove: String}```')
                         
                 text = msg[1]
                 await ctx.guild.ban(user=ctx.author, reason=text)
