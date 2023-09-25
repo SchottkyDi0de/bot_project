@@ -11,7 +11,7 @@ from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.blacklist.blacklist import blacklist
+from lib.blacklist.blacklist import data
 from lib.logger.logger import get_logger
 
 _log = get_logger(__name__, 'CogStatsLogger', 'logs/cog_stats.log')
@@ -44,7 +44,7 @@ class Stats(commands.Cog):
             ),
         ):
         try:
-            if ctx.author.id in blacklist:
+            if ctx.author.id in data:
                 await ctx.respond(embed=ErrorMSG().user_banned)
                 return
 
@@ -64,7 +64,7 @@ class Stats(commands.Cog):
     @commands.slash_command(description=Text().data.cmd_description.astats)
     async def astats(self, ctx):
         try:
-            if ctx.author.id in blacklist:
+            if ctx.author.id in data:
                 await ctx.respond(embed=ErrorMSG().user_banned)
                 return
 

@@ -9,7 +9,7 @@ from lib.database.servers import ServersDB
 from lib.locale.locale import Text
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
-from lib.blacklist.blacklist import blacklist
+from lib.blacklist.blacklist import data
 from lib.logger.logger import get_logger
 from lib.settings.settings import SttObject
 
@@ -32,7 +32,7 @@ class Set(commands.Cog):
             )
         ):
 
-        if ctx.author.id in blacklist:
+        if ctx.author.id in data:
             await ctx.respond(embed=ErrorMSG().user_banned)
             return
         
@@ -62,7 +62,7 @@ class Set(commands.Cog):
             )
         ):
 
-        if ctx.author.id in blacklist:
+        if ctx.author.id in data:
             await ctx.respond(embed=ErrorMSG().user_banned)
             return
         try:

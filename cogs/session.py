@@ -13,7 +13,7 @@ from lib.embeds.info import InfoMSG
 from lib.exceptions import api, data_parser, database
 from lib.image.session import ImageGen
 from lib.locale.locale import Text
-from lib.blacklist.blacklist import blacklist
+from lib.blacklist.blacklist import data
 from lib.logger.logger import get_logger
 from lib.data_classes.api_data import PlayerGlobalData
 from datetime import datetime
@@ -30,7 +30,7 @@ class Session(commands.Cog):
         
     @commands.slash_command(guild_only=True, description=Text().data.cmd_description.start_session)
     async def start_session(self, ctx):
-        if ctx.author.id in blacklist:
+        if ctx.author.id in data:
             await ctx.respond(embed=ErrorMSG().user_banned)
             return
         
@@ -57,7 +57,7 @@ class Session(commands.Cog):
 
     @commands.slash_command(guild_only=True, description=Text().get().cmd_description.get_session)
     async def get_session(self, ctx):
-        if ctx.author.id in blacklist:
+        if ctx.author.id in data:
             await ctx.respond(embed=ErrorMSG().user_banned)
             return
         
@@ -97,7 +97,7 @@ class Session(commands.Cog):
 
     @commands.slash_command(guild_only=True, description='None')
     async def session_state(self, ctx):
-        if ctx.author.id in blacklist:
+        if ctx.author.id in data:
             await ctx.respond(embed=ErrorMSG().user_banned)
             return
         
