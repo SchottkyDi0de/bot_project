@@ -48,15 +48,19 @@ class AdminCommand(commands.Cog):
             except Exception:
                 await ctx.author.send(f'```{traceback.format_exc()}```')
 
+    @commands.command()
     async def show_blacklist(self, ctx: commands.Context):
         msg = ctx.message.content
         if len(msg) == 2:
             if msg[1].lower() == 'this':
-                await ctx.reply('```' + '\n'.join(blacklist.data) + '```')
+                text = ''
+                for i in blacklist.data:
+                    text += f'<@{str(i)}\n>'
+                ctx.reply(text)
             else:
-                await ctx.author.send('```' + '\n'.join(blacklist.data) + '```')
+                await ctx.author.send(text)
             return
-        await ctx.send('```' + '\n'.join(blacklist.data) + '```')
+        await ctx.author.send(f'<@{str(i)}\n>')
 
     @commands.command()
     async def blacklist(self, ctx: commands.Context):
@@ -70,15 +74,15 @@ class AdminCommand(commands.Cog):
                 elif len(msg) == 3:
                     if msg[2].lower == 'add':
                         blacklist.data.append(msg[1])
-                        ctx.author.send(f'`{msg[1]} added in blacklist`')
+                        await ctx.author.send(f'`{msg[1]} added in blacklist`')
                     elif msg[2].lower == 'remove':
                         blacklist.data.remove(msg[1])
-                        ctx.author.send(f'`{msg[1]} removed in blacklist`')
+                        await ctx.author.send(f'`{msg[1]} removed in blacklist`')
                     blacklist.reload()
                 
                 elif len(msg) == 2:
                     blacklist.data.append(msg[1])
-                    ctx.author.send(f'`{msg[1]} added in blacklist`)')
+                    await ctx.author.send(f'`{msg[1]} added in blacklist`)')
                     blacklist.reload()
                 
                 else:

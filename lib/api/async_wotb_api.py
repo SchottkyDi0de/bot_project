@@ -217,27 +217,32 @@ class API():
                     &account_id={account_id}\
                     &extra=clan').strip()
                 
-                async with session.get(url_get_clan_stats) as response:
-                    if response.status != 200:
-                        raise api_exceptions.APIError(f'Bad response code {response.status}')
-                    
-                    clan_tag = None
+                try:
+                    async with session.get(url_get_clan_stats) as response:
+                        if response.status != 200:
+                            raise api_exceptions.APIError(f'Bad response code {response.status}')
+                        
+                        clan_tag = None
 
-                    data = await response.text()
-                    data = json.loads(data)
+                        data = await response.text()
+                        data = json.loads(data)
 
-                    if data['status'] != 'ok':
-                        raise api_exceptions.APIError(f'Bad API response status {data}')
-                    
-                    try:
-                        clan_tag = data['data'][str(account_id)]['clan']['tag']
-                    except AttributeError as e:
-                        raise api_exceptions.APIError(e) 
-                    else:
-                        data['data'] = data['data'][str(account_id)]
-                        data = ClanStats(data)
-                        player.data.clan_tag = clan_tag
-                        player.data.clan_stats = data.data.clan
+                        if data['status'] != 'ok':
+                            raise api_exceptions.APIError(f'Bad API response status {data}')
+                        
+                        try:
+                            clan_tag = data['data'][str(account_id)]['clan']['tag']
+                        except AttributeError as e:
+                            raise api_exceptions.APIError(e) 
+                        else:
+                            data['data'] = data['data'][str(account_id)]
+                            data = ClanStats(data)
+                            player.data.clan_tag = clan_tag
+                            player.data.clan_stats = data.data.clan
+
+                except Exception:
+                    player.data.clan_tag = ''
+                    player.data.clan_stats = None
 
                 url_get_tanks_stats = \
                         f'https://api.wotblitz.{self._reg_normalizer(region)}/wotb/tanks/stats/\
