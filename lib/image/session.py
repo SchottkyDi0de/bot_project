@@ -341,6 +341,13 @@ class Values():
         }
 
 
+class Flags():
+    eu = Image.open('res/image/flags/eu.png', formats=['png'])
+    ruby = Image.open('res/image/flags/ruby.png', formats=['png'])
+    usa = Image.open('res/image/flags/usa.png', formats=['png'])
+    china = Image.open('res/image/flags/china.png', formats=['png'])
+
+
 @singleton
 class ImageGen():
     cache = ImageCache()
@@ -460,7 +467,7 @@ class ImageGen():
                 return 'ﬁ • '
             case _:
                 _log.error(f'Ignoring Exception: Invalid tank type: {tank_type}')
-                return '� • '
+                return '� • ' 
             
     def tank_tier_handler(self, tier: int):
         match tier:
@@ -693,6 +700,18 @@ class ImageGen():
                 align='center',
                 fill=self.colors.blue
             )
+    
+    def draw_flag(self):
+        # self.data.region = 'asia' - Only for test
+        match self.data.region:
+            case 'ru':
+                self.image.paste(self.flags.ruby, (10, 10), self.flags.ruby)
+            case 'eu':
+                self.image.paste(self.flags.eu, (10, 10), self.flags.eu)
+            case 'com':
+                self.image.paste(self.flags.usa, (10, 10), self.flags.usa)
+            case 'asia':
+                self.image.paste(self.flags.china, (10, 10), self.flags.china)
 
     def value_colors(self, value: int | float) -> tuple:
         if type(value) is str:

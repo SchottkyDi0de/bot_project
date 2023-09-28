@@ -71,27 +71,6 @@ class API():
     def __init__(self) -> None:
         self.account_id = 0
         self.cache = APICache()
-
-    def _url_by_reg(self, reg):
-        if reg in ['ru', 'eu', 'asia']:
-            match reg:
-                case 'ru':
-                    return 'papi.tanksblitz.ru'
-                case 'eu':
-                    return 'api.wotblitz.eu'
-                case 'asia':
-                    return 'api.wotblitz.asia'
-                case _:
-                    raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
-            return reg
-        if reg in ['na', 'as']:
-            match reg:
-                case 'na':
-                    return 'api.wotblitz.com'
-                case 'as':
-                    return 'api.wotblitz.asia'
-                case _:
-                    raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
     
     def _get_id_by_reg(self, reg: str):
         reg = reg.lower()
@@ -111,12 +90,26 @@ class API():
                     return 'asia'
                 case _:
                     raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
+                
+    def _get_url_by_reg(self, reg: str):
+        reg = self._reg_normalizer(reg)
+        match reg:
+            case 'ru':
+                return 'papi.tanksblitz.ru'
+            case 'eu':
+                return 'api.wotblitz.eu'
+            case 'asia':
+                return 'api.wotblitz.asia'
+            case 'com':
+                return 'api.wotblitz.com'
+            case _:
+                raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
 
     async def get_tankopedia(self, region: str = 'ru') -> dict:
 
         _log.debug('Get tankopedia data')
         url_get_tankopedia = (
-            f'https://api.wotblitz.{region}/wotb/encyclopedia/vehicles/\
+            f'https://api.wotblitz.eu/wotb/encyclopedia/vehicles/\
             ?application_id={self._get_id_by_reg(region)}&fields=\
             -description%2C+-engines%2C+-guns%2C-next_tanks%2C+-prices_xp%2C+\
             -suspensions%2C+-turrets%2C+-cost%2C+-default_profile%2C+-modules_tree%2C+-images').strip()
@@ -153,7 +146,7 @@ class API():
         
         self.account_id = 0
         url_get_id = (
-            f'https://{self._url_by_reg(region)}/wotb/account/list/\
+            f'https://{self._get_url_by_reg(region)}/wotb/account/list/\
             ?application_id={self._get_id_by_reg(region)}\
             &search={search}\
             &type={"exact" if exact else "startswith"}').strip()
@@ -179,7 +172,7 @@ class API():
                 data = None
                 
                 url_get_stats = (
-                    f'https://{self._url_by_reg(region)}/wotb/account/info/\
+                    f'https://{self._get_url_by_reg(region)}/wotb/account/info/\
                     ?application_id={self._get_id_by_reg(region)}\
                     &account_id={account_id}\
                     &extra=statistics.rating\
@@ -214,7 +207,7 @@ class API():
                     data = None
                 
                 url_get_achievements = (
-                    f'https://{self._url_by_reg(region)}/wotb/account/achievements/\
+                    f'https://{self._get_url_by_reg(region)}/wotb/account/achievements/\
                     ?application_id={self._get_id_by_reg(region)}\
                     &fields=-max_series&account_id={account_id}').strip()
                 
@@ -233,7 +226,7 @@ class API():
                     data = None
                     
                 url_get_clan_stats = (
-                    f'https://{self._url_by_reg(region)}/wotb/clans/accountinfo/\
+                    f'https://{self._get_url_by_reg(region)}/wotb/clans/accountinfo/\
                     ?application_id={self._get_id_by_reg(region)}\
                     &account_id={account_id}\
                     &extra=clan').strip()
@@ -262,14 +255,14 @@ class API():
                             player.data.clan_stats = data.data.clan
 
                 except Exception:
-                    player.data.clan_tag = ''
+                    player.data.clan_tag = 'NONE'
                     player.data.clan_stats = None
-
+                        
                 url_get_tanks_stats = \
-                        f'https://{self._url_by_reg(region)}/wotb/tanks/stats/\
+                        f'https://{self._get_url_by_reg(region)}/wotb/tanks/stats/\
                         ?application_id={self._get_id_by_reg(region)}\
                         &account_id={player.id}'
-                        
+                
                 async with session.get(url_get_tanks_stats) as response:
                     if response.status != 200:
                         raise api_exceptions.APIError(f'Bad response code {response.status}')

@@ -153,6 +153,13 @@ class Leagues():
     """Image representing a calibration league."""
 
 
+class Flags():
+    eu = Image.open('res/image/flags/eu.png', formats=['png'])
+    ruby = Image.open('res/image/flags/ruby.png', formats=['png'])
+    usa = Image.open('res/image/flags/usa.png', formats=['png'])
+    china = Image.open('res/image/flags/china.png', formats=['png'])
+
+
 class Coordinates():
     def __init__(self, img_size):
         _center_x = img_size[0] // 2
@@ -384,6 +391,7 @@ class ImageGen():
     colors = Colors()
     leagues = Leagues()
     cache = ImageCache()
+    flags = Flags()
     value = None
     data = None
     diff_data = None
@@ -438,6 +446,8 @@ class ImageGen():
         self.draw_rating_stats(img_draw)
         self.darw_common_stats(img_draw)
         self.darw_medal_count(img_draw)
+
+        self.draw_flag()
 
         # self.draw_main_points(img_draw)
         # self.draw_rating_points(img_draw)
@@ -647,6 +657,18 @@ class ImageGen():
                     i, getattr(self.data.all, i), rating=True)
             )
 
+    def draw_flag(self):
+        # self.data.region = 'asia' - Only for test
+        match self.data.region:
+            case 'ru':
+                self.image.paste(self.flags.ruby, (10, 10), self.flags.ruby)
+            case 'eu':
+                self.image.paste(self.flags.eu, (10, 10), self.flags.eu)
+            case 'com':
+                self.image.paste(self.flags.usa, (10, 10), self.flags.usa)
+            case 'asia':
+                self.image.paste(self.flags.china, (10, 10), self.flags.china)
+
     def point_coloring(self, stats_type, stats_value, rating=False):
         val = stats_value
         if stats_type == 'winrate':
@@ -800,4 +822,4 @@ class ImageGen():
         self.image.close()
         quit()
 
-# ImageGen().test()
+ImageGen().test()
