@@ -158,6 +158,7 @@ class Flags():
     ruby = Image.open('res/image/flags/ruby.png', formats=['png'])
     usa = Image.open('res/image/flags/usa.png', formats=['png'])
     china = Image.open('res/image/flags/china.png', formats=['png'])
+    cis = Image.open('res/image/flags/cis.png', formats=['png'])
 
 
 class Coordinates():
@@ -661,7 +662,7 @@ class ImageGen():
         # self.data.region = 'asia' - Only for test
         match self.data.region:
             case 'ru':
-                self.image.paste(self.flags.ruby, (10, 10), self.flags.ruby)
+                self.image.paste(self.flags.ruby, (10, 10), self.flags.cis)
             case 'eu':
                 self.image.paste(self.flags.eu, (10, 10), self.flags.eu)
             case 'com':

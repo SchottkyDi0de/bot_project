@@ -346,6 +346,7 @@ class Flags():
     ruby = Image.open('res/image/flags/ruby.png', formats=['png'])
     usa = Image.open('res/image/flags/usa.png', formats=['png'])
     china = Image.open('res/image/flags/china.png', formats=['png'])
+    cis = Image.open('res/image/flags/cis.png', formats=['png'])
 
 
 @singleton
@@ -381,6 +382,7 @@ class ImageGen():
         self.diff_values = DiffValues(diff_data)
         self.session_values = SessionValues(diff_data)
         self.values = Values(data, self.diff_data.tank_index)
+        self.flags = Flags()
 
         tank_type = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['type']
         tank_tier = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['tier']
@@ -705,7 +707,7 @@ class ImageGen():
         # self.data.region = 'asia' - Only for test
         match self.data.region:
             case 'ru':
-                self.image.paste(self.flags.ruby, (10, 10), self.flags.ruby)
+                self.image.paste(self.flags.ruby, (10, 10), self.flags.cis)
             case 'eu':
                 self.image.paste(self.flags.eu, (10, 10), self.flags.eu)
             case 'com':
