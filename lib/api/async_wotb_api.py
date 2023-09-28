@@ -71,6 +71,27 @@ class API():
     def __init__(self) -> None:
         self.account_id = 0
         self.cache = APICache()
+
+    def _url_by_reg(self, reg):
+        if reg in ['ru', 'eu', 'asia']:
+            match reg:
+                case 'ru':
+                    return 'papi.tanksblitz.ru'
+                case 'eu':
+                    return 'api.wotblitz.eu'
+                case 'asia':
+                    return 'api.wotblitz.asia'
+                case _:
+                    raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
+            return reg
+        if reg in ['na', 'as']:
+            match reg:
+                case 'na':
+                    return 'api.wotblitz.com'
+                case 'as':
+                    return 'api.wotblitz.asia'
+                case _:
+                    raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
     
     def _get_id_by_reg(self, reg: str):
         reg = reg.lower()
@@ -132,7 +153,7 @@ class API():
         
         self.account_id = 0
         url_get_id = (
-            f'https://api.wotblitz.{self._reg_normalizer(region)}/wotb/account/list/\
+            f'https://{self._url_by_reg(region)}/wotb/account/list/\
             ?application_id={self._get_id_by_reg(region)}\
             &search={search}\
             &type={"exact" if exact else "startswith"}').strip()
@@ -158,7 +179,7 @@ class API():
                 data = None
                 
                 url_get_stats = (
-                    f'https://api.wotblitz.{self._reg_normalizer(region)}/wotb/account/info/\
+                    f'https://{self._url_by_reg(region)}/wotb/account/info/\
                     ?application_id={self._get_id_by_reg(region)}\
                     &account_id={account_id}\
                     &extra=statistics.rating\
@@ -193,7 +214,7 @@ class API():
                     data = None
                 
                 url_get_achievements = (
-                    f'https://api.wotblitz.{self._reg_normalizer(region)}/wotb/account/achievements/\
+                    f'https://{self._url_by_reg(region)}/wotb/account/achievements/\
                     ?application_id={self._get_id_by_reg(region)}\
                     &fields=-max_series&account_id={account_id}').strip()
                 
@@ -212,7 +233,7 @@ class API():
                     data = None
                     
                 url_get_clan_stats = (
-                    f'https://api.wotblitz.{self._reg_normalizer(region)}/wotb/clans/accountinfo/\
+                    f'https://{self._url_by_reg(region)}/wotb/clans/accountinfo/\
                     ?application_id={self._get_id_by_reg(region)}\
                     &account_id={account_id}\
                     &extra=clan').strip()
@@ -245,7 +266,7 @@ class API():
                     player.data.clan_stats = None
 
                 url_get_tanks_stats = \
-                        f'https://api.wotblitz.{self._reg_normalizer(region)}/wotb/tanks/stats/\
+                        f'https://{self._url_by_reg(region)}/wotb/tanks/stats/\
                         ?application_id={self._get_id_by_reg(region)}\
                         &account_id={player.id}'
                         
