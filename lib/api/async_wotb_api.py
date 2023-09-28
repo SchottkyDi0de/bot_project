@@ -76,7 +76,7 @@ class API():
         reg = reg.lower()
         if reg == 'ru':
             return st.LT_APP_ID
-        elif reg in ['eu', 'com', 'asia']:
+        elif reg in ['eu', 'com', 'asia', 'na', 'as']:
             return st.WG_APP_ID
         
     def _reg_normalizer(self, reg: str) -> str:
@@ -160,7 +160,7 @@ class API():
                 data = json.loads(data)
 
                 if data['status'] == 'error':
-                    match data.error.code:
+                    match data['error']['code']:
                         case 407 | 402:
                             raise api_exceptions.UncorrectName()
                 if data['meta']['count'] > 1:
