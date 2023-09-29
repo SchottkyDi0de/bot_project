@@ -82,14 +82,10 @@ class API():
     def _reg_normalizer(self, reg: str) -> str:
         if reg in ['ru', 'eu', 'asia']:
             return reg
-        if reg in ['na', 'as']:
-            match reg:
-                case 'na':
-                    return 'com'
-                case 'as':
-                    return 'asia'
-                case _:
-                    raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
+        if reg == 'na':
+            return 'com'
+        else:
+            raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
                 
     def _get_url_by_reg(self, reg: str):
         reg = self._reg_normalizer(reg)
