@@ -662,7 +662,7 @@ class ImageGen():
         # self.data.region = 'asia' - Only for test
         match self.data.region:
             case 'ru':
-                self.image.paste(self.flags.ruby, (10, 10), self.flags.cis)
+                self.image.paste(self.flags.cis, (10, 10), self.flags.cis)
             case 'eu':
                 self.image.paste(self.flags.eu, (10, 10), self.flags.eu)
             case 'com':

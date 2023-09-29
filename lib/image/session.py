@@ -133,7 +133,6 @@ class Fonts():
 
 class Leagues():
     """A class that holds different league images."""
-
     empty = Image.open('res/image/leagues/no-rating.png', formats=['png'])  # Empty league image
     gold = Image.open('res/image/leagues/gold.png', formats=['png'])  # Gold league image
     platinum = Image.open('res/image/leagues/platinum.png', formats=['png'])  # Platinum league image
@@ -707,7 +706,7 @@ class ImageGen():
         # self.data.region = 'asia' - Only for test
         match self.data.region:
             case 'ru':
-                self.image.paste(self.flags.ruby, (10, 10), self.flags.cis)
+                self.image.paste(self.flags.cis, (10, 10), self.flags.cis)
             case 'eu':
                 self.image.paste(self.flags.eu, (10, 10), self.flags.eu)
             case 'com':
