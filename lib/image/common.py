@@ -155,7 +155,6 @@ class Leagues():
 
 class Flags():
     eu = Image.open('res/image/flags/eu.png', formats=['png'])
-    ruby = Image.open('res/image/flags/ruby.png', formats=['png'])
     usa = Image.open('res/image/flags/usa.png', formats=['png'])
     china = Image.open('res/image/flags/china.png', formats=['png'])
     cis = Image.open('res/image/flags/cis.png', formats=['png'])
