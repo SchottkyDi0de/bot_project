@@ -347,5 +347,3 @@ def test(nickname='cnJIuHTeP_KPbIca', region='ru', save_to_database: bool = Fals
         db.set_member_last_stats(766019191836639273, data.to_dict())
 
     return data
-
-test()
