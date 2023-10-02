@@ -176,6 +176,7 @@ class API():
                     task = tg.create_task(task())
                     await task
 
+        _log.debug(f'All requests time: {time() - self.start_time}')
         return get_normalized_data(self.player)
 
     async def get_account_id(self):
@@ -334,8 +335,6 @@ class API():
             # _log.debug('%s', return_data)
             if self.raw_dict:
                 return self.player.to_dict()
-
-            _log.debug('Data sent in %s sec', round(time() - self.start_time, 4))
 
 
 def test(nickname='cnJIuHTeP_KPbIca', region='ru', save_to_database: bool = False):
