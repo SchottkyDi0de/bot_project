@@ -142,6 +142,7 @@ errors:
 
 help:
   help: Допомога
+  send_ok: Help message was sended.
   types: [syntax, setup, statistics, session, all]
   syntax: |-
     > ***Command syntax***:

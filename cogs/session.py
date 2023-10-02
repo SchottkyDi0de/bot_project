@@ -13,13 +13,13 @@ from lib.embeds.info import InfoMSG
 from lib.exceptions import api, data_parser, database
 from lib.image.session import ImageGen
 from lib.locale.locale import Text
-from lib.blacklist.blacklist import data
+from lib.blacklist.blacklist import check_user
+from lib.exceptions.blacklist import UserBanned
 from lib.logger.logger import get_logger
 from lib.data_classes.api_data import PlayerGlobalData
 from datetime import datetime
 
 _log = get_logger(__name__, 'CogSessionLogger', 'logs/cog_session.log')
-
 
 class Session(commands.Cog):
     def __init__(self, bot) -> None:
@@ -30,8 +30,9 @@ class Session(commands.Cog):
         
     @commands.slash_command(guild_only=True, description=Text().data.cmd_description.start_session)
     async def start_session(self, ctx):
-        if ctx.author.id in data:
-            await ctx.respond(embed=ErrorMSG().user_banned)
+        try:
+            check_user(ctx)
+        except UserBanned:
             return
         
         await ctx.defer()
@@ -41,8 +42,8 @@ class Session(commands.Cog):
             if self.db.check_member(ctx.author.id):
                 member = self.db.get_member(ctx.author.id)
                 try:
-                    data = await self.api.get_stats(member['nickname'], member['region'], raw_dict=False)
-                    self.db.set_member_last_stats(ctx.author.id, data.to_dict())
+                    block_list = await self.api.get_stats(member['nickname'], member['region'], raw_dict=False)
+                    self.db.set_member_last_stats(ctx.author.id, block_list.to_dict())
                 except database.LastStatsNotFound:
                     await ctx.respond(embed=ErrorMSG().session_not_found)
                     return
@@ -57,8 +58,9 @@ class Session(commands.Cog):
 
     @commands.slash_command(guild_only=True, description=Text().get().cmd_description.get_session)
     async def get_session(self, ctx):
-        if ctx.author.id in data:
-            await ctx.respond(embed=ErrorMSG().user_banned)
+        try:
+            check_user(ctx)
+        except UserBanned:
             return
         
         await ctx.defer()
@@ -97,8 +99,9 @@ class Session(commands.Cog):
 
     @commands.slash_command(guild_only=True, description='None')
     async def session_state(self, ctx):
-        if ctx.author.id in data:
-            await ctx.respond(embed=ErrorMSG().user_banned)
+        try:
+            check_user(ctx)
+        except UserBanned:
             return
         
         try:

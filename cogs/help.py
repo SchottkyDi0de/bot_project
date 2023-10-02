@@ -3,7 +3,8 @@ from asyncio import sleep
 
 from discord import Option, errors
 from discord.ext import commands
-from lib.blacklist.blacklist import data
+from lib.blacklist.blacklist import check_user
+from lib.exceptions.blacklist import UserBanned
 from lib.database.servers import ServersDB
 from lib.locale.locale import Text
 from lib.embeds.errors import ErrorMSG
@@ -29,8 +30,9 @@ class Help(commands.Cog):
             required=True
             )
         ):
-        if ctx.author.id in data:
-            await ctx.respond(embed=ErrorMSG().user_banned)
+        try:
+            check_user(ctx)
+        except UserBanned:
             return
         
         try:
