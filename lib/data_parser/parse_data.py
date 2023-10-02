@@ -26,6 +26,7 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
         data.data.statistics.rating.rating = 0
 
         if data.data.statistics.rating.calibration_battles_left == 0:
+            # Вообще, округлять лучше при выводе данных куда-либо, а в структурах хранить честное значение.
             data.data.statistics.rating.rating = round(data.data.statistics.rating.mm_rating * 10 + 3000)
 
         if data.data.statistics.rating.battles != 0:
@@ -37,7 +38,7 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
             data.data.name_and_tag = f'{data.nickname} [{data.data.clan_stats.tag}]'
         else:
             data.data.name_and_tag = f'{data.nickname}'
-        
+
         if data.data.achievements.mainGun is None:
             data.data.achievements.mainGun = 0
         if data.data.achievements.markOfMastery is None:
@@ -51,7 +52,7 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
 
         tanks = data.data.tank_stats
 
-        for i, j in enumerate(tanks):
+        for i, j in enumerate(tanks):  # i & j – так себе имена, не понятно, что они означают
             tank = j
 
             if tank.all.battles != 0:
@@ -59,7 +60,9 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
                 tank.all.avg_damage = tank.all.damage_dealt // tank.all.battles
             else:
                 tank.all.winrate = 0
-            
+
+            # Не очень понимаю, что здесь происходит в `tanks` & `data.data.tank_stats`,
+            # выглядит подозрительно.
             tanks.insert(i, tank)
             data.data.tank_stats.pop(i)
             data.data.tank_stats = tanks
@@ -82,9 +85,8 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
             _log.debug('Different data generating error: player data not updated')
             raise data_parser.NoDiffData('Different data generating error: player data not updated')
 
-        tank_id = tank_data[0]
+        tank_id, tank_index = tank_data
 
-        tank_index = tank_data[1]
         battles_not_updated = False
         
         for i in data_old.data.tank_stats:

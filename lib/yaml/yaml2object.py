@@ -27,6 +27,9 @@ class Parser:
         return self._parse(data)
         
     def _parse(self, d):
+        # Здесь, похоже, dict конвертится в объект.
+        # Можно было бы использовать тот же Pydantic.
         x: SimpleNamespace = SimpleNamespace()
-        _ = [setattr(x, k, self._parse(v)) if isinstance(v, dict) else setattr(x, k, v) for k, v in d.items()]    
+        for k, v in d.items():
+            setattr(x, k, self._parse(v) if isinstance(v, dict) else v)
         return x
