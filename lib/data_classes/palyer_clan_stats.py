@@ -18,9 +18,9 @@ class Data(JSONObject):
     joined_at: int = None
     account_id: int = None
     account_name: str = None
-    clan: Clan = None
+    clan: Clan = Clan()
 
 class ClanStats(JSONObject):
     status: str = None
-    meta: Meta = None
-    data: Data = None
+    meta: Meta = Meta()
+    data: Data = Data()

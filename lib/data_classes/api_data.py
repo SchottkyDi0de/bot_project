@@ -9,17 +9,17 @@ from lib.data_classes.tanks_stats import TankStats
 
 
 class Player(JSONObject):
-    achievements: Achievements = None
-    clan_stats: ClanStats = None
+    achievements: Achievements = Achievements()
+    clan_stats: ClanStats = ClanStats()
     tank_stats: List[TankStats]
-    statistics: Statistics = None
+    statistics: Statistics = Statistics()
     name_and_tag: str = None
     clan_tag: str = None
 
 
 class PlayerGlobalData(JSONObject):
     id: int = None
-    data: Player = None
+    data: Player = Player()
     region: str = None
     lower_nickname: str = None
     timestamp: int = None
