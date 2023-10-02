@@ -25,6 +25,7 @@ _log = logger.get_logger(__name__, 'ImageCommonLogger',
 
 from datetime import datetime
 
+# Похоже на копипасту кэша из API.
 class ImageCache():
     """
     A class for caching images.

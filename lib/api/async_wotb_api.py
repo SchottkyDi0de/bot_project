@@ -8,6 +8,9 @@ import aiohttp
 if __name__ == '__main__':
     import os
     import sys
+    # Тебе нужно уметь запускать этот скрипт самостоятельно, верно?
+    # Если да, то этот трюк не совсем нужен, должно сработать вот так из корня проекта:
+    # python -m lib.api.async_wotb_api
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
     sys.path.insert(0, path)
 
@@ -26,21 +29,21 @@ _log = get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
 st = settings.SttObject()
 
 
-class APICache():
+# Я бы не писал кэш вручную, а использовал что-то готовое вроде
+# https://pypi.org/project/cachetools/
+class APICache:
     cache: dict = {}
     cache_ttl: int = 60  # seconds
     cache_size: int = 40  # items
 
     def check_item(self, key):
-        if key in self.cache.keys():
-            return True
-        return False
+        return key in self.cache.keys()
 
     def _overflow_handler(self):
         overflow = len(self.cache.keys()) - self.cache_size
         if overflow > 0:
-            for i in range(overflow):
-                key = list(self.cache.keys())[i]
+            keys = list(self.cache.keys())[:overflow]
+            for key in keys:
                 self.cache.pop(key)
 
     def del_item(self, key):
@@ -50,10 +53,7 @@ class APICache():
         current_time = datetime.now().timestamp()
         timestamp = self.cache[key].timestamp
         time_delta = current_time - timestamp
-        if time_delta > self.cache_ttl:
-            return False
-        else:
-            return True
+        return time_delta <= self.cache_ttl
 
     def add_item(self, item: PlayerGlobalData):
         self._overflow_handler()
@@ -67,7 +67,7 @@ class APICache():
         raise KeyError('Cache miss')
 
 
-class API():
+class API:
     def __init__(self) -> None:
         self.account_id = 0
         self.cache = APICache()
@@ -75,7 +75,6 @@ class API():
         self.exact = True
         self.nickname = ''
         self.region = ''
-        self.session: aiohttp.ClientSession = None
         self.need_cached = False
         self.raw_dict = False
 
@@ -87,6 +86,7 @@ class API():
             return st.LT_APP_ID
         elif reg in ['eu', 'com', 'asia', 'na', 'as']:
             return st.WG_APP_ID
+        raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
 
     def _reg_normalizer(self, reg: str) -> str:
         if reg in ['ru', 'eu', 'asia']:
@@ -122,17 +122,16 @@ class API():
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url_get_tankopedia) as response:
+                # Здесь можно было бы вызывать `response.raise_for_status()` вместо ручной проверки, но не критично
                 if response.status != 200:
                     raise api_exceptions.APIError()
 
-                data = await response.text()
-                data = json.loads(data)
+                data = await response.json()
 
                 if data['status'] == 'error':
                     _log.error(f'Error get tankopedia, bad response status: \n{data}')
                     raise api_exceptions.APIError(f'Bad API response status {data}')
 
-                await session.close()
                 return data
 
     async def get_stats(self, search: str, region: str, exact: bool = True, raw_dict: bool = False) -> PlayerGlobalData:
@@ -143,7 +142,11 @@ class API():
             self.region = ''
             self.account_id = 0
             raise api_exceptions.APIError('Empty parameter search or region')
-        
+
+        # Здесь может быть проблема: получается, что вызов `get_stats()` переключает `API`
+        # потенциально на другой регион. Если не аккуратно запрограммировать, то можно
+        # наткнуться на интересные баги, например, что будет использован неправильный регион.
+        # Лучше было бы не сохранять их в аттрибутах вообще, а всегда принимать через параметры.
         self.exact = exact
         self.raw_dict = raw_dict
         self.nickname = search
@@ -175,6 +178,11 @@ class API():
                 for task in tasks:
                     task = tg.create_task(task())
                     await task
+                    # Мне не очень понятно, зачем используется `TaskGroup`, ведь
+                    # `await task` автоматически делает этот код последовательным
+                    # (ждем одну таску, потом следующую и так далее).
+                    # Здесь можно было бы использовать `asyncio.gather()`,
+                    # если хотелось их запрашивать параллельно.
 
         _log.debug(f'All requests time: {time() - self.start_time}')
         return get_normalized_data(self.player)
@@ -189,6 +197,8 @@ class API():
 
         async with aiohttp.ClientSession() as self.session:
             async with self.session.get(url_get_id) as response:
+                # Проверки статуса и результата повторяются для каждого метода API.
+                # Можно было бы вынести эту общую логику в отдельный метод.
                 if response.status != 200:
                     raise api_exceptions.APIError()
 
@@ -221,8 +231,7 @@ class API():
             if response.status != 200:
                 raise api_exceptions.APIError(f'Bad response code {response.status}')
 
-            data = await response.text()
-            data = json.loads(data)
+            data = await response.json()  # ниже такие же штуки
 
             if data['status'] != 'ok':
                 raise api_exceptions.APIError(f'Bad API response status {data}')
@@ -296,6 +305,8 @@ class API():
                     self.player.data.clan_tag = clan_tag
                     self.player.data.clan_stats = data.data.clan
 
+        # Ловить Exception, чаще всего, плохая идея: как минимум, будет трудно отлаживать.
+        # Лучше ловить конкретные типы исключений.
         except Exception:
             self.player.data.clan_tag = 'NONE'
             self.player.data.clan_stats = None

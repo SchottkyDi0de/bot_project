@@ -1,3 +1,6 @@
+# Посмотри на pytest для автоматических тестов:
+# https://docs.pytest.org/en/7.4.x/
+
 import os
 
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
