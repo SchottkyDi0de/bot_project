@@ -26,6 +26,6 @@ def write():
             f.write(str(i) + '\n')
 
 def reload():
-    nonlocal block_list
+    global block_list
     write()
     block_list = load()
