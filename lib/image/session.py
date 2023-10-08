@@ -487,7 +487,7 @@ class ImageGen():
             case 7:
                 return ' • VII'
             case 8:
-                return ' • Ⅷ'
+                return ' • VIII'
             case 9:
                 return ' • IX'
             case 10:

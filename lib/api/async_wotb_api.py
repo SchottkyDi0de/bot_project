@@ -157,11 +157,17 @@ class API:
         
 
         account_id = await self.get_account_id(region=region, nickname=search)
+        # tasks_for_gather = [
+        #     self.get_player_stats(region=region, nickname=search, account_id=account_id),
+        #     self.get_player_tanks_stats(region=region, nickname=search, account_id=account_id),
+        #     self.get_player_clan_stats(region=region, nickname=search, account_id=account_id),
+        #     self.get_player_achievements(region=region, nickname=search, account_id=account_id)
+        # ]
         tasks = [
-            self.get_player_stats(region=region, nickname=search, account_id=account_id),
-            self.get_player_tanks_stats(region=region, nickname=search, account_id=account_id),
-            self.get_player_clan_stats(region=region, nickname=search, account_id=account_id),
-            self.get_player_achievements(region=region, nickname=search, account_id=account_id)
+            self.get_player_stats,
+            self.get_player_tanks_stats,
+            self.get_player_clan_stats,
+            self.get_player_achievements
         ]
         task_names = [
             'get_player_stats',
@@ -171,15 +177,14 @@ class API:
         ]
 
         async with aiohttp.ClientSession() as self.session:
-        #     async with asyncio.TaskGroup() as tg:
-        #         for i, task in enumerate(tasks):
-        #             task = tg.create_task(task(account_id=account_id, region=region, nickname=search))
-        #             task.set_name(task_names[i])
-        #             task.add_done_callback(self.done_callback)
-        #             await task
+            async with asyncio.TaskGroup() as tg:
+                for i, task in enumerate(tasks):
+                    task = tg.create_task(task(account_id=account_id, region=region, nickname=search))
+                    task.set_name(task_names[i])
+                    task.add_done_callback(self.done_callback)
+                    await task
 
-            await asyncio.gather(*tasks)
-
+            # await asyncio.gather(*tasks)
 
         _log.debug(f'All requests time: {time() - self.start_time}')
         return get_normalized_data(self.player)
@@ -214,7 +219,7 @@ class API:
                     raise api_exceptions.NoPlayersFound()
 
                 account_id: int = data['data'][0]['account_id']
-                #_log.debug('Get account_id finished\n')
+                _log.debug('Get account_id finished\n')
                 return account_id
 
     async def get_player_stats(self, region: str, account_id: str, **kwargs) -> PlayerStats:
@@ -251,7 +256,7 @@ class API:
                     self.player.data = data.data
                     self.player.nickname = data.data.nickname
 
-            #_log.debug('Get main stats finished\n')
+            _log.debug('Get main stats finished\n')
 
     async def get_player_achievements(self, region: str, account_id: str, **kwargs) -> None:
         _log.debug('Get achievements started')
@@ -273,7 +278,7 @@ class API:
 
             self.player.data.achievements = Achievements(data['data'][str(account_id)]['achievements'])
 
-            #_log.debug('Get achievements finished\n')
+            _log.debug('Get achievements finished\n')
 
     async def get_player_clan_stats(self, region: str, account_id: str | int, **kwargs):
         _log.debug('Get clan stats started')
@@ -294,12 +299,16 @@ class API:
                 data = await response.text()
                 data = json.loads(data)
 
+                if data is None:
+                    self.player.data.clan_tag = 'NONE'
+                    self.player.data.clan_stats = None
+                    return
+                
                 if data['status'] != 'ok':
                     raise api_exceptions.APIError(f'Bad API response status {data}')
-
                 try:
                     clan_tag = data['data'][str(account_id)]['clan']['tag']
-                except AttributeError as e:
+                except (AttributeError, KeyError) as e:
                     raise api_exceptions.APIError(e)
                 else:
                     data['data'] = data['data'][str(account_id)]
@@ -310,8 +319,8 @@ class API:
         # Ловить Exception, чаще всего, плохая идея: как минимум, будет трудно отлаживать.
         # Лучше ловить конкретные типы исключений.
         # _Zener: Поленился...
-            #_log.debug('Get clan stats finished\n')
-        except Exception:
+            _log.debug('Get clan stats finished\n')
+        except (KeyError, AttributeError):
             self.player.data.clan_tag = 'NONE'
             self.player.data.clan_stats = None
 
@@ -349,7 +358,7 @@ class API:
                 _log.debug('Data add to cache')
 
             # _log.debug('%s', return_data)
-            #_log.debug('Get player tank stats finished\n')
+            _log.debug('Get player tank stats finished\n')
             if self.raw_dict:
                 return self.player.to_dict()
 
