@@ -205,3 +205,45 @@ help:
     > 3: `/session_state`
     > ***Что делает:***
     > - Отображает активна ли сессия и время, которое сессия активна.
+
+replay_parser:
+  embed:
+    title: Информация о реплеи (Powered by replay-parser)
+    description: |-
+      Бой на карте <map_name> от игрока <player_name>. Вермя <timestamp> UTC
+    
+    main_result_title: Основные данные.
+    main_result_descr: |-
+      ```py
+      Исход боя:       <battle_win_state>
+      Уровень:         <tank_tier>
+      Танк:            <tank_name>
+      Нанесено урона:  <damage_dealt>
+      Получено урона:  <damage_recivied>
+      Натанковано:     <damage_blocked>
+      ```
+    
+    economy_result_title: Кредиты и опыт.
+    economy_result_descr: |-
+      ```py
+      Получено кредитов: <credits>
+      Получено опыта:    <xp>
+      ```
+
+    allies_list_title: Союзники.
+    allies_list_descr: |-
+      ```py
+      Ник:               %Побед    Бои
+      ---------------    ------    -------
+      Средние:           <avg_wins>    <avg_bettles>
+      ```
+    
+    enemies_list_title: Враги.
+    enemies_list_descr: |-
+      ```py
+      Ник:               %Побед    Бои
+      ---------------    ------    -------
+      Средние:           <avg_wins>    <avg_bettles>
+      ```
+
+

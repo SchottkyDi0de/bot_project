@@ -69,12 +69,9 @@ class APICache:
 
 class API:
     def __init__(self) -> None:
-        self.account_id = 0
         self.cache = APICache()
         self.player = PlayerGlobalData()
         self.exact = True
-        self.nickname = ''
-        self.region = ''
         self.need_cached = False
         self.raw_dict = False
 
@@ -133,24 +130,18 @@ class API:
                     raise api_exceptions.APIError(f'Bad API response status {data}')
 
                 return data
+            
+    def done_callback(self, task: asyncio.Task):
+        _log.debug(f'{task.get_name()} done\n')
 
     async def get_stats(self, search: str, region: str, exact: bool = True, raw_dict: bool = False) -> PlayerGlobalData:
         if search is None or region is None:
             self.exact = True
             self.raw_dict = False
-            self.nickname = ''
-            self.region = ''
-            self.account_id = 0
             raise api_exceptions.APIError('Empty parameter search or region')
 
-        # Здесь может быть проблема: получается, что вызов `get_stats()` переключает `API`
-        # потенциально на другой регион. Если не аккуратно запрограммировать, то можно
-        # наткнуться на интересные баги, например, что будет использован неправильный регион.
-        # Лучше было бы не сохранять их в аттрибутах вообще, а всегда принимать через параметры.
         self.exact = exact
         self.raw_dict = raw_dict
-        self.nickname = search
-        self.region = region
 
         _log.debug('Get stats method called, arguments: %s, %s', search, region)
         self.start_time = time()
@@ -165,33 +156,39 @@ class API:
             return cached_data
         
 
+        account_id = await self.get_account_id(region=region, nickname=search)
         tasks = [
-            self.get_player_stats,
-            self.get_player_tanks_stats,
-            self.get_player_clan_stats,
-            self.get_player_achievements
+            self.get_player_stats(region=region, nickname=search, account_id=account_id),
+            self.get_player_tanks_stats(region=region, nickname=search, account_id=account_id),
+            self.get_player_clan_stats(region=region, nickname=search, account_id=account_id),
+            self.get_player_achievements(region=region, nickname=search, account_id=account_id)
+        ]
+        task_names = [
+            'get_player_stats',
+            'get_player_tanks_stats',
+            'get_player_clan_stats',
+            'get_player_achievements'
         ]
 
-        await self.get_account_id()
         async with aiohttp.ClientSession() as self.session:
-            async with asyncio.TaskGroup() as tg:
-                for task in tasks:
-                    task = tg.create_task(task())
-                    await task
-                    # Мне не очень понятно, зачем используется `TaskGroup`, ведь
-                    # `await task` автоматически делает этот код последовательным
-                    # (ждем одну таску, потом следующую и так далее).
-                    # Здесь можно было бы использовать `asyncio.gather()`,
-                    # если хотелось их запрашивать параллельно.
+        #     async with asyncio.TaskGroup() as tg:
+        #         for i, task in enumerate(tasks):
+        #             task = tg.create_task(task(account_id=account_id, region=region, nickname=search))
+        #             task.set_name(task_names[i])
+        #             task.add_done_callback(self.done_callback)
+        #             await task
+
+            await asyncio.gather(*tasks)
+
 
         _log.debug(f'All requests time: {time() - self.start_time}')
         return get_normalized_data(self.player)
 
-    async def get_account_id(self):
+    async def get_account_id(self, region: str, nickname: str, **kwargs) -> None:
         url_get_id = (
-            f'https://{self._get_url_by_reg(self.region)}/wotb/account/list/'
-            f'?application_id={self._get_id_by_reg(self.region)}'
-            f'&search={self.nickname}'
+            f'https://{self._get_url_by_reg(region)}/wotb/account/list/'
+            f'?application_id={self._get_id_by_reg(region)}'
+            f'&search={nickname}'
             f'&type={"exact" if self.exact else "startswith"}'
         )
 
@@ -199,6 +196,8 @@ class API:
             async with self.session.get(url_get_id) as response:
                 # Проверки статуса и результата повторяются для каждого метода API.
                 # Можно было бы вынести эту общую логику в отдельный метод.
+                # _Zener: Согласен.
+                # _log.debug('Get account_id started')
                 if response.status != 200:
                     raise api_exceptions.APIError()
 
@@ -214,15 +213,16 @@ class API:
                 elif data['meta']['count'] == 0:
                     raise api_exceptions.NoPlayersFound()
 
-                self.account_id: int = data['data'][0]['account_id']
-                data = None
+                account_id: int = data['data'][0]['account_id']
+                #_log.debug('Get account_id finished\n')
+                return account_id
 
-    async def get_player_stats(self):
-
+    async def get_player_stats(self, region: str, account_id: str, **kwargs) -> PlayerStats:
+        _log.debug('Get main stats started')
         url_get_stats = (
-            f'https://{self._get_url_by_reg(self.region)}/wotb/account/info/'
-            f'?application_id={self._get_id_by_reg(self.region)}'
-            f'&account_id={self.account_id}'
+            f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
+            f'?application_id={self._get_id_by_reg(region)}'
+            f'&account_id={account_id}'
             f'&extra=statistics.rating'
             f'&fields=-statistics.clan'
         )
@@ -236,7 +236,7 @@ class API:
             if data['status'] != 'ok':
                 raise api_exceptions.APIError(f'Bad API response status {data}')
 
-            data['data'] = data['data'][str(self.account_id)]
+            data['data'] = data['data'][str(account_id)]
             data = PlayerStats(data)
 
             try:
@@ -247,17 +247,18 @@ class API:
                 if battles < 100:
                     raise api_exceptions.NeedMoreBattlesError('Need more battles for generate statistics')
                 else:
-                    self.player.id = self.account_id
+                    self.player.id = account_id
                     self.player.data = data.data
                     self.player.nickname = data.data.nickname
 
-            data = None
+            #_log.debug('Get main stats finished\n')
 
-    async def get_player_achievements(self):
+    async def get_player_achievements(self, region: str, account_id: str, **kwargs) -> None:
+        _log.debug('Get achievements started')
         url_get_achievements = (
-            f'https://{self._get_url_by_reg(self.region)}/wotb/account/achievements/'
-            f'?application_id={self._get_id_by_reg(self.region)}'
-            f'&fields=-max_series&account_id={self.account_id}'
+            f'https://{self._get_url_by_reg(region)}/wotb/account/achievements/'
+            f'?application_id={self._get_id_by_reg(region)}'
+            f'&fields=-max_series&account_id={account_id}'
         )
 
         async with self.session.get(url_get_achievements) as response:
@@ -270,15 +271,16 @@ class API:
             if data['status'] != 'ok':
                 raise api_exceptions.APIError(f'Bad API response status {data}')
 
-            self.player.data.achievements = Achievements(data['data'][str(self.account_id)]['achievements'])
+            self.player.data.achievements = Achievements(data['data'][str(account_id)]['achievements'])
 
-            data = None
+            #_log.debug('Get achievements finished\n')
 
-    async def get_player_clan_stats(self):
+    async def get_player_clan_stats(self, region: str, account_id: str | int, **kwargs):
+        _log.debug('Get clan stats started')
         url_get_clan_stats = (
-            f'https://{self._get_url_by_reg(self.region)}/wotb/clans/accountinfo/'
-            f'?application_id={self._get_id_by_reg(self.region)}'
-            f'&account_id={self.account_id}'
+            f'https://{self._get_url_by_reg(region)}/wotb/clans/accountinfo/'
+            f'?application_id={self._get_id_by_reg(region)}'
+            f'&account_id={account_id}'
             f'&extra=clan'
         )
 
@@ -296,26 +298,29 @@ class API:
                     raise api_exceptions.APIError(f'Bad API response status {data}')
 
                 try:
-                    clan_tag = data['data'][str(self.account_id)]['clan']['tag']
+                    clan_tag = data['data'][str(account_id)]['clan']['tag']
                 except AttributeError as e:
                     raise api_exceptions.APIError(e)
                 else:
-                    data['data'] = data['data'][str(self.account_id)]
+                    data['data'] = data['data'][str(account_id)]
                     data = ClanStats(data)
                     self.player.data.clan_tag = clan_tag
                     self.player.data.clan_stats = data.data.clan
 
         # Ловить Exception, чаще всего, плохая идея: как минимум, будет трудно отлаживать.
         # Лучше ловить конкретные типы исключений.
+        # _Zener: Поленился...
+            #_log.debug('Get clan stats finished\n')
         except Exception:
             self.player.data.clan_tag = 'NONE'
             self.player.data.clan_stats = None
 
-    async def get_player_tanks_stats(self):
+    async def get_player_tanks_stats(self, region: str, account_id: str, nickname: str,  **kwargs):
+        _log.debug('Get player tank stats started')
         url_get_tanks_stats = (
-            f'https://{self._get_url_by_reg(self.region)}/wotb/tanks/stats/'
-            f'?application_id={self._get_id_by_reg(self.region)}'
-            f'&account_id={self.account_id}'
+            f'https://{self._get_url_by_reg(region)}/wotb/tanks/stats/'
+            f'?application_id={self._get_id_by_reg(region)}'
+            f'&account_id={account_id}'
         )
         async with self.session.get(url_get_tanks_stats) as response:
 
@@ -330,13 +335,13 @@ class API:
 
             tanks_stats: list[TankStats] = []
 
-            for i in data['data'][str(self.account_id)]:
+            for i in data['data'][str(account_id)]:
                 tanks_stats.append(TankStats(i))
 
             self.player.timestamp = datetime.now().timestamp()
 
-            self.player.region = self._reg_normalizer(self.region)
-            self.player.lower_nickname = self.nickname.lower()
+            self.player.region = self._reg_normalizer(region)
+            self.player.lower_nickname = nickname.lower()
             self.player.data.tank_stats = tanks_stats
 
             if self.need_cached:
@@ -344,6 +349,7 @@ class API:
                 _log.debug('Data add to cache')
 
             # _log.debug('%s', return_data)
+            #_log.debug('Get player tank stats finished\n')
             if self.raw_dict:
                 return self.player.to_dict()
 

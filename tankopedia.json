@@ -1327,14 +1327,6 @@
         "type": "heavyTank",
         "tank_id": 23073
     },
-    "55057": {
-        "name": "Pz.Kpfw. IV hydrostat.",
-        "nation": "germany",
-        "is_premium": true,
-        "tier": 5,
-        "type": "mediumTank",
-        "tank_id": 55057
-    },
     "6161": {
         "name": "Pz.Kpfw. II Luchs",
         "nation": "germany",
@@ -2735,6 +2727,14 @@
         "type": "heavyTank",
         "tank_id": 10753
     },
+    "12049": {
+        "name": "Jagdpanzer E 100",
+        "nation": "germany",
+        "is_premium": false,
+        "tier": 10,
+        "type": "AT-SPG",
+        "tank_id": 12049
+    },
     "1409": {
         "name": "P.43 bis",
         "nation": "european",
@@ -3639,13 +3639,13 @@
         "type": "AT-SPG",
         "tank_id": 11585
     },
-    "12049": {
-        "name": "Jagdpanzer E 100",
+    "55057": {
+        "name": "Pz.Kpfw. IV hydrostat.",
         "nation": "germany",
-        "is_premium": false,
-        "tier": 10,
-        "type": "AT-SPG",
-        "tank_id": 12049
+        "is_premium": true,
+        "tier": 5,
+        "type": "mediumTank",
+        "tank_id": 55057
     },
     "24065": {
         "name": "\u041b\u0422\u0413",

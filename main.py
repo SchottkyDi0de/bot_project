@@ -22,7 +22,7 @@ class App():
         self.bot = commands.Bot(intents=self.intents, command_prefix=st.default.prefix)
         self.bot.remove_command('help')
 
-        self.extension_names = [filepath.with_suffix('') for filepath in Path('cogs').glob('*.py')]
+        self.extension_names = [f"cogs.{filename[:-3]}" for filename in os.listdir("./cogs") if filename.endswith(".py")]
 
     def load_extension(self, extension_names: list[str]):
         for i in extension_names:
