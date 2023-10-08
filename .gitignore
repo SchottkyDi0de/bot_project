@@ -11,3 +11,4 @@ logs
 *.env
 database_copy.*
 *.pkl
+.tmp
