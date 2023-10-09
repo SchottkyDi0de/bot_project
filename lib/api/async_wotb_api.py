@@ -118,7 +118,7 @@ class API:
         )
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(url_get_tankopedia) as response:
+            async with session.get(url_get_tankopedia, verify_ssl=False) as response:
                 # Здесь можно было бы вызывать `response.raise_for_status()` вместо ручной проверки, но не критично
                 if response.status != 200:
                     raise api_exceptions.APIError()
@@ -198,7 +198,7 @@ class API:
         )
 
         async with aiohttp.ClientSession() as self.session:
-            async with self.session.get(url_get_id) as response:
+            async with self.session.get(url_get_id, verify_ssl=False) as response:
                 # Проверки статуса и результата повторяются для каждого метода API.
                 # Можно было бы вынести эту общую логику в отдельный метод.
                 # _Zener: Согласен.
@@ -232,7 +232,7 @@ class API:
             f'&fields=-statistics.clan'
         )
 
-        async with self.session.get(url_get_stats) as response:
+        async with self.session.get(url_get_stats, verify_ssl=False) as response:
             if response.status != 200:
                 raise api_exceptions.APIError(f'Bad response code {response.status}')
 
@@ -266,7 +266,7 @@ class API:
             f'&fields=-max_series&account_id={account_id}'
         )
 
-        async with self.session.get(url_get_achievements) as response:
+        async with self.session.get(url_get_achievements, verify_ssl=False) as response:
             if response.status != 200:
                 raise api_exceptions.APIError(f'Bad response code {response.status}')
 
@@ -290,7 +290,7 @@ class API:
         )
 
         try:
-            async with self.session.get(url_get_clan_stats) as response:
+            async with self.session.get(url_get_clan_stats, verify_ssl=False) as response:
                 if response.status != 200:
                     raise api_exceptions.APIError(f'Bad response code {response.status}')
 
@@ -331,7 +331,7 @@ class API:
             f'?application_id={self._get_id_by_reg(region)}'
             f'&account_id={account_id}'
         )
-        async with self.session.get(url_get_tanks_stats) as response:
+        async with self.session.get(url_get_tanks_stats, verify_ssl=False) as response:
 
             if response.status != 200:
                 raise api_exceptions.APIError(f'Bad response code {response.status}')

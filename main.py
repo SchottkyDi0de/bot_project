@@ -33,6 +33,7 @@ class App():
             self.bot.reload_extension(i)
 
     def main(self):
+
         @self.bot.event
         async def on_ready():
             _log.info('Bot started: %s', self.bot.user)
@@ -48,9 +49,9 @@ class App():
     async def retrieve_tankopedia(api: async_wotb_api.API, n_retries: int = 2) -> dict:
         for _ in range(n_retries):
             try:
-                return await api.get_tankopedia()
+                return await api.get_tankopedia('ru')
             except Exception:
-                _log.error(exc_info=True)
+                _log.error('', exc_info=True)
         quit(1)
 
 
