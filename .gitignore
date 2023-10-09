@@ -12,3 +12,4 @@ logs
 database_copy.*
 *.pkl
 .tmp
+*.dat
