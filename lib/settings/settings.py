@@ -22,12 +22,14 @@ else:
 class SttObject():
     def __init__(self) -> None:
         self.DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+        self.DISCORD_TOKEN_DEV = os.getenv('DISCORD_TOKEN_DEV')
         self.WG_APP_ID = os.getenv('WG_APP_ID')
         self.LT_APP_ID = os.getenv('LT_APP_ID')
         with open('settings/settings.yaml', encoding='utf-8') as f:
             self.settings = Settings(yaml.safe_load(f))
 
         self.settings.DISCORD_TOKEN = self.DISCORD_TOKEN
+        self.settings.DISCORD_TOKEN_DEV = self.DISCORD_TOKEN_DEV
         self.settings.WG_APP_ID = self.WG_APP_ID
         self.settings.LT_APP_ID = self.LT_APP_ID
 

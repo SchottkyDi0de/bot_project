@@ -1,18 +1,11 @@
-import asyncio
 import json
+import asyncio
 from time import time
 from datetime import datetime
 
-import aiohttp
+from cacheout import FIFOCache
 
-if __name__ == '__main__':
-    import os
-    import sys
-    # Тебе нужно уметь запускать этот скрипт самостоятельно, верно?
-    # Если да, то этот трюк не совсем нужен, должно сработать вот так из корня проекта:
-    # python -m lib.api.async_wotb_api
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-    sys.path.insert(0, path)
+import aiohttp
 
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.data_classes.palyer_clan_stats import ClanStats
@@ -28,51 +21,11 @@ from lib.settings import settings
 _log = get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
 st = settings.SttObject()
 
-
-# Я бы не писал кэш вручную, а использовал что-то готовое вроде
-# https://pypi.org/project/cachetools/
-class APICache:
-    cache: dict = {}
-    cache_ttl: int = 60  # seconds
-    cache_size: int = 40  # items
-
-    def check_item(self, key):
-        return key in self.cache.keys()
-
-    def _overflow_handler(self):
-        overflow = len(self.cache.keys()) - self.cache_size
-        if overflow > 0:
-            keys = list(self.cache.keys())[:overflow]
-            for key in keys:
-                self.cache.pop(key)
-
-    def del_item(self, key):
-        del self.cache[key]
-
-    def check_timestamp(self, key):
-        current_time = datetime.now().timestamp()
-        timestamp = self.cache[key].timestamp
-        time_delta = current_time - timestamp
-        return time_delta <= self.cache_ttl
-
-    def add_item(self, item: PlayerGlobalData):
-        self._overflow_handler()
-        self.cache[(item.lower_nickname, item.region)] = item
-
-    def get_item(self, key):
-        if self.check_item(key):
-            if self.check_timestamp(key):
-                return self.cache[key]
-
-        raise KeyError('Cache miss')
-
-
 class API:
     def __init__(self) -> None:
-        self.cache = APICache()
+        self.cache = FIFOCache(maxsize=100, ttl=60)
         self.player = PlayerGlobalData()
         self.exact = True
-        self.need_cached = False
         self.raw_dict = False
 
         self.start_time = 0
@@ -92,6 +45,32 @@ class API:
             return 'com'
         else:
             raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
+        
+    async def response_handler(self, response: aiohttp.ClientResponse, check_data_status: bool = True) -> dict:
+        """
+        Asynchronously handles the response from the API and returns the data as a dictionary.
+
+        Args:
+            response (aiohttp.ClientResponse): The response object received from the API.
+            check_data_status (bool, optional): Flag to indicate whether to check the status of the data. Defaults to True.
+
+        Raises:
+            api_exceptions.APIError: Raised if the response status is not 200 or the data status is not 'ok'.
+
+        Returns:
+            dict: The data returned from the API as a dictionary.
+        """
+        if response.status != 200:
+            raise api_exceptions.APIError()
+        
+        data = await response.text()
+        data = json.loads(data)
+
+        if check_data_status:
+            if data['status'] != 'ok':
+                raise api_exceptions.APIError()
+        
+        return data
 
     def _get_url_by_reg(self, reg: str):
         reg = self._reg_normalizer(reg)
@@ -119,11 +98,7 @@ class API:
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url_get_tankopedia, verify_ssl=False) as response:
-                # Здесь можно было бы вызывать `response.raise_for_status()` вместо ручной проверки, но не критично
-                if response.status != 200:
-                    raise api_exceptions.APIError()
-
-                data = await response.json()
+                data = await self.response_handler(response, False)
 
                 if data['status'] == 'error':
                     _log.error(f'Error get tankopedia, bad response status: \n{data}')
@@ -139,30 +114,27 @@ class API:
             self.exact = True
             self.raw_dict = False
             raise api_exceptions.APIError('Empty parameter search or region')
+        
+        self.cache.delete_expired()
 
         self.exact = exact
         self.raw_dict = raw_dict
 
         _log.debug('Get stats method called, arguments: %s, %s', search, region)
         self.start_time = time()
-        self.need_cached = False
-        try:
-            cached_data = self.cache.get_item((search.lower(), region))
-        except KeyError:
-            self.need_cached = True
+        need_cached = False
+
+        cached_data = self.cache.get((search.lower(), region))
+
+        if cached_data is None:
+            need_cached = True
             _log.debug('Cache miss')
         else:
             _log.debug('Returned cached player data')
-            return cached_data
-        
+            return PlayerGlobalData(cached_data)
 
         account_id = await self.get_account_id(region=region, nickname=search)
-        # tasks_for_gather = [
-        #     self.get_player_stats(region=region, nickname=search, account_id=account_id),
-        #     self.get_player_tanks_stats(region=region, nickname=search, account_id=account_id),
-        #     self.get_player_clan_stats(region=region, nickname=search, account_id=account_id),
-        #     self.get_player_achievements(region=region, nickname=search, account_id=account_id)
-        # ]
+
         tasks = [
             self.get_player_stats,
             self.get_player_tanks_stats,
@@ -182,9 +154,15 @@ class API:
                     task = tg.create_task(task(account_id=account_id, region=region, nickname=search))
                     task.set_name(task_names[i])
                     task.add_done_callback(self.done_callback)
-                    await task
+            
+        self.player.timestamp = datetime.now().timestamp()
 
-            # await asyncio.gather(*tasks)
+        if need_cached:
+            self.cache.set((search.lower(), region), self.player.to_dict())
+            _log.debug('Data add to cache')
+
+        if self.raw_dict:
+            return self.player.to_dict()
 
         _log.debug(f'All requests time: {time() - self.start_time}')
         return get_normalized_data(self.player)
@@ -199,27 +177,19 @@ class API:
 
         async with aiohttp.ClientSession() as self.session:
             async with self.session.get(url_get_id, verify_ssl=False) as response:
-                # Проверки статуса и результата повторяются для каждого метода API.
-                # Можно было бы вынести эту общую логику в отдельный метод.
-                # _Zener: Согласен.
-                # _log.debug('Get account_id started')
-                if response.status != 200:
-                    raise api_exceptions.APIError()
-
-                data = await response.text()
-                data = json.loads(data)
+                data = await self.response_handler(response, False)
 
                 if data['status'] == 'error':
                     match data['error']['code']:
                         case 407 | 402:
                             raise api_exceptions.UncorrectName()
+                        
                 if data['meta']['count'] > 1:
                     raise api_exceptions.MoreThanOnePlayerFound()
                 elif data['meta']['count'] == 0:
                     raise api_exceptions.NoPlayersFound()
 
                 account_id: int = data['data'][0]['account_id']
-                _log.debug('Get account_id finished\n')
                 return account_id
 
     async def get_player_stats(self, region: str, account_id: str, **kwargs) -> PlayerStats:
@@ -233,30 +203,22 @@ class API:
         )
 
         async with self.session.get(url_get_stats, verify_ssl=False) as response:
-            if response.status != 200:
-                raise api_exceptions.APIError(f'Bad response code {response.status}')
+            data = await self.response_handler(response)
 
-            data = await response.json()  # ниже такие же штуки
+        try:
+            battles = data['data'][str(account_id)]['statistics']['all']['battles']
+        except KeyError:
+            raise api_exceptions.EmptyDataError('Cannot acces to field "battles" in the output data')
+        else:
+            if battles < 100:
+                raise api_exceptions.NeedMoreBattlesError('Need more battles for generate statistics')
 
-            if data['status'] != 'ok':
-                raise api_exceptions.APIError(f'Bad API response status {data}')
+        data['data'] = data['data'][str(account_id)]
+        data = PlayerStats(data)
 
-            data['data'] = data['data'][str(account_id)]
-            data = PlayerStats(data)
-
-            try:
-                battles = data.data.statistics.all.battles
-            except (KeyError, AttributeError):
-                raise api_exceptions.EmptyDataError('Cannot acces to field "battles" in the output data')
-            else:
-                if battles < 100:
-                    raise api_exceptions.NeedMoreBattlesError('Need more battles for generate statistics')
-                else:
-                    self.player.id = account_id
-                    self.player.data = data.data
-                    self.player.nickname = data.data.nickname
-
-            _log.debug('Get main stats finished\n')
+        self.player.id = account_id
+        self.player.data.statistics = data.data.statistics
+        self.player.nickname = data.data.nickname
 
     async def get_player_achievements(self, region: str, account_id: str, **kwargs) -> None:
         _log.debug('Get achievements started')
@@ -267,18 +229,9 @@ class API:
         )
 
         async with self.session.get(url_get_achievements, verify_ssl=False) as response:
-            if response.status != 200:
-                raise api_exceptions.APIError(f'Bad response code {response.status}')
+            data = await self.response_handler(response)
 
-            data = await response.text()
-            data = json.loads(data)
-
-            if data['status'] != 'ok':
-                raise api_exceptions.APIError(f'Bad API response status {data}')
-
-            self.player.data.achievements = Achievements(data['data'][str(account_id)]['achievements'])
-
-            _log.debug('Get achievements finished\n')
+        self.player.data.achievements = Achievements(data['data'][str(account_id)]['achievements'])
 
     async def get_player_clan_stats(self, region: str, account_id: str | int, **kwargs):
         _log.debug('Get clan stats started')
@@ -289,40 +242,18 @@ class API:
             f'&extra=clan'
         )
 
-        try:
-            async with self.session.get(url_get_clan_stats, verify_ssl=False) as response:
-                if response.status != 200:
-                    raise api_exceptions.APIError(f'Bad response code {response.status}')
+        async with self.session.get(url_get_clan_stats, verify_ssl=False) as response:
+            data = await self.response_handler(response)
 
-                clan_tag = None
-
-                data = await response.text()
-                data = json.loads(data)
-
-                if data is None:
-                    self.player.data.clan_tag = 'NONE'
-                    self.player.data.clan_stats = None
-                    return
-                
-                if data['status'] != 'ok':
-                    raise api_exceptions.APIError(f'Bad API response status {data}')
-                try:
-                    clan_tag = data['data'][str(account_id)]['clan']['tag']
-                except (AttributeError, KeyError) as e:
-                    raise api_exceptions.APIError(e)
-                else:
-                    data['data'] = data['data'][str(account_id)]
-                    data = ClanStats(data)
-                    self.player.data.clan_tag = clan_tag
-                    self.player.data.clan_stats = data.data.clan
-
-        # Ловить Exception, чаще всего, плохая идея: как минимум, будет трудно отлаживать.
-        # Лучше ловить конкретные типы исключений.
-        # _Zener: Поленился...
-            _log.debug('Get clan stats finished\n')
-        except (KeyError, AttributeError):
-            self.player.data.clan_tag = 'NONE'
+        if data['data'][str(account_id)] is None:
+            self.player.data.clan_tag = None
             self.player.data.clan_stats = None
+            return
+        
+        data['data'] = data['data'][str(account_id)]
+        data = ClanStats(data)
+        self.player.data.clan_tag = data.data.clan.tag
+        self.player.data.clan_stats = data.data.clan
 
     async def get_player_tanks_stats(self, region: str, account_id: str, nickname: str,  **kwargs):
         _log.debug('Get player tank stats started')
@@ -332,35 +263,16 @@ class API:
             f'&account_id={account_id}'
         )
         async with self.session.get(url_get_tanks_stats, verify_ssl=False) as response:
+            data = await self.response_handler(response)
 
-            if response.status != 200:
-                raise api_exceptions.APIError(f'Bad response code {response.status}')
+        tanks_stats: list[TankStats] = []
 
-            data = await response.text()
-            data = json.loads(data)
+        for i in data['data'][str(account_id)]:
+            tanks_stats.append(TankStats(i))
 
-            if data['status'] != 'ok':
-                raise api_exceptions.APIError(f'Bad API response status \n{data}')
-
-            tanks_stats: list[TankStats] = []
-
-            for i in data['data'][str(account_id)]:
-                tanks_stats.append(TankStats(i))
-
-            self.player.timestamp = datetime.now().timestamp()
-
-            self.player.region = self._reg_normalizer(region)
-            self.player.lower_nickname = nickname.lower()
-            self.player.data.tank_stats = tanks_stats
-
-            if self.need_cached:
-                self.cache.add_item(self.player)
-                _log.debug('Data add to cache')
-
-            # _log.debug('%s', return_data)
-            _log.debug('Get player tank stats finished\n')
-            if self.raw_dict:
-                return self.player.to_dict()
+        self.player.region = self._reg_normalizer(region)
+        self.player.lower_nickname = nickname.lower()
+        self.player.data.tank_stats = tanks_stats
 
 
 def test(nickname='cnJIuHTeP_KPbIca', region='ru', save_to_database: bool = False):

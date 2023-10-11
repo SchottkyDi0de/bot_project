@@ -3,7 +3,7 @@ from lib.data_classes.session import SesionDiffData
 from lib.database import tankopedia
 from lib.exceptions import data_parser
 from lib.logger import logger
-from lib.yaml.yaml2object import Parser
+import traceback
 
 _log = logger.get_logger(__name__, 'DataParserLogger', 'logs/data_parser.log')
 
@@ -67,9 +67,9 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
             data.data.tank_stats.pop(i)
             data.data.tank_stats = tanks
             
-    except Exception as e:
-        _log.error(f'Data parsing error, {str(e)}')
-        raise data_parser.DataParserError(e)
+    except* (AttributeError, TypeError):
+        _log.error(f'Data parsing error, \n{traceback.format_exc()}')
+        raise data_parser.DataParserError()
     else:
         _log.debug('Parsing data: OK')
         return data

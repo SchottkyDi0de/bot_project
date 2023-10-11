@@ -12,7 +12,7 @@ class Clan(JSONObject):
     clan_id: int = None
     emblem_set_id: int = None
 
-class Data(JSONObject):
+class ClanData(JSONObject):
     role: str = None
     clan_id: int = None
     joined_at: int = None
@@ -23,4 +23,4 @@ class Data(JSONObject):
 class ClanStats(JSONObject):
     status: str = None
     meta: Meta = Meta()
-    data: Data = Data()
+    data: ClanData = ClanData()

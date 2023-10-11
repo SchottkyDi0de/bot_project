@@ -2,15 +2,11 @@
 Модуль для генерирования изображения
 со статистикой.
 '''
-if __name__ == '__main__':
-    import os
-    import sys
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-    sys.path.insert(0, path)
-
 from datetime import datetime
 from io import BytesIO
 from time import time
+
+from cacheout import FIFOCache
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -22,99 +18,6 @@ from lib.utils.singleton_factory import singleton
 _log = logger.get_logger(__name__, 'ImageCommonLogger',
                          'logs/image_common.log')
 
-
-from datetime import datetime
-
-# Похоже на копипасту кэша из API.
-class ImageCache():
-    """
-    A class for caching images.
-    """
-
-    cache: dict = {}  # The cache dictionary
-    cache_ttl: int = 60  # The time-to-live for cache items in seconds
-    cache_size: int = 40  # The maximum number of items in the cache
-
-    def check_item(self, key):
-        """
-        Check if an item exists in the cache.
-
-        Args:
-            key: The key to check.
-
-        Returns:
-            True if the item exists in the cache, False otherwise.
-        """
-        if key in self.cache.keys():
-            return True
-        return False
-
-    def _overflow_handler(self):
-        """
-        Handle cache overflow by removing the oldest items.
-        """
-        overflow = len(self.cache.keys()) - self.cache_size
-        if overflow > 0:
-            for i in range(overflow):
-                key = list(self.cache.keys())[i]
-                self.cache.pop(key)
-
-    def del_item(self, key):
-        """
-        Delete an item from the cache.
-
-        Args:
-            key: The key of the item to delete.
-        """
-        del self.cache[key]
-
-    def check_timestamp(self, key):
-        """
-        Check if the timestamp of an item in the cache is still valid.
-
-        Args:
-            key: The key of the item to check.
-
-        Returns:
-            True if the timestamp is still valid, False otherwise.
-        """
-        current_time = datetime.now().timestamp()
-        time_stamp = self.cache[key]['timestamp']
-        time_delta = current_time - time_stamp
-        if time_delta > self.cache_ttl:
-            del self.cache[key]
-            return False
-        else:
-            return True
-
-    def add_item(self, item):
-        """
-        Add an item to the cache.
-
-        Args:
-            item: The item to add to the cache.
-        """
-        self._overflow_handler()
-        self.cache[item['id']] = item
-
-    def get_item(self, key):
-        """
-        Get an item from the cache.
-
-        Args:
-            key: The key of the item to get.
-
-        Returns:
-            The item if it exists in the cache and the timestamp is still valid.
-
-        Raises:
-            KeyError: If the item is not in the cache or the timestamp is not valid.
-        """
-        if self.check_item(key):
-            if self.check_timestamp(key):
-                return self.cache[key]
-
-        raise KeyError('Cache miss')
 
 
 class Fonts():
@@ -158,7 +61,7 @@ class Flags():
     eu = Image.open('res/image/flags/eu.png', formats=['png'])
     usa = Image.open('res/image/flags/usa.png', formats=['png'])
     china = Image.open('res/image/flags/china.png', formats=['png'])
-    cis = Image.open('res/image/flags/cis.png', formats=['png'])
+    ru = Image.open('res/image/flags/ru.png', formats=['png'])
 
 
 class Coordinates():
@@ -391,7 +294,7 @@ class ImageGen():
     fonts = Fonts()
     colors = Colors()
     leagues = Leagues()
-    cache = ImageCache()
+    cache = FIFOCache(maxsize=100, ttl=60)
     flags = Flags()
     value = None
     data = None
@@ -407,19 +310,21 @@ class ImageGen():
         self.text = Text().get()
         start_time = time()
         need_caching = False
-        try:
-            cached_data = self.cache.get_item(str(data.id))
-        except KeyError:
+
+        cached_data = self.cache.get(str(data.id))
+
+        if cached_data is None:
             need_caching = True
             _log.debug('Cache miss')
         else:
             _log.debug('Image loaded from cache')
-            bin_image = None
             bin_image = BytesIO()
             cached_data['img'].save(bin_image, 'PNG')
             bin_image.seek(0)
-            _log.debug('Image was sent in %s sec.',
-                       round(time() - start_time, 4))
+            _log.debug(
+                'Image was sent in %s sec.', 
+                round(time() - start_time, 4)
+                )
             return bin_image
 
         bin_image = None
@@ -454,11 +359,14 @@ class ImageGen():
         # self.draw_rating_points(img_draw)
         # self.darw_common_points(img_draw)
 
-        return_data = {'img': self.image, 'timestamp': datetime.now(
-        ).timestamp(), 'id': str(data.id)}
+        return_data = {
+            'img': self.image,
+            'timestamp': datetime.now().timestamp(), 
+            'id': str(data.id)
+            }
 
         if need_caching:
-            self.cache.add_item(return_data)
+            self.cache.set(str(data.id), return_data)
             _log.debug('Image added to cache')
 
         bin_image = BytesIO()
@@ -662,7 +570,7 @@ class ImageGen():
         # self.data.region = 'asia' - Only for test
         match self.data.region:
             case 'ru':
-                self.image.paste(self.flags.cis, (10, 10), self.flags.cis)
+                self.image.paste(self.flags.ru, (10, 10), self.flags.ru)
             case 'eu':
                 self.image.paste(self.flags.eu, (10, 10), self.flags.eu)
             case 'com':

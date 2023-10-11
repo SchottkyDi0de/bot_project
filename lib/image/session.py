@@ -345,7 +345,7 @@ class Flags():
     eu = Image.open('res/image/flags/eu.png', formats=['png'])
     usa = Image.open('res/image/flags/usa.png', formats=['png'])
     china = Image.open('res/image/flags/china.png', formats=['png'])
-    cis = Image.open('res/image/flags/cis.png', formats=['png'])
+    ru = Image.open('res/image/flags/ru.png', formats=['png'])
 
 
 @singleton
@@ -706,7 +706,7 @@ class ImageGen():
         # self.data.region = 'asia' - Only for test
         match self.data.region:
             case 'ru':
-                self.image.paste(self.flags.cis, (10, 10), self.flags.cis)
+                self.image.paste(self.flags.ru, (10, 10), self.flags.ru)
             case 'eu':
                 self.image.paste(self.flags.eu, (10, 10), self.flags.eu)
             case 'com':

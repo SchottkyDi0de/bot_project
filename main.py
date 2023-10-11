@@ -43,7 +43,7 @@ class App():
             _log.debug('Tankopedia set successfull\nBot started: %s', self.bot.user)
 
         self.load_extension(self.extension_names)
-        self.bot.run(st.DISCORD_TOKEN)
+        self.bot.run(st.DISCORD_TOKEN_DEV)
 
     @staticmethod
     async def retrieve_tankopedia(api: async_wotb_api.API, n_retries: int = 2) -> dict:

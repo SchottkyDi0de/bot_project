@@ -4,3 +4,5 @@ aiohttp==3.8.5
 python-easy-json==1.1.9
 python-dotenv==1.0.0
 pillow==10.0.1
+elara==0.5.5
+cachetools==5.3.1
