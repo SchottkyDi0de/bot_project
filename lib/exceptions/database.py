@@ -1,4 +1,4 @@
-class DatabaseError(BaseException):
+class DatabaseError(Exception):
     pass
 
 class MemberNotFound(DatabaseError):
