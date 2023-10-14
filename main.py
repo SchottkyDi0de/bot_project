@@ -1,8 +1,9 @@
-import traceback
 import os
-from pathlib import Path
+from threading import Thread
 
-from discord import Intents
+from asyncio import sleep
+
+from discord import Intents, Activity, ActivityType
 from discord.ext import commands
 
 from lib.api import async_wotb_api
@@ -32,18 +33,33 @@ class App():
         for i in extension_names:
             self.bot.reload_extension(i)
 
+    async def apply_presence(self):
+        await self.bot.change_presence(
+            activity=Activity(
+                name=f'Servers: {len(self.bot.guilds)}',
+                type=ActivityType.watching
+            )
+        )
+        _log.debug('Presence applied')
+
     def main(self):
+
 
         @self.bot.event
         async def on_ready():
             _log.info('Bot started: %s', self.bot.user)
+
             tp = tankopedia.TanksDB()
             api = async_wotb_api.API()
+
             tp.set_tankopedia(await self.retrieve_tankopedia(api))
             _log.debug('Tankopedia set successfull\nBot started: %s', self.bot.user)
+            await sleep(5)
+            await self.apply_presence()
 
         self.load_extension(self.extension_names)
         self.bot.run(st.DISCORD_TOKEN_DEV)
+
 
     @staticmethod
     async def retrieve_tankopedia(api: async_wotb_api.API, n_retries: int = 2) -> dict:

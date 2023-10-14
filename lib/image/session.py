@@ -41,7 +41,7 @@ class Leagues():
 
 
 class Coordinates():
-    def __init__(self, img_size):
+    def __init__(self, img_size: tuple[int]):
         """
         Class to store coordinates for labels and stats in an image.
 
@@ -86,8 +86,8 @@ class Coordinates():
 
         # Rating labels
         self.rating_labels = {
-            'rating_battles': (150, 560),  # Rating battles label
-            'winrate': (553, 560),  # Winrate label
+            'rating_battles': (553, 560),  # Rating battles label
+            'winrate': (150, 560),  # Winrate label
         }
 
         # Rating league label
@@ -162,23 +162,32 @@ class DiffValues():
         """
         self.val_normalizer = ValueNormalizer()
         self.main = {
-            'winrate': self.value_colors(diff_data.main_diff.winrate) + self.val_normalizer.winrate(diff_data.main_diff.winrate),
-            'avg_damage': self.value_colors(diff_data.main_diff.avg_damage) + self.val_normalizer.other(diff_data.main_diff.avg_damage),
-            'battles': self.value_colors(diff_data.main_diff.battles) + self.val_normalizer.other(diff_data.main_diff.battles)
+            'winrate': self.vlue_add_plus(diff_data.main_diff.winrate) + self.val_normalizer.winrate(diff_data.main_diff.winrate),
+            'avg_damage': self.vlue_add_plus(diff_data.main_diff.avg_damage) + self.val_normalizer.other(diff_data.main_diff.avg_damage),
+            'battles': self.vlue_add_plus(diff_data.main_diff.battles) + self.val_normalizer.other(diff_data.main_diff.battles)
         }
         self.rating = {
-            'winrate': self.value_colors(diff_data.rating_diff.winrate) + self.val_normalizer.winrate(diff_data.rating_diff.winrate),
-            'rating': self.value_colors(diff_data.rating_diff.rating) + self.val_normalizer.other(diff_data.rating_diff.rating),
-            'battles': self.value_colors(diff_data.rating_diff.battles) + self.val_normalizer.other(diff_data.rating_diff.battles)
+            'winrate': self.vlue_add_plus(diff_data.rating_diff.winrate) + self.val_normalizer.winrate(diff_data.rating_diff.winrate),
+            'rating': self.vlue_add_plus(diff_data.rating_diff.rating) + self.val_normalizer.other(diff_data.rating_diff.rating),
+            'battles': self.vlue_add_plus(diff_data.rating_diff.battles) + self.val_normalizer.other(diff_data.rating_diff.battles)
         }
         self.tank = {
-            'winrate': self.value_colors(diff_data.tank_diff.winrate) + self.val_normalizer.winrate(diff_data.tank_diff.winrate),
-            'avg_damage': self.value_colors(diff_data.tank_diff.avg_damage) + self.val_normalizer.other(diff_data.tank_diff.avg_damage),
-            'battles': self.value_colors(diff_data.tank_diff.battles) + self.val_normalizer.other(diff_data.tank_diff.battles)
+            'winrate': self.vlue_add_plus(diff_data.tank_diff.winrate) + self.val_normalizer.winrate(diff_data.tank_diff.winrate),
+            'avg_damage': self.vlue_add_plus(diff_data.tank_diff.avg_damage) + self.val_normalizer.other(diff_data.tank_diff.avg_damage),
+            'battles': self.vlue_add_plus(diff_data.tank_diff.battles) + self.val_normalizer.other(diff_data.tank_diff.battles)
         }
 
-    def value_colors(self, value: int | float) -> str:
-        if value > 0:
+    def vlue_add_plus(self, value: int | float) -> str:
+        """
+        Determines if the given value is positive or negative and returns the corresponding symbol.
+
+        Args:
+            value (int | float): The value to be evaluated.
+
+        Returns:
+            str: The symbol '+' if the value is positive, otherwise an empty string.
+        """
+        if round(value, 2) > 0:
             return '+'
         else:
             return ''
@@ -294,7 +303,9 @@ class ImageGen():
         strt_time = time()
         self.leagues = Leagues()
         need_caching = False
-        cached_data = self.cache.get(str(data.id))
+
+        current_lang = Text().get_current_lang()
+        cached_data = self.cache.get((str(data.id), current_lang))
 
         if cached_data is None:
             need_caching = True
@@ -336,6 +347,7 @@ class ImageGen():
         self.draw_tank_diff_stats(img_draw)
         self.draw_tank_session_stats(img_draw)
         self.draw_tank_labels(img_draw)
+        self.draw_flag()
 
         return_data = {'img': self.image, 'timestamp': datetime.now(
         ).timestamp(), 'id': str(data.id)}
@@ -344,7 +356,7 @@ class ImageGen():
             self.image.show()
 
         if need_caching:
-            self.cache.set(str(data.id), return_data)
+            self.cache.set((str(data.id), current_lang), return_data)
             _log.debug('Image added to cache')
 
         bin_image = BytesIO()
@@ -400,13 +412,13 @@ class ImageGen():
             text=self.data.data.name_and_tag,
             font=self.fonts.roboto,
             anchor='ma',
-            fill=self.colors.blue)
+            fill=Colors.blue)
         img.text(
             (self.img_size[0]//2, 55),
             text=f'ID: {str(self.data.id)}',
             font=self.fonts.roboto_small2,
             anchor='ma',
-            fill=self.colors.l_grey)
+            fill=Colors.l_grey)
 
     def draw_category_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.category_labels.keys():
@@ -415,7 +427,7 @@ class ImageGen():
                 text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small,
                 anchor='mm',
-                fill=self.colors.blue
+                fill=Colors.blue
             )
 
     def draw_main_labels(self, img: ImageDraw.ImageDraw):
@@ -426,7 +438,7 @@ class ImageGen():
                 font=self.fonts.roboto_small,
                 anchor='ma',
                 align='center',
-                fill=self.colors.blue
+                fill=Colors.blue
             )
 
     def draw_main_stats(self, img: ImageDraw.ImageDraw):
@@ -457,7 +469,7 @@ class ImageGen():
                 font=self.fonts.roboto_25,
                 anchor='ma',
                 align='center',
-                fill=self.colors.l_grey)
+                fill=Colors.l_grey)
 
     def draw_tank_name(self, img: ImageDraw.ImageDraw):
         img.text(
@@ -477,7 +489,7 @@ class ImageGen():
                 font=self.fonts.roboto_small,
                 anchor='ma',
                 align='center',
-                fill=self.colors.blue
+                fill=Colors.blue
             )
         self._rating_label_handler(img)
 
@@ -498,7 +510,7 @@ class ImageGen():
                 font=self.fonts.roboto_25,
                 anchor='ma',
                 align='center',
-                fill=self.colors.l_grey)
+                fill=Colors.l_grey)
 
     def draw_rating_icon(self, img: ImageDraw.ImageDraw) -> None:
         rt_img = self.leagues.empty
@@ -543,7 +555,7 @@ class ImageGen():
             font=self.fonts.roboto_small,
             anchor='ma',
             # align='center',
-            fill=self.colors.blue
+            fill=Colors.blue
         )
 
     def draw_rating_diff_stats(self, img: ImageDraw.ImageDraw):
@@ -587,7 +599,7 @@ class ImageGen():
                 font=self.fonts.roboto_25,
                 anchor='ma',
                 align='center',
-                fill=self.colors.l_grey)
+                fill=Colors.l_grey)
 
     def draw_tank_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.tank_labels.keys():
@@ -597,10 +609,10 @@ class ImageGen():
                 font=self.fonts.roboto_small,
                 anchor='ma',
                 align='center',
-                fill=self.colors.blue
+                fill=Colors.blue
             )
     
-    def draw_flag(self):
+    def draw_flag(self) -> None:
         # self.data.region = 'asia' - Only for test
         match self.data.region:
             case 'ru':
@@ -614,13 +626,14 @@ class ImageGen():
 
     def value_colors(self, value: int | float) -> tuple:
         if type(value) is str:
-            return self.colors.grey
+            return Colors.grey
+        value = round(value, 2)
         if value > 0:
-            return self.colors.green
+            return Colors.green
         if value < 0:
-            return self.colors.red
+            return Colors.red
         if value == 0:
-            return self.colors.grey
+            return Colors.grey
 
 
 if __name__ == '__main__':

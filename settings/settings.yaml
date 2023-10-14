@@ -5,4 +5,5 @@ bot_name:
 default: 
   prefix : '!'
   lang: 'en'
-  available_locales: ['ru', 'en', 'pl', 'ua']
+  available_locales: ['ru', 'en']
+  available_regions: ['ru', 'eu', 'na', 'asia']

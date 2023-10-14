@@ -106,6 +106,10 @@ setup:
   server_reg: 'Вкажіть регіон пошуку за замовчанням для цього серверу: '
   channel_reg: 'Вкажіть регіон пошуку за замовчанням для цього каналу: '
 
+lang:
+  lang: Language.
+  on_server: If selected, sets the localisation language of the bot for the whole server.
+
 time_units: # Need translate!!!
   hours: h.
   minuts: m.
@@ -139,6 +143,8 @@ errors:
     про регіони введіть команду `/help regions`
   session_not_found: 'Сесійні дані не знайдені, можливо ви не запустили сесію або минуло більше 12 годин з моменту старту минулої сесії.'
   session_not_updated: 'Не виявлено зміни статистики, можливо ви не робили боїв або API не оновило дані, спробуйте пізніше.'
+  lang_set_permission: To change the language on the whole server you need administrator rights.
+  player_not_registred: To set the language, first save your data with the `/set_player` command
 
 help:
   help: Допомога

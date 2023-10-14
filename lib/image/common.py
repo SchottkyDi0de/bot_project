@@ -14,6 +14,7 @@ from lib.data_classes.api_data import PlayerGlobalData
 from lib.locale.locale import Text
 from lib.logger import logger
 from lib.utils.singleton_factory import singleton
+from lib.locale.locale import Text
 
 _log = logger.get_logger(__name__, 'ImageCommonLogger',
                          'logs/image_common.log')
@@ -108,8 +109,8 @@ class Coordinates():
             'battles': (553, 175),
         }
         self.rating_labels = {
-            'rating_battles': (150, 535),
-            'winrate': (553, 535),
+            'winrate': (150, 535),
+            'rating_battles': (553, 535),
         }
         self.rating_league_label = (350, 550)
         self.rating_stats = {
@@ -173,13 +174,13 @@ class ValueNormalizer():
                   If val is 0, returns '—'.
                   Otherwise, returns the winrate value formatted as '{:.2f} %'.
         """
-        if val == 0:
+        if round(val, 2) == 0:
             if not enable_null:
                 return '—'
             else:
                 return '0'
 
-        return '{:.2f}'.format(val) + ' %'
+        return '{:.2f}'.format(val) + '%'
 
     @staticmethod
     def ratio(val, enable_null=False):
@@ -194,7 +195,7 @@ class ValueNormalizer():
                   If val is 0, returns '—'.
                   Otherwise, returns the ratio value formatted as '{:.2f}'.
         """
-        if val == 0:
+        if round(val, 2) == val == 0:
             if not enable_null:
                 return '—'
             else:
@@ -206,7 +207,7 @@ class ValueNormalizer():
     def other(val, enable_null=False):
         """
         Normalizes a value.
-       льное, дательный п. 
+
         Args:
             val (float or int): The value to normalize.
         
@@ -220,7 +221,7 @@ class ValueNormalizer():
                     rounded to 2 decimal places and appended with 'M'.
                   Otherwise, returns the value as a string.
         """
-        if val == 0:
+        if round(val) == 0:
             if not enable_null:
                 return '—'
             else:
@@ -244,15 +245,16 @@ class Values():
     def __init__(self, data: PlayerGlobalData) -> None:
         self.val_normalizer = ValueNormalizer()
         shorted_data = data.data.statistics
+        _log.debug(shorted_data.all.winrate)
         self.main = {
             'winrate': self.val_normalizer.winrate(shorted_data.all.winrate),
             'avg_damage': self.val_normalizer.other(shorted_data.all.avg_damage),
             'battles': self.val_normalizer.other(shorted_data.all.battles)
         }
         self.rating = {
-            'winrate': self.val_normalizer.other(shorted_data.rating.battles),
+            'winrate': self.val_normalizer.winrate(shorted_data.rating.winrate),
             'rating': self.val_normalizer.other(shorted_data.rating.rating),
-            'battles': self.val_normalizer.winrate(shorted_data.rating.winrate)
+            'battles': self.val_normalizer.other(shorted_data.rating.battles)
         }
         self.common = {
             'frags_per_battle': self.val_normalizer.ratio(shorted_data.all.frags_per_battle),
@@ -276,7 +278,6 @@ class Colors():
     """
     A class that represents different colors.
     """
-
     blue = (0, 136, 252)     # Represents the color blue
     yellow = (255, 252, 0)   # Represents the color yellow
     red = (192, 21, 21)      # Represents the color red
@@ -292,7 +293,6 @@ class Colors():
 class ImageGen():
     text = None
     fonts = Fonts()
-    colors = Colors()
     leagues = Leagues()
     cache = FIFOCache(maxsize=100, ttl=60)
     flags = Flags()
@@ -310,8 +310,9 @@ class ImageGen():
         self.text = Text().get()
         start_time = time()
         need_caching = False
+        current_lang = Text().get_current_lang()
 
-        cached_data = self.cache.get(str(data.id))
+        cached_data = self.cache.get((str(data.id), current_lang))
 
         if cached_data is None:
             need_caching = True
@@ -319,7 +320,7 @@ class ImageGen():
         else:
             _log.debug('Image loaded from cache')
             bin_image = BytesIO()
-            cached_data['img'].save(bin_image, 'PNG')
+            cached_data.save(bin_image, 'PNG')
             bin_image.seek(0)
             _log.debug(
                 'Image was sent in %s sec.', 
@@ -359,14 +360,8 @@ class ImageGen():
         # self.draw_rating_points(img_draw)
         # self.darw_common_points(img_draw)
 
-        return_data = {
-            'img': self.image,
-            'timestamp': datetime.now().timestamp(), 
-            'id': str(data.id)
-            }
-
         if need_caching:
-            self.cache.set(str(data.id), return_data)
+            self.cache.set((str(data.id), current_lang), self.image)
             _log.debug('Image added to cache')
 
         bin_image = BytesIO()
@@ -401,25 +396,25 @@ class ImageGen():
             text=self.data.data.name_and_tag,
             font=self.fonts.roboro_icon,
             anchor='ma',
-            fill=self.colors.blue)
+            fill=Colors.blue)
         img.text(
             (self.img_size[0]//2, 55),
             text=f'ID: {str(self.data.id)}',
             font=self.fonts.roboto_small2,
             anchor='ma',
-            fill=self.colors.l_grey)
+            fill=Colors.l_grey)
 
-    def draw_category_labels(self, img: object):
+    def draw_category_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.category_labels.keys():
             img.text(
                 self.coord.category_labels[i],
                 text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small,
                 anchor='mm',
-                fill=self.colors.blue
+                fill=Colors.blue
             )
 
-    def draw_medals_labels(self, img: object):
+    def draw_medals_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.medals_labels.keys():
             img.text(
                 self.coord.medals_labels[i],
@@ -427,10 +422,10 @@ class ImageGen():
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
-                fill=self.colors.blue
+                fill=Colors.blue
             )
 
-    def draw_common_labels(self, img: object):
+    def draw_common_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.common_stats_labels.keys():
             img.text(
                 self.coord.common_stats_labels[i],
@@ -438,10 +433,10 @@ class ImageGen():
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
-                fill=self.colors.blue
+                fill=Colors.blue
             )
 
-    def draw_main_labels(self, img: object):
+    def draw_main_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.main_labels.keys():
             img.text(
                 self.coord.main_labels[i],
@@ -449,10 +444,10 @@ class ImageGen():
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
-                fill=self.colors.blue
+                fill=Colors.blue
             )
 
-    def draw_rating_labels(self, img: object):
+    def draw_rating_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.rating_labels.keys():
             img.text(
                 self.coord.rating_labels[i],
@@ -460,7 +455,7 @@ class ImageGen():
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
-                fill=self.colors.blue
+                fill=Colors.blue
             )
         self._rating_label_handler(img)
 
@@ -485,7 +480,7 @@ class ImageGen():
             font=self.fonts.roboto_small2,
             anchor='ma',
             # align='center',
-            fill=self.colors.blue
+            fill=Colors.blue
         )
 
     def draw_main_stats(self, img: Image.Image):
@@ -582,147 +577,147 @@ class ImageGen():
         val = stats_value
         if stats_type == 'winrate':
             if val == 0:
-                return self.colors.grey
+                return Colors.grey
             if val <= 44:
-                return self.colors.red
+                return Colors.red
             if val <= 47:
-                return self.colors.orange
+                return Colors.orange
             if val <= 50:
-                return self.colors.yellow
+                return Colors.yellow
             if val <= 55:
-                return self.colors.green
+                return Colors.green
             if val < 60:
-                return self.colors.cyan
+                return Colors.cyan
             if val >= 60:
-                return self.colors.purple
+                return Colors.purple
 
         elif stats_type == 'avg_damage':
             if val == 0:
-                return self.colors.grey
+                return Colors.grey
             if val < 600:
-                return self.colors.red
+                return Colors.red
             if val < 900:
-                return self.colors.orange
+                return Colors.orange
             if val < 1200:
-                return self.colors.yellow
+                return Colors.yellow
             if val < 1700:
-                return self.colors.green
+                return Colors.green
             if val < 2500:
-                return self.colors.cyan
+                return Colors.cyan
             if val >= 2500:
-                return self.colors.purple
+                return Colors.purple
 
         elif stats_type == 'battles':
             if val == 0:
-                return self.colors.grey
+                return Colors.grey
             if val < 2000:
-                return self.colors.red
+                return Colors.red
             if val < 5000:
-                return self.colors.orange
+                return Colors.orange
             if val < 10000:
-                return self.colors.yellow
+                return Colors.yellow
             if val < 30000:
-                return self.colors.green
+                return Colors.green
             if val < 50000:
-                return self.colors.cyan
+                return Colors.cyan
             if val >= 50000:
-                return self.colors.purple
+                return Colors.purple
 
         elif stats_type == 'battles' and rating:
             if val == 0:
-                return self.colors.grey
+                return Colors.grey
             if val < 300:
-                return self.colors.red
+                return Colors.red
             if val < 700:
-                return self.colors.orange
+                return Colors.orange
             if val < 1000:
-                return self.colors.yellow
+                return Colors.yellow
             if val < 3000:
-                return self.colors.green
+                return Colors.green
             if val < 6000:
-                return self.colors.cyan
+                return Colors.cyan
             if val >= 6000:
-                return self.colors.purple
+                return Colors.purple
 
         elif stats_type == 'frags_per_battle':
             if val == 0:
-                return self.colors.grey
+                return Colors.grey
             if val < 0.60:
-                return self.colors.red
+                return Colors.red
             if val < 0.75:
-                return self.colors.orange
+                return Colors.orange
             if val < 1:
-                return self.colors.yellow
+                return Colors.yellow
             if val < 1.2:
-                return self.colors.green
+                return Colors.green
             if val < 1.3:
-                return self.colors.cyan
+                return Colors.cyan
             if val >= 1.3:
-                return self.colors.purple
+                return Colors.purple
 
         elif stats_type == 'damage_ratio':
             if val == 0:
-                return self.colors.grey
+                return Colors.grey
             if val < 0.7:
-                return self.colors.red
+                return Colors.red
             if val < 0.9:
-                return self.colors.orange
+                return Colors.orange
             if val < 1:
-                return self.colors.yellow
+                return Colors.yellow
             if val < 1.3:
-                return self.colors.green
+                return Colors.green
             if val < 2:
-                return self.colors.cyan
+                return Colors.cyan
             if val >= 2:
-                return self.colors.purple
+                return Colors.purple
 
         elif stats_type == 'destruction_ratio':
             if val == 0:
-                return self.colors.grey
+                return Colors.grey
             if val < 0.6:
-                return self.colors.red
+                return Colors.red
             if val < 0.8:
-                return self.colors.orange
+                return Colors.orange
             if val < 1:
-                return self.colors.yellow
+                return Colors.yellow
             if val < 1.4:
-                return self.colors.green
+                return Colors.green
             if val < 2.4:
-                return self.colors.cyan
+                return Colors.cyan
             if val >= 2.4:
-                return self.colors.purple
+                return Colors.purple
 
         elif stats_type == 'avg_spotted':
             if val == 0:
-                return self.colors.grey
+                return Colors.grey
             if val < 0.7:
-                return self.colors.red
+                return Colors.red
             if val < 0.9:
-                return self.colors.orange
+                return Colors.orange
             if val < 1:
-                return self.colors.yellow
+                return Colors.yellow
             if val < 1.2:
-                return self.colors.green
+                return Colors.green
             if val < 1.5:
-                return self.colors.cyan
+                return Colors.cyan
             if val >= 1.5:
-                return self.colors.purple
+                return Colors.purple
 
         elif stats_type == 'accuracy':
             if val == 0:
-                return self.colors.grey
+                return Colors.grey
             if val < 60:
-                return self.colors.red
+                return Colors.red
             if val < 65:
-                return self.colors.orange
+                return Colors.orange
             if val < 70:
-                return self.colors.yellow
+                return Colors.yellow
             if val < 75:
-                return self.colors.green
+                return Colors.green
             if val < 85:
-                return self.colors.cyan
+                return Colors.cyan
             if val >= 85:
-                return self.colors.purple
+                return Colors.purple
 
     def test(self):
         import lib.api.async_wotb_api as async_wotb_api

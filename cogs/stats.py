@@ -3,6 +3,7 @@ import traceback
 from discord import File, Option, Embed
 from discord.ext import commands
 
+from lib.settings.settings import SttObject
 from lib.exceptions import api, data_parser
 from lib.image.common import ImageGen
 from lib.locale.locale import Text
@@ -25,22 +26,24 @@ class Stats(commands.Cog):
         self.api = API()
         self.db = PlayersDB()
         self.sdb = ServersDB()
+        self.inf_msg = InfoMSG()
+        self.err_msg = ErrorMSG()
         
-    @commands.slash_command(description=Text().data.cmd_description.stats)
+    @commands.slash_command(description=Text().get().cmds.stats.descr.this)
     async def stats(
             self, 
             ctx: commands.Context,
             nickname: Option(
                 str,
-                description=Text().data.cmd_description.nickname,
+                description=Text().get().frequent.common.nickname,
                 required=True,
                 max_lenght=24,
                 min_lenght=3
             ),
             region: Option(
                 str,
-                description=Text().data.cmd_description.region,
-                choices=Text().data.common.regions,
+                description=Text().get().frequent.common.region,
+                choices=SttObject().get().default.available_regions,
                 required=True
             ),
         ):
@@ -51,66 +54,66 @@ class Stats(commands.Cog):
         
         try:
             await ctx.defer()
-            Text().load(self.sdb.safe_get_lang(ctx.guild.id))
-            
-            img = await self.get_stats(nickname, region)
-            if isinstance(img, Embed):
-                await ctx.respond(embed=img)
-            else:
+            Text().load_from_context(ctx)
+            img = await self.get_stats(ctx, nickname, region)
+
+            if img is not None:
                 await ctx.respond(file=File(img, 'stats.png'))
                 img.close()
+
         except Exception:
             _log.error(traceback.format_exc())
-            await ctx.respond(embed=ErrorMSG().unknown_error)
+            await ctx.respond(embed=self.err_msg.unknown_error())
 
-    @commands.slash_command(description=Text().data.cmd_description.astats)
+    @commands.slash_command(description=Text().get().cmds.astats.descr.this)
     async def astats(self, ctx):
         try:
             check_user(ctx)
         except UserBanned:
             return
         
+        Text().load_from_context(ctx)
         try:
             await ctx.defer()
             if not self.db.check_member(ctx.author.id):
-                await ctx.respond(embed=InfoMSG().player_not_registred)
+                await ctx.respond(embed=self.inf_msg.player_not_registred_astats())
                 
             else:
-                Text().load(self.sdb.safe_get_lang(ctx.guild.id))
                 player_data = self.db.get_member(ctx.author.id)
-                img = await self.get_stats(player_data['nickname'], player_data['region'])
-                if isinstance(img, Embed):
-                    await ctx.respond(embed=img)
-                else:
+                img = await self.get_stats(ctx, player_data['nickname'], player_data['region'])
+
+                if img is not None:
                     await ctx.respond(file=File(img, 'stats.png'))
                     img.close()
+
         except Exception:
             _log.error(traceback.format_exc())
-            await ctx.respond(embed=ErrorMSG().unknown_error)
+            await ctx.respond(embed=self.err_msg.unknown_error())
     
-    async def get_stats(self, nickname, region):
+    async def get_stats(self, ctx: commands.Context, nickname: str, region: str):
+        exception = None
         try:
-            try:
-                data = await self.api.get_stats(nickname, region)
-            except api.EmptyDataError:
-                return ErrorMSG().unknown_error
-            except api.NeedMoreBattlesError:
-                return ErrorMSG().need_more_battles
-            except api.UncorrectName:
-                return ErrorMSG().uncorrect_name
-            except api.UncorrectRegion:
-                return ErrorMSG().uncorrect_region
-            except api.NoPlayersFound:
-                return ErrorMSG().player_not_found
-            except api.APIError:
-                return ErrorMSG().api_error
-            except data_parser.DataParserError:
-                return ErrorMSG().parser_error
-            else:
-                img_data = self.img_gen.generate(data)
-                return img_data
-        except Exception:
-            _log.error(traceback.format_exc())
+            data = await self.api.get_stats(nickname, region)
+        except* api.EmptyDataError:
+            exception = 'unknown_error'
+        except* api.NeedMoreBattlesError:
+            exception = 'need_more_battles'
+        except* api.UncorrectName:
+            exception = 'UncorrectName'
+        except* api.UncorrectRegion:
+            exception = 'uncorrect_region'
+        except* api.NoPlayersFound:
+            exception = 'player_not_found'
+        except* api.APIError:
+            exception = 'api_error'
+        except* data_parser.DataParserError:
+            exception = 'parser_error'
+        if exception is not None:
+            await ctx.respond(embed=getattr(self.err_msg, exception)())
+            return None
+        else:
+            img_data = self.img_gen.generate(data)
+            return img_data
 
 
 def setup(bot):

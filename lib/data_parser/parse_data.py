@@ -1,6 +1,5 @@
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.data_classes.session import SesionDiffData
-from lib.database import tankopedia
 from lib.exceptions import data_parser
 from lib.logger import logger
 import traceback
@@ -14,23 +13,22 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
 
         data.data.statistics.all.avg_xp = all_stats.xp // all_stats.battles
         data.data.statistics.all.avg_damage = all_stats.damage_dealt // all_stats.battles
-        data.data.statistics.all.accuracy = round((all_stats.hits / all_stats.shots) * 100, 2)
-        data.data.statistics.all.winrate = round((all_stats.wins / all_stats.battles) * 100, 2)
-        data.data.statistics.all.avg_spotted = round((all_stats.spotted / all_stats.battles), 2)
-        data.data.statistics.all.frags_per_battle = round((all_stats.frags / all_stats.battles), 2)
+        data.data.statistics.all.accuracy = (all_stats.hits / all_stats.shots) * 100
+        data.data.statistics.all.winrate = (all_stats.wins / all_stats.battles) * 100
+        data.data.statistics.all.avg_spotted = (all_stats.spotted / all_stats.battles)
+        data.data.statistics.all.frags_per_battle = (all_stats.frags / all_stats.battles)
         data.data.statistics.all.not_survived_battles = all_stats.battles - all_stats.survived_battles
-        data.data.statistics.all.survival_ratio = round((all_stats.survived_battles / all_stats.battles), 2)
-        data.data.statistics.all.damage_ratio = round((all_stats.damage_dealt / all_stats.damage_received), 2)
-        data.data.statistics.all.destruction_ratio = round((all_stats.frags / all_stats.not_survived_battles), 2)
+        data.data.statistics.all.survival_ratio = (all_stats.survived_battles / all_stats.battles)
+        data.data.statistics.all.damage_ratio = (all_stats.damage_dealt / all_stats.damage_received)
+        data.data.statistics.all.destruction_ratio = (all_stats.frags / all_stats.not_survived_battles)
 
         data.data.statistics.rating.rating = 0
 
         if data.data.statistics.rating.calibration_battles_left == 0:
-            # Вообще, округлять лучше при выводе данных куда-либо, а в структурах хранить честное значение.
             data.data.statistics.rating.rating = round(data.data.statistics.rating.mm_rating * 10 + 3000)
 
         if data.data.statistics.rating.battles != 0:
-            data.data.statistics.rating.winrate = round((data.data.statistics.rating.wins / data.data.statistics.rating.battles)*100, 2)
+            data.data.statistics.rating.winrate = (data.data.statistics.rating.wins / data.data.statistics.rating.battles)*100
         else:
             data.data.statistics.rating.winrate = 0
             
@@ -52,20 +50,21 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
 
         tanks = data.data.tank_stats
 
-        for i, j in enumerate(tanks):  # i & j – так себе имена, не понятно, что они означают
-            tank = j
+        for index, tank in enumerate(tanks):
 
             if tank.all.battles != 0:
-                tank.all.winrate = round((tank.all.wins / tank.all.battles) * 100, 2)
+                tank.all.winrate = (tank.all.wins / tank.all.battles) * 100
                 tank.all.avg_damage = tank.all.damage_dealt // tank.all.battles
             else:
                 tank.all.winrate = 0
+                tank.all.avg_damage = 0
 
             # Не очень понимаю, что здесь происходит в `tanks` & `data.data.tank_stats`,
             # выглядит подозрительно.
-            tanks.insert(i, tank)
-            data.data.tank_stats.pop(i)
-            data.data.tank_stats = tanks
+            tanks[index] = tank
+            # tanks.insert(index, tank)
+            # data.data.tank_stats.pop(index)
+            # data.data.tank_stats = tanks
             
     except* (AttributeError, TypeError):
         _log.error(f'Data parsing error, \n{traceback.format_exc()}')
@@ -107,7 +106,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
         r_diff_winrate = data_new_shorted.rating.winrate - data_old_shorted.rating.winrate
 
         if r_diff_battles != 0:
-            r_session_winrate = round((data_new_shorted.rating.wins / data_new_shorted.rating.battles) * 100, 2)
+            r_session_winrate = data_new_shorted.rating.wins / data_new_shorted.rating.battles * 100
             r_session_rating = (data_new_shorted.rating.mm_rating - data_old_shorted.rating.mm_rating) * 10
         else:
             r_session_winrate = 0
@@ -115,23 +114,29 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
         
         if not battles_not_updated:
             diff_battles = data_new_shorted.all.battles - data_old_shorted.all.battles
-            diff_winrate = round(data_new_shorted.all.winrate - data_old_shorted.all.winrate, 2)
+            diff_winrate = data_new_shorted.all.winrate - data_old_shorted.all.winrate
             diff_avg_damage = data_new_shorted.all.avg_damage - data_old_shorted.all.avg_damage
 
             t_diff_battles = new_tank.all.battles - old_tank.all.battles
             
-            old_tank.all.winrate = round((old_tank.all.wins / old_tank.all.battles) * 100, 2)
-            new_tank.all.winrate = round((new_tank.all.wins / new_tank.all.battles) * 100, 2)
+            if old_tank.all.battles != 0:
+                old_tank.all.winrate = old_tank.all.wins / old_tank.all.battles * 100
+                old_tank.all.avg_damage = old_tank.all.damage_dealt // old_tank.all.battles
+                t_avg_damage_before = old_tank.all.damage_dealt // old_tank.all.battles
+            else:
+                old_tank.all.winrate = 0
+                old_tank.all.avg_damage = 0
+
+            new_tank.all.winrate = new_tank.all.wins / new_tank.all.battles * 100
             t_diff_winrate = new_tank.all.winrate - old_tank.all.winrate
             
-            t_avg_damage_before = old_tank.all.damage_dealt // old_tank.all.battles
             t_avg_damage_after = new_tank.all.damage_dealt // new_tank.all.battles
             t_diff_avg_damage = t_avg_damage_after - t_avg_damage_before
 
-            session_winrate = round((data_new_shorted.all.wins - data_old_shorted.all.wins) // diff_battles * 100, 2)
+            session_winrate = (data_new_shorted.all.wins - data_old_shorted.all.wins) / diff_battles * 100
             session_avg_damage = (data_new_shorted.all.damage_dealt - data_old_shorted.all.damage_dealt) // diff_battles
 
-            t_session_winrate = round((new_tank.all.wins - old_tank.all.wins) // t_diff_battles * 100, 2)
+            t_session_winrate = (new_tank.all.wins - old_tank.all.wins) / t_diff_battles * 100
             t_session_avg_damage = (new_tank.all.damage_dealt - old_tank.all.damage_dealt) // t_diff_battles
             
             

@@ -107,6 +107,10 @@ time_units: # Need translate!!!
   hours: h.
   minuts: m.
 
+lang:
+  lang: Language.
+  on_server: If selected, sets the localisation language of the bot for the whole server.
+
 info:
   info: Informacje
   set_player_ok: 'Informacje o graczu zostały pomyślnie zapisane, teraz możesz użyć `/astats` do automatycznego wyświetlania statystyk na podstawie zapisanych danych.'
@@ -135,6 +139,8 @@ errors:
   incorrect_region: "Określono nieprawidłowy region żeby wyszukać gracza. Aby dowiedzieć się więcej o regionach, wpisz polecenie `/help regions`"
   session_not_found: 'Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęło więcej niż 12 godzin od ostatniego uruchomienia sesji.'
   session_not_updated: 'Nie wykryto zmian w statystykach, być może nie zagrałeś żadnych bitew lub API nie zaktualizowało danych, spróbuj ponownie później.'
+  lang_set_permission: To change the language on the whole server you need administrator rights.
+  player_not_registred: To set the language, first save your data with the `/set_player` command
 
 help:
   help: Pomoc

@@ -61,6 +61,7 @@ class API:
             dict: The data returned from the API as a dictionary.
         """
         if response.status != 200:
+            _log.error(f'Error get data, bad response status: {response.status}')
             raise api_exceptions.APIError()
         
         data = await response.text()
@@ -68,6 +69,7 @@ class API:
 
         if check_data_status:
             if data['status'] != 'ok':
+                _log.error(f'Error get data, bad response status: {data}')
                 raise api_exceptions.APIError()
         
         return data
@@ -158,7 +160,7 @@ class API:
         self.player.timestamp = datetime.now().timestamp()
 
         if need_cached:
-            self.cache.set((search.lower(), region), self.player.to_dict())
+            self.cache.set((search.lower(), region), get_normalized_data(self.player).to_dict())
             _log.debug('Data add to cache')
 
         if self.raw_dict:
@@ -191,6 +193,20 @@ class API:
 
                 account_id: int = data['data'][0]['account_id']
                 return account_id
+            
+    async def get_player_battles(self, region: str, account_id: str, **kwargs) -> int:
+        url_get_battles = (
+            f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
+            f'?application_id={self._get_id_by_reg(region)}'
+            f'&account_id={account_id}'
+            f'&fields=-statistics.clan'
+        )
+
+        async with aiohttp.ClientSession() as sesison:
+            async with sesison.get(url_get_battles, verify_ssl=False) as response:
+                data = await self.response_handler(response)
+
+        return data['data'][str(account_id)]['statistics']['all']['battles']
 
     async def get_player_stats(self, region: str, account_id: str, **kwargs) -> PlayerStats:
         _log.debug('Get main stats started')

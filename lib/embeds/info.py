@@ -1,59 +1,99 @@
 from discord import Colour
 from discord import Embed
+
+from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
 
+@singleton
+class InfoMSG:
 
-class InfoMSG():
-    def __init__(self):
-        text = Text().get()
-
-        self.player_not_registred = Embed(
-            title=text.info.info,
-            description=text.info.player_not_registred,
+    def player_not_registred(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().frequent.info.player_not_registred,
             colour=Colour.orange()
         )
-        self.set_player_ok = Embed(
-            title=text.info.info,
-            description=text.info.set_player_ok,
+
+    def set_player_ok(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.set_player.info.set_player_ok,
             colour=Colour.green()
         )
-        self.player_not_registred_session = Embed(
-            title=text.info.info,
-            description=text.info.player_not_registred_session,
+
+    def player_not_registred_session(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.start_session.info.player_not_registred,
             colour=Colour.orange()
         )
-        self.session_started = Embed(
-            title=text.info.info,
-            description=text.info.session_started,
+    
+    def player_not_registred_astats(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.astats.info.player_not_registred,
+            colour=Colour.orange()
+        )
+
+    def session_started(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.start_session.info.started,
             colour=Colour.green()
         )
-        self.set_lang_ok = Embed(
-            title=text.info.info,
-            description=text.info.set_lang_ok,
+
+    def set_lang_ok(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.set_lang.info.set_lang_ok,
             color=Colour.green()
         )
-        self.help_syntax = Embed(
-            title=text.info.info,
-            description=text.help.syntax,
+
+    def help_syntax(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.help.items.syntax,
             colour=Colour.blurple()
         )
-        self.help_setup = Embed(
-            title=text.info.info,
-            description=text.help.setup,
+
+    def help_setup(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.help.items.setup,
             colour=Colour.blurple()
         )
-        self.help_statistics = Embed(
-            title=text.info.info,
-            description=text.help.statistics,
+
+    def help_statistics(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.help.items.statistics,
             colour=Colour.blurple()
         )
-        self.help_session = Embed(
-            title=text.info.info,
-            description=text.help.session,
+
+    def help_session(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.help.items.session,
             colour=Colour.blurple()
         )
-        self.help_send_ok = Embed(
-            title=text.info.info,
-            description=text.help.send_ok,
+
+    def help_send_ok(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.help.info.send_ok,
             colour=Colour.green()
         )
+    def session_state(self, text: str) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=text,
+            colour=Colour.green()
+        )
+    def custom(self, text: str, colour: str = 'blurple') -> Embed:
+        colour = getattr(Colour, colour)
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=text,
+            colour=colour()
+        )
+        

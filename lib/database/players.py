@@ -33,6 +33,7 @@ class PlayersDB():
                 'region': region,
                 'premium': False,
                 'premium_time': None,
+                'lang': 'en',
                 'last_stats': dict()
             }
         self.db.commit()
@@ -56,15 +57,18 @@ class PlayersDB():
             raise database.MemberNotFound(f'Member not found, id: {member_id}')
         else:
             return self.db['members'][member_id]
+        
+    def get_member_lang(self, member_id: int) -> str:
+        member_id = str(member_id)
+
+        if self.check_member(member_id):
+            return self.db['members'][member_id]['lang']
+        return None
 
     def delete_member_last_stats(self, member_id: int) -> None:
         member_id = str(member_id)
         del self.db['members'][member_id]['last_stats']
         self.db.commit()
-
-    def get_server_lang(self, server_id):
-        server_id = str(server_id)
-        return self.db['servers'][server_id]['settings']['lang']
 
     def delete_member(self, member_id: int):
         del self.db['members'][member_id]
@@ -74,6 +78,14 @@ class PlayersDB():
         member_id = str(member_id)
         self.db['members'][member_id]['last_stats'] = data
         self.db.commit()
+
+    def set_member_lang(self, member_id: int, lang: str):
+        member_id = str(member_id)
+        if self.check_member(member_id):
+            self.db['members'][member_id]['lang'] = lang
+            self.db.commit()
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
 
     def check_member_last_stats(self, member_id) -> bool:
         member_id = str(member_id)
@@ -97,7 +109,7 @@ class PlayersDB():
         now_time = datetime.now().timestamp()
         member = self.get_member(member_id)
         try:
-            if (now_time - member['last_stats']['timestamp']) > 43200:
+            if (now_time - member['last_stats']['timestamp']) > 86400:
                 self.delete_member_last_stats(member_id)
         except (KeyError, ValueError, AttributeError) as e:
             raise database.LastStatsNotFound(e)

@@ -7,6 +7,7 @@ class Default(JSONObject):
     prefix: str = None
     lang: str = None
     available_locales: List[str]
+    available_regions: List[str]
 
 
 class Settings(JSONObject):

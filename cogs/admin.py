@@ -87,9 +87,7 @@ class AdminCommand(commands.Cog):
                 
                 else:
                     await ctx.author.send('```Uncorrect command format\n!blacklist [ID: Integer] {Add|Remove: String}```')
-                        
-                text = msg[1]
-                await ctx.guild.ban(user=ctx.author, reason=text)
+            
             except Exception:
                 _log.error(traceback.format_exc())
                 ctx.author.send()
@@ -120,20 +118,21 @@ class AdminCommand(commands.Cog):
             try:
                 db = PlayersDB()
                 for i, j in enumerate(db.db['members']):
-                    await ctx.author.send(f"```Player_id: {db.db['members'][j]['id']}\nPlayer_nickname: {db.db['members'][j]['nickname']}\nRegion: {db.db['members'][j]['region']}```")
+                    await ctx.author.send(f"```Player_id: {db.db['members'][j]['id']}\nPlayer_nickname: {db.db['members'][j]['nickname']}\nRegion: {db.db['members'][j]['region']}\nlang{db.db['members'][j]['lang']}```")
                 await ctx.author.send(f"`Count: {i+1}`")
             except Exception:
                 await ctx.author.send(traceback.format_exc())
 
     @commands.command()
     async def get_servers(self, ctx):
-        try:
-            sdb = ServersDB()
-            for i, j in enumerate(sdb.db['servers']):
-                await ctx.author.send(f"```Server_id: {sdb.db['servers'][j]['id']}\n Server_name: {sdb.db['servers'][j]['name']}\nSettings: {sdb.db['servers'][j]['settings']}```")
-            await ctx.author.send(f"`count: {i+1}`")
-        except Exception:
-            await ctx.author.send(f'```{traceback.format_exc()}```')
+        if ctx.author.id in _admin_ids:
+            try:
+                sdb = ServersDB()
+                for i, j in enumerate(sdb.db['servers']):
+                    await ctx.author.send(f"```Server_id: {sdb.db['servers'][j]['id']}\n Server_name: {sdb.db['servers'][j]['name']}\nSettings: {sdb.db['servers'][j]['settings']}```")
+                await ctx.author.send(f"`count: {i+1}`")
+            except Exception:
+                await ctx.author.send(f'```{traceback.format_exc()}```')
 
     @commands.command()
     async def get_sessions(self, ctx):

@@ -1,4 +1,13 @@
 ---
+# This localization file use placeholders:
+# format: <key_name>
+#
+# Example:
+#   srv_id: "server_id: <id>"
+#
+# Please do not change the placeholders names when translating the file.
+# _Zener
+
 for_image:
   main: MAIN
   winrate: WINRATE
@@ -69,135 +78,205 @@ for_image:
   no_clan: WITHOUT CLAN
   no_data: NO DATA
 
-cmd_description:
-  stats: View player statistics.
-  astats: Display of player statistics without entering any data.
-  nickname: Player nickname.
-  region: Search region.
-  get_session: "Get session"
-  start_session: Start of session.
-  stop_session: End of session.
-  lang: Language.
-  help: Help
-  help_types: Help category
 
-common:
-  nickname: Nickname
-  region: Region
-  regions:
-    - ru
-    - eu
-    - na
-    - asia
-  langs:
-    - ru
-    - en
-    - pl
-    - ua
+frequent:
+  errors:
+    error: Error
+    unknown_error: Unknown error.
+    user_banned: You are blocked and cannot use this bot's commands.
+    api_error: Error when working with API.
+    parser_error: Error when parsing data.
 
-session:
+  info:
+    info: Information
+    player_not_registred: The player is not logged in. First enter the command `/set_player`
 
-setup:
-  setup: Customise
-  server_lang: Specify the language the bot will use on the server.
-  channel_lang: Specify the language that the bot will use in this channel.
-  server_reg: "Specify the default search region for this server: "
-  channel_reg: "Specify the default search region for this channel: "
+  common:
+    nickname: Nickname
+    region: Region
+    time_units:
+      h: 'h'
+      m: 'm'
+      s: 's'
+      
 
-time_units:
-  hours: h.
-  minuts: m.
+cmds:
+# astats command
+  astats:
+    descr:
+      this: Show player stats without inputting any data.
+      sub_descr:
+        ''
+    errors:
+      player_not_found: No player with this nickname has been found.
+    info:
+      player_not_registred: To display stats without entering data, save your data with `/set_player`.
+    items:
+      ''
 
-info:
-  info: Info
-  set_player_ok: "Player information has been successfully saved, you can now use `/astats` to automatically display statistics based on the saved data."
-  player_not_registred: "To request statistics without entering data, first save the data using the `/set_player` command."
-  session_started: "The session has started, now play a few battles to generate a session"
-  player_not_registred_session: "To use the session, save the data using the `/set_player` command."
-  set_lang_ok: "Localization language changed successfully."
+# stats command
+  stats:
+    descr:
+      this: Request for player stats.
+      sub_descr:
+        nickname: Player's nickname.
+        region: Selecting a region from the list.
+    errors:
+      player_not_found: No player with this nickname has been found.
+      no_battles: Not enough fights to generate stats!
+    info:
+      ''
+    items:
+      ''
 
-session_state:
-  started: Session started.
-  not_started: Session not started.
-  player_not_registred: The user is not registered, use `/astats` to save their data.'
-  age: 'Duration of the session: '
+# Set player command
+  set_player:
+    descr:
+      this: Saves the data for future queries.
+      sub_descr:
+        nickname: Player's nickname.
+        region: Selecting a region from the list.
+    errors:
+      player_not_found: No player with this nickname has been found.
+    info:
+      set_player_ok: 'Player information has been successfully saved, you can now use `/astats` to automatically display statistics based on the saved data.'
+    items:
+      ''
 
-errors:
-  error: Error
-  parser_error: Server data processing error
-  no_battles: Not enough battles to generate statistics!
-  player_not_found: No player with this nickname has been found.
-  api_error: Internal API error
-  user_banned: User banned!
-  unknown_error: Unknown error.
-  incorrect_name: |-
-    Incorrect nickname.
-    An alias can only consist of the letters of the alphabet A-Z, '_', the numbers 0-9 and be between 3 and 24 characters long.
-  incorrect_region: "You have specified an invalid region to search for a player. To learn more about regions type the command `/help regions`."
-  session_not_found: "Session data not found, perhaps the session has not been started or it has been more than 12 hours since the session was last started."
-  session_not_updated: "No change in stats detected, perhaps you have not played any battles or the API has not updated the data, try again later."
+# Set lang command
+  set_lang:
+    descr:
+      this: Language change.
+      sub_descr:
+        lang_list: List of languages.
+        to_server: Apply for server.
+    errors:
+      player_not_registred: To change the language, first save your data with `/set_player`
+      permission_denied: You must have administrator rights to change the language on the entire server.
+    info:
+      set_lang_ok: Localisation language has been successfully changed.
 
-help:
-  help: Help
-  types: [syntax, setup, statistics, session, all]
-  send_ok: Help message was sended.
-  syntax: |-
-    > ***Command syntax***:
-    > `/command [arg_1] <arg_2> <arg_3[]>`
-    > - Some commands have arguments, which can be mandatory or optional, and can also be a list of ready-made parameters to choose from.
-    > `/command [arg]`
-    > - If an argument is specified in square brackets `[]`, it is mandatory.
-    > - If the argument is specified in triangle brackets `<>`, it is optional.
-    > - Arguments with square brackets after the name are a list.
-    > `[arg_name[]] <arg_name[]> - lists`
-    > `[arg_name] <arg_name> - default`
-    > - They can also be mandatory or optional.
-    > 
-    > ***Example:***
-    > `/stats [nickname] [region[]]`
-    > - The `nickname` argument is mandatory.
-    > - The `region[]` argument is also mandatory, and contains a list of regions from which to select 1.
-  setup: |-
-    **Setup commands:**
-    > 1: `/set_lang [lang[]]`
-    > ***Arguments:***
-    > - `lang[]` List of available languages (string)
-    > ***What does:***
-    > - Sets the localization language for the bot on the server in which the command was called.
-    > 
-    > 2: `/set_player [nickname] [region[]]`
-    > ***Arguments:***
-    > - `nickname` The nickname of the player to save (string)
-    > - `region[]` Region to search (string)
-    > 3: ***What it does:***
-    > - Records the player in the database for later use in sessions and for the team `/astats`
-  statistics: |-
-    > **Commands to call statistics:**
-    > 1: `/stats [nickname] [region[]]`
-    > ***Arguments:***
-    > - `nickname` The nickname of the player to search for (string)
-    > - `region[]` Region to search for (string)
-    > ***What does:***
-    > - Searches for a player with the given nickname in the given region. 
-    > If the player is found, a picture with detailed statistics is returned.
-    > Otherwise, an error is returned.
-    > 
-    > 2: `/astats`
-    > ***What it does:***
-    > - Same as `/stats` but you don't need to enter the data, it is taken from the database after registering it with the command 
-    > `/set_player`
-  session: |-
-    > Game session management commands:
-    > 1: `/start_session`.
-    > ***What it does:***
-    > - Starts a session, after starting a session you need to play a few fights to generate a session.
-    > To use, you need to save your data with `/set_player`
-    > 
-    > 2: `/get_session`
-    > ***What it does:***
-    > - Generates a player session and sends a picture of session stats in response.
-    > To use, save your data with `/set_player` and start the session with `/start_session`
-    > 
-    > 3: `/session_state`
-    > ***What it does:***
-    > - Displays whether the session is active and the time the session has been active.
+# Session state command
+  session_state:
+    descr:
+      this: Session Status
+      sub_descr:
+        ''
+    errors:
+      session_not_found: No session data found, you may not have started a session or it may have been more than 24 hours since the last session started.
+    info:
+      player_not_registred: To view the session status, first save your data with `/set_player`
+    items:
+      started: |- 
+        ```py
+        The session is running.
+        +----------------------------+
+        Session time: <time>
+        Before reset: <time_left>
+        Battles played: <battles>
+        +----------------------------+
+        >>> You can extend the session: /extend_session
+        The session will be extended for 24 hours.
+        ```
+      not_started: "Session not started."
+
+# Get session command
+  get_session:
+    descr:
+      this: Get session
+      sub_descr:
+        ''
+    errors:
+      session_not_found: No session data found, you may not have started a session or it may have been more than 24 hours since the last session started.
+      session_not_updated: No change in stats detected, maybe you haven't done any fights or the API hasn't updated the data, try again later.
+    info:
+      player_not_registred: To view session stats, first save your data with `/set_player`
+    items:
+      ''
+
+# Start session command
+  start_session:
+    descr:
+      this: Start session
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      player_not_registred: To start the session, first save your data with `/set_player`
+      started: Session is running. Now you can play some battles and get session statistics using `/get_session`.
+    items:
+      ''
+
+  help: 
+    descr:
+      this: Help
+      sub_descr:
+        help_types: Choose category
+    errors:
+      ''
+    info:
+      send_ok: Help message was sent.
+    items:
+      help_types: [syntax, setup, statistics, session, all]
+      help: Help
+      syntax: |-
+        > ***Command syntax***:
+        > `/command [arg_1] <arg_2> <arg_3[]>`
+        > - Some commands have arguments, which can be mandatory or optional, and can also be a list of ready-made parameters to choose from.
+        > `/command [arg]`
+        > - If an argument is specified in square brackets `[]`, it is mandatory.
+        > - If the argument is specified in triangle brackets `<>`, it is optional.
+        > - Arguments with square brackets after the name are a list.
+        > `[arg_name[]] <arg_name[]> - lists`
+        > `[arg_name] <arg_name> - default`
+        > - They can also be mandatory or optional.
+        > 
+        > ***Example:***
+        > `/stats [nickname] [region[]]`
+        > - The `nickname` argument is mandatory.
+        > - The `region[]` argument is also mandatory, and contains a list of regions from which to select 1.
+      setup: |-
+        **Setup commands:**
+        > 1: `/set_lang [lang[]]`
+        > ***Arguments:***
+        > - `lang[]` List of available languages (string)
+        > ***What does:***
+        > - Sets the localization language for the bot on the server in which the command was called.
+        > 
+        > 2: `/set_player [nickname] [region[]]`
+        > ***Arguments:***
+        > - `nickname` The nickname of the player to save (string)
+        > - `region[]` Region to search (string)
+        > 3: ***What it does:***
+        > - Records the player in the database for later use in sessions and for the team `/astats`
+      statistics: |-
+        > **Commands to call statistics:**
+        > 1: `/stats [nickname] [region[]]`
+        > ***Arguments:***
+        > - `nickname` The nickname of the player to search for (string)
+        > - `region[]` Region to search for (string)
+        > ***What does:***
+        > - Searches for a player with the given nickname in the given region. 
+        > If the player is found, a picture with detailed statistics is returned.
+        > Otherwise, an error is returned.
+        > 
+        > 2: `/astats`
+        > ***What it does:***
+        > - Same as `/stats` but you don't need to enter the data, it is taken from the database after registering it with the command 
+        > `/set_player`
+      session: |-
+        > Game session management commands:
+        > 1: `/start_session`.
+        > ***What it does:***
+        > - Starts a session, after starting a session you need to play a few fights to generate a session.
+        > To use, you need to save your data with `/set_player`
+        > 
+        > 2: `/get_session`
+        > ***What it does:***
+        > - Generates a player session and sends a picture of session stats in response.
+        > To use, save your data with `/set_player` and start the session with `/start_session`
+        > 
+        > 3: `/session_state`
+        > ***What it does:***
+        > - Displays whether the session is active and the time the session has been active.

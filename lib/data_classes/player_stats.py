@@ -45,7 +45,7 @@ class All(JSONObject):
     capture_points: int = None
     battles: int = None
     damage_dealt: int = None
-    damage_recieved: int = None
+    damage_received: int = None
     shots: int = None
     frags8p: int = None
     xp: int = None
