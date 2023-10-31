@@ -23,7 +23,12 @@ class CogReplayParser(commands.Cog):
         self.sdb = ServersDB()
         self.parser = ReplayParser()
 
-    @commands.slash_command(guild_only=True, description='Parse replay (TESTING...)')
+    @commands.slash_command(
+            guild_only=True, 
+            description='Parse replay (TESTING...)',
+            description_localizations={
+                'ru': 'Парсинг реплея (ТЕСТИРОВАНИЕ...)',
+            })
     async def parse_replay(self,
                     ctx: commands.Context,
                     replay: Option(

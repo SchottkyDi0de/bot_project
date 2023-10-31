@@ -1,74 +1,77 @@
-from python_easy_json import JSONObject
-from typing import List
+from typing import List, Optional
+
+from pydantic import BaseModel
 
 
-class Author(JSONObject):
-    hitpoints_left: int
+class Author(BaseModel):
+    hitpoints_left: Optional[int]
     total_credits: int
     total_xp: int
     n_shots: int
     n_hits: int
     n_splashes: int
-    n_penetraions: int
+    n_penetrations: int
     damage_dealt: int
     account_id: int
     team_number: int
 
 
-class AvatarInfo(JSONObject):
+class Info1(BaseModel):
     gfx_url: str
     gfx2_url: str
     kind: str
 
 
-class Avatar(JSONObject):
-    info: AvatarInfo
+class Avatar(BaseModel):
+    info: Info1
 
 
-class PlayerInfo(JSONObject):
+class Info(BaseModel):
     nickname: str
-    platoon_id: int
+    platoon_id: Optional[int]
     team: int
-    clan_tag: str | None
+    clan_tag: Optional[str]
     avatar: Avatar
 
 
-class Player(JSONObject):
+class Player(BaseModel):
     account_id: int
-    info: PlayerInfo
+    info: Info
 
 
-class PlayerResultInfo(JSONObject):
+class Info2(BaseModel):
     credits_earned: int
     base_xp: int
     n_shots: int
     n_hits_dealt: int
-    n_penetraions: int
+    n_penetrations_dealt: int
     damage_dealt: int
     damage_assisted_1: int
     damage_assisted_2: int
-    h_hits_recivied: int
-    n_non_penetrating_hits: int
+    n_hits_received: int
+    n_non_penetrating_hits_received: int
+    n_penetrations_received: int
     n_enemies_damaged: int
     n_enemies_destroyed: int
     victory_points_earned: int
     victory_points_seized: int
     account_id: int
-    mm_rating: int
+    tank_id: int
+    mm_rating: Optional[float]
     damage_blocked: int
 
 
-class PlayerResult(JSONObject):
+class PlayerResult(BaseModel):
     result_id: int
-    info: PlayerResultInfo
+    info: Info2
 
 
-class CommonReplayData(JSONObject):
+class ReplayData(BaseModel):
     mode_map_id: int
     timestamp_secs: int
     winner_team_number: int
     author: Author
-    room_type: str
+    room_type: int
     free_xp: int
     players: List[Player]
     player_results: List[PlayerResult]

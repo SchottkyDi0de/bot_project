@@ -21,13 +21,26 @@ class Help(commands.Cog):
         self.sdb = ServersDB()
         self.pdb = PlayersDB()
 
-    @commands.slash_command(guild_only=True, description=Text().get().cmds.help.descr.this)
+    @commands.slash_command(
+            guild_only=True,
+            name='help',
+            name_localizations={
+                'ru': 'помощь'
+            },
+            description=Text().get().cmds.help.descr.this,
+            description_localizations={
+                'ru': Text().get('ru').cmds.help.descr.this,
+                },
+            )
     async def help(
         self, 
         ctx: commands.Context,
         h_type: Option(
             str,
             description=Text().get().cmds.help.descr.sub_descr.help_types,
+            description_localizations={
+                'ru': Text().get('ru').cmds.help.descr.sub_descr.help_types,
+                },
             choices=Text().get().cmds.help.items.help_types,
             default='all'
             )

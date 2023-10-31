@@ -3,7 +3,7 @@ import traceback
 from discord import File, Option, Embed
 from discord.ext import commands
 
-from lib.settings.settings import SttObject
+from lib.settings.settings import Config
 from lib.exceptions import api, data_parser
 from lib.image.common import ImageGen
 from lib.locale.locale import Text
@@ -29,13 +29,21 @@ class Stats(commands.Cog):
         self.inf_msg = InfoMSG()
         self.err_msg = ErrorMSG()
         
-    @commands.slash_command(description=Text().get().cmds.stats.descr.this)
+    @commands.slash_command(
+            description=Text().get().cmds.stats.descr.this,
+            description_localizations={
+                'ru' : Text().get('ru').cmds.stats.descr.this
+                }
+            )
     async def stats(
             self, 
             ctx: commands.Context,
             nickname: Option(
                 str,
                 description=Text().get().frequent.common.nickname,
+                description_localizations={
+                    'ru': Text().get('ru').frequent.common.nickname
+                },
                 required=True,
                 max_lenght=24,
                 min_lenght=3
@@ -43,7 +51,10 @@ class Stats(commands.Cog):
             region: Option(
                 str,
                 description=Text().get().frequent.common.region,
-                choices=SttObject().get().default.available_regions,
+                description_localizations={
+                    'ru': Text().get('ru').frequent.common.region
+                },
+                choices=Config().get().default.available_regions,
                 required=True
             ),
         ):
@@ -65,12 +76,18 @@ class Stats(commands.Cog):
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
 
-    @commands.slash_command(description=Text().get().cmds.astats.descr.this)
-    async def astats(self, ctx):
+    @commands.slash_command(
+            description=Text().get().cmds.astats.descr.this,
+            description_localizations={
+                'ru': Text().get('ru').cmds.astats.descr.this
+                }
+            )
+    async def astats(self, ctx: commands.Context):
         try:
             check_user(ctx)
         except UserBanned:
             return
+        _log.debug(f'User locale is: {ctx.interaction.locale}')
         
         Text().load_from_context(ctx)
         try:

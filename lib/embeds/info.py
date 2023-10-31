@@ -89,10 +89,16 @@ class InfoMSG:
             description=text,
             colour=Colour.green()
         )
-    def custom(self, text: str, colour: str = 'blurple') -> Embed:
+    def custom(
+            self,
+            text: str,
+            title: str = Text().get().frequent.info.info,
+            colour: str = 'blurple'
+        ) -> Embed:
+    
         colour = getattr(Colour, colour)
         return Embed(
-            title=Text().get().frequent.info.info,
+            title=title,
             description=text,
             colour=colour()
         )

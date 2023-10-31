@@ -19,7 +19,7 @@ from lib.logger.logger import get_logger
 from lib.settings import settings
 
 _log = get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
-st = settings.SttObject()
+st = settings.Config()
 
 class API:
     def __init__(self) -> None:
@@ -27,6 +27,7 @@ class API:
         self.player = PlayerGlobalData()
         self.exact = True
         self.raw_dict = False
+        self._palyers_stats = []
 
         self.start_time = 0
 
@@ -46,7 +47,13 @@ class API:
         else:
             raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
         
-    async def response_handler(self, response: aiohttp.ClientResponse, check_data_status: bool = True) -> dict:
+    async def response_handler(
+            self,
+            response: aiohttp.ClientResponse, 
+            check_data_status: bool = True,
+            check_battles: bool = False,
+            recursion_flag: bool = False
+            ) -> dict | bool:
         """
         Asynchronously handles the response from the API and returns the data as a dictionary.
 
@@ -59,6 +66,7 @@ class API:
 
         Returns:
             dict: The data returned from the API as a dictionary.
+            bool: `False` if get error `REQUEST_LIMIT_EXCEEDED`
         """
         if response.status != 200:
             _log.error(f'Error get data, bad response status: {response.status}')
@@ -69,8 +77,18 @@ class API:
 
         if check_data_status:
             if data['status'] != 'ok':
+                if recursion_flag and data['error']['message'] == 'REQUEST_LIMIT_EXCEEDED':
+                    _log.warning(f'Failed get data, `REQUEST_LIMIT_EXCEEDED` Retrying...')
+                    await asyncio.sleep(1)
+                    return False
+                
                 _log.error(f'Error get data, bad response status: {data}')
                 raise api_exceptions.APIError()
+            
+        if check_battles:
+            if data[str(data['account_id'])]['statistics']['all']['battles'] < 100:
+                _log.error(f'Need more battles')
+                raise api_exceptions.NeedMoreBattlesError()
         
         return data
 
@@ -87,9 +105,39 @@ class API:
                 return 'api.wotblitz.com'
             case _:
                 raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
+    
+    def get_players_callback(self, task: asyncio.Task) -> PlayerStats:
+        self._palyers_stats.append(task.result())
+        
+            
+    async def get_players_stats(self, players_id: list[int], region: str) -> list[PlayerStats | None]:
+        self._palyers_stats = []
+        async with asyncio.TaskGroup() as tg:
+            for i in players_id:
+                tg.create_task(self._get_players_stats(i, region))
+        
+        return self._palyers_stats
+                
+    async def _get_players_stats(self, player_id: int, region: str) -> None:
+        self._palyers_stats = []
+        url_get_stats = (
+            f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
+            f'?application_id={self._get_id_by_reg(region)}'
+            f'&account_id={player_id}'
+            f'&fields=-statistics.clan'
+        )
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_get_stats, verify_ssl=False) as response:
+                try:
+                    await asyncio.sleep(0.2)
+                    data = await self.response_handler(response, check_battles=False)
+                except api_exceptions.APIError:
+                    self._palyers_stats.append(None)
+        
+            self._palyers_stats.append(PlayerStats.model_validate_json(data))
+                
 
     async def get_tankopedia(self, region: str = 'ru') -> dict:
-
         _log.debug('Get tankopedia data')
         url_get_tankopedia = (
             f'https://{self._get_url_by_reg(region)}/wotb/encyclopedia/vehicles/'
@@ -133,7 +181,7 @@ class API:
             _log.debug('Cache miss')
         else:
             _log.debug('Returned cached player data')
-            return PlayerGlobalData(cached_data)
+            return PlayerGlobalData.model_validate(cached_data)
 
         account_id = await self.get_account_id(region=region, nickname=search)
 
@@ -158,6 +206,7 @@ class API:
                     task.add_done_callback(self.done_callback)
             
         self.player.timestamp = datetime.now().timestamp()
+        self.player.end_timestamp = self.player.timestamp + settings.Config().get().session_ttl
 
         if need_cached:
             self.cache.set((search.lower(), region), get_normalized_data(self.player).to_dict())
@@ -230,7 +279,8 @@ class API:
                 raise api_exceptions.NeedMoreBattlesError('Need more battles for generate statistics')
 
         data['data'] = data['data'][str(account_id)]
-        data = PlayerStats(data)
+        print(data)
+        data = PlayerStats.model_validate(data)
 
         self.player.id = account_id
         self.player.data.statistics = data.data.statistics
@@ -247,7 +297,7 @@ class API:
         async with self.session.get(url_get_achievements, verify_ssl=False) as response:
             data = await self.response_handler(response)
 
-        self.player.data.achievements = Achievements(data['data'][str(account_id)]['achievements'])
+        self.player.data.achievements = Achievements.model_validate(data['data'][str(account_id)]['achievements'])
 
     async def get_player_clan_stats(self, region: str, account_id: str | int, **kwargs):
         _log.debug('Get clan stats started')
@@ -267,7 +317,8 @@ class API:
             return
         
         data['data'] = data['data'][str(account_id)]
-        data = ClanStats(data)
+        _log.debug(json.dumps(data, indent=4))
+        data = ClanStats.model_validate(data)
         self.player.data.clan_tag = data.data.clan.tag
         self.player.data.clan_stats = data.data.clan
 
@@ -284,7 +335,7 @@ class API:
         tanks_stats: list[TankStats] = []
 
         for i in data['data'][str(account_id)]:
-            tanks_stats.append(TankStats(i))
+            tanks_stats.append(TankStats.model_validate(i))
 
         self.player.region = self._reg_normalizer(region)
         self.player.lower_nickname = nickname.lower()
@@ -300,3 +351,18 @@ def test(nickname='cnJIuHTeP_KPbIca', region='ru', save_to_database: bool = Fals
         db.set_member_last_stats(766019191836639273, data.to_dict())
 
     return data
+
+# class Foo():
+#     somevalue: int
+
+# class Bar():
+#     foo: Foo
+#     somestring: Optional[str]
+
+# some_model = Bar
+# some_model.somestring = 'bar'
+# some_model.foo = Foo.mode_lvalidate(some_data)
+
+# >>> Traceback most recent call last:
+#     ...
+#     AttributeError: 'Bar' object has no attribute 'foo'

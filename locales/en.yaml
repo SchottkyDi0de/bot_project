@@ -90,6 +90,7 @@ frequent:
   info:
     info: Information
     player_not_registred: The player is not logged in. First enter the command `/set_player`
+    err_info_sent: Information about the error has been sent to the developer.
 
   common:
     nickname: Nickname
@@ -123,6 +124,7 @@ cmds:
         region: Selecting a region from the list.
     errors:
       player_not_found: No player with this nickname has been found.
+      uncorrect_nickname: Incorrect player nickname. The nickname can consist of Latin letters A-Z, numbers 0-9 and the symbol '_'.
       no_battles: Not enough fights to generate stats!
     info:
       ''
@@ -191,6 +193,20 @@ cmds:
       session_not_updated: No change in stats detected, maybe you haven't done any fights or the API hasn't updated the data, try again later.
     info:
       player_not_registred: To view session stats, first save your data with `/set_player`
+    items:
+      ''
+
+# Extend session command
+  extend_session:
+    descr:
+      this: Extend session
+      sub_descr:
+        ''
+    errors:
+      session_not_found: No session data found, you may not have started a session or it may have been more than 24 hours since the last session started.
+    info:
+      session_extended: Session has been extended for 24 hours.
+      player_not_registred: To extend the session, first save your data with `/set_player`
     items:
       ''
 
@@ -280,3 +296,66 @@ cmds:
         > 3: `/session_state`
         > ***What it does:***
         > - Displays whether the session is active and the time the session has been active.
+
+  parse_replay:
+    descr:
+      this: Показать информацию о реплеи.
+      sub_descr:
+        ''
+    errors:
+      parsing_error: Ошибка при разборе реплея.
+      uncorrect_file_format: Некорректный формат файла.
+    info:
+      ''
+    items:
+      title:
+        Данные реплея <@<member_id>>
+      description: |-
+        ```py
+        Основная информация:
+        +-----------------------+
+        Исход боя:     <battle_result>
+        Тип боя:       <battle_type>
+        Уровень:       <tier>
+        Карта:         <map>
+        Бой сыгран:    <time> UTC
+        +-----------------------+
+
+        Урон:
+        +-----------------------+
+        нанесено:      <damage_dealt>
+        с помощью:     <damage_assisted>
+        натанковано:   <damage_blocked>
+        +-----------------------+
+
+        Очки захвата:
+        +-----------------------+
+        Зхвачано:      <point_captured>
+        Сбито:         <point_defended>
+        +-----------------------+
+
+        Выстрелы:
+        +-----------------------+
+        сделано:       <shots_fired>
+        попаданий:     <shots_hit>
+        пробитий:      <shots_penetrated>
+        +-----------------------+
+
+        Эффективность:
+        +-----------------------+
+        Точность:      <accuracy>
+        Пробития:      <penetration>
+
+        Союзники:
+        +-----------------------+
+        Ник:      ПП:      Бои:
+        =========+========+======
+        <allies>
+
+        Противники:
+        +-----------------------+
+        Ник:      ПП      Бои
+        =========+=======+=======
+        <opponents>
+        ```
+     

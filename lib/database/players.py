@@ -4,12 +4,9 @@ from datetime import datetime
 
 import elara
 
-if __name__ == '__main__':
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    sys.path.insert(0, path)
-
 from lib.exceptions import database
 from lib.utils.singleton_factory import singleton
+from lib.settings.settings import Config
 
 
 @singleton
@@ -33,7 +30,7 @@ class PlayersDB():
                 'region': region,
                 'premium': False,
                 'premium_time': None,
-                'lang': 'en',
+                'lang': None,
                 'last_stats': dict()
             }
         self.db.commit()
@@ -50,15 +47,15 @@ class PlayersDB():
                 return False
             return True
 
-    def get_member(self, member_id: int) -> dict:
+    def get_member(self, member_id: int) -> dict | None:
         member_id = str(member_id)
 
         if not self.check_member(member_id):
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+            return None
         else:
             return self.db['members'][member_id]
         
-    def get_member_lang(self, member_id: int) -> str:
+    def get_member_lang(self, member_id: int) -> str | None:
         member_id = str(member_id)
 
         if self.check_member(member_id):
@@ -74,18 +71,19 @@ class PlayersDB():
         del self.db['members'][member_id]
         self.db.commit()
 
-    def set_member_last_stats(self, member_id: int, data: dict):
+    def set_member_last_stats(self, member_id: int, data: dict) -> None:
         member_id = str(member_id)
         self.db['members'][member_id]['last_stats'] = data
         self.db.commit()
 
-    def set_member_lang(self, member_id: int, lang: str):
+    def set_member_lang(self, member_id: int, lang: str | None):
         member_id = str(member_id)
         if self.check_member(member_id):
             self.db['members'][member_id]['lang'] = lang
             self.db.commit()
+            return True
         else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+            return False
 
     def check_member_last_stats(self, member_id) -> bool:
         member_id = str(member_id)
@@ -97,19 +95,48 @@ class PlayersDB():
         else:
             return True
 
-    def get_member_last_stats(self, member_id) -> dict:
-        self._check_data_timestamp(member_id)
-        if self.check_member_last_stats(member_id):
-            member_id = str(member_id)
-            return self.db['members'][member_id]['last_stats']
-        else:
+    def get_member_last_stats(self, member_id) -> dict | None:
+        member_id = str(member_id)
+        if self._check_data_timestamp(member_id):
+            if self.check_member_last_stats(member_id):
+                return self.db['members'][member_id]['last_stats']
+
+        return None
+        
+    def extend_session(self, member_id: int) -> None:
+        member_id = str(member_id)
+        if self.check_member(member_id) and self.check_member_last_stats(member_id):
+            self.db['members'][member_id]['last_stats']['end_timestamp'] = \
+                datetime.now().timestamp() + Config().get().session_ttl
+            self.db.commit()
+        elif self.check_member(member_id) == None:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+        elif self.check_member_last_stats(member_id) == None:
             raise database.LastStatsNotFound('Player last stats not found')
+        
+    def get_session_endtime(self, member_id: int) -> float | None:
+        member_id = str(member_id)
+        if self.check_member(member_id):
+            if self.check_member_last_stats(member_id):
+                return self.db['members'][member_id]['last_stats']['end_timestamp']
+            else:
+                raise database.LastStatsNotFound(f'Player last stats not found')
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
 
     def _check_data_timestamp(self, member_id: int) -> bool:
-        now_time = datetime.now().timestamp()
         member = self.get_member(member_id)
         try:
-            if (now_time - member['last_stats']['timestamp']) > 86400:
+            end_time = member['last_stats']['end_timestamp']
+            if (end_time - datetime.now().timestamp()) < 0:
                 self.delete_member_last_stats(member_id)
-        except (KeyError, ValueError, AttributeError) as e:
-            raise database.LastStatsNotFound(e)
+                return False
+            return True
+        
+        except (KeyError, ValueError, AttributeError):
+            return False
+
+db = PlayersDB()
+
+for i in db.db['members']:
+    db.set_member_lang(i, None)

@@ -12,7 +12,7 @@ class ErrorMSG:
             title=Text().get().frequent.errors.error,
             description=Text().get().frequent.errors.api_error,
             colour=Colour.red()
-        )
+        ).set_footer(text=Text().get().frequent.info.err_info_sent)
     
     def player_not_found(self) -> Embed:
         return Embed(
@@ -33,7 +33,7 @@ class ErrorMSG:
             title=Text().get().frequent.errors.error,
             description=Text().get().frequent.errors.unknown_error,
             colour=Colour.red()
-        )
+        ).set_footer(text=Text().get().frequent.info.err_info_sent)
     
     def uncorrect_name(self) -> Embed:
         return Embed(
@@ -47,7 +47,7 @@ class ErrorMSG:
             title=Text().get().frequent.errors.error,
             description=Text().get().frequent.errors.parser_error,
             colour=Colour.red()
-        )
+        ).set_footer(text=Text().get().frequent.info.err_info_sent)
     
     def session_not_found(self) -> Embed:
         return Embed(
@@ -83,10 +83,20 @@ class ErrorMSG:
             description=Text().get().cmds.set_lang.errors.player_not_registred,
             colour=Colour.red()
         )
-    def custom(self, text: str) -> Embed:
-        return Embed(
-            title=Text().get().frequent.errors.error,
+    def custom(
+            self, 
+            text: str,
+            title: str = Text().get().frequent.errors.error,
+            colour: str = 'red',
+            err_inf_sent: bool = False
+            ) -> Embed:
+        embed =  Embed(
+            title=title,
             description=text,
-            colour=Colour.red()
+            colour=getattr(Colour, colour)()
         )
+        if err_inf_sent:
+            embed.set_footer(text=Text().get().frequent.info.err_info_sent)
+            
+        return embed
     

@@ -118,7 +118,12 @@ class AdminCommand(commands.Cog):
             try:
                 db = PlayersDB()
                 for i, j in enumerate(db.db['members']):
-                    await ctx.author.send(f"```Player_id: {db.db['members'][j]['id']}\nPlayer_nickname: {db.db['members'][j]['nickname']}\nRegion: {db.db['members'][j]['region']}\nlang{db.db['members'][j]['lang']}```")
+                    await ctx.author.send(
+                        f"```Player_id: {db.db['members'][j]['id']}"
+                        f"Player_nickname: {db.db['members'][j]['nickname']}"
+                        f"Region: {db.db['members'][j]['region']}"
+                        f"lang{db.db['members'][j]['lang']}```"
+                        )
                 await ctx.author.send(f"`Count: {i+1}`")
             except Exception:
                 await ctx.author.send(traceback.format_exc())
