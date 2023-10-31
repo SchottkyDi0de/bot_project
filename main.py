@@ -44,7 +44,6 @@ class App():
 
     def main(self):
 
-
         @self.bot.event
         async def on_ready():
             _log.info('Bot started: %s', self.bot.user)
@@ -58,7 +57,7 @@ class App():
             await self.apply_presence()
 
         self.load_extension(self.extension_names)
-        self.bot.run(st.DISCORD_TOKEN_DEV)
+        self.bot.run(st.DISCORD_TOKEN)
 
 
     @staticmethod
