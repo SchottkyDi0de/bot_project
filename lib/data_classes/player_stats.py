@@ -45,7 +45,7 @@ class All(JSONObject):
     capture_points: int = None
     battles: int = None
     damage_dealt: int = None
-    damage_recieved: int = None
+    damage_received: int = None
     shots: int = None
     frags8p: int = None
     xp: int = None
@@ -72,7 +72,7 @@ class Statistics(JSONObject):
     all: All = None
 
 
-class Data(JSONObject):
+class PlayerData(JSONObject):
     statistics: Statistics = None
     nickname: str = None
     account_id: int = None
@@ -85,4 +85,4 @@ class Data(JSONObject):
 class PlayerStats(JSONObject):
     status: str = None
     meta: Meta = None
-    data: Data = None
+    data: PlayerData = None

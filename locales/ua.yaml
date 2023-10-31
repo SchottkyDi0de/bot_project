@@ -1,0 +1,212 @@
+---
+for_image:
+  main: ОСНОВНІ
+  winrate: ПЕРЕМОГИ
+  avg_damage: |-
+    СЕРЕДНЯ
+    ШКОДА
+  battles: БОЇ
+  medals: МЕДАЛІ
+  mainGun: |-
+    ОСНОВНИЙ
+    КАЛІБР
+  medalKolobanov: КОЛОБАНОВ
+  warrior: ВОЇН
+  medalRadleyWalters: |-
+    РЕДЛІ
+    ВОЛТЕРС
+  markOfMastery: МАСТЕР
+  rating: РЕЙТИНГ
+  personal_rating: |-
+    ОСОБИСТИЙ
+    РЕЙТИНГ
+  rating_battles: |-
+    РЕЙТИНГОВІ
+    БОЇ
+  no_rating: НЕМА РЕЙТИНГА
+  tank: 'ТАНК'
+  leagues:
+    gold: ЗОЛОТО
+    platinum: ПЛАТИНА
+    brilliant: БРИЛЛІАНТ
+    no_league: |-
+      НЕМАЄ
+      ЛІГИ
+    calibration: КАЛІБРУВАННЯ
+  total: ОБЩИЕ
+  kills_per_battle: |-
+    ЗНИЩЕНО
+    ЗА БІЙ
+  max_frags: |-
+    МАКС.
+    ЗНИЩЕНО
+  enemies_destroyed: |-
+    ЗНИЩЕНО
+    ВОРОГІВ
+  destruction_ratio: |-
+    КОЕФІЦІЄНТ
+    ЗНИЩЕННЯ
+  damage_caused: |-
+    НАНЕСЕНО
+    ШКОДИ
+  damage_ratio: |-
+    КОЕФІЦІЄНТ
+    ШКОДИ
+  average_spotted: |-
+    ВИЯВЛЕНО
+    ЗА БІЙ
+  battles_survived: |-
+    ВЫЖИВ У
+    БОЯХ
+  all_xp: |-
+    ВСЬОГО
+    ДОСВІДУ
+  max_xp: |-
+    МАКС. ДОСВІДУ
+    ЗА БІЙ
+  shots: ПОСТРІЛИ
+  accuracy: |-
+    ВЛУЧНІСТЬ
+    СТРІЛЬБЫ
+  no_clan: НЕМА КЛАНУ
+  no_data: НЕМА ДАНИХ
+
+cmd_description:
+  stats: Показати статистику гравця.
+  astats: Показати статистику гравця без вводу даних.
+  nickname: Нікнейм гравця.
+  region: Регіон пошуку.
+  get_session: 'Get session'
+  start_session: Запуск сесії.
+  stop_session: Зупинка сесії.
+  lang: Мова локалізації
+  help: Help
+  help_types: Help category
+
+common:
+  nickname: Нікнейм
+  region: Регіон
+  regions:
+  - ru
+  - eu
+  - na
+  - asia
+  langs:
+  - ru
+  - en
+  - pl
+  - ua
+
+session:
+  
+setup:
+  setup: Налаштування
+  server_lang: Вкажіть мову, яку бот використовуватиме на вашому сервері.
+  channel_lang: Вкажіть мову, яку бот використовуватиме в цьому каналі.
+  server_reg: 'Вкажіть регіон пошуку за замовчанням для цього серверу: '
+  channel_reg: 'Вкажіть регіон пошуку за замовчанням для цього каналу: '
+
+lang:
+  lang: Language.
+  on_server: If selected, sets the localisation language of the bot for the whole server.
+
+time_units: # Need translate!!!
+  hours: h.
+  minuts: m.
+
+info:
+  info: Інформація
+  set_player_ok: 'Інформацію про гравця збережено, тепер можена використовувати `/astats` для автоматичного відображення статистики на основі збережених данных.'
+  player_not_registred: 'Для запиту статистики без вводу даних спочатку збережіть свої дані командою `/set_player`'
+  session_started: 'Cесію запущено, тепер зіграйте декілька боїв для генерації сесії.'
+  player_not_registred_session: 'Для використання сесії збережіть свої дані командою `/set_player`'
+  set_lang_ok: 'Localization language changed successfully' # Need translate!!!
+
+session_state: # Need translate!!!
+  started: Session started.
+  not_started: Session not started.
+  player_not_registred: The user is not registered, use `/astats` to save their data.'
+  age: 'Duration of the session: '
+
+errors:
+  error: Помилка
+  parser_error: Помилка обробки даних від серверу
+  no_battles: Недостатньо боїв для генерації статистики!
+  player_not_found: Гравця з таким нікнеймом не знайдено.
+  api_error: Внутрішня помилка API
+  unknown_error: Невідома помилка.
+  user_banned: Пользователь заблокирован!
+  incorrect_name: |-
+    Невірно вказано нікнейм.
+    Нікнейм може складатися тільки з латинських букв A-Z, символа '_', цифр 0-9 та бути 3-24 символ.
+  incorrect_region: Вказано не вірний регіон для пошуку гравця, щоб дізнатися більше
+    про регіони введіть команду `/help regions`
+  session_not_found: 'Сесійні дані не знайдені, можливо ви не запустили сесію або минуло більше 12 годин з моменту старту минулої сесії.'
+  session_not_updated: 'Не виявлено зміни статистики, можливо ви не робили боїв або API не оновило дані, спробуйте пізніше.'
+  lang_set_permission: To change the language on the whole server you need administrator rights.
+  player_not_registred: To set the language, first save your data with the `/set_player` command
+
+help:
+  help: Допомога
+  send_ok: Help message was sended.
+  types: [syntax, setup, statistics, session, all]
+  syntax: |-
+    > ***Command syntax***:
+    > `/command [arg_1] <arg_2> <arg_3[]>`
+    > - Some commands have arguments, which can be mandatory or optional, and can also be a list of ready-made parameters to choose from.
+    > `/command [arg]`
+    > - If an argument is specified in square brackets `[]`, it is mandatory.
+    > - If the argument is specified in triangle brackets `<>`, it is optional.
+    > - Arguments with square brackets after the name are a list.
+    > `[arg_name[]] <arg_name[]> - lists`
+    > `[arg_name] <arg_name> - default`
+    > - They can also be mandatory or optional.
+    > 
+    > ***Example:***
+    > `/stats [nickname] [region[]]`
+    > - The `nickname` argument is mandatory.
+    > - The `region[]` argument is also mandatory, and contains a list of regions from which to select 1.
+  setup: |-
+    **Setup commands:**
+    > 1: `/set_lang [lang[]]`
+    > ***Arguments:***
+    > - `lang[]` List of available languages (string)
+    > ***What does:***
+    > - Sets the localization language for the bot on the server in which the command was called.
+    > 
+    > 2: `/set_player [nickname] [region[]]`
+    > ***Arguments:***
+    > - `nickname` The nickname of the player to save (string)
+    > - `region[]` Region to search (string)
+    > 3: ***What it does:***
+    > - Records the player in the database for later use in sessions and for the team `/astats`
+  statistics: |-
+    > **Commands to call statistics:**
+    > 1: `/stats [nickname] [region[]]`
+    > ***Arguments:***
+    > - `nickname` The nickname of the player to search for (string)
+    > - `region[]` Region to search for (string)
+    > ***What does:***
+    > - Searches for a player with the given nickname in the given region. 
+    > If the player is found, a picture with detailed statistics is returned.
+    > Otherwise, an error is returned.
+    > 
+    > 2: `/astats`
+    > ***What it does:***
+    > - Same as `/stats` but you don't need to enter the data, it is taken from the database after registering it with the command 
+    > `/set_player`
+  session: |-
+    > Game session management commands:
+    > 1: `/start_session`
+    > ***What it does:***
+    > - Starts a session, after starting a session you need to play a few fights to generate a session.
+    > To use, you need to save your data with `/set_player`
+    > 
+    > 2: `/get_session`
+    > ***What it does:***
+    > - Generates a player session and sends a picture of session stats in response.
+    > To use, save your data with `/set_player` and start the session with `/start_session`
+    > 
+    > 3: `/session_state`
+    > ***What it does:***
+    > - Displays whether the session is active and the time the session has been active.

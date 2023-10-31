@@ -8,7 +8,7 @@ class Parser:
     def __init__(self):
         pass
     
-    def parse(self, fp: str) -> object:
+    def parse_file(self, fp: str) -> SimpleNamespace:
         with open(fp, encoding='utf-8') as f:
             d = yaml.safe_load(f)
         return self._parse(d)
@@ -19,14 +19,17 @@ class Parser:
             pickle.dump(obj, f)
 
     @staticmethod
-    def object_from_file(fp: str) -> object:
+    def object_from_file(fp: str) -> SimpleNamespace:
         with open(fp, 'rb') as f:
             return pickle.load(f)
     
-    def parse_dict(self, data: dict) -> object:
+    def parse_dict(self, data: dict) -> SimpleNamespace:
         return self._parse(data)
         
     def _parse(self, d):
+        # Здесь, похоже, dict конвертится в объект.
+        # Можно было бы использовать тот же Pydantic.
         x: SimpleNamespace = SimpleNamespace()
-        _ = [setattr(x, k, self._parse(v)) if isinstance(v, dict) else setattr(x, k, v) for k, v in d.items()]    
+        for k, v in d.items():
+            setattr(x, k, self._parse(v) if isinstance(v, dict) else v)
         return x

@@ -1,0 +1,29 @@
+{
+    "1004871731799933019": {
+        "id": 1004871731799933019,
+        "name": "BOT TEST",
+        "settings": {
+            "lang": "ru",
+            "is_premium": false
+        },
+        "premium": false
+    },
+    "726435083384258591": {
+        "id": 726435083384258591,
+        "name": "BlitzHUB [\u0421\u041d\u0413]",
+        "settings": {
+            "lang": "ru",
+            "is_premium": false
+        },
+        "premium": false
+    },
+    "784161851310735370": {
+        "id": 784161851310735370,
+        "name": "BlitzHUB EU",
+        "settings": {
+            "lang": "en",
+            "is_premium": false
+        },
+        "premium": false
+    }
+}

@@ -4,16 +4,15 @@
 '''
 from discord import Colour, Embed
 
-from lib.locale import locale
+from lib.locale.locale import Text
 
 
-class CommonMSG():
-    text = locale.Text()
-    help = Embed(
-        title=text.data.help.help,
-        description=text.data.help.common,
-        colour=Colour.blurple()
-    )
-
-
-
+# class CommonMSG():
+#     def __init__(self):
+#         text = Text().get()
+        
+#         self.help = Embed(
+#             title=text.help.help,
+#             description=text.help.common,
+#             colour=Colour.blurple()
+#         )

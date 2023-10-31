@@ -1,5 +1,9 @@
+# У TopTal есть генератор .gitignore, для разных ОС & IDE – чтобы не прописывать руками:
+# https://www.toptal.com/developers/gitignore
+
 __pycache__
 venv
+.venv
 logs
 /.vscode
 /.VSCodeCounter
@@ -7,3 +11,5 @@ logs
 *.env
 database_copy.*
 *.pkl
+.tmp
+*.dat
