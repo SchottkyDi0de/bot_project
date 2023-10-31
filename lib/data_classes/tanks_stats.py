@@ -33,7 +33,7 @@ class TankStats(BaseModel):
     max_xp: int
     in_garage_updated: int
     max_frags: int
-    frags: int
+    frags: Optional[int]
     mark_of_mastery: int
     battle_life_time: int
     in_garage: Optional[bool]

@@ -23,13 +23,15 @@ st = settings.Config()
 
 class API:
     def __init__(self) -> None:
+        self.player: PlayerGlobalData = None
         self.cache = FIFOCache(maxsize=100, ttl=60)
-        self.player = PlayerGlobalData()
         self.exact = True
         self.raw_dict = False
         self._palyers_stats = []
-
         self.start_time = 0
+
+        self.player_dict = {}
+        self.player_meta_dict = {}
 
     def _get_id_by_reg(self, reg: str):
         reg = reg.lower()
@@ -52,7 +54,7 @@ class API:
             response: aiohttp.ClientResponse, 
             check_data_status: bool = True,
             check_battles: bool = False,
-            ) -> dict | bool:
+            ) -> dict | None:
         """
         Asynchronously handles the response from the API and returns the data as a dictionary.
 
@@ -62,13 +64,13 @@ class API:
 
         Raises:
             api_exceptions.APIError: Raised if the response status is not 200 or the data status is not 'ok'.
+            api_exceptions.NeedMoreBattlesError: Raised if the number of battles is less than 100 (Optional).
 
         Returns:
             dict: The data returned from the API as a dictionary.
-            bool: `False` if get error `REQUEST_LIMIT_EXCEEDED`
         """
         if response.status != 200:
-            _log.error(f'Error get data, bad response status: {response.status}')
+            _log.error(f'Error get data, bad response code: {response.status}')
             raise api_exceptions.APIError()
         
         data = await response.text()
@@ -127,9 +129,8 @@ class API:
                     data = await self.response_handler(response, check_battles=False)
                 except api_exceptions.APIError:
                     self._palyers_stats.append(None)
-        
-            self._palyers_stats.append(PlayerStats.model_validate_json(data))
-                
+                else:
+                    self._palyers_stats.append(PlayerStats.model_validate_json(data))
 
     async def get_tankopedia(self, region: str = 'ru') -> dict:
         _log.debug('Get tankopedia data')
@@ -199,15 +200,21 @@ class API:
                     task.set_name(task_names[i])
                     task.add_done_callback(self.done_callback)
             
-        self.player.timestamp = datetime.now().timestamp()
-        self.player.end_timestamp = self.player.timestamp + settings.Config().get().session_ttl
+        self.player_meta_dict['timestamp'] = int(datetime.now().timestamp())
+        self.player_meta_dict['end_timestamp'] = int(
+            self.player_meta_dict['timestamp'] +
+            settings.Config().get().session_ttl
+        )
+        self.player_meta_dict['data'] = self.player_dict
+
+        self.player = PlayerGlobalData.model_validate(self.player_meta_dict) 
 
         if need_cached:
-            self.cache.set((search.lower(), region), get_normalized_data(self.player).to_dict())
+            self.cache.set((search.lower(), region), get_normalized_data(self.player).model_dump())
             _log.debug('Data add to cache')
 
         if self.raw_dict:
-            return self.player.to_dict()
+            return self.player.model_dump()
 
         _log.debug(f'All requests time: {time() - self.start_time}')
         return get_normalized_data(self.player)
@@ -273,12 +280,16 @@ class API:
                 raise api_exceptions.NeedMoreBattlesError('Need more battles for generate statistics')
 
         data['data'] = data['data'][str(account_id)]
-        print(data)
+
         data = PlayerStats.model_validate(data)
 
-        self.player.id = account_id
-        self.player.data.statistics = data.data.statistics
-        self.player.nickname = data.data.nickname
+        self.player_meta_dict['id'] = account_id
+        self.player_meta_dict['nickname'] = data.data.nickname
+        self.player_dict['statistics'] = data.data.statistics
+
+        # self.player.id = account_id
+        # self.player.data.statistics = data.data.statistics
+        # self.player.nickname = data.data.nickname
 
     async def get_player_achievements(self, region: str, account_id: str, **kwargs) -> None:
         _log.debug('Get achievements started')
@@ -291,7 +302,7 @@ class API:
         async with self.session.get(url_get_achievements, verify_ssl=False) as response:
             data = await self.response_handler(response)
 
-        self.player.data.achievements = Achievements.model_validate(data['data'][str(account_id)]['achievements'])
+        self.player_dict['achievements'] = Achievements.model_validate(data['data'][str(account_id)]['achievements'])
 
     async def get_player_clan_stats(self, region: str, account_id: str | int, **kwargs):
         _log.debug('Get clan stats started')
@@ -306,15 +317,19 @@ class API:
             data = await self.response_handler(response)
 
         if data['data'][str(account_id)] is None:
-            self.player.data.clan_tag = None
-            self.player.data.clan_stats = None
+            self.player_dict['clan_tag'] = None
+            self.player_dict['clan_stats'] = None
             return
         
         data['data'] = data['data'][str(account_id)]
+
+
         _log.debug(json.dumps(data, indent=4))
         data = ClanStats.model_validate(data)
-        self.player.data.clan_tag = data.data.clan.tag
-        self.player.data.clan_stats = data.data.clan
+
+        self.player_dict['clan_tag'] = data.data.clan.tag
+        self.player_dict['clan_stats'] = data.data.clan
+        # self.player.data.clan_stats = data.data.clan
 
     async def get_player_tanks_stats(self, region: str, account_id: str, nickname: str,  **kwargs):
         _log.debug('Get player tank stats started')
@@ -328,13 +343,12 @@ class API:
 
         tanks_stats: list[TankStats] = []
 
-        for i in data['data'][str(account_id)]:
-            tanks_stats.append(TankStats.model_validate(i))
+        for tank in data['data'][str(account_id)]:
+            tanks_stats.append(TankStats.model_validate(tank))
 
-        self.player.region = self._reg_normalizer(region)
-        self.player.lower_nickname = nickname.lower()
-        self.player.data.tank_stats = tanks_stats
-
+        self.player_meta_dict['region'] = self._reg_normalizer(region)
+        self.player_meta_dict['lower_nickname'] = nickname.lower()
+        self.player_dict['tank_stats'] = tanks_stats
 
 def test(nickname='cnJIuHTeP_KPbIca', region='ru', save_to_database: bool = False):
     db = PlayersDB()
