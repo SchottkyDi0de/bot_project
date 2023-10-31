@@ -52,7 +52,6 @@ class API:
             response: aiohttp.ClientResponse, 
             check_data_status: bool = True,
             check_battles: bool = False,
-            recursion_flag: bool = False
             ) -> dict | bool:
         """
         Asynchronously handles the response from the API and returns the data as a dictionary.
@@ -77,11 +76,6 @@ class API:
 
         if check_data_status:
             if data['status'] != 'ok':
-                if recursion_flag and data['error']['message'] == 'REQUEST_LIMIT_EXCEEDED':
-                    _log.warning(f'Failed get data, `REQUEST_LIMIT_EXCEEDED` Retrying...')
-                    await asyncio.sleep(1)
-                    return False
-                
                 _log.error(f'Error get data, bad response status: {data}')
                 raise api_exceptions.APIError()
             
