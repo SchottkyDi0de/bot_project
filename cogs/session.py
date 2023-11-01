@@ -1,6 +1,8 @@
 from datetime import time, datetime, timedelta
 import traceback
 
+from pydantic import ValidationError
+
 from discord import File
 from discord.ext import commands
 
@@ -91,16 +93,19 @@ class Session(commands.Cog):
                     stats = await self.api.get_stats(member['nickname'], member['region'])
                 except api.APIError:
                     await ctx.respond(embed=self.err_msg.api_error())
+                    return
                 
                 try:
-                    last_stats = PlayerGlobalData(self.db.get_member_last_stats(member['id']))
-                except database.LastStatsNotFound:
+                    last_stats = PlayerGlobalData.model_validate(self.db.get_member_last_stats(member['id']))
+                except ValidationError:
                     await ctx.respond(embed=self.err_msg.session_not_found())
+                    return
 
                 try:
                     diff_stats = get_session_stats(last_stats, stats)
                 except data_parser.NoDiffData:
                     await ctx.respond(embed=self.err_msg.session_not_updated())
+                    return
 
                 image = ImageGen().generate(stats, diff_stats)
                 await ctx.respond(file=File(image, 'session.png'))
@@ -109,9 +114,10 @@ class Session(commands.Cog):
             await ctx.respond(
                 embed=self.inf_msg.custom(
                     Text().get().cmds.get_session.info.player_not_registred,
-                    'orange'
+                    colour='orange'
                     )
                 )
+            
         except Exception:
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())

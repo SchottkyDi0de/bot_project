@@ -23,15 +23,14 @@ st = settings.Config()
 
 class API:
     def __init__(self) -> None:
-        self.player: PlayerGlobalData = None
         self.cache = FIFOCache(maxsize=100, ttl=60)
         self.exact = True
         self.raw_dict = False
         self._palyers_stats = []
         self.start_time = 0
 
-        self.player_dict = {}
-        self.player_meta_dict = {}
+        self.player_stats = {}
+        self.player = {}
 
     def _get_id_by_reg(self, reg: str):
         reg = reg.lower()
@@ -54,7 +53,7 @@ class API:
             response: aiohttp.ClientResponse, 
             check_data_status: bool = True,
             check_battles: bool = False,
-            ) -> dict | None:
+            ) -> dict:
         """
         Asynchronously handles the response from the API and returns the data as a dictionary.
 
@@ -110,6 +109,7 @@ class API:
         self._palyers_stats = []
         async with asyncio.TaskGroup() as tg:
             for i in players_id:
+                await asyncio.sleep(0.2)
                 tg.create_task(self._get_players_stats(i, region))
         
         return self._palyers_stats
@@ -130,7 +130,9 @@ class API:
                 except api_exceptions.APIError:
                     self._palyers_stats.append(None)
                 else:
-                    self._palyers_stats.append(PlayerStats.model_validate_json(data))
+                    account_id = list(data['data'].keys())[0]
+                    data['data'] = data['data'][account_id]
+                    self._palyers_stats.append(PlayerStats.model_validate(data))
 
     async def get_tankopedia(self, region: str = 'ru') -> dict:
         _log.debug('Get tankopedia data')
@@ -192,7 +194,7 @@ class API:
             'get_player_clan_stats',
             'get_player_achievements'
         ]
-
+        self.player, self.player_stats = {}, {}
         async with aiohttp.ClientSession() as self.session:
             async with asyncio.TaskGroup() as tg:
                 for i, task in enumerate(tasks):
@@ -200,24 +202,24 @@ class API:
                     task.set_name(task_names[i])
                     task.add_done_callback(self.done_callback)
             
-        self.player_meta_dict['timestamp'] = int(datetime.now().timestamp())
-        self.player_meta_dict['end_timestamp'] = int(
-            self.player_meta_dict['timestamp'] +
+        self.player['timestamp'] = int(datetime.now().timestamp())
+        self.player['end_timestamp'] = int(
+            self.player['timestamp'] +
             settings.Config().get().session_ttl
         )
-        self.player_meta_dict['data'] = self.player_dict
+        self.player['data'] = self.player_stats
 
-        self.player = PlayerGlobalData.model_validate(self.player_meta_dict) 
+        player_stats = PlayerGlobalData.model_validate(self.player)
 
         if need_cached:
-            self.cache.set((search.lower(), region), get_normalized_data(self.player).model_dump())
+            self.cache.set((search.lower(), region), get_normalized_data(player_stats).model_dump())
             _log.debug('Data add to cache')
 
         if self.raw_dict:
-            return self.player.model_dump()
+            return player_stats.model_dump()
 
         _log.debug(f'All requests time: {time() - self.start_time}')
-        return get_normalized_data(self.player)
+        return get_normalized_data(player_stats)
 
     async def get_account_id(self, region: str, nickname: str, **kwargs) -> None:
         url_get_id = (
@@ -283,9 +285,9 @@ class API:
 
         data = PlayerStats.model_validate(data)
 
-        self.player_meta_dict['id'] = account_id
-        self.player_meta_dict['nickname'] = data.data.nickname
-        self.player_dict['statistics'] = data.data.statistics
+        self.player['id'] = account_id
+        self.player['nickname'] = data.data.nickname
+        self.player_stats['statistics'] = data.data.statistics
 
         # self.player.id = account_id
         # self.player.data.statistics = data.data.statistics
@@ -302,7 +304,7 @@ class API:
         async with self.session.get(url_get_achievements, verify_ssl=False) as response:
             data = await self.response_handler(response)
 
-        self.player_dict['achievements'] = Achievements.model_validate(data['data'][str(account_id)]['achievements'])
+        self.player_stats['achievements'] = Achievements.model_validate(data['data'][str(account_id)]['achievements'])
 
     async def get_player_clan_stats(self, region: str, account_id: str | int, **kwargs):
         _log.debug('Get clan stats started')
@@ -317,8 +319,8 @@ class API:
             data = await self.response_handler(response)
 
         if data['data'][str(account_id)] is None:
-            self.player_dict['clan_tag'] = None
-            self.player_dict['clan_stats'] = None
+            self.player_stats['clan_tag'] = None
+            self.player_stats['clan_stats'] = None
             return
         
         data['data'] = data['data'][str(account_id)]
@@ -327,8 +329,8 @@ class API:
         _log.debug(json.dumps(data, indent=4))
         data = ClanStats.model_validate(data)
 
-        self.player_dict['clan_tag'] = data.data.clan.tag
-        self.player_dict['clan_stats'] = data.data.clan
+        self.player_stats['clan_tag'] = data.data.clan.tag
+        self.player_stats['clan_stats'] = data.data.clan
         # self.player.data.clan_stats = data.data.clan
 
     async def get_player_tanks_stats(self, region: str, account_id: str, nickname: str,  **kwargs):
@@ -346,9 +348,9 @@ class API:
         for tank in data['data'][str(account_id)]:
             tanks_stats.append(TankStats.model_validate(tank))
 
-        self.player_meta_dict['region'] = self._reg_normalizer(region)
-        self.player_meta_dict['lower_nickname'] = nickname.lower()
-        self.player_dict['tank_stats'] = tanks_stats
+        self.player['region'] = self._reg_normalizer(region)
+        self.player['lower_nickname'] = nickname.lower()
+        self.player_stats['tank_stats'] = tanks_stats
 
 def test(nickname='cnJIuHTeP_KPbIca', region='ru', save_to_database: bool = False):
     db = PlayersDB()

@@ -45,6 +45,7 @@ class Set(commands.Cog):
             ),
         ):
 
+
         try:
             check_user(ctx)
         except UserBanned:

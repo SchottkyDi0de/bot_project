@@ -50,7 +50,7 @@ class ParseReplayData:
 
     def parse(self, data: ReplayData, region: str) -> ParsedReplayData:
         try:
-            parsed_data = ParsedReplayData.model_validate(data.model_dump())
+            parsed_data = {}
             # get all players ids
             players_ids = []
             for player in data.players:
@@ -60,31 +60,31 @@ class ParseReplayData:
 
             # get all players stats
             players_stats = asyncio.run(self.api.get_players_stats(players_ids, region))
-            for i in players_stats:
-                pass
-                _log.debug(json.dumps(i.to_dict(), indent=4))
-                for player_stats in players_stats:
-                    parsed_data.player_results[players_stats.index(player_stats)].statistics = player_stats
             
-            for player_result in parsed_data.player_results:
-                if player_result.statistics is not None:
-                    if player_result.statistics.all.battles > 0:
-                        player_result.statistics.all.winrate = (
-                            player_result.statistics.all.wins / 
-                            player_result.statistics.all.battles
-                            ) * 100
-                    else:
-                        player_result.statistics.all.winrate = 0.0
+            # for i in players_stats:
+            #     _log.debug(json.dumps(i.model_dump(), indent=4))
+            #     for player_stats in players_stats:
+            #         parsed_data.player_results[players_stats.index(player_stats)].statistics = player_stats
+            
+            # for player_result in data.player_results:
+            #     if player_result.statistics is not None:
+            #         if player_result.statistics.all.battles > 0:
+            #             player_result.statistics.all.winrate = (
+            #                 player_result.statistics.all.wins / 
+            #                 player_result.statistics.all.battles
+            #                 ) * 100
+            #         else:
+            #             player_result.statistics.all.winrate = 0.0
 
-                parsed_data.player_results[parsed_data.player_results.index(player_result)] = player_result
+            #     parsed_data.player_results[parsed_data.player_results.index(player_result)] = player_result
 
-            try:
-                parsed_data.map_name = Maps(data.mode_map_id & 0xFFFF).name
-            except ValueError:
-                parsed_data.map_name = None
+            # try:
+            #     parsed_data.map_name = Maps(data.mode_map_id & 0xFFFF).name
+            # except ValueError:
+            #     parsed_data.map_name = None
                     
-            # # 
-            # print(json.dumps(parsed_data.model_dump(), indent=4))
+            # # # 
+            # # print(json.dumps(parsed_data.model_dump(), indent=4))
 
         except Exception:
             _log.error(f'Error while parsing replay data\n{traceback.format_exc()}')

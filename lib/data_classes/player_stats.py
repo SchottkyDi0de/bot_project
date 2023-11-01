@@ -70,7 +70,7 @@ class All(BaseModel):
 
 
 class Statistics(BaseModel):
-    rating: Rating
+    rating: Optional[Rating] = None
     all: All
 
 
@@ -81,7 +81,7 @@ class PlayerData(BaseModel):
     created_at: int
     updated_at: int
     private: Optional[bool] = None
-    last_battle_time: int
+    last_battle_time: Optional[int] = None
 
 
 class PlayerStats(BaseModel):
