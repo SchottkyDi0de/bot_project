@@ -45,6 +45,52 @@ class ForImage(BaseModel):
     no_data: str
 
 
+class MapNames(BaseModel):
+    desert_sands: str
+    middleburg: str
+    copperfield: str
+    alpenstadt: str
+    mines: str
+    dead_rail: str
+    fort_despair: str
+    himmelsdorf: str
+    black_goldville: str
+    basis_palm: str
+    ghost_factory: str
+    molendijk: str
+    port_bay: str
+    winter_malinovka: str
+    castilia: str
+    canal: str
+    vineyards: str
+    yamato_harbor: str
+    canyon: str
+    mayan_ruins: str
+    dynasty_pearl: str
+    naval_frontier: str
+    falls_creek: str
+    new_bay: str
+    normandy: str
+    wasteland: str
+    unknown: str
+
+
+class Gamemodes(BaseModel):
+    any: str
+    regular: str
+    training_room: str
+    tournament: str
+    quick_tournament: str
+    rating: str
+    mad_games: str
+    realistic_battles: str
+    urprising: str
+    gravity_mode: str
+    skirmish: str
+    burning_games: str
+    unknown: str
+
+
 class Errors(BaseModel):
     error: str
     unknown_error: str
@@ -274,6 +320,7 @@ class Items1(BaseModel):
     setup: str
     statistics: str
     session: str
+    other: str
 
 
 class Help(BaseModel):
@@ -283,19 +330,29 @@ class Help(BaseModel):
     items: Items1
 
 
+class SubDescr4(BaseModel):
+    file: str
+
+
 class Descr9(BaseModel):
     this: str
-    sub_descr: str
+    sub_descr: SubDescr4
 
 
 class Errors8(BaseModel):
     parsing_error: str
     uncorrect_file_format: str
 
+class Common1(BaseModel):
+    win: str
+    lose: str
 
 class Items2(BaseModel):
+    avg_stats: str
+    empty_player: str
     title: str
     description: str
+    common: Common1
 
 
 class ParseReplay(BaseModel):
@@ -321,4 +378,6 @@ class Cmds(BaseModel):
 class Localization(BaseModel):
     for_image: ForImage
     frequent: Frequent
+    map_names: MapNames
+    gamemodes: Gamemodes
     cmds: Cmds

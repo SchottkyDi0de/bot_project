@@ -198,9 +198,12 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
         raise data_parser.DataParserError(e)
 
     else:
-        return SesionDiffData(diff_data_dict)
+        return SesionDiffData.model_validate(diff_data_dict)
 
 def _search_max_diff_battles_tank(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> Optional[tuple[int, int]]:
+    if not isinstance(data_old, PlayerGlobalData) or not isinstance(data_new, PlayerGlobalData):
+        raise ValueError('Wrong data type')
+    
     max_diff_battles = 0
     max_tank_id = None
     tanks = data_new.data.tank_stats

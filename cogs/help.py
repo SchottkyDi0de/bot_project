@@ -23,9 +23,9 @@ class Help(commands.Cog):
 
     @commands.slash_command(
             guild_only=True,
-            name='help',
+            name=Text().get().cmds.help.items.help.lower(),
             name_localizations={
-                'ru': 'помощь'
+                'ru': Text().get('ru').cmds.help.items.help.lower()
             },
             description=Text().get().cmds.help.descr.this,
             description_localizations={
@@ -42,6 +42,9 @@ class Help(commands.Cog):
                 'ru': Text().get('ru').cmds.help.descr.sub_descr.help_types,
                 },
             choices=Text().get().cmds.help.items.help_types,
+            choices_localizations={
+                'ru': Text().get('ru').cmds.help.items.help_types
+            },
             default='all'
             )
         ):
@@ -63,6 +66,8 @@ class Help(commands.Cog):
                         await ctx.user.send(embed=InfoMSG().help_statistics())
                     case 'session':
                         await ctx.user.send(embed=InfoMSG().help_session())
+                    case 'other':
+                        await ctx.user.send(embed=InfoMSG().help_other())
                     case 'all':
                         for i in Text().get().cmds.help.items.help_types:
                             if i == 'all':
@@ -84,8 +89,10 @@ class Help(commands.Cog):
                             await ctx.channel.send(embed=InfoMSG().help_statistics())
                         case 'session':
                             await ctx.channel.send(embed=InfoMSG().help_session())
+                        case 'other':
+                            await ctx.channel.send(embed=InfoMSG().help_other())
                         case 'all':
-                            for i in Text().get().cmds.help.items.help_types:
+                            for i in Text().get('en').cmds.help.items.help_types:
                                 if i == 'all':
                                     continue
                                 await ctx.channel.send(embed=getattr(InfoMSG(), f'help_{i}')())

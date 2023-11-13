@@ -78,6 +78,49 @@ for_image:
   no_clan: WITHOUT CLAN
   no_data: NO DATA
 
+map_names:
+  desert_sands: Desert Sands
+  middleburg: Middleburg
+  copperfield: Copperfield
+  alpenstadt: Alpenstadt
+  mines: Mines
+  dead_rail: Dead Rail
+  fort_despair: Fort
+  himmelsdorf: Himmelsdorf
+  black_goldville: Black Goldville
+  basis_palm: Basis Palm
+  ghost_factory: Ghost Factory
+  molendijk: Molendijk
+  port_bay: Port
+  winter_malinovka: Winter Malinovka
+  castilia: Castilia
+  canal: Canal
+  vineyards: Vineyards
+  canyon: Canyon
+  mayan_ruins: Mayan Ruins
+  dynasty_pearl: Dynasty Pearl
+  naval_frontier: Naval Frontier
+  falls_creek: Falls Creek
+  new_bay: New Bay
+  normandy: Normandy
+  yamato_harbor: Yamato Harbor
+  wasteland: Wasteland
+  unknown: Unknown
+
+gamemodes:
+  any: Unknown
+  regular: Regular
+  training_room: Training Room
+  tournament: Tournament
+  quick_tournament: Quick Tournament
+  rating: Rating
+  mad_games: Mad Games
+  realistic_battles: Realistic
+  urprising: Uprising
+  gravity_mode: Gravity Mode
+  skirmish: Skirmish
+  burning_games: Burning Games
+  unknown: Unknown
 
 frequent:
   errors:
@@ -177,8 +220,7 @@ cmds:
         Before reset: <time_left>
         Battles played: <battles>
         +----------------------------+
-        >>> You can extend the session: /extend_session
-        The session will be extended for 24 hours.
+        >>> Reset session: /start_session
         ```
       not_started: "Session not started."
 
@@ -234,55 +276,56 @@ cmds:
     info:
       send_ok: Help message was sent.
     items:
-      help_types: [syntax, setup, statistics, session, all]
+      help_types: [syntax, setup, statistics, session, other, all]
       help: Help
       syntax: |-
         > ***Command syntax***:
-        > `/command [arg_1] <arg_2> <arg_3[]>`
-        > - Some commands have arguments, which can be mandatory or optional, and can also be a list of ready-made parameters to choose from.
-        > `/command [arg]`
-        > - If an argument is specified in square brackets `[]`, it is mandatory.
-        > - If the argument is specified in triangle brackets `<>`, it is optional.
-        > - Arguments with square brackets after the name are a list.
-        > `[arg_name[]] <arg_name[]> - lists`
-        > `[arg_name] <arg_name> - default`
-        > - They can also be mandatory or optional.
+        >
+        > `/command [arg_1] <arg_2> <arg_3>`
+        > - Some commands have arguments that can be mandatory or optional.        
+        > - If an argument is specified in square brackets `[]`, it is mandatory
+        > - If an argument is specified in triangle brackets `<>`, it is optional.
+        > `[arg_name] <arg_name>``
         > 
         > ***Example:***
-        > `/stats [nickname] [region[]]`
+        > ` `/parse_replay [replay] [region] <output_type>``
         > - The `nickname` argument is mandatory.
-        > - The `region[]` argument is also mandatory, and contains a list of regions from which to select 1.
+        > - The `output_type` argument is optional, so it can be left out.
       setup: |-
         **Setup commands:**
-        > 1: `/set_lang [lang[]]`
+        >
+        > 1: `/set_lang [lang]`
         > ***Arguments:***
-        > - `lang[]` List of available languages (string)
+        > - `lang` List of available languages (string)
+        > - Language `default` enables automatic language selection.
         > ***What does:***
-        > - Sets the localization language for the bot on the server in which the command was called.
+        > - Sets the localization language of the bot for you.
         > 
-        > 2: `/set_player [nickname] [region[]]`
+        > 2: `/set_player [nickname] [region]`.
         > ***Arguments:***
-        > - `nickname` The nickname of the player to save (string)
-        > - `region[]` Region to search (string)
+        > - `nickname` Nickname of the player to save (string)
+        > - `region` Region to search (string)
         > 3: ***What it does:***
-        > - Records the player in the database for later use in sessions and for the team `/astats`
+        > - Records the player in the database for later use, e.g. for a command 
+        > `/astats`
       statistics: |-
         > **Commands to call statistics:**
-        > 1: `/stats [nickname] [region[]]`
+        >
+        > 1: `/stats [nickname] [region]`
         > ***Arguments:***
         > - `nickname` The nickname of the player to search for (string)
-        > - `region[]` Region to search for (string)
-        > ***What does:***
+        > - `region` Region to search (string)
+        > ***What it does:***
         > - Searches for a player with the given nickname in the given region. 
         > If the player is found, a picture with detailed statistics is returned.
         > Otherwise, an error is returned.
         > 
         > 2: `/astats`
         > ***What it does:***
-        > - Same as `/stats` but you don't need to enter the data, it is taken from the database after registering it with the command 
-        > `/set_player`
+        > - Same as `/stats` but you don't need to enter the data, it is taken from the database after registering it with the command `/set_player`.
       session: |-
-        > Game session management commands:
+        > **Game session management commands:**
+        >
         > 1: `/start_session`.
         > ***What it does:***
         > - Starts a session, after starting a session you need to play a few fights to generate a session.
@@ -290,72 +333,90 @@ cmds:
         > 
         > 2: `/get_session`
         > ***What it does:***
-        > - Generates a player session and sends a picture of session stats in response.
-        > To use, save your data with `/set_player` and start the session with `/start_session`
+        > - Generates a player session and sends a picture with session stats in response.
+        > To use it, save your data with `/set_player` and start the session with `/start_session`.
         > 
         > 3: `/session_state`
         > ***What it does:***
         > - Displays whether the session is active and the time the session has been active.
+      other: |-
+        > **Other commands:**
+        > 
+        > 1: `/parse_replay [replay] [region] <output_type>`.
+        > ***What it does:***
+        > - Shows basic information about the replay, the list of combatants from the replay and their stats.
+        > 
+        > 2: `/ping`
+        > ***What does:***
+        > - Displays the response time of the bot.
 
   parse_replay:
     descr:
-      this: Показать информацию о реплеи.
+      this: Show information about replay.
       sub_descr:
-        ''
+        file: Attach the replay file (.wotbreplay)
     errors:
-      parsing_error: Ошибка при разборе реплея.
-      uncorrect_file_format: Некорректный формат файла.
+      parsing_error: Error when parsing replay.
+      uncorrect_file_format: Uncorrect file format.
     info:
       ''
     items:
-      title:
-        Данные реплея <@<member_id>>
+      avg_stats: Average
+      empty_player: '[no data]'
+      title: |-
+        Replay data from <member_id>
+        Account: <nickname>
+      common:
+        win: Win
+        lose: Lose
+        # When localizing, use an editor with a monospaced font 
+        # and align placeholders relative to each other
+        # I recomended VS Code or Sublime Text with monospaced font
       description: |-
         ```py
-        Основная информация:
+        Main battle info:
         +-----------------------+
-        Исход боя:     <battle_result>
-        Тип боя:       <battle_type>
-        Уровень:       <tier>
-        Карта:         <map>
-        Бой сыгран:    <time> UTC
-        +-----------------------+
-
-        Урон:
-        +-----------------------+
-        нанесено:      <damage_dealt>
-        с помощью:     <damage_assisted>
-        натанковано:   <damage_blocked>
+        Outcome:       <battle_result>
+        Battle type:   <battle_type>
+        Tier:          <tier>
+        Map:           <map>
+        Battle played: <time> UTC
         +-----------------------+
 
-        Очки захвата:
+        Damage:
         +-----------------------+
-        Зхвачано:      <point_captured>
-        Сбито:         <point_defended>
-        +-----------------------+
-
-        Выстрелы:
-        +-----------------------+
-        сделано:       <shots_fired>
-        попаданий:     <shots_hit>
-        пробитий:      <shots_penetrated>
+        Dealt:         <damage_dealt>
+        Assisted:      <damage_assisted>
+        Blocked:       <damage_blocked>
         +-----------------------+
 
-        Эффективность:
+        Capture points:
         +-----------------------+
-        Точность:      <accuracy>
-        Пробития:      <penetration>
+        Earned:      <point_captured>
+        Seized:      <point_defended>
+        +-----------------------+
 
-        Союзники:
+        Shots:
         +-----------------------+
-        Ник:      ПП:      Бои:
-        =========+========+======
+        Fired:         <shots_fired>
+        Hits:          <shots_hit>
+        Penetrations:  <shots_penetrated>
+        +-----------------------+
+
+        Efficiency:
+        +-----------------------+
+        Accuracy:      <accuracy>
+        Penetrations:  <penetration>
+
+        Allies:
+        +-----------------------+
+        Nick:          WR:  Btls:
+        ==============+====+=====
         <allies>
-
-        Противники:
+        Enemies:
         +-----------------------+
-        Ник:      ПП      Бои
-        =========+=======+=======
-        <opponents>
+        Nick:          WR:  Btls:
+        ==============+====+=====
+        <enemies>
         ```
      

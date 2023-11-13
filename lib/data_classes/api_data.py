@@ -25,3 +25,4 @@ class PlayerGlobalData(BaseModel):
     timestamp: int
     end_timestamp: int
     nickname: str
+    from_cache: Optional[bool] = False

@@ -5,11 +5,11 @@
 from datetime import datetime
 from io import BytesIO
 from time import time
-
 from cacheout import FIFOCache
 
 from PIL import Image, ImageDraw, ImageFont
 
+import lib.api.async_wotb_api as async_wotb_api
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.locale.locale import Text
 from lib.logger import logger
@@ -63,6 +63,10 @@ class Flags():
     usa = Image.open('res/image/flags/usa.png', formats=['png'])
     china = Image.open('res/image/flags/china.png', formats=['png'])
     ru = Image.open('res/image/flags/ru.png', formats=['png'])
+
+
+class Cache():
+    cache_label = Image.open('res/image/other/cached_label.png', formats=['png'])
 
 
 class Coordinates():
@@ -158,6 +162,7 @@ class Coordinates():
 
             'accuracy': (620, 841),
         }
+
 
 
 class ValueNormalizer():
@@ -306,19 +311,30 @@ class ImageGen():
     img_size = []
     coord = None
 
-    def generate(self, data: PlayerGlobalData):
+    def generate(self, 
+                data: PlayerGlobalData, 
+                speed_test: bool = False, 
+                disable_cache: bool = False
+                    ) -> BytesIO | float:
+        
         self.text = Text().get()
         start_time = time()
         need_caching = False
         current_lang = Text().get_current_lang()
 
+        if speed_test:
+            disable_cache = True
+
         cached_data = self.cache.get((str(data.id), current_lang))
 
+        if disable_cache:
+            cached_data = None
         if cached_data is None:
             need_caching = True
             _log.debug('Cache miss')
         else:
             _log.debug('Image loaded from cache')
+            self.draw_cache_label(cached_data)
             bin_image = BytesIO()
             cached_data.save(bin_image, 'PNG')
             bin_image.seek(0)
@@ -369,7 +385,7 @@ class ImageGen():
         bin_image.seek(0)
         _log.debug('Image was sent in %s sec.', round(time() - start_time, 4))
 
-        return bin_image
+        return bin_image if not speed_test else time() - start_time
 
     def draw_rating_icon(self) -> None:
         rt_img = self.leagues.empty
@@ -435,6 +451,9 @@ class ImageGen():
                 align='center',
                 fill=Colors.blue
             )
+
+    def draw_cache_label(self, img: Image.Image):
+        img.paste(Cache.cache_label, (self.image.size[0] - 75, 0), Cache.cache_label)
 
     def draw_main_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.main_labels.keys():
@@ -718,12 +737,21 @@ class ImageGen():
                 return Colors.cyan
             if val >= 85:
                 return Colors.purple
+            
+    async def speed_test(self):
+        try:
+            data, response_time = await async_wotb_api.test('rtx4080', 'eu', speed_test=True)
+        except:
+            return (0, 0)
+        generate_time = self.generate(data, speed_test=True)
+        return(
+            round(response_time, 3),
+            round(generate_time, 3)
+        )
 
     def test(self):
         import lib.api.async_wotb_api as async_wotb_api
         self.generate(async_wotb_api.test('rtx4080', 'eu'), )
-        self.image.show()
-        self.image.close()
         quit()
 
 # ImageGen().test()

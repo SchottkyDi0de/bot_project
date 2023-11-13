@@ -107,7 +107,7 @@ class PlayersDB():
         member_id = str(member_id)
         if self.check_member(member_id) and self.check_member_last_stats(member_id):
             self.db['members'][member_id]['last_stats']['end_timestamp'] = \
-                datetime.now().timestamp() + Config().get().session_ttl
+                int(datetime.now().timestamp() + Config().get().session_ttl)
             self.db.commit()
         elif self.check_member(member_id) == None:
             raise database.MemberNotFound(f'Member not found, id: {member_id}')

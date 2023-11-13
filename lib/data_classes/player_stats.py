@@ -61,8 +61,8 @@ class All(BaseModel):
     avg_damage: Optional[int] = None
     accuracy: Optional[float] = None
     winrate: Optional[float] = None
-    avg_spotted: Optional[int] = None
-    frags_per_battle: Optional[int] = None
+    avg_spotted: Optional[float] = None
+    frags_per_battle: Optional[float] = None
     not_survived_battles: Optional[int] = None
     survival_ratio: Optional[float] = None
     damage_ratio: Optional[float] = None

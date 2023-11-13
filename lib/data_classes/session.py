@@ -45,4 +45,4 @@ class SesionDiffData(BaseModel):
     tank_diff: TankDiff
     tank_session: TankSession
     tank_id: int
-    tenk_index: int
+    tank_index: int

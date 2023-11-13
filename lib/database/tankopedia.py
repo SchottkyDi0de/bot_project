@@ -18,9 +18,10 @@ class TanksDB():
         self.db['root']['id_list'] = list(data['data'].keys())
         self.db.commit()
 
-    def get_tank_by_id(self, id: str) -> dict:
+    def get_tank_by_id(self, id: str | int) -> dict:
+        id = str(id)
         _log.debug(f'Retrieving tank with id {id}')
         if id in self.db['root']['id_list']:
             return self.db['root']['data'][id]
         else:
-            raise TankNotFoundInTankopedia
+            raise TankNotFoundInTankopedia(f'Tank with id {id} not found')

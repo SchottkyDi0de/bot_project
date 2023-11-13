@@ -40,6 +40,10 @@ class Leagues():
     calibration = Image.open('res/image/leagues/calibr.png', formats=['png'])  # Calibration league image
 
 
+class Cache():
+    cache_label = Image.open('res/image/other/cached_label.png', formats=['png'])
+
+
 class Coordinates():
     def __init__(self, img_size: tuple[int]):
         """
@@ -291,8 +295,13 @@ class ImageGen():
         self.values = Values(data, self.diff_data.tank_index)
         self.flags = Flags()
 
-        tank_type = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['type']
-        tank_tier = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['tier']
+        try:
+            tank_type = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['type']
+            tank_tier = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['tier']
+        except TankNotFoundInTankopedia:
+            _log.debug(f'Tank with id {self.diff_data.tank_id} not found')
+            tank_tier = '?'
+            tank_type = '?'
 
         try:
             self.curr_tank_name = self.tank_type_handler(tank_type) + TanksDB().get_tank_by_id(
@@ -314,6 +323,7 @@ class ImageGen():
             _log.debug('Image loaded from cache')
             bin_image = None
             bin_image = BytesIO()
+            self.draw_cache_label(cached_data['img'])
             cached_data['img'].save(bin_image, 'PNG')
             bin_image.seek(0)
             _log.debug('Image was sent in %s sec.',
@@ -365,6 +375,9 @@ class ImageGen():
         _log.debug('Image was sent in %s sec.', round(time() - strt_time, 4))
 
         return bin_image
+    
+    def draw_cache_label(self, img: Image.Image):
+        img.paste(Cache.cache_label, (self.image.size[0] - 75, 0), Cache.cache_label)
     
     def tank_type_handler(self, tank_type: str):
         match tank_type:

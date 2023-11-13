@@ -76,6 +76,12 @@ class InfoMSG:
             description=Text().get().cmds.help.items.session,
             colour=Colour.blurple()
         )
+    def help_other(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.help.items.other,
+            colour=Colour.blurple()
+        )
 
     def help_send_ok(self) -> Embed:
         return Embed(

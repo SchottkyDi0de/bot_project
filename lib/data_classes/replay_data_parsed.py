@@ -12,10 +12,12 @@ class Author(BaseModel):
     accuracy: Optional[float] = 0.0
     n_splashes: int
     n_penetrations: int
-    penertarion_percent: Optional[float] = None
+    penertarions_percent: Optional[float] = 0.0
     damage_dealt: int
     account_id: int
     team_number: int
+    winner: Optional[bool] = None
+    tank_id: Optional[int] = 0
 
 
 class Info1(BaseModel):
@@ -87,11 +89,11 @@ class Clan(BaseModel):
 
 class All(BaseModel):
     spotted: int
-    max_frags_tank_id: int
+    max_frags_tank_id: Optional[int]
     hits: int
     frags: int
     max_xp: int
-    max_xp_tank_id: int
+    max_xp_tank_id: Optional[int]
     wins: int
     losses: int
     winrate: Optional[float]
@@ -109,14 +111,14 @@ class All(BaseModel):
 
 
 class Statistics(BaseModel):
-    clan: Clan
+    clan: Optional[Clan] = None
     all: All
-    frags: Any
 
 
 class PlayerResult(BaseModel):
     result_id: int
     info: Info2
+    player_info: Optional[Info] = None
     statistics: Optional[Statistics] = None
 
 
@@ -124,9 +126,11 @@ class ParsedReplayData(BaseModel):
     mode_map_id: int
     map_name: Optional[str] = 'Undefined'
     timestamp_secs: int
+    time_string: Optional[str] = '--/--'
     winner_team_number: int
     author: Author
     room_type: int
+    room_name: Optional[str] = 'Undefined'
     free_xp: int
     players: List[Player]
     player_results: List[PlayerResult]

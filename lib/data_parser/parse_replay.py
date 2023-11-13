@@ -2,6 +2,7 @@ import json
 import asyncio
 import traceback
 from enum import Enum
+from datetime import datetime
 
 from lib.api.async_wotb_api import API
 from lib.data_classes.replay_data import ReplayData
@@ -41,58 +42,96 @@ class Maps(Enum):
     normandy = 42
     wasteland = 71
 
-for i, map in enumerate(Maps):
-    print(map.name, map.value)
+
+class RoomType(Enum):
+    any = 0
+    regular = 1
+    training_room = 2
+    tournament = 4
+    quick_tournament = 5
+    rating = 7
+    mad_games = 8
+    realistic_battles = 22
+    uprising = 23
+    gravity_mode = 24
+    skirmish = 25
+    burning_games = 26
+
 
 class ParseReplayData:
     def __init__(self):
         self.api = API()
 
-    def parse(self, data: ReplayData, region: str) -> ParsedReplayData:
+    async def parse(self, data: ReplayData, region: str) -> ParsedReplayData:
         try:
-            parsed_data = {}
+            parsed_data = ParsedReplayData.model_validate(data.model_dump())
+
             # get all players ids
             players_ids = []
             for player in data.players:
                 players_ids.append(player.account_id)
-
-            _log.debug(f'len {len(players_ids)}')
+            
+            # Set time in human readable format
+            parsed_data.time_string = datetime.fromtimestamp(data.timestamp_secs).strftime("%d/%m/%Y\n%H:%M:%S | UTC + 0")
 
             # get all players stats
-            players_stats = asyncio.run(self.api.get_players_stats(players_ids, region))
+            players_stats = await self.api.get_players_stats(players_ids, region)
             
-            # for i in players_stats:
-            #     _log.debug(json.dumps(i.model_dump(), indent=4))
-            #     for player_stats in players_stats:
-            #         parsed_data.player_results[players_stats.index(player_stats)].statistics = player_stats
+            for player_stats in players_stats:
+                if not isinstance(player_stats, bool):
+                    for player_result in parsed_data.player_results:
+                        if player_stats.data.account_id == player_result.info.account_id:
+                            player_result.statistics = player_stats.data.statistics     
+        
+            for player_result in parsed_data.player_results:
+                if player_result.statistics is not None:
+                    if player_result.statistics.all.battles > 0:
+                        player_result.statistics.all.winrate = (
+                            player_result.statistics.all.wins / 
+                            player_result.statistics.all.battles
+                            ) * 100
+                    else:
+                        player_result.statistics.all.winrate = 0.0
+
+            for player in data.player_results:
+                if parsed_data.author.account_id == player.info.account_id:
+                    parsed_data.author.tank_id = player.info.tank_id
+
+            for player_result in parsed_data.player_results:
+                for player in parsed_data.players:
+                    if player.account_id == player_result.info.account_id:
+                        player_result.player_info = player.info
+                        parsed_data.player_results[parsed_data.player_results.index(player_result)] = player_result
+
+            try:
+                parsed_data.map_name = Maps(data.mode_map_id & 0xFFFF).name
+            except ValueError:
+                _log.debug(f'Map is not defined, map_id {data.mode_map_id & 0xFFFF}')
+
+            try:
+                parsed_data.room_name = RoomType(data.room_type).name
+            except ValueError:
+                _log.debug(f'Room type is not defined, room_type {data.room_type}')
+
+            if parsed_data.author.team_number == parsed_data.winner_team_number:
+                parsed_data.author.winner = True
+            else:
+                parsed_data.author.winner = False
+
+            if parsed_data.author.n_shots > 0:
+                parsed_data.author.accuracy = parsed_data.author.n_hits / parsed_data.author.n_shots * 100
+                parsed_data.author.penertarions_percent = parsed_data.author.n_penetrations / parsed_data.author.n_shots * 100
             
-            # for player_result in data.player_results:
-            #     if player_result.statistics is not None:
-            #         if player_result.statistics.all.battles > 0:
-            #             player_result.statistics.all.winrate = (
-            #                 player_result.statistics.all.wins / 
-            #                 player_result.statistics.all.battles
-            #                 ) * 100
-            #         else:
-            #             player_result.statistics.all.winrate = 0.0
-
-            #     parsed_data.player_results[parsed_data.player_results.index(player_result)] = player_result
-
-            # try:
-            #     parsed_data.map_name = Maps(data.mode_map_id & 0xFFFF).name
-            # except ValueError:
-            #     parsed_data.map_name = None
-                    
-            # # # 
-            # # print(json.dumps(parsed_data.model_dump(), indent=4))
+            return parsed_data
+            # print(json.dumps(parsed_data.model_dump(), indent=4))
 
         except Exception:
             _log.error(f'Error while parsing replay data\n{traceback.format_exc()}')
             raise DataParserError('Error while parsing replay data')
         
 
-def test():
-    data = ReplayParser().parse('test.wotbreplay', False)
-    parsed_replay_data = ParseReplayData().parse(data, 'eu')
+# def test():
+#     data = ReplayParser().parse('test.wotbreplay', False)
+#     parsed_replay_data = ParseReplayData().parse(data, 'eu')
 
-test()
+# test()
