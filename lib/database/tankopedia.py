@@ -12,10 +12,11 @@ class TanksDB():
     def __init__(self) -> None:
         _log.debug('Takopedia database initialized')
         self.db = elara.exe('database/tankopedia.eldb')
+        self.db.commit()
 
     def set_tankopedia(self, data: dict):
         self.db['root'] = data
-        self.db['root']['id_list'] = list(data['data'].keys())
+        self.db['root']['id_list'] = list(data.keys())
         self.db.commit()
 
     def get_tank_by_id(self, id: str | int) -> dict:

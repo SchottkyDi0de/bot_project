@@ -10,7 +10,7 @@ from lib.data_classes.tanks_stats import TankStats
 
 class Player(BaseModel):
     achievements: Achievements
-    clan_stats: Clan
+    clan_stats: Optional[Clan] = None
     tank_stats: List[TankStats]
     statistics: Statistics
     name_and_tag: Optional[str] = None

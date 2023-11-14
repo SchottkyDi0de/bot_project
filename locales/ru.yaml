@@ -267,7 +267,7 @@ cmds:
       send_ok: Помощь была отправлена.
     items:
       help: Помощь
-      help_types: [синтаксис, настройка, статистика, сесии, разное, всё]
+      help_types: [syntax, setup, statistics, session, other, all]
       syntax: |-
         > ***Синтаксис команд***:
         >

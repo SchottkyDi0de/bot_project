@@ -38,7 +38,7 @@ class ErrorMSG:
     def uncorrect_name(self) -> Embed:
         return Embed(
             title=Text().get().frequent.errors.error,
-            description=Text().get().cmds.stats.errors.uncorrect_nickanme,
+            description=Text().get().cmds.stats.errors.uncorrect_nickname,
             color=Colour.red()
         )
     

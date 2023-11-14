@@ -238,20 +238,6 @@ cmds:
     items:
       ''
 
-# Extend session command
-  extend_session:
-    descr:
-      this: Extend session
-      sub_descr:
-        ''
-    errors:
-      session_not_found: No session data found, you may not have started a session or it may have been more than 24 hours since the last session started.
-    info:
-      session_extended: Session has been extended for 24 hours.
-      player_not_registred: To extend the session, first save your data with `/set_player`
-    items:
-      ''
-
 # Start session command
   start_session:
     descr:

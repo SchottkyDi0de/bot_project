@@ -116,7 +116,7 @@ class Stats(commands.Cog):
         except* api.NeedMoreBattlesError:
             exception = 'need_more_battles'
         except* api.UncorrectName:
-            exception = 'UncorrectName'
+            exception = 'uncorrect_name'
         except* api.UncorrectRegion:
             exception = 'uncorrect_region'
         except* api.NoPlayersFound:

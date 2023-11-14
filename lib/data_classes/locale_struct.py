@@ -370,7 +370,6 @@ class Cmds(BaseModel):
     session_state: SessionState
     get_session: GetSession
     start_session: StartSession
-    extend_session: ExtendSession
     help: Help
     parse_replay: ParseReplay
 
