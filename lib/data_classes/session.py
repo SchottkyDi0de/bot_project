@@ -1,42 +1,48 @@
-from python_easy_json import JSONObject
+from pydantic import BaseModel
 
 
-class TankDiff(JSONObject):
-    winrate: float = None
-    avg_damage: int = None
-    battles: int = None
+class TankDiff(BaseModel):
+    winrate: float = 0
+    avg_damage: int
+    battles: int
 
-class TankSession(JSONObject):
-    winrate: float = None
-    avg_damage: int = None
-    battles: int = None
 
-class MainDiff(JSONObject):
-    winrate: float = None
-    avg_damage: int = None
-    battles: int = None
+class TankSession(BaseModel):
+    winrate: float
+    avg_damage: int
+    battles: int
 
-class MainSession(JSONObject):
-    winrate: float = None
-    avg_damage: int = None
-    battles: int = None
 
-class RatingDiff(JSONObject):
-    winrate: float = None
-    rating: int = None
-    battles: int = None
+class MainDiff(BaseModel):
+    winrate: float
+    avg_damage: int
+    battles: int
 
-class RatingSession(JSONObject):
-    winrate: float = None
-    rating: int = None
-    battles: int = None
 
-class SesionDiffData(JSONObject):
-    main_diff: MainDiff = None
-    main_session: MainSession = None
-    rating_diff: RatingDiff = None
-    rating_session: RatingSession = None
-    tank_diff: TankDiff = None
-    tank_session: TankSession = None
-    tank_id: int = None
-    tenk_index: int = None
+class MainSession(BaseModel):
+    winrate: float
+    avg_damage: int
+    battles: int
+
+
+class RatingDiff(BaseModel):
+    winrate: float
+    rating: int
+    battles: int
+
+
+class RatingSession(BaseModel):
+    winrate: float
+    rating: int
+    battles: int
+    
+
+class SesionDiffData(BaseModel):
+    main_diff: MainDiff
+    main_session: MainSession
+    rating_diff: RatingDiff
+    rating_session: RatingSession
+    tank_diff: TankDiff
+    tank_session: TankSession
+    tank_id: int
+    tank_index: int

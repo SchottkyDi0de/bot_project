@@ -12,10 +12,14 @@ from lib.database.servers import ServersDB
 from lib.locale.locale import Text
 from lib.replay_parser.parser import ReplayParser
 from lib.replay_parser.parser import ReplayParserError
+from lib.data_parser.parse_replay import ParseReplayData
 from lib.logger.logger import get_logger
 from lib.embeds.errors import ErrorMSG
+from lib.embeds.replay import EmbedReplayBuilder
+from lib.settings.settings import Config
 
 _log = get_logger(__name__, 'CogReplayParserLogger', 'logs/cog_replay_parser.log')
+
 
 class CogReplayParser(commands.Cog):
     def __init__(self, bot):
@@ -23,23 +27,41 @@ class CogReplayParser(commands.Cog):
         self.sdb = ServersDB()
         self.parser = ReplayParser()
 
-    @commands.slash_command(guild_only=True, description='Parse replay (TESTING...)')
+    @commands.slash_command(
+            guild_only=True, 
+            description=Text().get().cmds.parse_replay.descr.this,
+            description_localizations={
+                'ru': Text().get('ru').cmds.parse_replay.descr.this,
+            }
+        )
     async def parse_replay(self,
                     ctx: commands.Context,
                     replay: Option(
                         Attachment,
-                        description='Attach the replay file (.wotbreplay)',
+                        description=Text().get().cmds.parse_replay.descr.sub_descr.file,
+                        description_localizations={
+                            'ru': Text().get('ru').cmds.parse_replay.descr.sub_descr.file
+                        },
                         required=True,
                         
+                    ),
+                    region: Option(
+                        str,
+                        description=Text().get().frequent.common.region,
+                        description_localizations={
+                            'ru': Text().get('ru').frequent.common.region
+                        },
+                        required=True,
+                        choices=Config().settings.default.available_regions
                     ),
                     output_type: Option(
                         str,
                         description='Output type',
-                        choices=['raw (json)', ],
-                        required=True
-                    )
+                        choices=['raw (json)', 'embed'],
+                        default='embed',
+                    ),
                 ):
-        Text().load(self.sdb.safe_get_lang(ctx.guild.id))
+        Text().load_from_context(ctx)
         try:
             check_user(ctx)
         except UserBanned:
@@ -47,10 +69,6 @@ class CogReplayParser(commands.Cog):
         
         try:
             await ctx.defer()
-
-            if not isinstance(replay, Attachment):
-                await ctx.respond('`Uncorrect file!`')
-                return
             
             filename = randint(1000000, 9999999)
             await replay.save(f'tmp/replay/{filename}.wotbreplay')
@@ -59,12 +77,26 @@ class CogReplayParser(commands.Cog):
                 case 'raw (json)':
                     with StringIO(self.parser.parse(f'tmp/replay/{filename}.wotbreplay')) as f:
                         await ctx.respond(file=File(f, 'replay_data.json'))
-            
-            os.remove(f'tmp/replay/{filename}.wotbreplay')                
+                case 'embed':
+                    replay_data = await ParseReplayData().parse(
+                                self.parser.parse(f'tmp/replay/{filename}.wotbreplay'),
+                                region
+                            )
+                    await ctx.respond(
+                        embed=EmbedReplayBuilder().build_embed(
+                            ctx,
+                            replay_data
+                            )
+                        )             
 
         except Exception:
             _log.error(traceback.format_exc())
-            await ctx.respond(embed=ErrorMSG().unknown_error)
+            await ctx.respond(
+                embed=ErrorMSG().custom(
+                    title=Text().get().frequent.errors.error,
+                    text=Text().get().cmds.parse_replay.errors.parsing_error
+                    )
+                )
 
 def setup(bot):
     bot.add_cog(CogReplayParser(bot))

@@ -1,3 +1,4 @@
+from typing import Optional
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.data_classes.session import SesionDiffData
 from lib.exceptions import data_parser
@@ -15,8 +16,8 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
         data.data.statistics.all.avg_damage = all_stats.damage_dealt // all_stats.battles
         data.data.statistics.all.accuracy = (all_stats.hits / all_stats.shots) * 100
         data.data.statistics.all.winrate = (all_stats.wins / all_stats.battles) * 100
-        data.data.statistics.all.avg_spotted = (all_stats.spotted / all_stats.battles)
-        data.data.statistics.all.frags_per_battle = (all_stats.frags / all_stats.battles)
+        data.data.statistics.all.avg_spotted = all_stats.spotted / all_stats.battles
+        data.data.statistics.all.frags_per_battle = all_stats.frags / all_stats.battles
         data.data.statistics.all.not_survived_battles = all_stats.battles - all_stats.survived_battles
         data.data.statistics.all.survival_ratio = (all_stats.survived_battles / all_stats.battles)
         data.data.statistics.all.damage_ratio = (all_stats.damage_dealt / all_stats.damage_received)
@@ -59,12 +60,7 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
                 tank.all.winrate = 0
                 tank.all.avg_damage = 0
 
-            # Не очень понимаю, что здесь происходит в `tanks` & `data.data.tank_stats`,
-            # выглядит подозрительно.
             tanks[index] = tank
-            # tanks.insert(index, tank)
-            # data.data.tank_stats.pop(index)
-            # data.data.tank_stats = tanks
             
     except* (AttributeError, TypeError):
         _log.error(f'Data parsing error, \n{traceback.format_exc()}')
@@ -87,6 +83,10 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
         tank_id, tank_index = tank_data
 
         battles_not_updated = False
+
+        new_tank = None
+        old_tank = None
+        t_avg_damage_before = 0
         
         for i in data_old.data.tank_stats:
             if i.tank_id == tank_id:
@@ -97,6 +97,10 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
             if i.tank_id == tank_id:
                 new_tank = i
                 break
+
+        if old_tank is None or new_tank is None:
+            _log.debug('Different data generating error: tank data not updated')
+            raise data_parser.NoDiffData('Different data generating error: tank data not updated')
 
         data_new_shorted = data_new.data.statistics
         data_old_shorted = data_old.data.statistics
@@ -133,12 +137,21 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
             t_avg_damage_after = new_tank.all.damage_dealt // new_tank.all.battles
             t_diff_avg_damage = t_avg_damage_after - t_avg_damage_before
 
-            session_winrate = (data_new_shorted.all.wins - data_old_shorted.all.wins) / diff_battles * 100
-            session_avg_damage = (data_new_shorted.all.damage_dealt - data_old_shorted.all.damage_dealt) // diff_battles
+            if diff_battles > 0:
+                session_winrate = (data_new_shorted.all.wins - data_old_shorted.all.wins) / diff_battles * 100
+                session_avg_damage = (data_new_shorted.all.damage_dealt - data_old_shorted.all.damage_dealt) // diff_battles
+            else:
+                session_winrate = 0
+                session_avg_damage = 0
 
-            t_session_winrate = (new_tank.all.wins - old_tank.all.wins) / t_diff_battles * 100
-            t_session_avg_damage = (new_tank.all.damage_dealt - old_tank.all.damage_dealt) // t_diff_battles
-            
+            if new_tank.all.wins - old_tank.all.wins != 0:
+                t_session_winrate = (new_tank.all.wins - old_tank.all.wins) / t_diff_battles * 100
+            else:
+                t_session_winrate = 0    
+            if new_tank.all.avg_damage - old_tank.all.avg_damage != 0:
+                t_avg_damage = (new_tank.all.avg_damage - old_tank.all.avg_damage) * 10
+            else:
+                t_avg_damage = 0           
             
             diff_data_dict = {
                 'main_diff' : {
@@ -161,7 +174,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
 
                 'rating_session' : {
                     'winrate' : r_session_winrate,
-                    'rating' : r_session_rating,
+                    'rating' : round(r_session_rating),
                     'battles' : r_diff_battles
                 },
 
@@ -173,7 +186,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
 
                 'tank_session' : {
                     'winrate' : t_session_winrate,
-                    'avg_damage' : t_session_avg_damage,
+                    'avg_damage' : t_avg_damage,
                     'battles' : t_diff_battles
                 },
 
@@ -189,13 +202,19 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
         raise data_parser.DataParserError(e)
 
     else:
-        return SesionDiffData(diff_data_dict)
+        return SesionDiffData.model_validate(diff_data_dict)
 
-def _search_max_diff_battles_tank(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> tuple[int, int]:
+def _search_max_diff_battles_tank(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> Optional[tuple[int, int]]:
+    if not isinstance(data_old, PlayerGlobalData) or not isinstance(data_new, PlayerGlobalData):
+        raise ValueError('Wrong data type')
+    
     max_diff_battles = 0
     max_tank_id = None
     tanks = data_new.data.tank_stats
     tanks_old = data_old.data.tank_stats
+
+    max_tank_id = 0
+    tank_index = 0
 
     for i, j in enumerate(tanks):
         try:

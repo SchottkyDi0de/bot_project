@@ -1,26 +1,29 @@
-from python_easy_json import JSONObject
+from pydantic import BaseModel
 
 
-class Meta(JSONObject):
-    count: int = None
+class Meta(BaseModel):
+    count: int
 
-class Clan(JSONObject):
-    members_count: int = None
-    name: str = None
-    created_at: int = None
-    tag: str = None
-    clan_id: int = None
-    emblem_set_id: int = None
 
-class ClanData(JSONObject):
-    role: str = None
-    clan_id: int = None
-    joined_at: int = None
-    account_id: int = None
-    account_name: str = None
-    clan: Clan = Clan()
+class Clan(BaseModel):
+    members_count: int
+    name: str
+    created_at: int
+    tag: str
+    clan_id: int
+    emblem_set_id: int
 
-class ClanStats(JSONObject):
-    status: str = None
-    meta: Meta = Meta()
-    data: ClanData = ClanData()
+
+class ClanData(BaseModel):
+    role: str
+    clan_id: int
+    joined_at: int
+    account_id: int
+    account_name: str
+    clan: Clan
+
+
+class ClanStats(BaseModel):
+    status: str
+    meta: Meta
+    data: ClanData

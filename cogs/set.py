@@ -3,7 +3,7 @@ import traceback
 from discord import Option
 from discord.ext import commands
 
-from lib.settings.settings import SttObject
+from lib.settings.settings import Config
 from lib.exceptions.database import MemberNotFound
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
@@ -13,7 +13,7 @@ from lib.embeds.info import InfoMSG
 from lib.blacklist.blacklist import check_user
 from lib.exceptions.blacklist import UserBanned
 from lib.logger.logger import get_logger
-from lib.settings.settings import SttObject
+from lib.settings.settings import Config
 
 _log = get_logger(__name__, 'CogSetLogger', 'logs/cog_set.log')
 
@@ -26,53 +26,53 @@ class Set(commands.Cog):
         self.err_msg = ErrorMSG()
         self.inf_msg = InfoMSG()
         
-    @commands.slash_command(guild_only=True)
+    @commands.slash_command(
+            guild_only=True,
+            description=Text().get().cmds.set_lang.descr.this,
+            description_localizations={
+                'ru': Text().get('ru').cmds.set_lang.descr.this
+                }
+            )
     async def set_lang(self, ctx: commands.Context,
             lang: Option(
                 str,
                 description=Text().get().cmds.set_lang.descr.sub_descr.lang_list,
-                choices=SttObject().get().default.available_locales,
+                description_localizations={
+                    'ru': Text().get('ru').cmds.set_lang.descr.sub_descr.lang_list
+                },
+                choices=Config().get().default.available_locales,
                 required=True
             ),
-            to_server: Option(
-                bool,
-                description=Text().get().cmds.set_lang.descr.sub_descr.to_server,
-                default=False
-            )
         ):
+
 
         try:
             check_user(ctx)
         except UserBanned:
             return
         
-        Text().load_from_context(ctx)
-        
-        if to_server:
-            if not ctx.author.guild_permissions.administrator:
-                await ctx.respond(embed=self.err_msg.set_lang_perm())
-                return
-            try:
-                self.sdb.set_lang(ctx.guild.id, lang, ctx.guild.name)
-                Text().load(self.sdb.safe_get_lang(ctx.guild.id))
-                await ctx.respond(embed=self.inf_msg.set_lang_ok())
-            except Exception:
-                _log.error(traceback.format_exc())
-                await ctx.respond(embed=self.err_msg.unknown_error())
-        else:
-            try:
-                self.db.set_member_lang(ctx.author.id, lang)
+        try:
+            Text().load_from_context(ctx)
+            lang = None if lang == 'auto' else lang
+            if self.db.set_member_lang(ctx.author.id, lang):
                 Text().load_from_context(ctx)
-            except MemberNotFound:
-                await ctx.respond(embed=self.err_msg.set_lang_unregistred())
             else:
-                await ctx.respond(embed=self.inf_msg.set_lang_ok())
+                await ctx.respond(embed=self.err_msg.set_lang_unregistred())
+                return
+            
+            await ctx.respond(embed=self.inf_msg.set_lang_ok())
+        except Exception:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
         
     @commands.slash_command(guild_only=True)
     async def set_player(self, ctx: commands.Context, 
             nickname: Option(
                 str,
                 description=Text().get().frequent.common.nickname,
+                description_localizations={
+                    'ru': Text().get('ru').frequent.common.nickname
+                },
                 max_length=24,
                 min_length=3,
                 required=True
@@ -80,7 +80,10 @@ class Set(commands.Cog):
             region: Option(
                 str,
                 description=Text().get().frequent.common.region,
-                choices=SttObject().get().default.available_regions,
+                description_localizations={
+                    'ru': Text().get('ru').frequent.common.region
+                },
+                choices=Config().get().default.available_regions,
                 required=True
             )
         ):

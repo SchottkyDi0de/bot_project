@@ -76,6 +76,12 @@ class InfoMSG:
             description=Text().get().cmds.help.items.session,
             colour=Colour.blurple()
         )
+    def help_other(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.info,
+            description=Text().get().cmds.help.items.other,
+            colour=Colour.blurple()
+        )
 
     def help_send_ok(self) -> Embed:
         return Embed(
@@ -89,10 +95,16 @@ class InfoMSG:
             description=text,
             colour=Colour.green()
         )
-    def custom(self, text: str, colour: str = 'blurple') -> Embed:
+    def custom(
+            self,
+            text: str,
+            title: str = Text().get().frequent.info.info,
+            colour: str = 'blurple'
+        ) -> Embed:
+    
         colour = getattr(Colour, colour)
         return Embed(
-            title=Text().get().frequent.info.info,
+            title=title,
             description=text,
             colour=colour()
         )

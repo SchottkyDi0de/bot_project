@@ -5,5 +5,4 @@ from . import exceptions
 from . import image
 from . import locale
 from . import logger
-from . import yaml
 from . import settings

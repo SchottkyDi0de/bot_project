@@ -1,6 +1,8 @@
 from datetime import time, datetime, timedelta
 import traceback
 
+from pydantic import ValidationError
+
 from discord import File
 from discord.ext import commands
 
@@ -36,7 +38,10 @@ class Session(commands.Cog):
         
     @commands.slash_command(
             guild_only=True, 
-            description=Text().data.cmds.start_session.descr.this
+            description=Text().data.cmds.start_session.descr.this,
+            description_localizations={
+                'ru': Text().get('ru').cmds.start_session.descr.this
+                }
             )
     async def start_session(self, ctx: commands.Context):
         try:
@@ -50,28 +55,27 @@ class Session(commands.Cog):
 
             if self.db.check_member(ctx.author.id):
                 member = self.db.get_member(ctx.author.id)
-                try:
-                    last_stats = await self.api.get_stats(member['nickname'], member['region'], raw_dict=False)
-                    self.db.set_member_last_stats(ctx.author.id, last_stats.to_dict())
-                except database.LastStatsNotFound:
-                    await ctx.respond(
-                        embed=self.inf_msg.custom(
-                            Text().get().cmds.start_session.info.player_not_registred
-                        )
-                    )
-                    return
-                
+                last_stats = await self.api.get_stats(member['nickname'], member['region'], raw_dict=False)
+                self.db.set_member_last_stats(ctx.author.id, last_stats.model_dump())
                 await ctx.respond(embed=self.inf_msg.session_started())
+            else:
+                await ctx.respond(
+                    embed=self.inf_msg.custom(
+                        Text().get().cmds.start_session.info.player_not_registred
+                    )
+                )
                 return
-
-            await ctx.respond(embed=self.inf_msg.player_not_registred_session())
-        except Exception as e:
+        except Exception:
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
 
     @commands.slash_command(
             guild_only=True, 
-            description=Text().get().cmds.get_session.descr.this)
+            description=Text().get().cmds.get_session.descr.this,
+            description_localizations={
+                'ru': Text().get('ru').cmds.get_session.descr.this
+                }
+            )
     async def get_session(self, ctx):
         try:
             check_user(ctx)
@@ -90,13 +94,12 @@ class Session(commands.Cog):
                 except api.APIError:
                     await ctx.respond(embed=self.err_msg.api_error())
                     return
-                
-                try:
-                    last_stats = PlayerGlobalData(self.db.get_member_last_stats(member['id']))
-                except database.LastStatsNotFound:
+
+                last_stats = self.db.get_member_last_stats(member['id'])
+                if last_stats is None:
                     await ctx.respond(embed=self.err_msg.session_not_found())
                     return
-
+                last_stats = PlayerGlobalData.model_validate(last_stats)
                 try:
                     diff_stats = get_session_stats(last_stats, stats)
                 except data_parser.NoDiffData:
@@ -104,20 +107,28 @@ class Session(commands.Cog):
                     return
 
                 image = ImageGen().generate(stats, diff_stats)
+                self.db.extend_session(ctx.author.id)
                 await ctx.respond(file=File(image, 'session.png'))
                 return
-            
+
             await ctx.respond(
                 embed=self.inf_msg.custom(
                     Text().get().cmds.get_session.info.player_not_registred,
-                    'orange'
+                    colour='orange'
                     )
                 )
+
         except Exception:
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
 
-    @commands.slash_command(guild_only=True, description='None')
+    @commands.slash_command(
+            guild_only=True, 
+            description='None',
+            description_localizations={
+                'ru' : Text().get('ru').cmds.session_state.descr.this
+                }
+            )
     async def session_state(self, ctx: commands.Context):
         try:
             check_user(ctx)
@@ -126,20 +137,30 @@ class Session(commands.Cog):
         
         try:
             Text().load_from_context(ctx)
-            member_registred = self.db.check_member(ctx.author.id)
-            if member_registred:
-                session_started = self.db.check_member_last_stats(ctx.author.id)
-                if session_started:
-                    try:
-                        last_stats = PlayerGlobalData(self.db.get_member_last_stats(ctx.author.id))
-                    except database.LastStatsNotFound:
+            if self.db.check_member(ctx.author.id):
+                if self.db.check_member_last_stats(ctx.author.id):
+                    
+                    last_stats = self.db.get_member_last_stats(ctx.author.id)
+                    if last_stats is None:
                         await ctx.respond(embed=self.err_msg.session_not_found())
                         return
-                    
+                    last_stats = PlayerGlobalData.model_validate(last_stats)
                     session_timestamp = last_stats.timestamp
                     time_format = f'%H{Text().get().frequent.common.time_units.h} : %M{Text().get().frequent.common.time_units.m}'
-                    passed_time = datetime.now().timestamp() - session_timestamp
-                    time_left = 86400 - passed_time
+                    now_time = datetime.now().timestamp()
+                    passed_time = now_time - session_timestamp
+                    try:
+                        end_time = self.db.get_session_endtime(ctx.author.id)
+                    except database.MemberNotFound:
+                        await ctx.respond(
+                            embed=self.inf_msg.custom(
+                                Text().get().frequent.info.player_not_registred,
+                                Text().get().frequent.info.info
+                                )
+                            )
+                        return
+                    
+                    time_left = end_time - now_time
                     try:
                         battles_before = last_stats.data.statistics.all.battles
                         battles_after = await self.api.get_player_battles(last_stats.region, str(last_stats.id))
@@ -167,21 +188,21 @@ class Session(commands.Cog):
                     await ctx.respond(
                         embed=self.inf_msg.custom(
                             Text().get().cmds.session_state.items.not_started,
-                            'orange'
+                            Text().get().frequent.info.info,
+                            colour='orange'
                             )
                         )
             else:
                 await ctx.respond(
                     embed=self.inf_msg.custom(
                         Text().get().cmds.session_state.info.player_not_registred,
-                        'orange'
+                        Text().get().frequent.info.info,
+                        colour='blue'
                         )
                     )
-
         except Exception:
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
 
-    
 def setup(bot):
     bot.add_cog(Session(bot))

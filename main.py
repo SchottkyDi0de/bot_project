@@ -1,6 +1,4 @@
 import os
-from threading import Thread
-
 from asyncio import sleep
 
 from discord import Intents, Activity, ActivityType
@@ -9,11 +7,11 @@ from discord.ext import commands
 from lib.api import async_wotb_api
 from lib.database import tankopedia
 from lib.logger import logger
-from lib.settings.settings import SttObject
+from lib.settings.settings import Config
 
 _log = logger.get_logger(__name__, 'MainLogger', 'logs/main.log')
 
-st = SttObject().get()
+st = Config().get()
 
 
 class App():
@@ -23,7 +21,9 @@ class App():
         self.bot = commands.Bot(intents=self.intents, command_prefix=st.default.prefix)
         self.bot.remove_command('help')
 
-        self.extension_names = [f"cogs.{filename[:-3]}" for filename in os.listdir("./cogs") if filename.endswith(".py")]
+        self.extension_names = [
+            f"cogs.{filename[:-3]}" for filename in os.listdir("./cogs") if filename.endswith(".py")
+            ]
 
     def load_extension(self, extension_names: list[str]):
         for i in extension_names:

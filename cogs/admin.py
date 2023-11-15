@@ -113,12 +113,28 @@ class AdminCommand(commands.Cog):
                 ctx.author.send('`Message sent successfully`')
 
     @commands.command()
+    async def get_member(self, ctx):
+        if ctx.author.id in _admin_ids:
+            try:
+                db = PlayersDB()
+                member_id: str = ctx.message.content
+                member_id = member_id.split(' ')
+                await ctx.send(f'`{db.get_member(int(member_id[1]))}`')
+            except:
+                await ctx.send(f'`{traceback.format_exc()}`')
+
+    @commands.command()
     async def get_members(self, ctx):
         if ctx.author.id in _admin_ids:
             try:
                 db = PlayersDB()
                 for i, j in enumerate(db.db['members']):
-                    await ctx.author.send(f"```Player_id: {db.db['members'][j]['id']}\nPlayer_nickname: {db.db['members'][j]['nickname']}\nRegion: {db.db['members'][j]['region']}\nlang{db.db['members'][j]['lang']}```")
+                    await ctx.author.send(
+                        f"```Player_id: {db.db['members'][j]['id']}"
+                        f"Player_nickname: {db.db['members'][j]['nickname']}"
+                        f"Region: {db.db['members'][j]['region']}"
+                        f"lang{db.db['members'][j]['lang']}```"
+                        )
                 await ctx.author.send(f"`Count: {i+1}`")
             except Exception:
                 await ctx.author.send(traceback.format_exc())

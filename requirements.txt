@@ -6,3 +6,4 @@ python-dotenv==1.0.0
 pillow==10.0.1
 elara==0.5.5
 cacheout==0.14.1
+pydantic==2.4.2
