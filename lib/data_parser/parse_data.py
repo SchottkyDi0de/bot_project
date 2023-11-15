@@ -174,7 +174,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
 
                 'rating_session' : {
                     'winrate' : r_session_winrate,
-                    'rating' : r_session_rating,
+                    'rating' : round(r_session_rating),
                     'battles' : r_diff_battles
                 },
 

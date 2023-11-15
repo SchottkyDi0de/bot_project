@@ -22,7 +22,8 @@ class TanksDB():
     def get_tank_by_id(self, id: str | int) -> dict:
         id = str(id)
         _log.debug(f'Retrieving tank with id {id}')
-        if id in self.db['root']['id_list']:
+        
+        try:
             return self.db['root']['data'][id]
-        else:
+        except KeyError:
             raise TankNotFoundInTankopedia(f'Tank with id {id} not found')
