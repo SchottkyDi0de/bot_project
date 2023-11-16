@@ -135,8 +135,3 @@ class PlayersDB():
         
         except (KeyError, ValueError, AttributeError):
             return False
-
-db = PlayersDB()
-
-for i in db.db['members']:
-    db.set_member_lang(i, None)
