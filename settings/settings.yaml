@@ -7,5 +7,5 @@ session_ttl: 86400
 default: 
   prefix : '!'
   lang: 'en'
-  available_locales: ['ru', 'en', 'auto']
+  available_locales: ['ru', 'en', 'pl', 'auto']
   available_regions: ['ru', 'eu', 'na', 'asia']
