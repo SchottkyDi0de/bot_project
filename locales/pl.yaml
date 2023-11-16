@@ -24,14 +24,18 @@ for_image:
   medalRadleyWalters: |-
     RADLEY
     WALTERS
-  markOfMastery: ODZNAKA MISTRZOWSKA
+  markOfMastery: |-
+    ODZNAKA 
+    MISTRZOWSKA
   rating: RANKING
   personal_rating: |-
     OSOBISTY 
     RANKING
   rating_battles: |-
     BBITWY
-  no_rating: BRAK RANKINGU
+  no_rating: |- 
+    BRAK 
+    RANKINGU
   tank: "CZOŁG"
 
   leagues:
@@ -44,25 +48,35 @@ for_image:
     calibration: KALIBRACJA
   total: RAZEM
   kills_per_battle: |-
-    ZNISZCZENIA NA BITWĘ
+    ZNISZCZENIA 
+    NA BITWĘ
   max_frags: |-
-    NAJWIĘCEJ ZNISZCZEŃ
+    NAJWIĘCEJ 
+    ZNISZCZEŃ
   enemies_destroyed: |-
-    ZNISZCZENI WROGOWIE
+    ZNISZCZENI 
+    WROGOWIE
   destruction_ratio: |-
-    STOSUNEK ZNISZCZEŃ
+    STOSUNEK 
+    ZNISZCZEŃ
   damage_caused: |-
-    ZADANE USZKODZENIA 
+    ZADANE 
+    USZKODZENIA 
   damage_ratio: |-
-    STOSUNEK ZNISZCZEŃ
+    STOSUNEK 
+    ZNISZCZEŃ
   average_spotted: |-
-    ŚREDNI WYNIK WYKRYTYCH PRZECIWNIKÓW
+    ŚREDNI WYNIK 
+    WYKRYTYCH PRZECIWNIKÓW
   battles_survived: |-
-    PRZETRWANE BITWY
+    PRZETRWANE 
+    BITWY
   all_xp: |-
-    ŁACZNIE DOŚWIADCZENIA
+    ŁACZNIE 
+    DOŚWIADCZENIA
   max_xp: |-
-    NAJWIĘCEJ DOŚWIADCZENIA
+    NAJWIĘCEJ 
+    DOŚWIADCZENIA
   shots: STRZAŁY
   accuracy: |-
     SKUTECZNOŚĆ
