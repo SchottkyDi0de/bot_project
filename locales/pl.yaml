@@ -1,11 +1,20 @@
 ---
+# This localization file use placeholders:
+# format: <key_name>
+#
+# Example:
+#   srv_id: "server_id: <id>"
+#
+# Please do not change the placeholders names when translating the file.
+# _Zener
+
 for_image:
-  main: STATYSTYKI
+  main: GŁÓWNE
   winrate: ZWYCIĘSTWA
   avg_damage: |-
     ŚREDNIE
     USZKODZENIA
-  battles: BITWY
+  battles: BBITWY
   medals: MEDALE
   mainGun: |-
     DUŻY
@@ -15,194 +24,376 @@ for_image:
   medalRadleyWalters: |-
     RADLEY
     WALTERS
-  markOfMastery: ODZNAKI MISTRZOWSKIE
+  markOfMastery: ODZNAKA MISTRZOWSKA
   rating: RANKING
   personal_rating: |-
-    OCENA
-    OSOBISTA
+    OSOBISTY 
+    RANKING
   rating_battles: |-
-    BITWY
-    RANKINGOWE
-  no_rating: BRAK PUNKTACJI
-  tank: 'CZOŁG'
+    BBITWY
+  no_rating: BRAK RANKINGU
+  tank: "CZOŁG"
+
   leagues:
-    gold: ZŁOTA
-    platinum: PLATYNOWA
+    gold: ZŁOTO
+    platinum: PLATYNA
     brilliant: DIAMENTOWA
     no_league: |-
       BRAK
-      LIGI
-    calibration: KWALIFIKACJA
-  total: ŁĄCZNIE
+      KWALIFIKACJI
+    calibration: KALIBRACJA
+  total: RAZEM
   kills_per_battle: |-
     ZNISZCZENIA NA BITWĘ
   max_frags: |-
-    NAJWIEKSZA ILOŚĆ 
-    ZNISZCZEŃ
+    NAJWIĘCEJ ZNISZCZEŃ
   enemies_destroyed: |-
-    ZNISZCZENI
-    PRZECIWNICY
+    ZNISZCZENI WROGOWIE
   destruction_ratio: |-
-    WSPÓŁCZYNNIK 
-    ZNISZCZENIA
+    STOSUNEK ZNISZCZEŃ
   damage_caused: |-
-    ZADANE 
-    USZKODZENIA
+    ZADANE USZKODZENIA 
   damage_ratio: |-
-   WSPÓŁCZYNNIK 
-   USZKODZEŃ
+    STOSUNEK ZNISZCZEŃ
   average_spotted: |-
-    ŚREDNIO WYKRYCI 
-    PRZECIWNICY
+    ŚREDNI WYNIK WYKRYTYCH PRZECIWNIKÓW
   battles_survived: |-
-    BITWY PRZETRWANE
+    PRZETRWANE BITWY
   all_xp: |-
-    ŁACZNA ILOŚĆ 
-    DOŚWIADCZENIA
+    ŁACZNIE DOŚWIADCZENIA
   max_xp: |-
-    MAKSYMALNA ILOŚĆ 
-    DOŚWIADCZENIA
+    NAJWIĘCEJ DOŚWIADCZENIA
   shots: STRZAŁY
   accuracy: |-
-    CELNOŚĆ
-  no_clan: BEZ KLANU
+    SKUTECZNOŚĆ
+  no_clan: BRAK KLANU
   no_data: BRAK DANYCH
 
-cmd_description:
-  stats: Wyświetl statystyki gracza.
-  astats: Wyświetlanie statystyk gracza bez wprowadzania jakichkolwiek danych.
-  nickname: Pseudonim gracza.
-  region: Wyszukaj region.
-  get_session: 'Get session'
-  start_session: Rozpoczęcie sesji.
-  stop_session: Zakończenie sesji.
-  lang: Język.
-  help: Help
-  help_types: Help category
+map_names:
+  desert_sands: Pustynne piaski
+  middleburg: Middleburg
+  copperfield: Miedziane pole
+  alpenstadt: Alpenstadt
+  mines: Kopalnie
+  dead_rail: Martwy Fort
+  fort_despair: Fort Rozpacz
+  himmelsdorf: Himmelsdorf
+  black_goldville: Czarne Złoto
+  basis_palm: Basis Palm
+  ghost_factory: Fabryka Duchów
+  molendijk: Molendijk
+  port_bay: Przystań
+  winter_malinovka: Malinówka Zimą
+  castilia: Kastylia
+  canal: Kanał
+  vineyards: Winnice
+  canyon: Kanion
+  mayan_ruins: Laguna
+  dynasty_pearl: Pereła Dynastii
+  naval_frontier: Morskie rubieże
+  falls_creek: Kanion
+  new_bay: Nowy Przystań
+  normandy: Normandia
+  yamato_harbor: Port Yamato
+  wasteland: Oaza
+  unknown: Nieznane
 
-common:
-  nickname: Pseudonim
-  region: Region
-  regions:
-  - ru
-  - eu
-  - na
-  - asia
-  langs:
-  - ru
-  - en
-  - pl
-  - ua
+gamemodes:
+  any: Nieznane
+  regular: Standardowe
+  training_room: Pokój treningowy
+  tournament: Turnieje
+  quick_tournament: Szybkie turnieje
+  rating: Punktowane
+  mad_games: Mad Games
+  realistic_battles: Tryb Realistyczny
+  urprising: Odrodzenie
+  gravity_mode: Tryb Grawitacji
+  skirmish: Potyczka
+  burning_games: Burning Games
+  unknown: Nieznane
 
-session: 
+frequent:
+  errors:
+    error: Błąd
+    unknown_error: Nieznany błąd.
+    user_banned: Jesteś zablokowany i nie możesz używać poleceń tego bota.
+    api_error: Błąd podczas pracy z API.
+    parser_error: Błąd podczas analizowania danych.
 
-setup:
-  setup: Dostosuj
-  server_lang: Określ język, którego bot będzie używał na serwerze.
-  channel_lang: Określ język, którego bot będzie używał w tym kanale.
-  server_reg: 'Określ domyślny region wyszukiwania dla tego serwera: '
-  channel_reg: 'Określ domyślny region wyszukiwania dla tego kanału: '
+  info:
+    info: Informacje
+    player_not_registred: Gracz nie jest zalogowany. Najpierw wprowadź komendę `/set_player`
+    err_info_sent: Informacja o błędzie została wysłana do dewelopera.
 
-time_units: # Need translate!!!
-  hours: h.
-  minuts: m.
+  common:
+    nickname: Pseudonim
+    region: Region
+    time_units:
+      h: 'h'
+      m: 'm'
+      s: 's'
+      
 
-lang:
-  lang: Language.
-  on_server: If selected, sets the localisation language of the bot for the whole server.
+cmds:
+# astats command
+  astats:
+    descr:
+      this: Wyświetlanie statystyk gracza bez wprowadzania danych.
+      sub_descr:
+        ''
+    errors:
+      player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
+    info:
+      player_not_registred: Aby wyświetlić statystyki bez wprowadzania danych, zapisz dane za pomocą opcji `/set_player`.
+    items:
+      ''
 
-info:
-  info: Informacje
-  set_player_ok: 'Informacje o graczu zostały pomyślnie zapisane, teraz możesz użyć `/astats` do automatycznego wyświetlania statystyk na podstawie zapisanych danych.'
-  player_not_registred: 'Aby zażądać statystyk bez wprowadzania danych, najpierw zapisz dane za pomocą komendy `/set_player`'
-  session_started: 'Sesja się rozpoczęła, teraz rozegraj kilka bitew, aby wygenerować sesję.'
-  player_not_registred_session: 'Aby skorzystać z sesji, należy zapisać dane za pomocą komendy `/set_player`'
-  set_lang_ok: 'Localization language changed successfully' # Need translate!!!
+# stats command
+  stats:
+    descr:
+      this: Prośba o statystyki graczy.
+      sub_descr:
+        nickname: Pseudonim gracza.
+        region: Wybieranie regionu z listy.
+    errors:
+      player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
+      uncorrect_nickname: Nieprawidłowy pseudonim gracza. Pseudonim może składać się z łacińskich liter A-Z, cyfr 0-9 i symbolu '_'.
+      no_battles: Za mało walk, by wygenerować statystyki!
+    info:
+      ''
+    items:
+      ''
 
-session_state: # Need translate!!!
-  started: Session started.
-  not_started: Session not started.
-  player_not_registred: The user is not registered, use `/astats` to save their data.'
-  age: 'Duration of the session: '
+# Set player command
+  set_player:
+    descr:
+      this: Zapisuje dane na potrzeby przyszłych zapytań.
+      sub_descr:
+        nickname: Pseudonim gracza.
+        region: Wybieranie regionu z listy.
+    errors:
+      player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
+    info:
+      set_player_ok: 'Informacje o graczu zostały pomyślnie zapisane, możesz teraz użyć `/astats` do automatycznego wyświetlania statystyk na podstawie zapisanych danych.'
+    items:
+      ''
 
-errors:
-  error: Błąd
-  parser_error: Błąd przetwarzania danych z serwera
-  no_battles: Za mało bitew, by wygenerować statystyki!
-  player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
-  api_error: Wewnętrzny błąd API
-  user_banned: User banned!
-  unknown_error: Nieznany błąd.
-  incorrect_name: |-
-    Nieprawidłowy pseudonim.
-    Pseudonim może składać się wyłącznie z liter alfabetu A-Z, '_', cyfr 0-9 i mieć długość od 3 do 24 znaków.
-  incorrect_region: "Określono nieprawidłowy region żeby wyszukać gracza. Aby dowiedzieć się więcej o regionach, wpisz polecenie `/help regions`"
-  session_not_found: 'Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęło więcej niż 12 godzin od ostatniego uruchomienia sesji.'
-  session_not_updated: 'Nie wykryto zmian w statystykach, być może nie zagrałeś żadnych bitew lub API nie zaktualizowało danych, spróbuj ponownie później.'
-  lang_set_permission: To change the language on the whole server you need administrator rights.
-  player_not_registred: To set the language, first save your data with the `/set_player` command
+# Set lang command
+  set_lang:
+    descr:
+      this: Zmiana języka.
+      sub_descr:
+        lang_list: Lista języków.
+        to_server: Aplikuj na serwer.
+    errors:
+      player_not_registred: Aby zmienić język, należy najpierw zapisać dane za pomocą opcji `/set_player`
+      permission_denied: Musisz mieć uprawnienia administratora, aby zmienić język na całym serwerze.
+    info:
+      set_lang_ok: Język lokalizacji został pomyślnie zmieniony.
 
-help:
-  help: Pomoc
-  send_ok: Help message was sended.
-  types: [syntax, setup, statistics, session, all]
-  syntax: |-
-    > ***Command syntax***:
-    > `/command [arg_1] <arg_2> <arg_3[]>`
-    > - Some commands have arguments, which can be mandatory or optional, and can also be a list of ready-made parameters to choose from.
-    > `/command [arg]`
-    > - If an argument is specified in square brackets `[]`, it is mandatory.
-    > - If the argument is specified in triangle brackets `<>`, it is optional.
-    > - Arguments with square brackets after the name are a list.
-    > `[arg_name[]] <arg_name[]> - lists`
-    > `[arg_name] <arg_name> - default`
-    > - They can also be mandatory or optional.
-    > 
-    > ***Example:***
-    > `/stats [nickname] [region[]]`
-    > - The `nickname` argument is mandatory.
-    > - The `region[]` argument is also mandatory, and contains a list of regions from which to select 1.
-  setup: |-
-    **Setup commands:**
-    > 1: `/set_lang [lang[]]`
-    > ***Arguments:***
-    > - `lang[]` List of available languages (string)
-    > ***What does:***
-    > - Sets the localization language for the bot on the server in which the command was called.
-    > 
-    > 2: `/set_player [nickname] [region[]]`
-    > ***Arguments:***
-    > - `nickname` The nickname of the player to save (string)
-    > - `region[]` Region to search (string)
-    > 3: ***What it does:***
-    > - Records the player in the database for later use in sessions and for the team 
-    > `/astats`
-  statistics: |-
-    > **Commands to call statistics:**
-    > 1: `/stats [nickname] [region[]]`
-    > ***Arguments:***
-    > - `nickname` The nickname of the player to search for (string)
-    > - `region[]` Region to search for (string)
-    > ***What does:***
-    > - Searches for a player with the given nickname in the given region. 
-    > If the player is found, a picture with detailed statistics is returned.
-    > Otherwise, an error is returned.
-    > 
-    > 2: `/astats`
-    > ***What it does:***
-    > - Same as `/stats` but you don't need to enter the data, it is taken from the database after registering it with the command `/set_player`
-  session: |-
-    > Game session management commands:
-    > 1: `/start_session`.
-    > ***What it does:***
-    > - Starts a session, after starting a session you need to play a few fights to generate a session.
-    > To use, you need to save your data with `/set_player`
-    > 
-    > 2: `/get_session`
-    > ***What it does:***
-    > - Generates a player session and sends a picture of session stats in response.
-    > To use, save your data with `/set_player` and start the session with `/start_session`
-    > 
-    > 3: `/session_state`
-    > ***What it does:***
-    > - Displays whether the session is active and the time the session has been active.
+# Session state command
+  session_state:
+    descr:
+      this: Status sesji
+      sub_descr:
+        ''
+    errors:
+      session_not_found: Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęły ponad 24 godziny od ostatniego uruchomienia sesji..
+    info:
+      player_not_registred: Aby wyświetlić stan sesji, należy najpierw zapisać dane za pomocą opcji `/set_player`
+    items:
+      started: |- 
+        ```py
+        The session is running.
+        +----------------------------+
+        Session time: <time>
+        Before reset: <time_left>
+        Battles played: <battles>
+        +----------------------------+
+        >>> Reset session: /start_session
+        ```
+      not_started: "Session not started."
+
+# Get session command
+  get_session:
+    descr:
+      this: Pobierz sesję
+      sub_descr:
+        ''
+    errors:
+      session_not_found: Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęły ponad 24 godziny od ostatniego uruchomienia sesji..
+      session_not_updated: Nie wykryto żadnych zmian w statystykach, być może nie stoczyłeś żadnej bitwy lub API nie zaktualizowało danych, spróbuj ponownie później..
+    info:
+      player_not_registred: Aby wyświetlić statystyki sesji, najpierw zapisz dane za pomocą  `/set_player`
+    items:
+      ''
+
+# Start session command
+  start_session:
+    descr:
+      this: Rozpoczęcie sesji
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      player_not_registred: Aby rozpocząć sesję, najpierw zapisz dane za pomocą `/set_player`
+      started: Sesja jest uruchomiona. Teraz możesz rozegrać kilka bitew i uzyskać statystyki sesji za pomocą `/get_session`.
+    items:
+      ''
+
+  help: 
+    descr:
+      this: Pomoc
+      sub_descr:
+        help_types: Wybierz kategorię
+    errors:
+      ''
+    info:
+      send_ok: Wiadomość pomocy została wysłana.
+    items:
+      help_types: [składnia, konfiguracja, statystyki, sesja, inne, wszystkie]
+      help: Pomoc
+      syntax: |-
+        > ***Command syntax***:
+        >
+        > `/command [arg_1] <arg_2> <arg_3>`
+        > - Some commands have arguments that can be mandatory or optional.        
+        > - If an argument is specified in square brackets `[]`, it is mandatory
+        > - If an argument is specified in triangle brackets `<>`, it is optional.
+        > `[arg_name] <arg_name>``
+        > 
+        > ***Example:***
+        > ` `/parse_replay [replay] [region] <output_type>``
+        > - The `nickname` argument is mandatory.
+        > - The `output_type` argument is optional, so it can be left out.
+      setup: |-
+        **Setup commands:**
+        >
+        > 1: `/set_lang [lang]`
+        > ***Arguments:***
+        > - `lang` List of available languages (string)
+        > - Language `default` enables automatic language selection.
+        > ***What does:***
+        > - Sets the localization language of the bot for you.
+        > 
+        > 2: `/set_player [nickname] [region]`.
+        > ***Arguments:***
+        > - `nickname` Nickname of the player to save (string)
+        > - `region` Region to search (string)
+        > 3: ***What it does:***
+        > - Records the player in the database for later use, e.g. for a command 
+        > `/astats`
+      statistics: |-
+        > **Commands to call statistics:**
+        >
+        > 1: `/stats [nickname] [region]`
+        > ***Arguments:***
+        > - `nickname` The nickname of the player to search for (string)
+        > - `region` Region to search (string)
+        > ***What it does:***
+        > - Searches for a player with the given nickname in the given region. 
+        > If the player is found, a picture with detailed statistics is returned.
+        > Otherwise, an error is returned.
+        > 
+        > 2: `/astats`
+        > ***What it does:***
+        > - Same as `/stats` but you don't need to enter the data, it is taken from the database after registering it with the command `/set_player`.
+      session: |-
+        > **Game session management commands:**
+        >
+        > 1: `/start_session`.
+        > ***What it does:***
+        > - Starts a session, after starting a session you need to play a few fights to generate a session.
+        > To use, you need to save your data with `/set_player`
+        > 
+        > 2: `/get_session`
+        > ***What it does:***
+        > - Generates a player session and sends a picture with session stats in response.
+        > To use it, save your data with `/set_player` and start the session with `/start_session`.
+        > 
+        > 3: `/session_state`
+        > ***What it does:***
+        > - Displays whether the session is active and the time the session has been active.
+      other: |-
+        > **Other commands:**
+        > 
+        > 1: `/parse_replay [replay] [region] <output_type>`.
+        > ***What it does:***
+        > - Shows basic information about the replay, the list of combatants from the replay and their stats.
+        > 
+        > 2: `/ping`
+        > ***What does:***
+        > - Displays the response time of the bot.
+
+  parse_replay:
+    descr:
+      this: Wyświetlanie informacji o powtórce.
+      sub_descr:
+        file: Załącz plik powtórki (.wotbreplay)
+    errors:
+      parsing_error: Błąd podczas analizowania powtórki.
+      uncorrect_file_format: Nieprawidłowy format pliku.
+    info:
+      ''
+    items:
+      avg_stats: Średnia
+      empty_player: '[brak danych]'
+      title: |-
+        Replay data from <member_id>
+        Account: <nickname>
+      common:
+        win: Wygrana
+        lose: Przegrana
+        # When localizing, use an editor with a monospaced font 
+        # and align placeholders relative to each other
+        # I recomended VS Code or Sublime Text with monospaced font
+      description: |-
+        ```py
+        Main battle info:
+        +-----------------------+
+        Outcome:       <battle_result>
+        Battle type:   <battle_type>
+        Tier:          <tier>
+        Map:           <map>
+        Battle played: <time> UTC
+        +-----------------------+
+
+        Damage:
+        +-----------------------+
+        Dealt:         <damage_dealt>
+        Assisted:      <damage_assisted>
+        Blocked:       <damage_blocked>
+        +-----------------------+
+
+        Capture points:
+        +-----------------------+
+        Earned:      <point_captured>
+        Seized:      <point_defended>
+        +-----------------------+
+
+        Shots:
+        +-----------------------+
+        Fired:         <shots_fired>
+        Hits:          <shots_hit>
+        Penetrations:  <shots_penetrated>
+        +-----------------------+
+
+        Efficiency:
+        +-----------------------+
+        Accuracy:      <accuracy>
+        Penetrations:  <penetration>
+
+        Allies:
+        +-----------------------+
+        Nick:          WR:  Btls:
+        ==============+====+=====
+        <allies>
+        Enemies:
+        +-----------------------+
+        Nick:          WR:  Btls:
+        ==============+====+=====
+        <enemies>
+        ```
+     
