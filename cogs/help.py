@@ -25,11 +25,15 @@ class Help(commands.Cog):
             guild_only=True,
             name=Text().get().cmds.help.items.help.lower(),
             name_localizations={
-                'ru': Text().get('ru').cmds.help.items.help.lower()
+                'ru': Text().get('ru').cmds.help.items.help.lower(),
+                'pl': Text().get('pl').cmds.help.items.help.lower(),
+                'uk': Text().get('ua').cmds.help.items.help.lower()
             },
             description=Text().get().cmds.help.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.help.descr.this,
+                'pl': Text().get('pl').cmds.help.descr.this,
+                'uk': Text().get('ua').cmds.help.descr.this
                 },
             )
     async def help(
@@ -40,11 +44,10 @@ class Help(commands.Cog):
             description=Text().get().cmds.help.descr.sub_descr.help_types,
             description_localizations={
                 'ru': Text().get('ru').cmds.help.descr.sub_descr.help_types,
+                'pl': Text().get('pl').cmds.help.descr.sub_descr.help_types,
+                'uk': Text().get('ua').cmds.help.descr.sub_descr.help_types
                 },
             choices=Text().get().cmds.help.items.help_types,
-            choices_localizations={
-                'ru': Text().get('ru').cmds.help.items.help_types
-            },
             default='all'
             )
         ):

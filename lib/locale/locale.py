@@ -24,8 +24,8 @@ class Text():
         if self.pdb.get_member_lang(ctx.author.id) is not None:
             self.load(self.pdb.get_member_lang(ctx.author.id))
         else:
-            if ctx.interaction.locale in Config().get().default.available_locales:
-                self.load(ctx.interaction.locale)
+            if ctx.interaction.locale in list(Config().get().default.locale_alliases.keys()):
+                self.load(Config().get().default.locale_alliases[ctx.interaction.locale])
             else:
                 self.load(self.default_lang)
 
