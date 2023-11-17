@@ -6,7 +6,6 @@ venv
 .venv
 *.env
 *.log
-/database/*.eldb
 /.vscode
 /.VSCodeCounter
 /.idea

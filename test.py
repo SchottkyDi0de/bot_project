@@ -24,4 +24,4 @@ def list_finc() -> list[int]:
 some_val = list_finc()
 
 for i in some_val:
-    i
+    i.
