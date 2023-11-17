@@ -33,18 +33,14 @@ for_image:
     RANKING
   rating_battles: |-
     BBITWY
-  no_rating: |- 
-    BRAK 
-    RANKINGU
+  no_rating: BRAK RANKINGU
   tank: "CZOŁG"
 
   leagues:
     gold: ZŁOTO
     platinum: PLATYNA
     brilliant: DIAMENTOWA
-    no_league: |-
-      BRAK
-      KWALIFIKACJI
+    no_league: BRAK KWALIFIKACJI
     calibration: KALIBRACJA
   total: RAZEM
   kills_per_battle: |-
@@ -66,8 +62,8 @@ for_image:
     STOSUNEK 
     ZNISZCZEŃ
   average_spotted: |-
-    ŚREDNI WYNIK 
-    WYKRYTYCH PRZECIWNIKÓW
+    ŚREDNIA WYKRYTYCH 
+    PRZECIWNIKÓW
   battles_survived: |-
     PRZETRWANE 
     BITWY
