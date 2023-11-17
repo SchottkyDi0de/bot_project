@@ -4,12 +4,12 @@
 __pycache__
 venv
 .venv
+*.env
 *.log
 /database/*.eldb
 /.vscode
 /.VSCodeCounter
 /.idea
-*.env
 database_copy.*
 *.pkl
 .tmp
