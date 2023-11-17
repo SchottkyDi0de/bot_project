@@ -32,6 +32,8 @@ class CogReplayParser(commands.Cog):
             description=Text().get().cmds.parse_replay.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.parse_replay.descr.this,
+                'pl': Text().get('pl').cmds.parse_replay.descr.this,
+                'uk': Text().get('ua').cmds.parse_replay.descr.this
             }
         )
     async def parse_replay(self,
@@ -40,7 +42,9 @@ class CogReplayParser(commands.Cog):
                         Attachment,
                         description=Text().get().cmds.parse_replay.descr.sub_descr.file,
                         description_localizations={
-                            'ru': Text().get('ru').cmds.parse_replay.descr.sub_descr.file
+                            'ru': Text().get('ru').cmds.parse_replay.descr.sub_descr.file,
+                            'pl': Text().get('pl').cmds.parse_replay.descr.sub_descr.file,
+                            'uk': Text().get('ua').cmds.parse_replay.descr.sub_descr.file
                         },
                         required=True,
                         
@@ -49,7 +53,9 @@ class CogReplayParser(commands.Cog):
                         str,
                         description=Text().get().frequent.common.region,
                         description_localizations={
-                            'ru': Text().get('ru').frequent.common.region
+                            'ru': Text().get('ru').frequent.common.region,
+                            'pl': Text().get('pl').frequent.common.region,
+                            'uk': Text().get('ua').frequent.common.region
                         },
                         required=True,
                         choices=Config().settings.default.available_regions

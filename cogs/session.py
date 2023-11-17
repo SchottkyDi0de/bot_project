@@ -40,7 +40,9 @@ class Session(commands.Cog):
             guild_only=True, 
             description=Text().data.cmds.start_session.descr.this,
             description_localizations={
-                'ru': Text().get('ru').cmds.start_session.descr.this
+                'ru': Text().get('ru').cmds.start_session.descr.this,
+                'pl': Text().get('pl').cmds.start_session.descr.this,
+                'uk': Text().get('ua').cmds.start_session.descr.this
                 }
             )
     async def start_session(self, ctx: commands.Context):
@@ -73,7 +75,9 @@ class Session(commands.Cog):
             guild_only=True, 
             description=Text().get().cmds.get_session.descr.this,
             description_localizations={
-                'ru': Text().get('ru').cmds.get_session.descr.this
+                'ru': Text().get('ru').cmds.get_session.descr.this,
+                'pl': Text().get('pl').cmds.get_session.descr.this,
+                'uk': Text().get('ua').cmds.get_session.descr.this
                 }
             )
     async def get_session(self, ctx):
@@ -126,7 +130,9 @@ class Session(commands.Cog):
             guild_only=True, 
             description='None',
             description_localizations={
-                'ru' : Text().get('ru').cmds.session_state.descr.this
+                'ru' : Text().get('ru').cmds.session_state.descr.this,
+                'pl' : Text().get('pl').cmds.session_state.descr.this,
+                'uk' : Text().get('ua').cmds.session_state.descr.this
                 }
             )
     async def session_state(self, ctx: commands.Context):

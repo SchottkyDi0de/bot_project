@@ -30,7 +30,9 @@ class Set(commands.Cog):
             guild_only=True,
             description=Text().get().cmds.set_lang.descr.this,
             description_localizations={
-                'ru': Text().get('ru').cmds.set_lang.descr.this
+                'ru': Text().get('ru').cmds.set_lang.descr.this,
+                'pl': Text().get('pl').cmds.set_lang.descr.this,
+                'uk': Text().get('ua').cmds.set_lang.descr.this
                 }
             )
     async def set_lang(self, ctx: commands.Context,
@@ -38,7 +40,9 @@ class Set(commands.Cog):
                 str,
                 description=Text().get().cmds.set_lang.descr.sub_descr.lang_list,
                 description_localizations={
-                    'ru': Text().get('ru').cmds.set_lang.descr.sub_descr.lang_list
+                    'ru': Text().get('ru').cmds.set_lang.descr.sub_descr.lang_list,
+                    'pl': Text().get('pl').cmds.set_lang.descr.sub_descr.lang_list,
+                    'uk': Text().get('ua').cmds.set_lang.descr.sub_descr.lang_list
                 },
                 choices=Config().get().default.available_locales,
                 required=True
@@ -71,7 +75,9 @@ class Set(commands.Cog):
                 str,
                 description=Text().get().frequent.common.nickname,
                 description_localizations={
-                    'ru': Text().get('ru').frequent.common.nickname
+                    'ru': Text().get('ru').frequent.common.nickname,
+                    'pl': Text().get('pl').frequent.common.nickname,
+                    'uk': Text().get('ua').frequent.common.nickname
                 },
                 max_length=24,
                 min_length=3,
@@ -81,7 +87,9 @@ class Set(commands.Cog):
                 str,
                 description=Text().get().frequent.common.region,
                 description_localizations={
-                    'ru': Text().get('ru').frequent.common.region
+                    'ru': Text().get('ru').frequent.common.region,
+                    'pl': Text().get('pl').frequent.common.region,
+                    'uk': Text().get('ua').frequent.common.region
                 },
                 choices=Config().get().default.available_regions,
                 required=True

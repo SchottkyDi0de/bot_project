@@ -32,7 +32,9 @@ class Stats(commands.Cog):
     @commands.slash_command(
             description=Text().get().cmds.stats.descr.this,
             description_localizations={
-                'ru' : Text().get('ru').cmds.stats.descr.this
+                'ru' : Text().get('ru').cmds.stats.descr.this,
+                'pl' : Text().get('pl').cmds.stats.descr.this,
+                'uk' : Text().get('ua').cmds.stats.descr.this
                 }
             )
     async def stats(
@@ -42,7 +44,9 @@ class Stats(commands.Cog):
                 str,
                 description=Text().get().frequent.common.nickname,
                 description_localizations={
-                    'ru': Text().get('ru').frequent.common.nickname
+                    'ru': Text().get('ru').frequent.common.nickname,
+                    'pl': Text().get('pl').frequent.common.nickname,
+                    'uk': Text().get('ua').frequent.common.nickname
                 },
                 required=True,
                 max_lenght=24,
@@ -52,7 +56,9 @@ class Stats(commands.Cog):
                 str,
                 description=Text().get().frequent.common.region,
                 description_localizations={
-                    'ru': Text().get('ru').frequent.common.region
+                    'ru': Text().get('ru').frequent.common.region,
+                    'pl': Text().get('pl').frequent.common.region,
+                    'uk': Text().get('ua').frequent.common.region
                 },
                 choices=Config().get().default.available_regions,
                 required=True
@@ -79,7 +85,9 @@ class Stats(commands.Cog):
     @commands.slash_command(
             description=Text().get().cmds.astats.descr.this,
             description_localizations={
-                'ru': Text().get('ru').cmds.astats.descr.this
+                'ru': Text().get('ru').cmds.astats.descr.this,
+                'pl': Text().get('pl').cmds.astats.descr.this,
+                'uk': Text().get('ua').cmds.astats.descr.this
                 }
             )
     async def astats(self, ctx: commands.Context):
