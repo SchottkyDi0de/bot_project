@@ -5,8 +5,10 @@ __pycache__
 venv
 .venv
 *.log
+/database/*.eldb
 /.vscode
 /.VSCodeCounter
+/.idea
 *.env
 database_copy.*
 *.pkl
