@@ -18,3 +18,9 @@ class NeedMoreBattlesError(APIError):
 
 class UncorrectRegion(APIError):
     pass
+
+class RequestsLimitExceeded(APIError):
+    pass
+
+class APISourceNotAvailable(APIError):
+    pass

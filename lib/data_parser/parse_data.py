@@ -126,7 +126,6 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
             if old_tank.all.battles != 0:
                 old_tank.all.winrate = old_tank.all.wins / old_tank.all.battles * 100
                 old_tank.all.avg_damage = old_tank.all.damage_dealt // old_tank.all.battles
-                t_avg_damage_before = old_tank.all.damage_dealt // old_tank.all.battles
             else:
                 old_tank.all.winrate = 0
                 old_tank.all.avg_damage = 0
@@ -134,12 +133,11 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
             new_tank.all.winrate = new_tank.all.wins / new_tank.all.battles * 100
             t_diff_winrate = new_tank.all.winrate - old_tank.all.winrate
             
-            t_avg_damage_after = new_tank.all.damage_dealt // new_tank.all.battles
-            t_diff_avg_damage = t_avg_damage_after - t_avg_damage_before
+            t_diff_avg_damage = new_tank.all.avg_damage - old_tank.all.avg_damage
 
             if diff_battles > 0:
                 session_winrate = (data_new_shorted.all.wins - data_old_shorted.all.wins) / diff_battles * 100
-                session_avg_damage = (data_new_shorted.all.damage_dealt - data_old_shorted.all.damage_dealt) // diff_battles
+                session_avg_damage = new_tank.all.avg_damage - old_tank.all.avg_damage
             else:
                 session_winrate = 0
                 session_avg_damage = 0
@@ -147,12 +145,10 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
             if new_tank.all.wins - old_tank.all.wins != 0:
                 t_session_winrate = (new_tank.all.wins - old_tank.all.wins) / t_diff_battles * 100
             else:
-                t_session_winrate = 0    
-            if new_tank.all.avg_damage - old_tank.all.avg_damage != 0:
-                t_avg_damage = (new_tank.all.avg_damage - old_tank.all.avg_damage) * 10
-            else:
-                t_avg_damage = 0           
-            
+                t_session_winrate = 0   
+
+            t_session_avg_damage =  (new_tank.all.damage_dealt - old_tank.all.damage_dealt) // t_diff_battles
+          
             diff_data_dict = {
                 'main_diff' : {
                     'winrate': diff_winrate,
@@ -186,7 +182,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
 
                 'tank_session' : {
                     'winrate' : t_session_winrate,
-                    'avg_damage' : t_avg_damage,
+                    'avg_damage' : t_session_avg_damage,
                     'battles' : t_diff_battles
                 },
 
