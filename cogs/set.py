@@ -14,6 +14,8 @@ from lib.blacklist.blacklist import check_user
 from lib.exceptions.blacklist import UserBanned
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
+from lib.api.async_wotb_api import API
+from lib.exceptions import api
 
 _log = get_logger(__name__, 'CogSetLogger', 'logs/cog_set.log')
 
@@ -25,6 +27,7 @@ class Set(commands.Cog):
         self.sdb = ServersDB()
         self.err_msg = ErrorMSG()
         self.inf_msg = InfoMSG()
+        self.api = API()
         
     @commands.slash_command(
             guild_only=True,
@@ -100,13 +103,24 @@ class Set(commands.Cog):
             check_user(ctx)
         except UserBanned:
             return
-        
         try:
             await ctx.defer()
             Text().load_from_context(ctx)
+            
+            try:
+                await self.api.check_player(nickname, region)
+            except api.NoPlayersFound:
+                await ctx.respond(embed=ErrorMSG().player_not_found())
+            except api.NeedMoreBattlesError:
+                await ctx.respond(embed=ErrorMSG().need_more_battles())
+            except api.APIError:
+                await ctx.respond(embed=ErrorMSG().api_error())
+            else:
+                self.db.set_member(ctx.author.id, nickname, region)
+                _log.debug(f'Set player: {ctx.author.id} {nickname} {region}')
+                await ctx.respond(embed=self.inf_msg.set_player_ok())
 
-            self.db.set_member(ctx.author.id, nickname, region)
-            await ctx.respond(embed=self.inf_msg.set_player_ok())
+            
         except Exception :
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())

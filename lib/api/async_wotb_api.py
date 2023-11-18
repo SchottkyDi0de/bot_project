@@ -6,6 +6,7 @@ from random import choice
 from datetime import datetime
 
 import aiohttp
+from the_retry import retry
 from cacheout import FIFOCache
 from asynciolimiter import Limiter
 
@@ -66,7 +67,8 @@ class API:
             response: aiohttp.ClientResponse, 
             check_data_status: bool = True,
             check_battles: bool = False,
-            check_data: bool = False
+            check_data: bool = False,
+            check_meta: bool = False
             ) -> dict:
         """
         Asynchronously handles the response from the API and returns the data as a dictionary.
@@ -78,7 +80,9 @@ class API:
         Raises:
             api_exceptions.APIError: Raised if the response status is not 200 or the data status is not 'ok'.
             api_exceptions.NeedMoreBattlesError: Raised if the number of battles is less than 100 (Optional).
-
+            api_exceptions.RequestsLimitExceeded: Raised if the request limit is exceeded.
+            api_exceptions.EmptyDataError: Raised if the data is empty.
+            api_exceptions.APISourceNotAvailable: Raised if the API source is not available (code 504).
         Returns:
             dict: The data returned from the API as a dictionary.
         """
@@ -88,14 +92,24 @@ class API:
         
         data = await response.text()
         data = json.loads(data)
+        if response.status == 504:
+            raise api_exceptions.APISourceNotAvailable()
 
         if check_data_status:
             if data['status'] != 'ok':
                 if data['error']['message'] == 'REQUEST_LIMIT_EXCEEDED':
-                    await asyncio.sleep(1)
+                    _log.warning(f'Ingnoring Exception caused by API: Request Limit Exceeded')
+                    raise api_exceptions.RequestsLimitExceeded('Rate Limit Exceeded')
                     
                 _log.error(f'Error get data, bad response status: {data}')
                 raise api_exceptions.APIError(f'Error get data, bad response status: {data}')
+            
+        if data['meta']['count'] == 0:
+            _log.error(
+                f'API Returned `count 0`'
+                f'Data: {data["meta"]}'
+            )
+            raise api_exceptions.NoPlayersFound()
 
         if check_data:
             if data['data'] == None:
@@ -113,7 +127,7 @@ class API:
                 raise api_exceptions.EmptyDataError(f'API Returned empty `data` section')
             
         if check_battles:
-            if data[str(data['account_id'])]['statistics']['all']['battles'] < 100:
+            if data['data'][list(data['data'].keys())[0]]['statistics']['all']['battles'] < 100:
                 _log.error(f'Need more battles')
                 raise api_exceptions.NeedMoreBattlesError()
       
@@ -168,6 +182,9 @@ class API:
                 data['data'] = data['data'][account_id]
                 self._palyers_stats.append(PlayerStats.model_validate(data))
 
+    async def retry_callback(self):
+        _log.debug('Task failed, retrying...')
+
     async def get_tankopedia(self, region: str = 'ru') -> dict:
         _log.debug('Get tankopedia data')
         url_get_tankopedia = (
@@ -182,6 +199,46 @@ class API:
                 data = await self.response_handler(response, False)
 
                 return data
+                
+    @retry(
+            expected_exception=(
+                api_exceptions.RequestsLimitExceeded,
+                api_exceptions.APISourceNotAvailable
+            ),
+            attempts=3,
+            on_exception=retry_callback
+    )
+    async def check_player(self, nickname: str, region: str) -> None:
+        url_get_id = (
+            f'https://{self._get_url_by_reg(region)}/wotb/account/list/'
+            f'?application_id={self._get_id_by_reg(region)}'
+            f'&search={nickname}'
+            f'&type={"exact" if self.exact else "startswith"}'
+        )
+
+        region = self._reg_normalizer(region)
+        async with aiohttp.ClientSession() as session:
+            await self.rate_limiter.wait()
+            async with session.get(url_get_id, verify_ssl=False) as response:
+                try:
+                    data = await self.response_handler(response, check_meta=True)
+                except Exception as e:
+                    _log.debug(f'Error check player\n{traceback.format_exc()}')
+                    raise e
+                
+            url_get_stats = (
+                f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
+                f'?application_id={self._get_id_by_reg(region)}'
+                f'&account_id={data["data"][0]["account_id"]}'
+                f'&fields=-statistics.clan'
+            )
+            await self.rate_limiter.wait()
+            async with session.get(url_get_stats, verify_ssl=False) as response:
+                try:
+                    await self.response_handler(response, check_battles=True, check_data=True)
+                except Exception as e:
+                    _log.debug(f'Error check player\n{traceback.format_exc()}')
+                    raise e
             
     def done_callback(self, task: asyncio.Task):
         _log.debug(f'{task.get_name()} done\n')
@@ -252,6 +309,14 @@ class API:
         _log.debug(f'All requests time: {time() - self.start_time}')
         return get_normalized_data(player_stats)
 
+    @retry(
+            expected_exception=(
+                api_exceptions.RequestsLimitExceeded,
+                api_exceptions.APISourceNotAvailable
+            ),
+            attempts=3,
+            on_exception=retry_callback
+    )
     async def get_account_id(self, region: str, nickname: str, **kwargs) -> None:
         url_get_id = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/list/'
@@ -260,6 +325,7 @@ class API:
             f'&type={"exact" if self.exact else "startswith"}'
         )
 
+        await self.rate_limiter.wait()
         async with aiohttp.ClientSession() as self.session:
             async with self.session.get(url_get_id, verify_ssl=False) as response:
                 data = await self.response_handler(response, False)
@@ -277,6 +343,14 @@ class API:
                 account_id: int = data['data'][0]['account_id']
                 return account_id
             
+    @retry(
+            expected_exception=(
+                api_exceptions.RequestsLimitExceeded,
+                api_exceptions.APISourceNotAvailable
+            ),
+            attempts=3,
+            on_exception=retry_callback
+    )
     async def get_player_battles(self, region: str, account_id: str, **kwargs) -> int:
         url_get_battles = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
@@ -284,13 +358,21 @@ class API:
             f'&account_id={account_id}'
             f'&fields=-statistics.clan'
         )
-
+        await self.rate_limiter.wait()
         async with aiohttp.ClientSession() as sesison:
             async with sesison.get(url_get_battles, verify_ssl=False) as response:
                 data = await self.response_handler(response)
 
         return data['data'][str(account_id)]['statistics']['all']['battles']
 
+    @retry(
+            expected_exception=(
+                api_exceptions.RequestsLimitExceeded,
+                api_exceptions.APISourceNotAvailable
+            ),
+            attempts=3,
+            on_exception=retry_callback
+    )
     async def get_player_stats(self, region: str, account_id: str, **kwargs) -> PlayerStats:
         _log.debug('Get main stats started')
         url_get_stats = (
@@ -301,6 +383,7 @@ class API:
             f'&fields=-statistics.clan'
         )
 
+        await self.rate_limiter.wait()
         async with self.session.get(url_get_stats, verify_ssl=False) as response:
             data = await self.response_handler(response)
 
@@ -324,6 +407,14 @@ class API:
         # self.player.data.statistics = data.data.statistics
         # self.player.nickname = data.data.nickname
 
+    @retry(
+            expected_exception=(
+                api_exceptions.RequestsLimitExceeded,
+                api_exceptions.APISourceNotAvailable
+            ),
+            attempts=3,
+            on_exception=retry_callback
+    )
     async def get_player_achievements(self, region: str, account_id: str, **kwargs) -> None:
         _log.debug('Get achievements started')
         url_get_achievements = (
@@ -332,11 +423,21 @@ class API:
             f'&fields=-max_series&account_id={account_id}'
         )
 
+        await self.rate_limiter.wait()
         async with self.session.get(url_get_achievements, verify_ssl=False) as response:
             data = await self.response_handler(response)
 
         self.player_stats['achievements'] = Achievements.model_validate(data['data'][str(account_id)]['achievements'])
 
+
+    @retry(
+            expected_exception=(
+                api_exceptions.RequestsLimitExceeded,
+                api_exceptions.APISourceNotAvailable
+            ),
+            attempts=3,
+            on_exception=retry_callback
+    )
     async def get_player_clan_stats(self, region: str, account_id: str | int, **kwargs):
         _log.debug('Get clan stats started')
         url_get_clan_stats = (
@@ -346,6 +447,7 @@ class API:
             f'&extra=clan'
         )
 
+        await self.rate_limiter.wait()
         async with self.session.get(url_get_clan_stats, verify_ssl=False) as response:
             data = await self.response_handler(response)
 
@@ -357,13 +459,20 @@ class API:
         data['data'] = data['data'][str(account_id)]
 
 
-        _log.debug(json.dumps(data, indent=4))
         data = ClanStats.model_validate(data)
 
         self.player_stats['clan_tag'] = data.data.clan.tag
         self.player_stats['clan_stats'] = data.data.clan
         # self.player.data.clan_stats = data.data.clan
 
+    @retry(
+            expected_exception=(
+                api_exceptions.RequestsLimitExceeded,
+                api_exceptions.APISourceNotAvailable
+            ),
+            attempts=3,
+            on_exception=retry_callback
+    )
     async def get_player_tanks_stats(self, region: str, account_id: str, nickname: str,  **kwargs):
         _log.debug('Get player tank stats started')
         url_get_tanks_stats = (
@@ -371,6 +480,8 @@ class API:
             f'?application_id={self._get_id_by_reg(region)}'
             f'&account_id={account_id}'
         )
+
+        await self.rate_limiter.wait()
         async with self.session.get(url_get_tanks_stats, verify_ssl=False) as response:
             data = await self.response_handler(response)
 
