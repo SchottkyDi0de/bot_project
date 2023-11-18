@@ -241,7 +241,7 @@ class API:
                     raise e
             
     def done_callback(self, task: asyncio.Task):
-        _log.debug(f'{task.get_name()} done\n')
+        pass
 
     async def get_stats(self, search: str, region: str, exact: bool = True, raw_dict: bool = False) -> PlayerGlobalData:
         if search is None or region is None:
@@ -254,7 +254,6 @@ class API:
         self.exact = exact
         self.raw_dict = raw_dict
 
-        _log.debug('Get stats method called, arguments: %s, %s', search, region)
         self.start_time = time()
         need_cached = False
 
@@ -374,7 +373,6 @@ class API:
             on_exception=retry_callback
     )
     async def get_player_stats(self, region: str, account_id: str, **kwargs) -> PlayerStats:
-        _log.debug('Get main stats started')
         url_get_stats = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
             f'?application_id={self._get_id_by_reg(region)}'
@@ -416,7 +414,6 @@ class API:
             on_exception=retry_callback
     )
     async def get_player_achievements(self, region: str, account_id: str, **kwargs) -> None:
-        _log.debug('Get achievements started')
         url_get_achievements = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/achievements/'
             f'?application_id={self._get_id_by_reg(region)}'
@@ -439,7 +436,6 @@ class API:
             on_exception=retry_callback
     )
     async def get_player_clan_stats(self, region: str, account_id: str | int, **kwargs):
-        _log.debug('Get clan stats started')
         url_get_clan_stats = (
             f'https://{self._get_url_by_reg(region)}/wotb/clans/accountinfo/'
             f'?application_id={self._get_id_by_reg(region)}'
@@ -474,7 +470,6 @@ class API:
             on_exception=retry_callback
     )
     async def get_player_tanks_stats(self, region: str, account_id: str, nickname: str,  **kwargs):
-        _log.debug('Get player tank stats started')
         url_get_tanks_stats = (
             f'https://{self._get_url_by_reg(region)}/wotb/tanks/stats/'
             f'?application_id={self._get_id_by_reg(region)}'
