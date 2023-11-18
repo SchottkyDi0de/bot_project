@@ -86,7 +86,6 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
 
         new_tank = None
         old_tank = None
-        t_avg_damage_before = 0
         
         for i in data_old.data.tank_stats:
             if i.tank_id == tank_id:
