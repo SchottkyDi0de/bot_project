@@ -95,7 +95,7 @@ class Stats(commands.Cog):
             check_user(ctx)
         except UserBanned:
             return
-        _log.debug(f'User locale is: {ctx.interaction.locale}')
+        # _log.debug(f'User locale is: {ctx.interaction.locale}')
         
         Text().load_from_context(ctx)
         try:

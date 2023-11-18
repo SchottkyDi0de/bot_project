@@ -305,7 +305,7 @@ class API:
         if self.raw_dict:
             return player_stats.model_dump()
 
-        _log.debug(f'All requests time: {time() - self.start_time}')
+        # _log.debug(f'All requests time: {time() - self.start_time}')
         return get_normalized_data(player_stats)
 
     @retry(

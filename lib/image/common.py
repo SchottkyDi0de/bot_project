@@ -250,7 +250,6 @@ class Values():
     def __init__(self, data: PlayerGlobalData) -> None:
         self.val_normalizer = ValueNormalizer()
         shorted_data = data.data.statistics
-        _log.debug(shorted_data.all.winrate)
         self.main = {
             'winrate': self.val_normalizer.winrate(shorted_data.all.winrate),
             'avg_damage': self.val_normalizer.other(shorted_data.all.avg_damage),
