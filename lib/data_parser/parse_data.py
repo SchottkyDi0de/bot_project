@@ -71,7 +71,6 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
         _log.error(f'Data parsing error, \n{traceback.format_exc()}')
         raise data_parser.DataParserError()
     else:
-        _log.debug('Parsing data: OK')
         return data
     
 def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> SesionDiffData:
