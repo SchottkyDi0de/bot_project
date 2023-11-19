@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, Optional
 
 from pydantic import BaseModel
 
@@ -11,7 +11,7 @@ from lib.data_classes.tanks_stats import TankStats
 class Player(BaseModel):
     achievements: Achievements
     clan_stats: Optional[Clan] = None
-    tank_stats: List[TankStats]
+    tank_stats: Dict[str, TankStats]
     statistics: Statistics
     name_and_tag: Optional[str] = None
     clan_tag: Optional[str]

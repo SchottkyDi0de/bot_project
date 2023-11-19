@@ -13,7 +13,7 @@ _admin_ids = [
     766019191836639273
 ]
 
-_log = get_logger(__name__, 'AdminLogger', 'logs/admin.log')
+_log = get_logger(__name__, 'AdminCogLogger', 'logs/admin.log')
 
 
 class AdminCommand(commands.Cog):

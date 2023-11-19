@@ -219,7 +219,7 @@ class SessionValues():
 
 
 class Values():
-    def __init__(self, data: PlayerGlobalData, tank_index: int) -> None:
+    def __init__(self, data: PlayerGlobalData, tank_id: list) -> None:
         """
         Initializes a Values object.
 
@@ -230,6 +230,7 @@ class Values():
         self.val_normalizer = ValueNormalizer()
         stats_data = data.data.statistics
         tank_data = data.data.tank_stats
+        tank_id = tank_id[0]
 
         # Define the main statistics
         self.main = {
@@ -247,9 +248,9 @@ class Values():
 
         # Define the tank statistics
         self.tank = {
-            'winrate': self.val_normalizer.winrate(tank_data[tank_index].all.winrate),
-            'avg_damage': self.val_normalizer.other(tank_data[tank_index].all.avg_damage),
-            'battles': self.val_normalizer.other(tank_data[tank_index].all.battles)
+            'winrate': self.val_normalizer.winrate(tank_data[str(tank_id)].all.winrate),
+            'avg_damage': self.val_normalizer.other(tank_data[str(tank_id)].all.avg_damage),
+            'battles': self.val_normalizer.other(tank_data[str(tank_id)].all.battles)
         }
 
 
@@ -281,9 +282,9 @@ class ImageGen():
         Generate the image for the given player's session stats.
 
         Args:
-            test (bool): If True, the image will be displayed for testing purposes.
             data (PlayerGlobalData): The global data of the player.
             diff_data (SesionDiffData): The diff data of the session.
+            test (bool): If True, the image will be displayed for testing purposes.
 
         Returns:
             BytesIO: The image generated for the session stats.
@@ -292,12 +293,12 @@ class ImageGen():
         self.data = data
         self.diff_values = DiffValues(diff_data)
         self.session_values = SessionValues(diff_data)
-        self.values = Values(data, self.diff_data.tank_index)
+        self.values = Values(data, self.diff_data.tank_id)
         self.flags = Flags()
 
         try:
-            tank_type = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['type']
-            tank_tier = TanksDB().get_tank_by_id(str(self.diff_data.tank_id))['tier']
+            tank_type = TanksDB().get_tank_by_id(self.diff_data.tank_id[0])['type']
+            tank_tier = TanksDB().get_tank_by_id(self.diff_data.tank_id[0])['tier']
         except TankNotFoundInTankopedia:
             _log.debug(f'Tank with id {self.diff_data.tank_id} not found')
             tank_tier = '?'
@@ -305,7 +306,7 @@ class ImageGen():
 
         try:
             self.curr_tank_name = self.tank_type_handler(tank_type) + TanksDB().get_tank_by_id(
-                str(self.diff_data.tank_id))['name'] + self.tank_tier_handler(tank_tier)
+                str(self.diff_data.tank_id[0]))['name'] + self.tank_tier_handler(tank_tier)
         except TankNotFoundInTankopedia:
             self.curr_tank_name = 'Unknown'
 

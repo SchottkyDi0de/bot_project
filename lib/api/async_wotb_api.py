@@ -480,10 +480,10 @@ class API:
         async with self.session.get(url_get_tanks_stats, verify_ssl=False) as response:
             data = await self.response_handler(response)
 
-        tanks_stats: list[TankStats] = []
+        tanks_stats: dict[str, TankStats] = {}
 
         for tank in data['data'][str(account_id)]:
-            tanks_stats.append(TankStats.model_validate(tank))
+            tanks_stats[str(tank['tank_id'])] = TankStats.model_validate(tank)
 
         self.player['region'] = self._reg_normalizer(region)
         self.player['lower_nickname'] = nickname.lower()
