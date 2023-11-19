@@ -1,4 +1,9 @@
-from typing import Optional
+import json
+import pprint
+import itertools
+from typing import Optional, List
+
+from lib.data_classes.tanks_stats import TankStats
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.data_classes.session import SesionDiffData
 from lib.exceptions import data_parser
@@ -51,7 +56,7 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
 
         tanks = data.data.tank_stats
 
-        for index, tank in enumerate(tanks):
+        for _, (key, tank) in enumerate(tanks.items()):
 
             if tank.all.battles != 0:
                 tank.all.winrate = (tank.all.wins / tank.all.battles) * 100
@@ -60,13 +65,12 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
                 tank.all.winrate = 0
                 tank.all.avg_damage = 0
 
-            tanks[index] = tank
+            tanks[key] = tank
             
     except* (AttributeError, TypeError):
         _log.error(f'Data parsing error, \n{traceback.format_exc()}')
         raise data_parser.DataParserError()
     else:
-        # _log.debug('Parsing data: OK')
         return data
     
 def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> SesionDiffData:
@@ -74,27 +78,25 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
     Return stats difference
     '''
     try:
-        tank_data = _search_max_diff_battles_tank(data_old, data_new)
+        tank_ids = _sort_tanks_by_diff_battles(data_old, data_new)
 
-        if tank_data is None:
+        if tank_ids is None:
             _log.debug('Different data generating error: player data not updated')
             raise data_parser.NoDiffData('Different data generating error: player data not updated')
-
-        tank_id, tank_index = tank_data
 
         battles_not_updated = False
 
         new_tank = None
         old_tank = None
         
-        for i in data_old.data.tank_stats:
-            if i.tank_id == tank_id:
-                old_tank = i
+        for _, (_, tank) in enumerate(data_old.data.tank_stats.items()):
+            if tank.tank_id == tank_ids[0]:
+                old_tank = tank
                 break
 
-        for i in data_new.data.tank_stats:
-            if i.tank_id == tank_id:
-                new_tank = i
+        for _, (_, tank) in enumerate(data_new.data.tank_stats.items()):
+            if tank.tank_id == tank_ids[0]:
+                new_tank = tank
                 break
 
         if old_tank is None or new_tank is None:
@@ -136,18 +138,18 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
 
             if diff_battles > 0:
                 session_winrate = (data_new_shorted.all.wins - data_old_shorted.all.wins) / diff_battles * 100
-                session_avg_damage = (data_new_shorted.all.damage_dealt - data_old_shorted.all.damage_dealt) // diff_battles
+                session_avg_damage = new_tank.all.avg_damage - old_tank.all.avg_damage
+                t_session_avg_damage =  (new_tank.all.damage_dealt - old_tank.all.damage_dealt) // t_diff_battles
             else:
                 session_winrate = 0
                 session_avg_damage = 0
+                t_session_avg_damage = 0
 
             if new_tank.all.wins - old_tank.all.wins != 0:
                 t_session_winrate = (new_tank.all.wins - old_tank.all.wins) / t_diff_battles * 100
             else:
-                t_session_winrate = 0   
+                t_session_winrate = 0
 
-            t_session_avg_damage =  (new_tank.all.damage_dealt - old_tank.all.damage_dealt) // t_diff_battles
-          
             diff_data_dict = {
                 'main_diff' : {
                     'winrate': diff_winrate,
@@ -185,8 +187,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
                     'battles' : t_diff_battles
                 },
 
-                'tank_id' : tank_id,
-                'tank_index' : tank_index
+                'tank_id' : tank_ids
             }
 
         else:
@@ -198,36 +199,35 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
 
     else:
         return SesionDiffData.model_validate(diff_data_dict)
+    
+def _get_index(tanks_list: List[TankStats], target: int): 
+    for index, x in enumerate(tanks_list): 
+        if x.tank_id == target: 
+            return index
+    return None
 
-def _search_max_diff_battles_tank(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> Optional[tuple[int, int]]:
+def _sort_tanks_by_diff_battles(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> Optional[List[str]]:
     if not isinstance(data_old, PlayerGlobalData) or not isinstance(data_new, PlayerGlobalData):
         raise ValueError('Wrong data type')
     
-    max_diff_battles = 0
-    max_tank_id = None
     tanks = data_new.data.tank_stats
     tanks_old = data_old.data.tank_stats
 
-    max_tank_id = 0
-    tank_index = 0
+    diff_battles = []
 
-    for i, j in enumerate(tanks):
+    for _, (keys, tank) in enumerate(tanks.items()):
         try:
-            battles_before = tanks_old[i].all.battles
-            battles_after = tanks[i].all.battles
-            diff_battles = battles_after - battles_before
-        except IndexError:
+            diff = tank.all.battles - tanks_old[keys].all.battles
+        except KeyError:
             continue
+        else:
+            if diff > 0:
+                diff_battles.append([tank.tank_id, diff])
 
-        if diff_battles == 0:
-            continue
-
-        if diff_battles > max_diff_battles:
-            max_diff_battles = diff_battles
-            max_tank_id = j.tank_id
-            tank_index = i
-
-    if max_diff_battles == 0:
+    if len(diff_battles) == 0:
         return None
     else:
-        return (max_tank_id, tank_index)
+        diff_battles = sorted(diff_battles, key=lambda x: x[1], reverse=True)
+        diff_tank_id = list(map(lambda x: x[0], diff_battles))
+        return diff_tank_id
+    
