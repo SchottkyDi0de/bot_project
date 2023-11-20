@@ -100,15 +100,16 @@ class Session(commands.Cog):
                     return
 
                 last_stats = self.db.get_member_last_stats(member['id'])
+
+                if last_stats is None:
+                    await ctx.respond(embed=self.err_msg.session_not_found())
+                    return
+                
                 if isinstance(last_stats['data']['tank_stats'], list):
                     tank_stats_dict = {}
                     for tank in last_stats['data']['tank_stats']:
                         tank_stats_dict[str(tank['tank_id'])] = tank
                     last_stats['data']['tank_stats'] = tank_stats_dict
-
-                if last_stats is None:
-                    await ctx.respond(embed=self.err_msg.session_not_found())
-                    return
                 
                 last_stats = PlayerGlobalData.model_validate(last_stats)
 

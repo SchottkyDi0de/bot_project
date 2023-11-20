@@ -261,7 +261,6 @@ class API:
 
         if cached_data is None:
             need_cached = True
-            _log.debug('Cache miss')
         else:
             _log.debug('Returned cached player data')
             cached_data['from_cache'] = True
