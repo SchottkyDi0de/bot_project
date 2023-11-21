@@ -2,6 +2,8 @@
 Модуль для генерирования изображения
 со статистикой.
 '''
+from enum import Enum
+from asyncio import run
 from datetime import datetime
 from io import BytesIO
 from time import time
@@ -15,11 +17,37 @@ from lib.locale.locale import Text
 from lib.logger import logger
 from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
+from lib.image.icons import StatsIcons
 
 _log = logger.get_logger(__name__, 'ImageCommonLogger',
                          'logs/image_common.log')
 
 
+class IconsCoords(Enum):
+    """Class that defines the coordinates of the icons in the image."""
+    # Main
+    winrate: tuple[int] = (150, 120)
+    avg_damage: tuple[int] = (300, 120)
+    battles: tuple[int] = (450, 120)
+    # Rating
+    winrate_r: tuple[int] = (150, 350)
+    battles_r: tuple[int] = (450, 350)
+    # Total
+    kills_per_battle: tuple[int] = (150, 430)
+    shots: tuple[int] = (300, 430)
+    xp: tuple[int] = (300, 430)
+    # Line 1
+    damage_ratio: tuple[int] = (150, 550)
+    damage_dealt: tuple[int] = (300, 550)
+    max_xp: tuple[int] = (300, 550)
+    # Line 2
+    destruction_ratio: tuple[int] = (150, 770)
+    frags: tuple[int] = (300, 770)
+    max_frags: tuple[int] = (300, 770)
+    # Line 3
+    avg_spotted: tuple[int] = (150, 890)
+    survived: tuple[int] = (300, 890)
+    accuracy: tuple[int] = (300, 890)
 
 class Fonts():
     """Class that defines different fonts used in the application."""
@@ -310,6 +338,7 @@ class ImageGen():
     achievements = None
     img_size = []
     coord = None
+    icons = StatsIcons()
 
     def generate(self, 
                 data: PlayerGlobalData, 
@@ -351,11 +380,13 @@ class ImageGen():
         self.stat_rating = data.data.statistics.rating
         self.achievements = data.data.achievements
 
-        self.image = Image.open('res/image/default_image/common_stats.png')
+        self.image = Image.open('res/image/default_image/default_bg.png')
         self.img_size = self.image.size
         self.coord = Coordinates(self.img_size)
 
         img_draw = ImageDraw.Draw(self.image)
+
+        self.draw_stats_icons()
 
         self.draw_category_labels(img_draw)
         self.draw_medals_labels(img_draw)
@@ -386,6 +417,10 @@ class ImageGen():
         _log.debug('Image was sent in %s sec.', round(time() - start_time, 4))
 
         return bin_image if not speed_test else time() - start_time
+    
+    def draw_stats_icons(self) -> None:
+        for coord_item in IconsCoords:
+            self.image.paste(getattr(self.icons, coord_item.name), coord_item.value, getattr(self.icons, coord_item.name))
 
     def draw_rating_icon(self) -> None:
         rt_img = self.leagues.empty
@@ -749,9 +784,11 @@ class ImageGen():
             round(generate_time, 3)
         )
 
-    def test(self):
+    async def test(self):
         import lib.api.async_wotb_api as async_wotb_api
-        self.generate(async_wotb_api.test('rtx4080', 'eu'), )
+        player_data = await async_wotb_api.test('rtx4080', 'eu')
+        self.generate(player_data[0], disable_cache=True)
+        self.image.show()
         quit()
 
-# ImageGen().test()
+run(ImageGen().test())

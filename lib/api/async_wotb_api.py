@@ -65,10 +65,8 @@ class API:
     async def response_handler(
             self,
             response: aiohttp.ClientResponse, 
-            check_data_status: bool = True,
             check_battles: bool = False,
             check_data: bool = False,
-            check_meta: bool = False
             ) -> dict:
         """
         Asynchronously handles the response from the API and returns the data as a dictionary.
@@ -88,21 +86,27 @@ class API:
         """
         if response.status != 200:
             _log.error(f'Error get data, bad response code: {response.status}')
-            raise api_exceptions.APIError()
-        
-        data = await response.text()
-        data = json.loads(data)
-        if response.status == 504:
-            raise api_exceptions.APISourceNotAvailable()
+            
+        try:
+            data = await response.text()
+            data = json.loads(data)
+        except Exception:
+            _log.error(
+                f'Error when parsing response: {response}\n'
+                f'{traceback.format_exc()}'
+                )
+            raise api_exceptions.APIError(f'Error when parsing response: {response}')
 
-        if check_data_status:
-            if data['status'] != 'ok':
-                if data['error']['message'] == 'REQUEST_LIMIT_EXCEEDED':
-                    _log.warning(f'Ingnoring Exception caused by API: Request Limit Exceeded')
-                    raise api_exceptions.RequestsLimitExceeded('Rate Limit Exceeded')
-                    
-                _log.error(f'Error get data, bad response status: {data}')
-                raise api_exceptions.APIError(f'Error get data, bad response status: {data}')
+        if data['status'] != 'ok':
+            if data['error']['message'] == 'REQUEST_LIMIT_EXCEEDED':
+                _log.warning(f'Ingnoring Exception caused by API: Request Limit Exceeded')
+                raise api_exceptions.RequestsLimitExceeded('Rate Limit Exceeded')
+            if data['error']['message'] == 'SOURCE_NOT_AVAILABLE':
+                _log.warning(f'Ingnoring Exception caused by API: SOURCE_NOT_AVAILABLE')
+                raise api_exceptions.SourceNotAvailable()
+                
+            _log.error(f'Error get data, bad response status: {data}')
+            raise api_exceptions.APIError(f'Error get data, bad response status: {data}')
             
         if data['meta']['count'] == 0:
             _log.error(
@@ -182,7 +186,7 @@ class API:
                 data['data'] = data['data'][account_id]
                 self._palyers_stats.append(PlayerStats.model_validate(data))
 
-    async def retry_callback(self):
+    async def retry_callback():
         _log.debug('Task failed, retrying...')
 
     async def get_tankopedia(self, region: str = 'ru') -> dict:
@@ -203,7 +207,7 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.SourceNotAvailable
             ),
             attempts=3,
             on_exception=retry_callback
@@ -312,7 +316,7 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.SourceNotAvailable
             ),
             attempts=3,
             on_exception=retry_callback
@@ -346,7 +350,7 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.SourceNotAvailable
             ),
             attempts=3,
             on_exception=retry_callback
@@ -368,7 +372,7 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.SourceNotAvailable
             ),
             attempts=3,
             on_exception=retry_callback
@@ -410,7 +414,7 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.SourceNotAvailable
             ),
             attempts=3,
             on_exception=retry_callback
@@ -433,7 +437,7 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.SourceNotAvailable
             ),
             attempts=3,
             on_exception=retry_callback
@@ -468,7 +472,7 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.SourceNotAvailable
             ),
             attempts=3,
             on_exception=retry_callback
