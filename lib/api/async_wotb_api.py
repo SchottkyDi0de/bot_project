@@ -182,7 +182,7 @@ class API:
                 data['data'] = data['data'][account_id]
                 self._palyers_stats.append(PlayerStats.model_validate(data))
 
-    async def retry_callback(self):
+    async def retry_callback():
         _log.debug('Task failed, retrying...')
 
     async def get_tankopedia(self, region: str = 'ru') -> dict:
