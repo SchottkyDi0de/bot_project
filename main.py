@@ -1,13 +1,16 @@
 import os
 from asyncio import sleep
 
+import uvicorn
 from discord import Intents, Activity, ActivityType
 from discord.ext import commands
 
+import server
 from lib.api import async_wotb_api
 from lib.database import tankopedia
 from lib.logger import logger
 from lib.settings.settings import Config
+from workers.pdb_checker import PDBWorker
 
 _log = logger.get_logger(__name__, 'MainLogger', 'logs/main.log')
 
@@ -17,6 +20,7 @@ st = Config().get()
 class App():
     def __init__(self):
         self.intents = Intents.default()
+        self.pbd_worker = PDBWorker()
         self.intents.message_content = True
         self.bot = commands.Bot(intents=self.intents, command_prefix=st.default.prefix)
         self.bot.remove_command('help')
@@ -53,14 +57,17 @@ class App():
 
             tp.set_tankopedia(await self.retrieve_tankopedia(api))
             _log.debug('Tankopedia set successfull\nBot started: %s', self.bot.user)
+            await self.pbd_worker.run_worker()
+
             await sleep(5)
             await self.apply_presence()
 
         self.load_extension(self.extension_names)
         self.bot.run(st.DISCORD_TOKEN_DEV)
+        # uvicorn.run(server.app, host='blitzhub.ru')
 
-
-    @staticmethod
+    # DEPRECATED, NEED REFACTOR >>>>>>>>
+    @staticmethod 
     async def retrieve_tankopedia(api: async_wotb_api.API, n_retries: int = 2) -> dict:
         for _ in range(n_retries):
             try:
@@ -68,6 +75,7 @@ class App():
             except Exception:
                 _log.error('', exc_info=True)
         quit(1)
+    # DEPRECATED, NEED REFACTOR <<<<<<<<
 
 
 if __name__ == '__main__':

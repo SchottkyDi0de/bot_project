@@ -137,7 +137,7 @@ class Stats(commands.Cog):
             await ctx.respond(embed=getattr(self.err_msg, exception)())
             return None
         else:
-            img_data = self.img_gen.generate(data)
+            img_data = self.img_gen.generate(ctx, data)
             return img_data
 
 

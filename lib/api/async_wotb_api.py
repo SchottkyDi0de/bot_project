@@ -156,6 +156,16 @@ class API:
         
             
     async def get_players_stats(self, players_id: list[int], region: str) -> list[PlayerStats | bool]:
+        """
+        Retrieves the statistics of multiple players based on their IDs and region.
+
+        Parameters:
+            players_id (list[int]): A list of player IDs.
+            region (str): The region of the players.
+
+        Returns:
+            list[PlayerStats | bool]: A list of PlayerStats objects representing the statistics of each player. If an error occurs during the retrieval, a boolean value indicating the success of the operation is returned.
+        """
         self._palyers_stats = []
         async with aiohttp.ClientSession() as session:
             async with asyncio.TaskGroup() as tg:
@@ -165,6 +175,17 @@ class API:
         return self._palyers_stats
                 
     async def _get_players_stats(self, player_id: int, region: str, session: aiohttp.ClientSession) -> None:
+        """
+        Asynchronously gets the player stats for a given player ID and region.
+
+        Parameters:
+            player_id (int): The ID of the player.
+            region (str): The region of the player.
+            session (aiohttp.ClientSession): The HTTP session for making requests.
+
+        Returns:
+            None
+        """
         await self.rate_limiter.wait()
         url_get_stats = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
@@ -190,6 +211,16 @@ class API:
         _log.debug('Task failed, retrying...')
 
     async def get_tankopedia(self, region: str = 'ru') -> dict:
+        """
+        Get tankopedia data.
+
+        Args:
+            region (str, optional): The region for which to get the tankopedia data. Defaults to 'ru'.
+
+        Returns:
+            dict: The tankopedia data.
+
+        """
         _log.debug('Get tankopedia data')
         url_get_tankopedia = (
             f'https://{self._get_url_by_reg(region)}/wotb/encyclopedia/vehicles/'
@@ -213,6 +244,20 @@ class API:
             on_exception=retry_callback
     )
     async def check_player(self, nickname: str, region: str) -> None:
+        """
+        Check a player's information.
+
+        Args:
+            nickname (str): The player's nickname.
+            region (str): The player's region.
+
+        Raises:
+            RequestsLimitExceeded: If the request limit is exceeded.
+            SourceNotAvailable: If the source is not available.
+
+        Returns:
+            None
+        """
         url_get_id = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/list/'
             f'?application_id={self._get_id_by_reg(region)}'
@@ -248,6 +293,22 @@ class API:
         _log.debug(f'{task.get_name()} done\n')
 
     async def get_stats(self, search: str, region: str, exact: bool = True, raw_dict: bool = False) -> PlayerGlobalData:
+        """
+        Asynchronously retrieves the statistics for a player based on their search parameters.
+
+        Args:
+            search (str): The search parameter, such as the player's nickname.
+            region (str): The region in which the player's statistics will be retrieved.
+            exact (bool, optional): Whether to perform an exact search. Defaults to True.
+            raw_dict (bool, optional): Whether to return the data as a raw dictionary. Defaults to False.
+
+        Returns:
+            PlayerGlobalData: The statistics for the player.
+
+        Raises:
+            api_exceptions.APIError: If the search parameter or region is empty.
+
+        """
         if search is None or region is None:
             self.exact = True
             self.raw_dict = False
@@ -258,7 +319,7 @@ class API:
         self.exact = exact
         self.raw_dict = raw_dict
 
-        _log.debug('Get stats method called, arguments: %s, %s', search, region)
+        _log.debug(f'Get stats method called, arguments: {search}, {region}')
         self.start_time = time()
         need_cached = False
 
@@ -321,7 +382,24 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def get_account_id(self, region: str, nickname: str, **kwargs) -> None:
+    async def get_account_id(self, region: str, nickname: str) -> None:
+        """
+        Retrieves the account ID of a player by their nickname and region.
+
+        Args:
+            region (str): The region of the player.
+            nickname (str): The nickname of the player.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            int: The account ID of the player.
+
+        Raises:
+            api_exceptions.RequestsLimitExceeded: If the API requests limit is exceeded.
+            api_exceptions.SourceNotAvailable: If the API source is not available.
+            api_exceptions.UncorrectName: If the player name is incorrect.
+            api_exceptions.MoreThanOnePlayerFound: If more than one player is found with the given nickname.
+            api_exceptions.NoPlayersFound: If no players are found with the given nickname."""
         url_get_id = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/list/'
             f'?application_id={self._get_id_by_reg(region)}'
@@ -356,6 +434,17 @@ class API:
             on_exception=retry_callback
     )
     async def get_player_battles(self, region: str, account_id: str, **kwargs) -> int:
+        """
+        Retrieves the number of battles played by a player.
+
+        Args:
+            region (str): The region of the player's account.
+            account_id (str): The ID of the player's account.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            int: The number of battles played by the player.
+        """
         url_get_battles = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
             f'?application_id={self._get_id_by_reg(region)}'
@@ -378,6 +467,23 @@ class API:
             on_exception=retry_callback
     )
     async def get_player_stats(self, region: str, account_id: str, **kwargs) -> PlayerStats:
+        """
+        Retrieves the player statistics for a given region and account ID.
+        
+        Args:
+            region (str): The region of the player (e.g. "NA", "EU", "ASIA").
+            account_id (str): The ID of the player's account.
+            **kwargs: Additional keyword arguments to be passed.
+        
+        Returns:
+            PlayerStats: An object containing the player's statistics.
+        
+        Raises:
+            RequestsLimitExceeded: If the API requests limit is exceeded.
+            SourceNotAvailable: If the API source is not available.
+            EmptyDataError: If the "battles" field is not present in the output data.
+            NeedMoreBattlesError: If the player has less than 100 battles.
+        """
         _log.debug('Get main stats started')
         url_get_stats = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
@@ -419,7 +525,17 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def get_player_achievements(self, region: str, account_id: str, **kwargs) -> None:
+    async def get_player_achievements(self, region: str, account_id: str) -> None:
+        """
+        Retrieves the achievements of a player.
+
+        Args:
+            region (str): The region of the player.
+            account_id (str): The ID of the player's account.
+
+        Returns:
+            None
+        """
         _log.debug('Get achievements started')
         url_get_achievements = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/achievements/'
@@ -442,7 +558,21 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def get_player_clan_stats(self, region: str, account_id: str | int, **kwargs):
+    async def get_player_clan_stats(self, region: str, account_id: str | int):
+        """
+        Retrieves clan statistics for a player.
+
+        Args:
+            region (str): The region of the player.
+            account_id (str | int): The account ID of the player.
+
+        Returns:
+            None
+
+        Raises:
+            api_exceptions.RequestsLimitExceeded: If the API requests limit is exceeded.
+            api_exceptions.SourceNotAvailable: If the API source is not available.
+        """
         _log.debug('Get clan stats started')
         url_get_clan_stats = (
             f'https://{self._get_url_by_reg(region)}/wotb/clans/accountinfo/'
@@ -478,6 +608,22 @@ class API:
             on_exception=retry_callback
     )
     async def get_player_tanks_stats(self, region: str, account_id: str, nickname: str,  **kwargs):
+        """
+        Retrieves the statistics of the tanks owned by a player.
+
+        Args:
+            region (str): The region of the player.
+            account_id (str): The account ID of the player.
+            nickname (str): The nickname of the player.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            None
+
+        Raises:
+            api_exceptions.RequestsLimitExceeded: If the requests limit has been exceeded.
+            api_exceptions.SourceNotAvailable: If the data source is not available.
+        """
         _log.debug('Get player tank stats started')
         url_get_tanks_stats = (
             f'https://{self._get_url_by_reg(region)}/wotb/tanks/stats/'

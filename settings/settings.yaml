@@ -3,9 +3,10 @@ bot_name:
   'Blitz Statistics'
 
 session_ttl: 86400
+ds_oauth_redirect_url: 'http://127.0.0.1:8000/auth'
 
-default: 
-  prefix : '!'
+default:
+  prefix : '!'  # deprecated
   lang: 'en'
   available_locales: ['ru', 'en', 'pl', 'ua', 'auto']
   locale_alliases: {ru: 'ru', en: 'en', pl: 'pl', uk: 'ua'}

@@ -6,18 +6,23 @@ from enum import Enum
 from asyncio import run
 from datetime import datetime
 from io import BytesIO
+import base64
 from time import time
+
 from cacheout import FIFOCache
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from discord.ext.commands import Context
 
-from PIL import Image, ImageDraw, ImageFont
-
+from lib.database.players import PlayersDB
+from lib.database.servers import ServersDB
 import lib.api.async_wotb_api as async_wotb_api
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.locale.locale import Text
 from lib.logger import logger
 from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
-from lib.image.icons import StatsIcons
+from lib.image.for_iamge.icons import StatsIcons
+from lib.image.for_iamge.medals import Medals
 
 _log = logger.get_logger(__name__, 'ImageCommonLogger',
                          'logs/image_common.log')
@@ -26,31 +31,51 @@ _log = logger.get_logger(__name__, 'ImageCommonLogger',
 class IconsCoords(Enum):
     """Class that defines the coordinates of the icons in the image."""
     # Main
-    winrate: tuple[int] = (150, 120)
-    avg_damage: tuple[int] = (300, 120)
-    battles: tuple[int] = (450, 120)
+    winrate: tuple[int] = (135, 110)
+    avg_damage: tuple[int] = (325, 110)
+    battles: tuple[int] = (532, 110)
+
     # Rating
-    winrate_r: tuple[int] = (150, 350)
-    battles_r: tuple[int] = (450, 350)
+    winrate_r: tuple[int] = (135, 450)
+    battles_r: tuple[int] = (532, 450)
+
     # Total
-    kills_per_battle: tuple[int] = (150, 430)
-    shots: tuple[int] = (300, 430)
-    xp: tuple[int] = (300, 430)
+    kills_per_battle: tuple[int] = (125, 630)
+    shots: tuple[int] = (325, 630)
+    xp: tuple[int] = (532, 630)
     # Line 1
-    damage_ratio: tuple[int] = (150, 550)
-    damage_dealt: tuple[int] = (300, 550)
-    max_xp: tuple[int] = (300, 550)
+    damage_ratio: tuple[int] = (128, 780)
+    damage_dealt: tuple[int] = (332, 780)
+    max_xp: tuple[int] = (534, 780)
     # Line 2
-    destruction_ratio: tuple[int] = (150, 770)
-    frags: tuple[int] = (300, 770)
-    max_frags: tuple[int] = (300, 770)
+    destruction_ratio: tuple[int] = (125, 930)
+    frags: tuple[int] = (325, 930)
+    max_frags: tuple[int] = (532, 930)
     # Line 3
-    avg_spotted: tuple[int] = (150, 890)
-    survived: tuple[int] = (300, 890)
-    accuracy: tuple[int] = (300, 890)
+    avg_spotted: tuple[int] = (123, 1075)
+    survived: tuple[int] = (320, 1075)
+    accuracy: tuple[int] = (532, 1075)
+
+
+class MedalCoords(Enum):
+    """Class that defines the coordinates of the medals in the image."""
+    high_caliber: tuple[int] = (105, 270)
+    radley_walters: tuple[int] = (208, 270)
+    mark_of_mastery: tuple[int] = (305, 270)
+    medal_kolobanov: tuple[int] = (420, 270)
+    warrior: tuple[int] = (526, 270)
+
+class BackgroundRectangleMap():
+    """Class that defines the coordinates of the background rectangle in the image."""
+    main = (25, 85, 675, 230)
+    medals = (25, 245, 675, 410)
+    rating = (25, 425, 675, 575)
+    total = (25, 590, 675, 1210)
 
 class Fonts():
     """Class that defines different fonts used in the application."""
+    roboto_40 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=40)
+    """The Roboto font with a size of 40."""
 
     roboto = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=28)
     """The Roboto font with a size of 28."""
@@ -108,11 +133,11 @@ class Coordinates():
             'total': (_center_x, 605),
         }
         self.medals_labels = {
-            'mainGun': (143, 360),
-            'medalRadleyWalters': (242, 360),
-            'markOfMastery': (350, 360),
-            'medalKolobanov': (458, 360),
-            'warrior': (560, 360),
+            'mainGun': (143, 365),
+            'medalRadleyWalters': (242, 365),
+            'markOfMastery': (350, 365),
+            'medalKolobanov': (458, 365),
+            'warrior': (560, 365),
         }
         self.common_stats_labels = {
             'kills_per_battle': (150, 712),
@@ -125,9 +150,9 @@ class Coordinates():
             'enemies_destroyed': (350, 1010),
             'battles_survived': (350, 1160),
 
-            'all_xp': (550, 712),
-            'max_xp': (550, 865),
-            'max_frags': (550, 1010),
+            'all_xp': (553, 712),
+            'max_xp': (553, 865),
+            'max_frags': (553, 1010),
             'accuracy': (550, 1160),
         }
         self.main_labels = {
@@ -161,17 +186,17 @@ class Coordinates():
             'frags': (350, 976),
             'survived_battles': (350, 1125),
 
-            'xp': (550, 680),
-            'max_xp': (550, 832),
-            'max_frags': (550, 976),
+            'xp': (555, 680),
+            'max_xp': (553, 832),
+            'max_frags': (553, 976),
             'accuracy': (550, 1125),
         }
         self.medals_count = {
-            'mainGun': (143, 344),
-            'medalRadleyWalters': (242, 344),
-            'markOfMastery': (350, 344),
-            'medalKolobanov': (458, 344),
-            'warrior': (560, 344),
+            'mainGun': (143, 349),
+            'medalRadleyWalters': (242, 349),
+            'markOfMastery': (350, 349),
+            'medalKolobanov': (458, 349),
+            'warrior': (560, 349),
         }
         self.main_stats_points = {
             'winrate': (240, 108),
@@ -339,17 +364,24 @@ class ImageGen():
     img_size = []
     coord = None
     icons = StatsIcons()
+    medals = Medals()
+    background_rectangles_map = BackgroundRectangleMap()
 
-    def generate(self, 
+    def generate(self,
+                ctx: Context | None,
                 data: PlayerGlobalData, 
                 speed_test: bool = False, 
-                disable_cache: bool = False
+                disable_cache: bool = False,
+                debug_label: bool = False,
                     ) -> BytesIO | float:
         
+        default_bg = False
         self.text = Text().get()
         start_time = time()
         need_caching = False
         current_lang = Text().get_current_lang()
+        pdb = PlayersDB()
+        sdb = ServersDB()
 
         if speed_test:
             disable_cache = True
@@ -372,6 +404,9 @@ class ImageGen():
                 round(time() - start_time, 4)
                 )
             return bin_image
+        
+        if ctx == None:
+            default_bg = True
 
         bin_image = None
         self.data = data
@@ -380,20 +415,50 @@ class ImageGen():
         self.stat_rating = data.data.statistics.rating
         self.achievements = data.data.achievements
 
-        self.image = Image.open('res/image/default_image/default_bg.png')
+        if not default_bg:
+            if pdb.check_member_premium(ctx.author.id):
+                if pdb.get_member_image(ctx.author.id) is not None:
+                    image_bytes = base64.b64decode(pdb.get_member_image(ctx.author.id))
+                    if image_bytes != None: 
+                        image_buffer = BytesIO(image_bytes)
+                        self.image = Image.open(image_buffer)
+                        # self.image.resize((700, 1250), Image.Resampling.BICUBIC)
+                        # self.image = self.image.convert('RGBA')
+            
+            elif sdb.check_server_premium(ctx.guild.id):
+                if sdb.get_server_image(ctx.guild.id) is not None:
+                    image_bytes = base64.b64decode(sdb.get_server_image(ctx.guild.id))
+                    if image_bytes != None:   
+                        image_buffer = BytesIO(image_bytes)
+                        self.image = Image.open(image_buffer)
+                        # self.image = self.image.resize((700, 1250), Image.Resampling.BICUBIC)
+                        # self.image = self.image.convert('RGBA')
+            else:
+                self.image = Image.open('res/image/default_image/common_stats.png')
+                default_bg = True
+        else:
+            self.image = Image.open('res/image/default_image/common_stats.png')
+            default_bg = True
+
         self.img_size = self.image.size
         self.coord = Coordinates(self.img_size)
-
         img_draw = ImageDraw.Draw(self.image)
 
-        self.draw_stats_icons()
+        _log.debug(f'Generate modele debug: image size: {self.image.size}')
 
+        if not default_bg:
+            self.darw_backround()
+            self.draw_stats_icons()
+            self.draw_medals()
+
+        self.draw_flag()
+        self.draw_rating_icon()
         self.draw_category_labels(img_draw)
         self.draw_medals_labels(img_draw)
         self.draw_common_labels(img_draw)
         self.draw_rating_labels(img_draw)
+        self.draw_nickname_box(img_draw)
         self.draw_main_labels(img_draw)
-        self.draw_rating_icon()
         self.draw_nickname(img_draw)
 
         self.draw_main_stats(img_draw)
@@ -401,7 +466,8 @@ class ImageGen():
         self.darw_common_stats(img_draw)
         self.darw_medal_count(img_draw)
 
-        self.draw_flag()
+        if debug_label:
+            self.draw_debug_label(img_draw)
 
         # self.draw_main_points(img_draw)
         # self.draw_rating_points(img_draw)
@@ -417,10 +483,66 @@ class ImageGen():
         _log.debug('Image was sent in %s sec.', round(time() - start_time, 4))
 
         return bin_image if not speed_test else time() - start_time
-    
+
     def draw_stats_icons(self) -> None:
         for coord_item in IconsCoords:
             self.image.paste(getattr(self.icons, coord_item.name), coord_item.value, getattr(self.icons, coord_item.name))
+
+    def draw_medals(self) -> False:
+        for coord_item in MedalCoords:
+            self.image.paste(getattr(self.medals, coord_item.name), coord_item.value, getattr(self.medals, coord_item.name))
+
+    def draw_debug_label(self, img: ImageDraw.ImageDraw) -> None:
+        bbox = img.textbbox(
+            (self.img_size[0] // 2 - 150, self.img_size[1] // 2),
+            text='DEBUG PREVIEW',
+            font=self.fonts.roboto_40
+        )
+        img.rectangle(bbox, fill="grey")
+        img.text(
+            (self.img_size[0] // 2 - 150, self.img_size[1] // 2),
+            text='DEBUG PREVIEW',
+            font=self.fonts.roboto_40,
+            fill=Colors.red
+        )
+
+    def darw_backround(self) -> None:
+        background_map = Image.new(mode='RGBA', size=self.image.size, color=(0, 0, 0, 0))
+        img_draw = ImageDraw.Draw(background_map)
+
+        # draw nickanme rectangle
+        text_box = img_draw.textbbox(
+            (self.img_size[0]//2, 20),
+            text=self.data.data.name_and_tag,
+            font=self.fonts.roboro_icon,
+            anchor='ma'
+        )
+
+        text_box = list(text_box)
+        text_box[0] -= 10
+        text_box[2] += 10
+        text_box[1] -= 5
+        text_box[3] += 3
+
+        img_draw.rounded_rectangle(
+            tuple(text_box),
+            radius=10,
+            fill=(0, 0, 0, 20),
+        )
+
+        # draw stats rectangles
+        img_draw.rounded_rectangle(self.background_rectangles_map.main, radius=30, fill=(0, 0, 0))
+        img_draw.rounded_rectangle(self.background_rectangles_map.rating, radius=30, fill=(0, 0, 0))
+        img_draw.rounded_rectangle(self.background_rectangles_map.medals, radius=30, fill=(0, 0, 0))
+        img_draw.rounded_rectangle(self.background_rectangles_map.total, radius=30, fill=(0, 0, 0))
+
+        bg = self.image.copy()
+        gaussian_filter = ImageFilter.GaussianBlur(radius=5)
+
+        bg = bg.filter(gaussian_filter)
+        bg = ImageEnhance.Brightness(bg).enhance(0)
+
+        self.image.paste(bg, (0, 0), background_map)
 
     def draw_rating_icon(self) -> None:
         rt_img = self.leagues.empty
@@ -441,6 +563,7 @@ class ImageGen():
 
         self.image.paste(rt_img, (326, 460), rt_img)
 
+
     def draw_nickname(self, img: Image.Image):
         img.text(
             (self.img_size[0]//2, 20),
@@ -454,6 +577,10 @@ class ImageGen():
             font=self.fonts.roboto_small2,
             anchor='ma',
             fill=Colors.l_grey)
+        
+    def draw_nickname_box(self, img: ImageDraw.ImageDraw):
+        pass
+        
 
     def draw_category_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.category_labels.keys():
@@ -580,7 +707,7 @@ class ImageGen():
                 text='.',
                 font=self.fonts.point,
                 anchor='mm',
-                fill=self.point_coloring(i, getattr(self.data.all, i))
+                fill=self.point_coloring(i, getattr(self.data.data.statistics.all, i))
             )
 
     def draw_rating_points(self, img: Image.Image):
@@ -590,7 +717,7 @@ class ImageGen():
                 text='.',
                 font=self.fonts.point,
                 anchor='mm',
-                fill=self.point_coloring(i, getattr(self.data.all, i))
+                fill=self.point_coloring(i, getattr(self.data.data.statistics.all, i))
             )
 
     def draw_rating_points(self, img: Image.Image):
@@ -601,7 +728,7 @@ class ImageGen():
                 font=self.fonts.point,
                 anchor='mm',
                 fill=self.point_coloring(i, getattr(
-                    self.data.rating, i), rating=True)
+                    self.data.data.statistics.rating, i), rating=True)
             )
 
     def darw_common_points(self, img: Image.Image):
@@ -612,7 +739,7 @@ class ImageGen():
                 font=self.fonts.point,
                 anchor='mm',
                 fill=self.point_coloring(
-                    i, getattr(self.data.all, i), rating=True)
+                    i, getattr(self.data.data.statistics.all, i), rating=True)
             )
 
     def draw_flag(self):
@@ -778,7 +905,7 @@ class ImageGen():
             data, response_time = await async_wotb_api.test('rtx4080', 'eu', speed_test=True)
         except:
             return (0, 0)
-        generate_time = self.generate(data, speed_test=True)
+        generate_time = self.generate(ctx=None, data=data, speed_test=True)
         return(
             round(response_time, 3),
             round(generate_time, 3)
@@ -787,8 +914,8 @@ class ImageGen():
     async def test(self):
         import lib.api.async_wotb_api as async_wotb_api
         player_data = await async_wotb_api.test('rtx4080', 'eu')
-        self.generate(player_data[0], disable_cache=True)
+        self.generate(ctx=None, data=player_data[0], disable_cache=True, debug_label=False)
         self.image.show()
         quit()
 
-run(ImageGen().test())
+# run(ImageGen().test())

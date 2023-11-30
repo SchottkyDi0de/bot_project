@@ -55,5 +55,6 @@ User_id: {j}\n\
 User_game_nickname: {db['members'][j]['nickname']}\n\
 Expiried at: {expiried_at}")
 
+
 if __name__ == '__main__':
-    tdb_to_json('tankopedia')
+    sdb_to_json('servers')

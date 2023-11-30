@@ -63,7 +63,6 @@ class MapNames(BaseModel):
     castilia: str
     canal: str
     vineyards: str
-    yamato_harbor: str
     canyon: str
     mayan_ruins: str
     dynasty_pearl: str
@@ -71,6 +70,7 @@ class MapNames(BaseModel):
     falls_creek: str
     new_bay: str
     normandy: str
+    yamato_harbor: str
     wasteland: str
     unknown: str
 
@@ -155,8 +155,8 @@ class Descr1(BaseModel):
 
 class Errors2(BaseModel):
     player_not_found: str
-    no_battles: str
     uncorrect_nickname: str
+    no_battles: str
 
 
 class Stats(BaseModel):
@@ -279,34 +279,45 @@ class StartSession(BaseModel):
     items: str
 
 
+class SubDescr3(BaseModel):
+    image: str
+    server: str
+
+
 class Descr7(BaseModel):
     this: str
-    sub_descr: str
+    sub_descr: SubDescr3
 
 
 class Errors7(BaseModel):
-    session_not_found: str
+    player_not_registred: str
+    premium_not_found: str
+    server_premium_not_found: str
+    permission_denied: str
+    file_error: str
+    oversize: str
+    overresolution: str
+    small_resolution: str
 
 
 class Info7(BaseModel):
-    session_extended: str
-    player_not_registred: str
+    set_background_ok: str
 
 
-class ExtendSession(BaseModel):
+class SetBackground(BaseModel):
     descr: Descr7
     errors: Errors7
     info: Info7
     items: str
 
 
-class SubDescr3(BaseModel):
+class SubDescr4(BaseModel):
     help_types: str
 
 
 class Descr8(BaseModel):
     this: str
-    sub_descr: SubDescr3
+    sub_descr: SubDescr4
 
 
 class Info8(BaseModel):
@@ -314,8 +325,8 @@ class Info8(BaseModel):
 
 
 class Items1(BaseModel):
-    help: str
     help_types: List[str]
+    help: str
     syntax: str
     setup: str
     statistics: str
@@ -330,29 +341,31 @@ class Help(BaseModel):
     items: Items1
 
 
-class SubDescr4(BaseModel):
+class SubDescr5(BaseModel):
     file: str
 
 
 class Descr9(BaseModel):
     this: str
-    sub_descr: SubDescr4
+    sub_descr: SubDescr5
 
 
 class Errors8(BaseModel):
     parsing_error: str
     uncorrect_file_format: str
 
+
 class Common1(BaseModel):
     win: str
     lose: str
+
 
 class Items2(BaseModel):
     avg_stats: str
     empty_player: str
     title: str
-    description: str
     common: Common1
+    description: str
 
 
 class ParseReplay(BaseModel):
@@ -370,13 +383,14 @@ class Cmds(BaseModel):
     session_state: SessionState
     get_session: GetSession
     start_session: StartSession
+    set_background: SetBackground
     help: Help
     parse_replay: ParseReplay
 
 
 class Localization(BaseModel):
     for_image: ForImage
-    frequent: Frequent
     map_names: MapNames
     gamemodes: Gamemodes
+    frequent: Frequent
     cmds: Cmds

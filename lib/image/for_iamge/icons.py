@@ -17,6 +17,7 @@ class StatsIcons:
     survived = Image.open('res/icons/for_stats/survived.png')
     winrate = Image.open('res/icons/for_stats/winrate.png')
     xp = Image.open('res/icons/for_stats/xp.png')
+    max_xp = Image.open('res/icons/for_stats/max_xp.png')
 
     winrate_r = winrate
     battles_r = battles

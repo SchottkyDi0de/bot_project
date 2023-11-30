@@ -130,6 +130,7 @@ frequent:
     api_error: Error when working with API.
     parser_error: Error when parsing data.
 
+
   info:
     info: Information
     player_not_registred: The player is not logged in. First enter the command `/set_player`
@@ -249,6 +250,27 @@ cmds:
     info:
       player_not_registred: To start the session, first save your data with `/set_player`
       started: Session is running. Now you can play some battles and get session statistics using `/get_session`.
+    items:
+      ''
+
+# Set background command
+  set_background: 
+    descr:
+      this: Change background
+      sub_descr:
+        image: Upload background in PNG or JPEG format (max. 2 MB) (700 X 1250px)
+        server: Set default background for this server (admin privileges required).
+    errors:
+      player_not_registred: To change the background, save your data using the `/astats` command
+      premium_not_found: You must be a premium user to change the background. For more information, visit the support server.
+      server_premium_not_found: To change the profile background on the server, the server must have premium status.
+      permission_denied: You must have administrator rights to set the background for the server.
+      file_error: The file is not a valid image.
+      oversize: The file is too large (maximum 2 MB).
+      overresolution: The image has too high resolution (maximum 2048x2048).
+      small_resolution: The image has too low resolution (minimum 256x256).
+    info:
+      set_background_ok: Background successfully changed.
     items:
       ''
 

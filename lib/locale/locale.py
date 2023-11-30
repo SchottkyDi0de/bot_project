@@ -19,7 +19,7 @@ class Text():
 
         with open(f'locales/{self.default_lang}.yaml', encoding='utf-8') as f:
             self.data = Localization.model_validate(yaml.safe_load(f))
-        
+
     def load_from_context(self, ctx: Context) -> None:
         if self.pdb.get_member_lang(ctx.author.id) is not None:
             self.load(self.pdb.get_member_lang(ctx.author.id))
@@ -32,10 +32,10 @@ class Text():
     def load(self, lang: str, save: bool = True) -> Localization | None:
         if self.current_lang == lang:
             return
-        
+
         if lang not in Config().get().default.available_locales:
             lang = Config().get().default.lang
-        
+
         with open(f'locales/{lang}.yaml', encoding='utf-8') as f:
             data = Localization.model_validate(yaml.safe_load(f))
  
@@ -44,14 +44,14 @@ class Text():
             self.data = data
         else:
             return data
-        
+
     def get_current_lang(self) -> str:
         return self.current_lang
-        
+
     def get(self, lang: str | None = None) -> Localization:
         if lang is None:
             return self.data
-        
+
         else:
             return self.load(lang, False)
 
