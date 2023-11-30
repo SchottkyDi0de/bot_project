@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import List
 
 from pydantic import BaseModel
@@ -315,12 +317,12 @@ class SubDescr4(BaseModel):
     help_types: str
 
 
-class Descr8(BaseModel):
+class Descr7(BaseModel):
     this: str
     sub_descr: SubDescr4
 
 
-class Info8(BaseModel):
+class Info7(BaseModel):
     send_ok: str
 
 
@@ -335,9 +337,9 @@ class Items1(BaseModel):
 
 
 class Help(BaseModel):
-    descr: Descr8
+    descr: Descr7
     errors: str
-    info: Info8
+    info: Info7
     items: Items1
 
 
@@ -345,12 +347,12 @@ class SubDescr5(BaseModel):
     file: str
 
 
-class Descr9(BaseModel):
+class Descr8(BaseModel):
     this: str
     sub_descr: SubDescr5
 
 
-class Errors8(BaseModel):
+class Errors7(BaseModel):
     parsing_error: str
     uncorrect_file_format: str
 
@@ -369,10 +371,23 @@ class Items2(BaseModel):
 
 
 class ParseReplay(BaseModel):
-    descr: Descr9
-    errors: Errors8
+    descr: Descr8
+    errors: Errors7
     info: str
     items: Items2
+
+
+class Descr9(BaseModel):
+    this: str
+
+
+class Errors8(BaseModel):
+    cooldown_not_expired: str
+
+
+class Cooldown(BaseModel):
+    descr: Descr9
+    errors: Errors8
 
 
 class Cmds(BaseModel):
@@ -386,6 +401,7 @@ class Cmds(BaseModel):
     set_background: SetBackground
     help: Help
     parse_replay: ParseReplay
+    cooldown: Cooldown
 
 
 class Localization(BaseModel):

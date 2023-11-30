@@ -435,5 +435,11 @@ cmds:
         <enemies>
         ```
 
+#Cooldown for command
+  cooldown:
+    descr:
+      this: Предотвращает частое использование команд.
       
+    errors:
+      cooldown_not_expired: Ошибка из-за слишком частого использования команды.
       

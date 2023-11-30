@@ -21,7 +21,7 @@ class TanksDB():
 
     def get_tank_by_id(self, id: str | int) -> dict:
         id = str(id)
-        _log.debug(f'Retrieving tank with id {id}')
+        # _log.debug(f'Retrieving tank with id {id}')
         
         try:
             return self.db['root']['data'][id]

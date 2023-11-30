@@ -2,6 +2,8 @@
 import yaml
 from discord.ext.commands import Context
 
+from typing import Dict
+
 from lib.data_classes.locale_struct import Localization
 from lib.utils.singleton_factory import singleton
 from lib.settings.settings import Config
@@ -16,10 +18,12 @@ class Text():
         self.pdb = PlayersDB()
         self.default_lang = Config().get().default.lang
         self.current_lang = self.default_lang
+        self.datas: Dict[str, Localization] = {}
 
-        with open(f'locales/{self.default_lang}.yaml', encoding='utf-8') as f:
-            self.data = Localization.model_validate(yaml.safe_load(f))
-
+        for i in ['pl', 'en', 'ru', 'ua']:
+            with open(f'locales/{i}.yaml', encoding='utf-8') as f:
+                self.datas |= {i: Localization.model_validate(yaml.safe_load(f))}
+        
     def load_from_context(self, ctx: Context) -> None:
         if self.pdb.get_member_lang(ctx.author.id) is not None:
             self.load(self.pdb.get_member_lang(ctx.author.id))
@@ -29,29 +33,24 @@ class Text():
             else:
                 self.load(self.default_lang)
 
-    def load(self, lang: str, save: bool = True) -> Localization | None:
+    def load(self, lang: str) -> Localization | None:
         if self.current_lang == lang:
             return
 
         if lang not in Config().get().default.available_locales:
             lang = Config().get().default.lang
+        
+        self.current_lang = lang
 
-        with open(f'locales/{lang}.yaml', encoding='utf-8') as f:
-            data = Localization.model_validate(yaml.safe_load(f))
- 
-        if save:
-            self.current_lang = lang
-            self.data = data
-        else:
-            return data
-
+        return self.datas[lang]
+        
     def get_current_lang(self) -> str:
         return self.current_lang
 
     def get(self, lang: str | None = None) -> Localization:
         if lang is None:
-            return self.data
-
+            return self.datas[self.current_lang]
+        
         else:
-            return self.load(lang, False)
+            return self.load(lang)
 

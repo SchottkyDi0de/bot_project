@@ -426,5 +426,12 @@ cmds:
         Nick:          WR:  Btls:
         ==============+====+=====
         <enemies>
-        ```
-     
+  
+#Cooldown for command
+  cooldown:
+    descr:
+      this: Prevents commands from being used too often.
+      
+    errors:
+      cooldown_not_expired: Error due to using the command too often.
+  

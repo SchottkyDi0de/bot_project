@@ -1,6 +1,7 @@
 from datetime import datetime
 from io import BytesIO
 from time import time
+from typing import Dict
 
 from PIL import Image, ImageDraw, ImageFont
 from cacheout import FIFOCache
@@ -276,6 +277,7 @@ class ImageGen():
     image = None
     data = None
     text = None
+    last_usage_by_user: Dict[int, int] = {}
 
     def generate(self, data: PlayerGlobalData, diff_data: SesionDiffData, test = False):
         """
