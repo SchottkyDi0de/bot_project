@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import List
 
 from pydantic import BaseModel
@@ -63,7 +65,6 @@ class MapNames(BaseModel):
     castilia: str
     canal: str
     vineyards: str
-    yamato_harbor: str
     canyon: str
     mayan_ruins: str
     dynasty_pearl: str
@@ -71,6 +72,7 @@ class MapNames(BaseModel):
     falls_creek: str
     new_bay: str
     normandy: str
+    yamato_harbor: str
     wasteland: str
     unknown: str
 
@@ -279,37 +281,16 @@ class StartSession(BaseModel):
     items: str
 
 
-class Descr7(BaseModel):
-    this: str
-    sub_descr: str
-
-
-class Errors7(BaseModel):
-    session_not_found: str
-
-
-class Info7(BaseModel):
-    session_extended: str
-    player_not_registred: str
-
-
-class ExtendSession(BaseModel):
-    descr: Descr7
-    errors: Errors7
-    info: Info7
-    items: str
-
-
 class SubDescr3(BaseModel):
     help_types: str
 
 
-class Descr8(BaseModel):
+class Descr7(BaseModel):
     this: str
     sub_descr: SubDescr3
 
 
-class Info8(BaseModel):
+class Info7(BaseModel):
     send_ok: str
 
 
@@ -324,9 +305,9 @@ class Items1(BaseModel):
 
 
 class Help(BaseModel):
-    descr: Descr8
+    descr: Descr7
     errors: str
-    info: Info8
+    info: Info7
     items: Items1
 
 
@@ -334,32 +315,47 @@ class SubDescr4(BaseModel):
     file: str
 
 
-class Descr9(BaseModel):
+class Descr8(BaseModel):
     this: str
     sub_descr: SubDescr4
 
 
-class Errors8(BaseModel):
+class Errors7(BaseModel):
     parsing_error: str
     uncorrect_file_format: str
+
 
 class Common1(BaseModel):
     win: str
     lose: str
 
+
 class Items2(BaseModel):
     avg_stats: str
     empty_player: str
     title: str
-    description: str
     common: Common1
+    description: str
 
 
 class ParseReplay(BaseModel):
-    descr: Descr9
-    errors: Errors8
+    descr: Descr8
+    errors: Errors7
     info: str
     items: Items2
+
+
+class Descr9(BaseModel):
+    this: str
+
+
+class Errors8(BaseModel):
+    cooldown_not_expired: str
+
+
+class Cooldown(BaseModel):
+    descr: Descr9
+    errors: Errors8
 
 
 class Cmds(BaseModel):
@@ -372,6 +368,7 @@ class Cmds(BaseModel):
     start_session: StartSession
     help: Help
     parse_replay: ParseReplay
+    cooldown: Cooldown
 
 
 class Localization(BaseModel):

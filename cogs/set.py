@@ -38,6 +38,7 @@ class Set(commands.Cog):
                 'uk': Text().get('ua').cmds.set_lang.descr.this
                 }
             )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def set_lang(self, ctx: commands.Context,
             lang: Option(
                 str,

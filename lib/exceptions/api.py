@@ -22,5 +22,5 @@ class UncorrectRegion(APIError):
 class RequestsLimitExceeded(APIError):
     pass
 
-class SourceNotAvailable(APIError):
+class APISourceNotAvailable(APIError):
     pass

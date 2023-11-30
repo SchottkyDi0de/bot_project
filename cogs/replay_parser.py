@@ -36,6 +36,7 @@ class CogReplayParser(commands.Cog):
                 'uk': Text().get('ua').cmds.parse_replay.descr.this
             }
         )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def parse_replay(self,
                     ctx: commands.Context,
                     replay: Option(
@@ -103,6 +104,13 @@ class CogReplayParser(commands.Cog):
                     text=Text().get().cmds.parse_replay.errors.parsing_error
                     )
                 )
+    
+    @parse_replay.error
+    async def on_error(self, ctx: commands.Context, _):
+        _log.error(traceback.format_exc())
+        await ctx.respond(
+            embed=ErrorMSG().cooldown_not_expired()
+            )
 
 def setup(bot):
     bot.add_cog(CogReplayParser(bot))

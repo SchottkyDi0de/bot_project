@@ -37,6 +37,7 @@ class Stats(commands.Cog):
                 'uk' : Text().get('ua').cmds.stats.descr.this
                 }
             )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def stats(
             self, 
             ctx: commands.Context,
@@ -81,6 +82,11 @@ class Stats(commands.Cog):
         except Exception:
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
+    
+    @stats.error
+    async def on_error(self, ctx: commands.Context, _):
+        _log.error(traceback.format_exc())
+        await ctx.respond(embed=self.err_msg.cooldown_not_expired())
 
     @commands.slash_command(
             description=Text().get().cmds.astats.descr.this,
@@ -90,12 +96,13 @@ class Stats(commands.Cog):
                 'uk': Text().get('ua').cmds.astats.descr.this
                 }
             )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def astats(self, ctx: commands.Context):
         try:
             check_user(ctx)
         except UserBanned:
             return
-        _log.debug(f'User locale is: {ctx.interaction.locale}')
+        # _log.debug(f'User locale is: {ctx.interaction.locale}')
         
         Text().load_from_context(ctx)
         try:
@@ -114,6 +121,11 @@ class Stats(commands.Cog):
         except Exception:
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
+    
+    @astats.error
+    async def on_error(self, ctx: commands.Context, _):
+        _log.error(traceback.format_exc())
+        await ctx.respond(embed=self.err_msg.cooldown_not_expired())
     
     async def get_stats(self, ctx: commands.Context, nickname: str, region: str):
         exception = None
