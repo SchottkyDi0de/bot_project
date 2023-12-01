@@ -82,11 +82,6 @@ class Stats(commands.Cog):
         except Exception:
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
-    
-    @stats.error
-    async def on_error(self, ctx: commands.Context, _):
-        _log.error(traceback.format_exc())
-        await ctx.respond(embed=self.err_msg.cooldown_not_expired())
 
     @commands.slash_command(
             description=Text().get().cmds.astats.descr.this,
@@ -122,11 +117,6 @@ class Stats(commands.Cog):
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
     
-    @astats.error
-    async def on_error(self, ctx: commands.Context, _):
-        _log.error(traceback.format_exc())
-        await ctx.respond(embed=self.err_msg.cooldown_not_expired())
-    
     async def get_stats(self, ctx: commands.Context, nickname: str, region: str):
         exception = None
         try:
@@ -153,5 +143,12 @@ class Stats(commands.Cog):
             return img_data
 
 
+async def on_error(self, ctx: commands.Context, _):
+        _log.error(traceback.format_exc())
+        await ctx.respond(embed=self.err_msg.cooldown_not_expired())
+
+
 def setup(bot):
+    for i in ['stats', 'astats']:
+        getattr(Stats, i).error(on_error)
     bot.add_cog(Stats(bot))

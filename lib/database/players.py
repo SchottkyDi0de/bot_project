@@ -1,12 +1,16 @@
 import os
 import sys
+import traceback
 from datetime import datetime
 
 import elara
 
 from lib.exceptions import database
+from lib.logger.logger import get_logger
 from lib.utils.singleton_factory import singleton
 from lib.settings.settings import Config
+
+_log = get_logger(__name__, logger_name='PlayersDBLogger', file_name='logs/playersdb_logger.log')
 
 
 @singleton
@@ -30,10 +34,14 @@ class PlayersDB():
                 'region': region,
                 'premium': False,
                 'premium_time': None,
+                'image' : None,
                 'lang': None,
-                'last_stats': dict()
+                'last_stats': dict(),
             }
         self.db.commit()
+
+    def member_count(self) -> int:
+        return len(self.db['members'].keys())
 
     def check_member(self, member_id: int) -> bool:
         member_id = str(member_id)
@@ -46,6 +54,50 @@ class PlayersDB():
             if not data:
                 return False
             return True
+        
+    def unset_member_premium(self, member_id: int):
+        member_id = str(member_id)
+
+        if self.check_member(member_id):
+            self.db['members'][member_id]['premium'] = False
+            self.db['members'][member_id]['premium_time'] = None
+            self.db.commit()
+
+    def set_member_premium(self, member_id: int, time_secs: int):
+        member_id = str(member_id)
+
+        self.db['members'][member_id]['premium'] = True
+        self.db['members'][member_id]['premium_time'] = datetime.now().timestamp() + time_secs
+        self.db.commit()
+
+    def check_member_premium(self, member_id: int) -> bool:
+        member_id = str(member_id)
+
+        if self.check_member(member_id):
+            if self.db['members'][member_id]['premium_time'] == None:
+                self.unset_member_premium(member_id)
+                return False
+            if self.db['members'][member_id]['premium_time'] > datetime.now().timestamp():
+                if self.db['members'][member_id]['premium']:
+                    return True
+
+        self.unset_member_premium(member_id)
+        return False
+
+    def get_member_image(self, member_id: int) -> str | None:
+        member_id = str(member_id)
+
+        if self.check_member(member_id):
+            return self.db['members'][member_id]['image']
+        
+        return None
+    
+    def set_member_image(self, member_id: int, image: str):
+        member_id = str(member_id)
+
+        if self.check_member(member_id):
+            self.db['members'][member_id]['image'] = image
+            self.db.commit()
 
     def get_member(self, member_id: int) -> dict | None:
         member_id = str(member_id)
@@ -135,3 +187,29 @@ class PlayersDB():
         
         except (KeyError, ValueError, AttributeError):
             return False
+        
+    def _change_database_structure(self):
+        """
+        Please DONT USE THIS FUNCTION ON WORK DB
+        """
+        for i in self.db.db['members'].keys():
+            try:
+                _ = self.db['members'][i]['id']
+                _ = self.db['members'][i]['nickname']
+                _ = self.db['members'][i]['region']
+                _ = self.db['members'][i]['premium']
+                _ = self.db['members'][i]['premium_time']
+                _ = self.db['members'][i]['last_stats']
+                _ = self.db['members'][i]['image']
+            except (KeyError, AttributeError):
+                print(f'Attempt to change database structure for player {i}')
+                try:
+                    self.db.db['members'][i]['premium'] = False
+                    self.db.db['members'][i]['premium_time'] = None
+                    self.db['members'][i]['image'] = None
+                except Exception:
+                    _log.debug(traceback.format_exc())
+                else:
+                    print('Succes...')
+
+        self.db.commit()

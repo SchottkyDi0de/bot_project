@@ -29,6 +29,14 @@ class Config():
         self.LT_APP_ID_CL0 = os.getenv('LT_APP_ID_CL0')
         self.LT_APP_ID_CL1 = os.getenv('LT_APP_ID_CL1')
 
+        self.CLIENT_ID = os.getenv('CLIENT_ID')
+        self.CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+
+        self.CLIENT_ID_DEV = os.getenv('CLIENT_ID_DEV')
+        self.CLIENT_SECRET_DEV = os.getenv('CLIENT_SECRET_DEV')
+
+        self.INTERNAL_API_KEY = os.getenv('INTERNAL_API_KEY')
+
         with open('settings/settings.yaml', encoding='utf-8') as f:
             self.settings = Settings(yaml.safe_load(f))
 

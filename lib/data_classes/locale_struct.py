@@ -105,6 +105,7 @@ class Info(BaseModel):
     info: str
     player_not_registred: str
     err_info_sent: str
+    warning: str
 
 
 class TimeUnits(BaseModel):
@@ -282,7 +283,8 @@ class StartSession(BaseModel):
 
 
 class SubDescr3(BaseModel):
-    help_types: str
+    image: str
+    server: str
 
 
 class Descr7(BaseModel):
@@ -290,7 +292,38 @@ class Descr7(BaseModel):
     sub_descr: SubDescr3
 
 
+class Errors7(BaseModel):
+    player_not_registred: str
+    premium_not_found: str
+    server_premium_not_found: str
+    permission_denied: str
+    file_error: str
+    oversize: str
+    overresolution: str
+    small_resolution: str
+
+
 class Info7(BaseModel):
+    set_background_ok: str
+
+
+class SetBackground(BaseModel):
+    descr: Descr7
+    errors: Errors7
+    info: Info7
+    items: str
+
+
+class SubDescr4(BaseModel):
+    help_types: str
+
+
+class Descr8(BaseModel):
+    this: str
+    sub_descr: SubDescr4
+
+
+class Info8(BaseModel):
     send_ok: str
 
 
@@ -305,22 +338,22 @@ class Items1(BaseModel):
 
 
 class Help(BaseModel):
-    descr: Descr7
+    descr: Descr8
     errors: str
-    info: Info7
+    info: Info8
     items: Items1
 
 
-class SubDescr4(BaseModel):
+class SubDescr5(BaseModel):
     file: str
 
 
-class Descr8(BaseModel):
+class Descr9(BaseModel):
     this: str
-    sub_descr: SubDescr4
+    sub_descr: SubDescr5
 
 
-class Errors7(BaseModel):
+class Errors8(BaseModel):
     parsing_error: str
     uncorrect_file_format: str
 
@@ -339,23 +372,23 @@ class Items2(BaseModel):
 
 
 class ParseReplay(BaseModel):
-    descr: Descr8
-    errors: Errors7
+    descr: Descr9
+    errors: Errors8
     info: str
     items: Items2
 
 
-class Descr9(BaseModel):
+class Descr10(BaseModel):
     this: str
 
 
-class Errors8(BaseModel):
+class Info9(BaseModel):
     cooldown_not_expired: str
 
 
 class Cooldown(BaseModel):
-    descr: Descr9
-    errors: Errors8
+    descr: Descr10
+    info: Info9
 
 
 class Cmds(BaseModel):
@@ -366,6 +399,7 @@ class Cmds(BaseModel):
     session_state: SessionState
     get_session: GetSession
     start_session: StartSession
+    set_background: SetBackground
     help: Help
     parse_replay: ParseReplay
     cooldown: Cooldown
