@@ -1,6 +1,7 @@
 from discord.ext import commands
 
 from lib.embeds.errors import ErrorMSG
+from lib.embeds.info import InfoMSG
 from lib.locale.locale import Text
 from lib.image.common import ImageGen
 
@@ -30,7 +31,7 @@ class Ping(commands.Cog):
     @ping.error
     async def on_error(self, ctx: commands.Context, _):
         await ctx.respond(
-            embed=ErrorMSG().cooldown_not_expired()
+            embed=InfoMSG().cooldown_not_expired()
             )
 
 def setup(bot):

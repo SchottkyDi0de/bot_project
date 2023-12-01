@@ -84,13 +84,6 @@ class ErrorMSG:
             description=self.text_obj.get().cmds.set_lang.errors.player_not_registred,
             colour=Colour.red()
         )
-    
-    def cooldown_not_expired(self) -> Embed:
-        return Embed(
-            title=self.text_obj.get().frequent.errors.error,
-            description=self.text_obj.get().cmds.cooldown.errors.cooldown_not_expired,
-            color=Colour.red()
-        )
 
     def custom(
             self, 

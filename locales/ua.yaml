@@ -1,4 +1,5 @@
 ---
+
 # This localization file use placeholders:
 # format: <key_name>
 #
@@ -136,6 +137,7 @@ frequent:
     info: Інформація
     player_not_registred: Гравець не зареєстрований. Спочатку введіть команду `/set_player`
     err_info_sent: Інформація про помилку була відправлена розробнику.
+    warning: Увага
 
   common:
     nickname: Нікнейм
@@ -189,71 +191,69 @@ cmds:
     items:
       ''
 
-
-# Команда установки языка
+# Set lang command
   set_lang:
     descr:
-      this: Зміна мови.
+      this: Смена языка.
       sub_descr:
-        lang_list: Список мов.
-        to_server: Зберегти для сервера.
+        lang_list: Список языков.
+        to_server: Сохранить для сервера.
     errors:
-      player_not_registred: Щоб змінити мову, спочатку збережіть свої дані за допомогою `/set_player`
-      permission_denied: Для зміни мови на всьому сервері у вас повинні бути права адміністратора.
+      player_not_registred: Для изменения языка сначала сохраните свои данные с помощью `/set_player`
+      permission_denied: Для изменения языка на всём сервере у вас должны быть права администратора.
     info:
-      set_lang_ok: Мова локалізації успішно змінена.
+      set_lang_ok: Язык локализации успешно изменён.
 
-# Команда стану сесії
+# Session state command
   session_state:
     descr:
-      this: Стан сесії
+      this: Статус сессии
       sub_descr:
         ''
     errors:
-      session_not_found: Сесійні дані не знайдені, можливо, ви не запустили сесію, або пройшло більше 24 годин з моменту початку минулої сесії.
+      session_not_found: Сессионные данные не найдены, возможно вы не запустили сессию или прошло более 24 часов с момента старта прошлой сессии.
     info:
-      player_not_registred: Для перегляду статусу сесії спочатку збережіть свої дані за допомогою `/set_player`
+      player_not_registred: Для просмотра статуса сессии сначала сохраните свои данные с помощью `/set_player`
     items:
-      # Переклад може змінити довжину рядків. 
-      # У вашому редакторі виберіть моноширинний шрифт та намагайтеся вирівняти все.
-      # Рекомендуються VS Code або Sublime Text з моноширинним шрифтом
+      # The translation will probably change the length of the lines. 
+      # In your editor, select monospaced font and try to align everything.
       started: |- 
         ```py
-        Сесія запущена.
+        Сессия запущена.
         +----------------------------+
-        Час сесії:     <time>     
-        До скидання:   <time_left>
-        Боїв зіграно:   <battles>  
+        Время сессии:   <time>     
+        До сброса:      <time_left>
+        Боёв сыграно:   <battles>  
         +----------------------------+
-        >>> Скинути сесію: /start_session
+        >>> Сбросить сессию: /start_session
         ```
-      not_started: '`Сесія не запущена.`'
+      not_started: '`Сессия не запущена.`'
 
-# Команда отримання сесії
+# Get session command
   get_session:
     descr:
-      this: Отримати сесію
+      this: Получить сессию
       sub_descr:
         ''
     errors:
-      session_not_found: Сесійні дані не знайдені, можливо, ви не запустили сесію, або пройшло більше 24 годин з моменту початку минулої сесії.
-      session_not_updated: Змін статистики не виявлено, можливо, ви не грали в бої або API не оновило дані, спробуйте пізніше.
+      session_not_found: Сессионные данные не найдены, возможно вы не запустили сессию или прошло более 24 часов с момента старта прошлой сессии.
+      session_not_updated: Не обнаружено изменение статистики, возможно вы не делали боёв или API не обновило данные, попробуйте позже.
     info:
-      player_not_registred: Щоб переглянути сесійну статистику, спочатку збережіть свої дані за допомогою `/set_player`
+      player_not_registred: Для просмотра сессионой статистики сначала сохраните свои данные с помощью `/set_player`
     items:
       ''
 
-# Команда запуску сесії
+# Start session command
   start_session:
     descr:
-      this: Запуск сесії
+      this: Запуск сессии
       sub_descr:
         ''
     errors:
       ''
     info:
-      player_not_registred: Для запуску сесії спочатку збережіть свої дані за допомогою `/set_player`
-      started: Сесія запущена. Тепер можете зіграти кілька боїв та отримати сесійну статистику, використовуючи `/get_session`
+      player_not_registred: Для запуска сессии сначала сохраните свои данные с помощью `/set_player`
+      started: Сессия запущена. Теперь можете сыграть несколько боёв и получить сессионную статистику используя `/get_session`
     items:
       ''
 
@@ -384,9 +384,9 @@ cmds:
       common:
         win: Перемога
         lose: Поразка
-        # Під час локалізації використовуйте редактор із моноширинним шрифтом 
-        # та вирівнюйте заповнювачі відносно один одного
-        # Рекомендую VS Code або Sublime Text з моноширинним шрифтом
+        # When localizing, use an editor with a monospaced font 
+        # and align placeholders relative to each other
+        # I recomended VS Code or Sublime Text with monospaced font
         # _Zener
       description: |-
         ```py
@@ -443,7 +443,7 @@ cmds:
     descr:
       this: Запобігає частому використанню команд.
       
-    errors:
-      cooldown_not_expired: Помилка через занадто часте використання команди.
+    info:
+      cooldown_not_expired: Зачекайте трішки перед наступним використанням.
       
       

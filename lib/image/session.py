@@ -1,10 +1,9 @@
-from datetime import datetime
 from io import BytesIO
 from time import time
 from typing import Dict
+from base64 import b64decode
 
 from PIL import Image, ImageDraw, ImageFont
-from cacheout import FIFOCache
 
 from lib.exceptions.database import TankNotFoundInTankopedia
 from lib.image.common import Colors, Fonts, ValueNormalizer
@@ -13,6 +12,7 @@ from lib.data_classes.session import SesionDiffData
 from lib.utils.singleton_factory import singleton
 from lib.database.tankopedia import TanksDB
 from lib.database.players import PlayersDB
+from lib.database.servers import ServersDB
 from lib.locale.locale import Text
 from lib.logger import logger
 
@@ -264,9 +264,10 @@ class Flags():
 
 @singleton
 class ImageGen():
-    cache = FIFOCache(maxsize=100, ttl=60)
     colors = Colors()
     fonts = Fonts()
+    pdb = PlayersDB()
+    sdb = ServersDB()
     session_values = None
     diff_values = None
     diff_data = None
@@ -314,27 +315,20 @@ class ImageGen():
 
         strt_time = time()
         self.leagues = Leagues()
-        need_caching = False
 
-        current_lang = Text().get_current_lang()
-        cached_data = self.cache.get((str(data.id), current_lang))
+        image_bytes_or_path = None
+        custom_player_image = self.pdb.get_member_image(data.id)
+        custom_server_image = self.sdb.get_server_image(data.guild_id)
 
-        if cached_data is None:
-            need_caching = True
-            _log.debug('Cache miss')
+        if custom_player_image:
+            image_bytes_or_path = BytesIO(b64decode(custom_player_image.encode()))
+        elif custom_server_image:
+            image_bytes_or_path = BytesIO(b64decode(custom_server_image.encode()))
         else:
-            _log.debug('Image loaded from cache')
-            bin_image = None
-            bin_image = BytesIO()
-            self.draw_cache_label(cached_data['img'])
-            cached_data['img'].save(bin_image, 'PNG')
-            bin_image.seek(0)
-            _log.debug('Image was sent in %s sec.',
-                       round(time() - strt_time, 4))
-            return bin_image
+            image_bytes_or_path = 'res/image/default_image/session_stats.png'
 
+        self.image = Image.open(image_bytes_or_path, formats=['png'])
         self.text = Text().get()
-        self.image = Image.open('res/image/default_image/session_stats.png')
         self.img_size = self.image.size
         self.coord = Coordinates(self.img_size)
 
@@ -362,15 +356,8 @@ class ImageGen():
         self.draw_tank_labels(img_draw)
         self.draw_flag()
 
-        return_data = {'img': self.image, 'timestamp': datetime.now(
-        ).timestamp(), 'id': str(data.id)}
-
         if test:
             self.image.show()
-
-        if need_caching:
-            self.cache.set((str(data.id), current_lang), return_data)
-            _log.debug('Image added to cache')
 
         bin_image = BytesIO()
         self.image.save(bin_image, 'PNG')

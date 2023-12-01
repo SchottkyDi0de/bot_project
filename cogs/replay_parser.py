@@ -15,6 +15,7 @@ from lib.replay_parser.parser import ReplayParserError
 from lib.data_parser.parse_replay import ParseReplayData
 from lib.logger.logger import get_logger
 from lib.embeds.errors import ErrorMSG
+from lib.embeds.info import InfoMSG
 from lib.embeds.replay import EmbedReplayBuilder
 from lib.settings.settings import Config
 
@@ -109,7 +110,7 @@ class CogReplayParser(commands.Cog):
     async def on_error(self, ctx: commands.Context, _):
         _log.error(traceback.format_exc())
         await ctx.respond(
-            embed=ErrorMSG().cooldown_not_expired()
+            embed=InfoMSG().cooldown_not_expired()
             )
 
 def setup(bot):

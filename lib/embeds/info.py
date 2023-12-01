@@ -95,6 +95,14 @@ class InfoMSG:
             description=text,
             colour=Colour.green()
         )
+    
+    def cooldown_not_expired(self) -> Embed:
+        return Embed(
+            title=self.text_obj.get().frequent.info.warning,
+            description=self.text_obj.get().cmds.cooldown.info.cooldown_not_expired,
+            color=Colour.red()
+        )
+    
     def custom(
             self,
             text: str,

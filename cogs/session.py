@@ -227,11 +227,13 @@ class Session(commands.Cog):
         except Exception:
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
-    
-    @session_state.error
-    async def on_error(self, ctx: commands.Context, _):
+
+
+async def on_error(self, ctx: commands.Context, _):
         _log.error(traceback.format_exc())
         await ctx.respond(embed=self.err_msg.cooldown_not_expired())
 
 def setup(bot):
+    for i in ['get_session', 'session_state']:
+        getattr(Session, i).error(on_error)
     bot.add_cog(Session(bot))

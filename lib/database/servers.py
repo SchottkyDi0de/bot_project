@@ -3,6 +3,7 @@ import sys
 
 import elara
 from discord.ext.commands import Context
+from discord.ext.commands import Context
 
 from lib.exceptions.database import ServerNotFound
 from lib.settings.settings import Config
@@ -19,7 +20,7 @@ class ServersDB():
             self.db.hnew('servers')
 
     def set_new_server(self, server_id: int, server_name: str) -> None:
-        server_id = str(server_id).strip()
+        server_id = str(server_id)
         if self.db.get('servers') is None:
             self.db.hnew('servers')
             
@@ -28,6 +29,9 @@ class ServersDB():
             server_id, {
                 'id': int(server_id),
                 'name': server_name,
+                'settings': dict(),
+                'premium': False,
+                'custom_background': None
                 'settings': dict(),
                 'premium': False,
                 'custom_background': None

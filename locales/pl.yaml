@@ -1,4 +1,5 @@
 ---
+
 # This localization file use placeholders:
 # format: <key_name>
 #
@@ -135,6 +136,7 @@ frequent:
     info: Informacje
     player_not_registred: Gracz nie jest zalogowany. Najpierw wprowadź komendę `/set_player`
     err_info_sent: Informacja o błędzie została wysłana do dewelopera.
+    warning: Warning
 
   common:
     nickname: Pseudonim
@@ -432,6 +434,6 @@ cmds:
     descr:
       this: Prevents commands from being used too often.
       
-    errors:
-      cooldown_not_expired: Error due to using the command too often.
+    info:
+      cooldown_not_expired: Wait a little before next use.
   

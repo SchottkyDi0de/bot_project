@@ -1,4 +1,5 @@
 ---
+
 # This localization file use placeholders:
 # format: <key_name>
 #
@@ -136,6 +137,7 @@ frequent:
     info: Информация
     player_not_registred: Игрок не зарегестрирован. Сначала введите команду `/set_player`
     err_info_sent: Информация об ошибке была отправлена разработчику.
+    warning: Внимание
 
   common:
     nickname: Никнейм
@@ -440,6 +442,6 @@ cmds:
     descr:
       this: Предотвращает частое использование команд.
       
-    errors:
-      cooldown_not_expired: Ошибка из-за слишком частого использования команды.
+    info:
+      cooldown_not_expired: Подождите немного перед следующим использованием.
       
