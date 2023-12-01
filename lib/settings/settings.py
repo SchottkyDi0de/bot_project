@@ -35,6 +35,8 @@ class Config():
         self.CLIENT_ID_DEV = os.getenv('CLIENT_ID_DEV')
         self.CLIENT_SECRET_DEV = os.getenv('CLIENT_SECRET_DEV')
 
+        self.INTERNAL_API_KEY = os.getenv('INTERNAL_API_KEY')
+
         with open('settings/settings.yaml', encoding='utf-8') as f:
             self.settings = Settings(yaml.safe_load(f))
 

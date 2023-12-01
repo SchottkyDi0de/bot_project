@@ -57,4 +57,4 @@ Expiried at: {expiried_at}")
 
 
 if __name__ == '__main__':
-    sdb_to_json('servers')
+    db_to_json('players')

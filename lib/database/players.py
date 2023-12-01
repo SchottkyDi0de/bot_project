@@ -9,6 +9,7 @@ from lib.exceptions import database
 from lib.logger.logger import get_logger
 from lib.utils.singleton_factory import singleton
 from lib.settings.settings import Config
+from lib.data_classes.db_player import DBPlayer
 
 _log = get_logger(__name__, logger_name='PlayersDBLogger', file_name='logs/playersdb_logger.log')
 
@@ -18,8 +19,13 @@ class PlayersDB():
     def __init__(self) -> None:
         self.db = elara.exe('database/players.eldb')
 
-    def set_member(self, member_id: int, nickname: str, region: str) -> None:
+    def set_member(self, member_id: int, nickname: str, region: str, data: DBPlayer = None) -> None:
         member_id = str(member_id)
+
+        if data is not None:
+            self.db['members'][member_id] = data.model_dump()
+            self.db.commit()
+            return
 
         if self.db.get('members') is None:
             self.db.hnew('members')

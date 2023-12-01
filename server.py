@@ -8,10 +8,13 @@ from fastapi.responses import RedirectResponse
 
 from lib.api.aync_discord_api import DiscordApi
 from lib.auth.dicord import DiscordOAuth
-
+from lib.settings.settings import Config
 from lib.database.players import PlayersDB
+from lib.data_classes.db_player import DBPlayer
 
 _current_user = None
+_pdb = PlayersDB()
+_config = Config()
 
 app = FastAPI()
 class Server:
@@ -21,20 +24,38 @@ class Server:
 
     def pywebio_page(self):
         put_markdown('# 🎉 Registration is complete, you can close the page 🎉')
-        put_info(f'authorized as: {_current_user["username"]}')
+        put_info(f'authorized as: {_current_user["username"]}', closable=True)
 
     @app.get('/')
     async def root():
         return 
-    
+
     @app.get('/api')
     async def api():
         return
     
     @app.get('/api/get_player')
-    async def get_player(api_key: str, discord_id: str):
-        player = PlayersDB().get_player(discord_id)
-        return
+    async def get_player(api_key: str, discord_id: str | int) -> dict:
+        if api_key != _config.INTERNAL_API_KEY:
+            return {'Error': 'AccesDenied'}
+        
+        player = _pdb.get_member(discord_id)
+
+        if player is not None:
+            try:
+                return DBPlayer.model_validate(player)
+            except:
+                return {'Error': 'DataValidationError'}
+        else:
+            return {'Error': 'PlayerNotFound'}
+    
+    @app.post('/api/set_player')
+    async def set_player(api_key: str, player: DBPlayer):
+        if api_key != _config.INTERNAL_API_KEY:
+            return {'Error': 'AccesDenied'}
+        
+        _pdb.set_member(player.id, player.nickname, player.region, player)
+        return {'Success': 'PlayerUpdated'}
 
     @app.get('/auth')
     async def auth(code: str):
