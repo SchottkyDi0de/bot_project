@@ -2,6 +2,7 @@
 Модуль для генерирования изображения
 со статистикой.
 '''
+from enum import Enum
 from datetime import datetime
 from io import BytesIO
 import base64

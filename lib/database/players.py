@@ -6,6 +6,7 @@ from datetime import datetime
 
 import elara
 
+from lib.data_classes.db_player import DBPlayer
 from lib.exceptions import database
 from lib.logger.logger import get_logger
 from lib.utils.singleton_factory import singleton
