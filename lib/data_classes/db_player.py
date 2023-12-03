@@ -9,5 +9,5 @@ class DBPlayer(BaseModel):
     premium: Optional[bool]
     premium_time: Optional[int]
     lang: Optional[str]
-    last_stats: Optional[dict[str, Any]]
-    image: Optional[str]
+    last_stats: Optional[dict[str, Any]] = None
+    image: Optional[str] = None

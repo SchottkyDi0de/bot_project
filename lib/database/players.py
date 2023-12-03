@@ -83,11 +83,13 @@ class PlayersDB():
             if self.db['members'][member_id]['premium_time'] == None:
                 self.unset_member_premium(member_id)
                 return False
+            
             if self.db['members'][member_id]['premium_time'] > datetime.now().timestamp():
                 if self.db['members'][member_id]['premium']:
                     return True
 
-        self.unset_member_premium(member_id)
+            self.unset_member_premium(member_id)
+
         return False
 
     def get_member_image(self, member_id: int) -> str | None:
