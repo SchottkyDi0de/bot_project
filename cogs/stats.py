@@ -37,6 +37,7 @@ class Stats(commands.Cog):
                 'uk' : Text().get('ua').cmds.stats.descr.this
                 }
             )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def stats(
             self, 
             ctx: commands.Context,
@@ -90,12 +91,13 @@ class Stats(commands.Cog):
                 'uk': Text().get('ua').cmds.astats.descr.this
                 }
             )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def astats(self, ctx: commands.Context):
         try:
             check_user(ctx)
         except UserBanned:
             return
-        _log.debug(f'User locale is: {ctx.interaction.locale}')
+        # _log.debug(f'User locale is: {ctx.interaction.locale}')
         
         Text().load_from_context(ctx)
         try:
@@ -141,5 +143,13 @@ class Stats(commands.Cog):
             return img_data
 
 
+async def on_error(self, ctx: commands.Context, _):
+        _log.error(traceback.format_exc())
+        await ctx.respond(embed=self.err_msg.cooldown_not_expired())
+
+
 def setup(bot):
+    for i in ['stats', 'astats']:
+        getattr(Stats, i).error(on_error)
     bot.add_cog(Stats(bot))
+

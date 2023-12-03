@@ -1,6 +1,7 @@
 from discord.ext import commands
 
 from lib.embeds.errors import ErrorMSG
+from lib.embeds.info import InfoMSG
 from lib.locale.locale import Text
 from lib.image.common import ImageGen
 
@@ -10,6 +11,7 @@ class Ping(commands.Cog):
         self.bot = bot
 
     @commands.slash_command()
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def ping(self, ctx):
         try:
             await ctx.defer()
@@ -25,6 +27,12 @@ class Ping(commands.Cog):
                             f'```')
         except:
             await ctx.respond(embed=ErrorMSG().unknown_error())
+    
+    @ping.error
+    async def on_error(self, ctx: commands.Context, _):
+        await ctx.respond(
+            embed=InfoMSG().cooldown_not_expired()
+            )
 
 def setup(bot):
     bot.add_cog(Ping(bot))

@@ -15,6 +15,7 @@ from lib.replay_parser.parser import ReplayParserError
 from lib.data_parser.parse_replay import ParseReplayData
 from lib.logger.logger import get_logger
 from lib.embeds.errors import ErrorMSG
+from lib.embeds.info import InfoMSG
 from lib.embeds.replay import EmbedReplayBuilder
 from lib.settings.settings import Config
 
@@ -36,6 +37,7 @@ class CogReplayParser(commands.Cog):
                 'uk': Text().get('ua').cmds.parse_replay.descr.this
             }
         )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def parse_replay(self,
                     ctx: commands.Context,
                     replay: Option(
@@ -103,6 +105,13 @@ class CogReplayParser(commands.Cog):
                     text=Text().get().cmds.parse_replay.errors.parsing_error
                     )
                 )
+    
+    @parse_replay.error
+    async def on_error(self, ctx: commands.Context, _):
+        _log.error(traceback.format_exc())
+        await ctx.respond(
+            embed=InfoMSG().cooldown_not_expired()
+            )
 
 def setup(bot):
     bot.add_cog(CogReplayParser(bot))

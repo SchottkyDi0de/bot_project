@@ -1,3 +1,4 @@
+
 from typing import List
 
 from pydantic import BaseModel
@@ -103,6 +104,7 @@ class Info(BaseModel):
     info: str
     player_not_registred: str
     err_info_sent: str
+    warning: str
 
 
 class TimeUnits(BaseModel):
@@ -282,11 +284,44 @@ class StartSession(BaseModel):
 class SubDescr3(BaseModel):
     image: str
     server: str
+    image: str
+    server: str
 
 
 class Descr7(BaseModel):
     this: str
     sub_descr: SubDescr3
+
+
+class Errors7(BaseModel):
+    player_not_registred: str
+    premium_not_found: str
+    server_premium_not_found: str
+    permission_denied: str
+    file_error: str
+    oversize: str
+    overresolution: str
+    small_resolution: str
+
+
+class Info7(BaseModel):
+    set_background_ok: str
+
+
+class SetBackground(BaseModel):
+    descr: Descr7
+    errors: Errors7
+    info: Info7
+    items: str
+
+
+class SubDescr4(BaseModel):
+    help_types: str
+
+
+class Descr7(BaseModel):
+    this: str
+    sub_descr: SubDescr4
 
 
 class Errors7(BaseModel):
@@ -375,6 +410,19 @@ class ParseReplay(BaseModel):
     items: Items2
 
 
+class Descr10(BaseModel):
+    this: str
+
+
+class Info9(BaseModel):
+    cooldown_not_expired: str
+
+
+class Cooldown(BaseModel):
+    descr: Descr10
+    info: Info9
+
+
 class Cmds(BaseModel):
     astats: Astats
     stats: Stats
@@ -386,6 +434,7 @@ class Cmds(BaseModel):
     set_background: SetBackground
     help: Help
     parse_replay: ParseReplay
+    cooldown: Cooldown
 
 
 class Localization(BaseModel):

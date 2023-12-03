@@ -1,4 +1,5 @@
 ---
+
 # This localization file use placeholders:
 # format: <key_name>
 #
@@ -136,6 +137,7 @@ frequent:
     info: Інформація
     player_not_registred: Гравець не зареєстрований. Спочатку введіть команду `/set_player`
     err_info_sent: Інформація про помилку була відправлена розробнику.
+    warning: Увага
 
   common:
     nickname: Нікнейм
@@ -436,6 +438,12 @@ cmds:
         <enemies>
         ```
 
-
+#Cooldown for command
+  cooldown:
+    descr:
+      this: Запобігає частому використанню команд.
+      
+    info:
+      cooldown_not_expired: Зачекайте трішки перед наступним використанням.
       
       
