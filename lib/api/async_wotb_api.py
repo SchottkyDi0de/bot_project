@@ -315,7 +315,6 @@ class API:
         self.exact = exact
         self.raw_dict = raw_dict
 
-        _log.debug(f'Get stats method called, arguments: {search}, {region}')
         self.start_time = time()
         need_cached = False
 

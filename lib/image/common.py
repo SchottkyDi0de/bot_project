@@ -908,7 +908,7 @@ class ImageGen():
             round(generate_time, 3)
         )
 
-    async def test(self):
+    def test(self):
         import lib.api.async_wotb_api as async_wotb_api
         player_data = await async_wotb_api.test('rtx4080', 'eu')
         self.generate(ctx=None, data=player_data[0], disable_cache=True, debug_label=False)

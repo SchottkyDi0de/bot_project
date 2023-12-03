@@ -73,5 +73,3 @@ class ReplayParser:
 
     def test(self):
         self.parse('test.wotbreplay', False, True)
-
-# print(ReplayParser().test())

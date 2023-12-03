@@ -1,18 +1,15 @@
 import os
 import sys
 import traceback
+import traceback
 from datetime import datetime
 
 import elara
 
 from lib.exceptions import database
 from lib.logger.logger import get_logger
-from lib.logger.logger import get_logger
 from lib.utils.singleton_factory import singleton
 from lib.settings.settings import Config
-from lib.data_classes.db_player import DBPlayer
-
-_log = get_logger(__name__, logger_name='PlayersDBLogger', file_name='logs/playersdb_logger.log')
 
 _log = get_logger(__name__, logger_name='PlayersDBLogger', file_name='logs/playersdb_logger.log')
 
@@ -48,6 +45,9 @@ class PlayersDB():
                 'last_stats': dict(),
             }
         self.db.commit()
+
+    def member_count(self) -> int:
+        return len(self.db['members'].keys())
 
     def member_count(self) -> int:
         return len(self.db['members'].keys())
