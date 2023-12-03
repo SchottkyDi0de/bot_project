@@ -10,6 +10,7 @@ from lib.exceptions import database
 from lib.logger.logger import get_logger
 from lib.utils.singleton_factory import singleton
 from lib.settings.settings import Config
+from lib.data_classes.db_player import DBPlayer
 
 _log = get_logger(__name__, logger_name='PlayersDBLogger', file_name='logs/playersdb_logger.log')
 
