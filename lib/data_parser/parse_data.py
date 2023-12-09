@@ -116,14 +116,14 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
         else:
             r_session_winrate = 0
             r_session_rating = 0
-        
+
         if not battles_not_updated:
             diff_battles = data_new_shorted.all.battles - data_old_shorted.all.battles
             diff_winrate = data_new_shorted.all.winrate - data_old_shorted.all.winrate
             diff_avg_damage = data_new_shorted.all.avg_damage - data_old_shorted.all.avg_damage
 
             t_diff_battles = new_tank.all.battles - old_tank.all.battles
-            
+
             if old_tank.all.battles != 0:
                 old_tank.all.winrate = old_tank.all.wins / old_tank.all.battles * 100
                 old_tank.all.avg_damage = old_tank.all.damage_dealt // old_tank.all.battles
@@ -199,17 +199,11 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
 
     else:
         return SesionDiffData.model_validate(diff_data_dict)
-    
-# def _get_index(tanks_list: List[TankStats], target: int): 
-#     for index, x in enumerate(tanks_list): 
-#         if x.tank_id == target: 
-#             return index
-#     return None
 
 def _sort_tanks_by_diff_battles(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> Optional[List[str]]:
     if not isinstance(data_old, PlayerGlobalData) or not isinstance(data_new, PlayerGlobalData):
         raise ValueError('Wrong data type')
-    
+
     tanks = data_new.data.tank_stats
     tanks_old = data_old.data.tank_stats
 
@@ -230,4 +224,3 @@ def _sort_tanks_by_diff_battles(data_old: PlayerGlobalData, data_new: PlayerGlob
         diff_battles = sorted(diff_battles, key=lambda x: x[1], reverse=True)
         diff_tank_id = list(map(lambda x: x[0], diff_battles))
         return diff_tank_id
-    

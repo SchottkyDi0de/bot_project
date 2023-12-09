@@ -13,9 +13,6 @@ if not os.path.exists(find_dotenv()):
 
 load_dotenv(dotenv_path)
 
-# Потенциально, можно было бы использовать https://docs.pydantic.dev/latest/concepts/pydantic_settings/
-# для настроек и Pydantic вместо `python-easy-json`, но это придирка
-# (Pydantic более известный и «стандартный»).
 
 @singleton
 class Config():

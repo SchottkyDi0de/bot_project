@@ -66,7 +66,6 @@ class App():
 
         self.load_extension(self.extension_names)
         self.bot.run(st.DISCORD_TOKEN_DEV)
-        # uvicorn.run(server.app, host='blitzhub.ru')
 
     @staticmethod 
     async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:
@@ -84,7 +83,5 @@ class App():
         _log.info('Failed to get tankopedia data, ignoring...')
 
 if __name__ == '__main__':
-    api_server = Process(target=Server())
-    api_server.start()
     app = App()
     app.main()

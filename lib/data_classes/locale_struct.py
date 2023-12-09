@@ -1,4 +1,3 @@
-
 from typing import List
 
 from pydantic import BaseModel
@@ -284,44 +283,11 @@ class StartSession(BaseModel):
 class SubDescr3(BaseModel):
     image: str
     server: str
-    image: str
-    server: str
 
 
 class Descr7(BaseModel):
     this: str
     sub_descr: SubDescr3
-
-
-class Errors7(BaseModel):
-    player_not_registred: str
-    premium_not_found: str
-    server_premium_not_found: str
-    permission_denied: str
-    file_error: str
-    oversize: str
-    overresolution: str
-    small_resolution: str
-
-
-class Info7(BaseModel):
-    set_background_ok: str
-
-
-class SetBackground(BaseModel):
-    descr: Descr7
-    errors: Errors7
-    info: Info7
-    items: str
-
-
-class SubDescr4(BaseModel):
-    help_types: str
-
-
-class Descr7(BaseModel):
-    this: str
-    sub_descr: SubDescr4
 
 
 class Errors7(BaseModel):
