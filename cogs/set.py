@@ -126,7 +126,6 @@ class Set(commands.Cog):
                 _log.debug(f'Set player: {ctx.author.id} {nickname} {region}')
                 await ctx.respond(embed=self.inf_msg.set_player_ok())
 
-            
         except Exception :
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())

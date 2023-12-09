@@ -1,18 +1,20 @@
 import os
 from asyncio import sleep
+from multiprocessing import Process
 
 import uvicorn
 from discord import Intents, Activity, ActivityType
 from discord.ext import commands
 
-import server
 from lib.api import async_wotb_api
 from lib.database import tankopedia
-from lib.logger import logger
+from lib.logger.logger import get_logger
+from api_server import Server
+from lib.exceptions.api import APIError
 from lib.settings.settings import Config
 from workers.pdb_checker import PDBWorker
 
-_log = logger.get_logger(__name__, 'MainLogger', 'logs/main.log')
+_log = get_logger(__name__, 'MainLogger', 'logs/main.log')
 
 st = Config().get()
 
@@ -66,18 +68,23 @@ class App():
         self.bot.run(st.DISCORD_TOKEN_DEV)
         # uvicorn.run(server.app, host='blitzhub.ru')
 
-    # DEPRECATED, NEED REFACTOR >>>>>>>>
     @staticmethod 
-    async def retrieve_tankopedia(api: async_wotb_api.API, n_retries: int = 2) -> dict:
-        for _ in range(n_retries):
+    async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:
+        tankopedia_server_list = ['ru', 'eu']
+        for i in tankopedia_server_list:
             try:
-                return await api.get_tankopedia('ru')
-            except Exception:
-                _log.error('', exc_info=True)
-        quit(1)
-    # DEPRECATED, NEED REFACTOR <<<<<<<<
+                return await api.get_tankopedia(i)
+            except APIError:
+                _log.warning('Failed to get tankopedia data, trying next server...')
 
+        if not Config().settings.internal.ignore_tankopedia_failures:
+            _log.critical('Failed to get tankopedia data')
+            quit(1)
+        
+        _log.info('Failed to get tankopedia data, ignoring...')
 
 if __name__ == '__main__':
+    api_server = Process(target=Server())
+    api_server.start()
     app = App()
     app.main()

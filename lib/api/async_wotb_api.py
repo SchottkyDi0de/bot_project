@@ -206,6 +206,14 @@ class API:
     async def retry_callback(self):
         _log.debug('Task failed, retrying...')
 
+    @retry(
+        expected_exception=(
+            api_exceptions.RequestsLimitExceeded,
+            api_exceptions.APISourceNotAvailable
+        ),
+        attempts=3,
+        on_exception=retry_callback
+    )
     async def get_tankopedia(self, region: str = 'ru') -> dict:
         """
         Get tankopedia data.

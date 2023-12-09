@@ -59,7 +59,7 @@ class Session(commands.Cog):
 
             if self.db.check_member(ctx.author.id):
                 member = self.db.get_member(ctx.author.id)
-                last_stats = await self.api.get_stats(member['nickname'], member['region'], raw_dict=False)
+                last_stats = await self.api.get_stats(member['nickname'], member['region'])
                 self.db.set_member_last_stats(ctx.author.id, last_stats.model_dump())
                 await ctx.respond(embed=self.inf_msg.session_started())
             else:

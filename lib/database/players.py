@@ -5,6 +5,7 @@ import traceback
 from datetime import datetime
 
 import elara
+from discord.ext.commands import Context
 
 from lib.data_classes.db_player import DBPlayer
 from lib.exceptions import database
@@ -20,6 +21,9 @@ class PlayersDB():
     def __init__(self) -> None:
         self.db = elara.exe('database/players.eldb')
 
+    def __len__(self):
+        return len(self.db['members'].keys())
+    
     def set_member(self, member_id: int, nickname: str, region: str, data: DBPlayer = None) -> None:
         member_id = str(member_id)
 
@@ -44,11 +48,10 @@ class PlayersDB():
                 'image' : None,
                 'lang': None,
                 'last_stats': dict(),
+                'verefied' : False,
+                'locked': False
             }
         self.db.commit()
-
-    def member_count(self) -> int:
-        return len(self.db['members'].keys())
 
     def member_count(self) -> int:
         return len(self.db['members'].keys())
@@ -64,6 +67,21 @@ class PlayersDB():
             if not data:
                 return False
             return True
+        
+    def safe_update_member(self, member_id: int, data: DBPlayer):
+        member_id = str(member_id)
+
+        if self.check_member(member_id):
+            member = DBPlayer(self.get_member(member_id))
+            
+            member.lang = data.lang
+            
+            self.db['members'][member_id] = member.model_dump()
+            self.db.commit()
+            
+            return
+        
+        raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def unset_member_premium(self, member_id: int):
         member_id = str(member_id)
@@ -101,6 +119,29 @@ class PlayersDB():
             return self.db['members'][member_id]['image']
         
         return None
+    
+    def set_member_lock(self, member_id: int):
+        member_id = str(member_id)
+
+        if self.check_member(member_id):
+            if self.db['members'][member_id]['verefied']:
+                self.db['members'][member_id]['locked'] = True
+                self.db.commit()
+                return
+            
+            raise database.MemberNotVerified(f'Member is not verified, id: {member_id}')
+
+        raise database.MemberNotFound(f'Member not found, id: {member_id}')
+    
+    def unset_member_lock(self, member_id: int):
+        member_id = str(member_id)
+ 
+        if self.check_member(member_id):
+            self.db['members'][member_id]['locked'] = False
+            self.db.commit()
+            return
+        
+        raise database.MemberNotFound(f'Member not found, id: {member_id}')
     
     def set_member_image(self, member_id: int, image: str):
         member_id = str(member_id)
@@ -257,12 +298,15 @@ class PlayersDB():
                 _ = self.db['members'][i]['premium_time']
                 _ = self.db['members'][i]['last_stats']
                 _ = self.db['members'][i]['image']
+                _ = self.db['members'][i]['verefied']
             except (KeyError, AttributeError):
                 print(f'Attempt to change database structure for player {i}')
                 try:
                     self.db.db['members'][i]['premium'] = False
                     self.db.db['members'][i]['premium_time'] = None
                     self.db['members'][i]['image'] = None
+                    self.db['members'][i]['verefied'] = False
+                    self.db['members'][i]['locked'] = False
                 except Exception:
                     _log.debug(traceback.format_exc())
                 else:

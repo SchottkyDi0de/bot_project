@@ -1,67 +1,33 @@
-# from pywebio import start_server
 import traceback
-import enum
+from typing import Union
 
-import uvicorn
+from fastapi import FastAPI, Response
+from fastapi.responses import JSONResponse, RedirectResponse
 from pywebio.input import *
 from pywebio.output import *
 from pywebio.platform.fastapi import asgi_app
-from fastapi import FastAPI, Response
-from fastapi.responses import RedirectResponse
+import uvicorn
 
+from lib.api.async_wotb_api import API
 from lib.api.aync_discord_api import DiscordApi
+from lib.auth.dicord import DiscordOAuth
+from lib.data_classes.db_player import DBPlayer
 from lib.data_classes.internal_api.err_response import ErrorResponse
 from lib.data_classes.internal_api.inf_response import InfoResponse
-from lib.auth.dicord import DiscordOAuth
-from lib.settings.settings import Config
 from lib.database.players import PlayersDB
-from lib.data_classes.db_player import DBPlayer
+from lib.internal_api.responses import ErrorResponses, InfoResponses
 from lib.logger.logger import get_logger
+from lib.settings.settings import Config
 
 _current_user = None
 _pdb = PlayersDB()
 _config = Config()
+_api = API()
 
 _log = get_logger(__name__, 'ServerLogger', 'logs/server.log')
 
-class InfoResponses:
-    succes = InfoResponse.model_validate(
-        {   
-            'info' : 'Success',
-            'message': 'Player data has ben updated',
-            'code': 200
-        }
-    )
 
-class ErrorResponses:
-    method_not_allowed =  ErrorResponse.model_validate(
-        {
-            'error': 'MethodNotAllowed', 
-            'message': 'Root method of API not allowed',
-            'code': 500
-        }
-    )
-    acces_denied =  ErrorResponse.model_validate(
-        {
-            'error': 'AccesDenied', 
-            'message': 'Invalid API KEY, acces denied',
-            'code': 501
-        }
-    )
-    player_not_found = ErrorResponse.model_validate(
-        {
-            'error': 'PlayerNotFound', 
-            'message': 'Player not found in DB',
-            'code': 502
-        }
-    )
-    validation_error = ErrorResponse.model_validate(
-        {
-            'error': 'ValidationError', 
-            'message': 'Error while validating data [INTERNAL ERROR]',
-            'code': 503
-        }
-    )
+
 
 app = FastAPI()
 class Server:
@@ -76,11 +42,43 @@ class Server:
     @app.get('/')
     async def root():
         return 
+    
+    @app.get(
+        '/ping', 
+        responses={
+            501: {'model' : ErrorResponse, 'description' : 'Acces denied'},
+            200: {'model' : InfoResponse, 'description' : 'Pong!'}
+        }
+    )
+    async def ping(api_key: str):
+        if api_key != _config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.acces_denied.model_dump(), status_code=501)
+        
+        return InfoResponses.pong
 
     @app.get('/api')
     async def api(response = Response) -> ErrorResponse:
         response.status_code = 500
         return ErrorResponses.method_not_allowed
+    
+    @app.get('/api/restart_session')
+    async def restart_session(api_key: str, discord_id: str | int) -> ErrorResponse:
+        if api_key != _config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.acces_denied.model_dump(), status_code=501)
+        
+        if _pdb.check_member(discord_id):
+            if _pdb.check_member_last_stats(discord_id):
+                player = _pdb.get_member(discord_id)
+                
+                if player is None:
+                    return JSONResponse(ErrorResponses.player_not_found.model_dump(), status_code=502)
+                
+                player_data = await _api.get_stats(player['nickname'], player['region'])
+                _pdb.set_member_last_stats(discord_id, player_data.model_dump())
+                return JSONResponse(InfoResponses.player_updated.model_dump(), status_code=200)
+            
+            return JSONResponse(ErrorResponses.player_session_not_found.model_dump(), status_code=504)
+        return JSONResponse(ErrorResponses.player_not_found.model_dump(), status_code=502)
     
     @app.get('/api/get_player')
     async def get_player(api_key: str, discord_id: str | int, include_traceback: bool = False, response = Response) -> DBPlayer | ErrorResponse:
@@ -118,17 +116,13 @@ class Server:
             response.status_code = 501
             return ErrorResponses.acces_denied
         
+        if _pdb.check_member(player.id):
+            return JSONResponse(ErrorResponses.player_not_found.model_dump(), status_code=502)
+        
         _pdb.set_member(player.id, player.nickname, player.region, player)
         _log.info(f'Player {player.nickname} : {player.id} updated')
-        return InfoResponses.succes
+        return InfoResponses.player_updated
 
-    @app.get('/auth')
-    async def auth(code: str):
-        global _current_user
-        token = await DiscordOAuth().exchange_code(code)
-        _current_user = await DiscordApi().get_user_data(token)
-        return RedirectResponse('/register_success')
 
 if __name__ == '__main__':
     uvicorn.run(Server().app, host='127.0.0.1', port=8000)
-

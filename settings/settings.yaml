@@ -11,3 +11,6 @@ default:
   available_locales: ['ru', 'en', 'pl', 'ua', 'auto']
   locale_alliases: {ru: 'ru', en: 'en', pl: 'pl', uk: 'ua'}
   available_regions: ['ru', 'eu', 'na', 'asia']
+
+internal:
+  ignore_tankopedia_failures: true

@@ -11,3 +11,5 @@ class DBPlayer(BaseModel):
     lang: Optional[str]
     last_stats: Optional[dict[str, Any]] = None
     image: Optional[str] = None
+    locked: bool = False
+    verefied: bool = False

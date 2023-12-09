@@ -10,8 +10,12 @@ class Default(JSONObject):
     locale_alliases: dict[str, str]
     available_regions: List[str]
 
+class Internal(JSONObject):
+    ignore_tankopedia_failures: bool
 
 class Settings(JSONObject):
     bot_name: str
     default: Default = Default()
     session_ttl: int
+    internal: Internal = Internal()
+    
