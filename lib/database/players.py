@@ -282,7 +282,7 @@ class PlayersDB():
                 return False
             return True
         
-        except (KeyError, ValueError, AttributeError):
+        except (KeyError, TypeError):
             return False
         
     def _change_database_structure(self):

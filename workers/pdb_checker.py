@@ -64,5 +64,6 @@ class PDBWorker:
         """
 
         for member_id in self.db.db['members'].keys():
-            self.db._check_data_timestamp(member_id)
-            self.db.check_member_premium(member_id)
+            if self.db.check_member(member_id):
+                self.db._check_data_timestamp(member_id)
+                self.db.check_member_premium(member_id)

@@ -6,6 +6,7 @@ from random import choice
 from datetime import datetime
 
 import aiohttp
+from aiohttp import client_exceptions
 from the_retry import retry
 from cacheout import FIFOCache
 from asynciolimiter import Limiter
@@ -233,11 +234,14 @@ class API:
             f'-suspensions%2C+-turrets%2C+-cost%2C+-default_profile%2C+-modules_tree%2C+-images'
         )
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url_get_tankopedia, verify_ssl=False) as response:
-                data = await self.response_handler(response, False)
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url_get_tankopedia, verify_ssl=False) as response:
+                    data = await self.response_handler(response, False)
 
-                return data
+                    return data
+        except client_exceptions.ClientConnectionError:
+            raise api_exceptions.APIError('Client Exception Occurred')
                 
     @retry(
             expected_exception=(
