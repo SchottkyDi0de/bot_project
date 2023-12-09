@@ -4,11 +4,11 @@ import traceback
 from time import time
 from random import choice
 from datetime import datetime
+from typing import Dict, Union
 
 import aiohttp
 from aiohttp import client_exceptions
 from the_retry import retry
-from cacheout import FIFOCache
 from asynciolimiter import Limiter
 
 from lib.data_classes.api_data import PlayerGlobalData
@@ -27,7 +27,6 @@ st = settings.Config()
 
 class API:
     def __init__(self) -> None:
-        self.cache = FIFOCache(maxsize=100, ttl=60)
         self.exact = True
         self.raw_dict = False
         self._palyers_stats = []
@@ -321,45 +320,32 @@ class API:
             self.exact = True
             self.raw_dict = False
             raise api_exceptions.APIError('Empty parameter search or region')
-        
-        self.cache.delete_expired()
 
         self.exact = exact
         self.raw_dict = raw_dict
 
         self.start_time = time()
-        need_cached = False
-
-        cached_data: PlayerGlobalData = self.cache.get((search.lower(), region))
-
-        if cached_data is None:
-            need_cached = True
-        else:
-            _log.debug('Returned cached player data')
-            cached_data['from_cache'] = True
-            return PlayerGlobalData.model_validate(cached_data)
 
         account_id = await self.get_account_id(region=region, nickname=search)
 
         tasks = [
             self.get_player_stats,
-            self.get_player_tanks_stats,
             self.get_player_clan_stats,
             self.get_player_achievements
         ]
         task_names = [
             'get_player_stats',
-            'get_player_tanks_stats',
             'get_player_clan_stats',
             'get_player_achievements'
         ]
+        default_params = {"account_id": account_id, "region": region}
         self.player, self.player_stats = {}, {}
         async with aiohttp.ClientSession() as self.session:
             async with asyncio.TaskGroup() as tg:
                 for i, task in enumerate(tasks):
-                    task = tg.create_task(task(account_id=account_id, region=region, nickname=search))
-                    task.set_name(task_names[i])
-                    task.add_done_callback(self.done_callback)
+                    self.create_task(tg, task_names[i], task, default_params)
+                self.create_task(tg, 'get_player_tanks_stats', self.get_player_tanks_stats, 
+                                 default_params | {"nickname": search})
             
         self.player['timestamp'] = int(datetime.now().timestamp())
         self.player['end_timestamp'] = int(
@@ -370,15 +356,17 @@ class API:
 
         player_stats = PlayerGlobalData.model_validate(self.player)
 
-        if need_cached:
-            self.cache.set((search.lower(), region), get_normalized_data(player_stats).model_dump())
-            _log.debug('Data add to cache')
-
         if self.raw_dict:
             return player_stats.model_dump()
 
         # _log.debug(f'All requests time: {time() - self.start_time}')
         return get_normalized_data(player_stats)
+
+    def create_task(self, tg: asyncio.TaskGroup, task_name: str, task, 
+                    params: Dict[str, Union[str, int]]) -> None:
+        task = tg.create_task(task(**params))
+        task.set_name(task_name)
+        task.add_done_callback(self.done_callback)
 
     @retry(
             expected_exception=(
@@ -463,6 +451,7 @@ class API:
                 data = await self.response_handler(response)
 
         return data['data'][str(account_id)]['statistics']['all']['battles']
+    
 
     @retry(
             expected_exception=(
@@ -472,7 +461,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def get_player_stats(self, region: str, account_id: str, **kwargs) -> PlayerStats:
+    async def get_player_stats(self, region: str, account_id: str) -> PlayerStats:
         """
         Retrieves the player statistics for a given region and account ID.
         
@@ -564,7 +553,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def get_player_clan_stats(self, region: str, account_id: str | int):
+    async def get_player_clan_stats(self, region: str, account_id: str | int) -> None:
         """
         Retrieves clan statistics for a player.
 
@@ -664,6 +653,6 @@ async def test(
     if speed_test:
         end_time = time()
     if save_to_database:
-        db.set_member_last_stats(766019191836639273, data.model_dump())
+        db.set_member_last_stats(766019191836639273, data.to_dict())
 
     return (data, (end_time - start_time) if speed_test else None)
