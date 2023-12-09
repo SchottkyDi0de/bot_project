@@ -664,6 +664,6 @@ async def test(
     if speed_test:
         end_time = time()
     if save_to_database:
-        db.set_member_last_stats(766019191836639273, data.to_dict())
+        db.set_member_last_stats(766019191836639273, data.model_dump())
 
     return (data, (end_time - start_time) if speed_test else None)

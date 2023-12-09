@@ -24,8 +24,8 @@ _api = API()
 
 _log = get_logger(__name__, 'ServerLogger', 'logs/server.log')
 
+app = FastAPI(docs_url='/bot/api/docs')
 
-app = FastAPI()
 
 class Server:
     def __init__(self):
@@ -36,12 +36,12 @@ class Server:
         put_markdown('# 🎉 Registration is complete, you can close the page 🎉')
         put_info(f'authorized as: {_current_user["username"]}', closable=True)
 
-    @app.get('/')
+    @app.get('/', include_in_schema=False)
     async def root():
-        return 
+        return
     
     @app.get(
-        '/ping', 
+        '/bot/api/ping', 
         responses={
             501: {'model' : ErrorResponse, 'description' : 'Acces denied'},
             200: {'model' : InfoResponse, 'description' : 'Pong!'}
@@ -53,12 +53,20 @@ class Server:
         
         return InfoResponses.pong
 
-    @app.get('/api')
+    @app.get('/bot/api', responses={
+        501: {'model' : ErrorResponse, 'description' : 'Root method not allowed'},
+        }
+    )
     async def api(response = Response) -> ErrorResponse:
-        response.status_code = 500
-        return ErrorResponses.method_not_allowed
+        return JSONResponse(ErrorResponses.method_not_allowed.model_dump(), status_code=500)
     
-    @app.get('/api/restart_session')
+    @app.get('/bot/api/restart_session', responses={
+        501: {'model' : ErrorResponse, 'description' : 'Acces denied'},
+        502: {'model' : ErrorResponse, 'description' : 'Player not found'},
+        504: {'model' : ErrorResponse, 'description' : 'Player session not found'},
+        200: {'model' : InfoResponse, 'description' : 'Player updated'}
+        }
+    )
     async def restart_session(api_key: str, discord_id: str | int) -> ErrorResponse:
         if api_key != _config.INTERNAL_API_KEY:
             return JSONResponse(ErrorResponses.acces_denied.model_dump(), status_code=501)
@@ -77,7 +85,12 @@ class Server:
             return JSONResponse(ErrorResponses.player_session_not_found.model_dump(), status_code=504)
         return JSONResponse(ErrorResponses.player_not_found.model_dump(), status_code=502)
     
-    @app.get('/api/get_player')
+    @app.get('/bot/api/get_player', responses={
+        501: {'model' : ErrorResponse, 'description' : 'Acces denied'},
+        502: {'model' : ErrorResponse, 'description' : 'Player not found'},
+        200: {'model' : DBPlayer, 'description' : 'Player data'}
+        }
+    )
     async def get_player(api_key: str, discord_id: str | int, include_traceback: bool = False, response = Response) -> DBPlayer | ErrorResponse:
         if api_key != _config.INTERNAL_API_KEY:
             response.status_code = 501
@@ -107,18 +120,22 @@ class Server:
                 
             return err_response
     
-    @app.post('/api/set_player') 
-    async def set_player(api_key: str, player: DBPlayer, response = Response) -> ErrorResponse | InfoResponse:
+    @app.post('/bot/api/set_player', responses={
+        501: {'model' : ErrorResponse, 'description' : 'Acces denied'},
+        502: {'model' : ErrorResponse, 'description' : 'Player not found'},
+        200: {'model' : InfoResponse, 'description' : 'Player updated'}
+        }
+    ) 
+    async def set_player(api_key: str, player: DBPlayer) -> ErrorResponse | InfoResponse:
         if api_key != _config.INTERNAL_API_KEY:
-            response.status_code = 501
-            return ErrorResponses.acces_denied
+            return JSONResponse(ErrorResponses.acces_denied.model_dump(), status_code=501)
         
         if _pdb.check_member(player.id):
             return JSONResponse(ErrorResponses.player_not_found.model_dump(), status_code=502)
         
-        _pdb.set_member(player.id, player.nickname, player.region, player)
+        _pdb.safe_update_member(player.id, player)
         _log.info(f'Player {player.nickname} : {player.id} updated')
-        return InfoResponses.player_updated
+        return JSONResponse(InfoResponses.player_updated.model_dump(), status_code=200)
 
 
 if __name__ == '__main__':
