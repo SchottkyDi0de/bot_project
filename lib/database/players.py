@@ -48,7 +48,7 @@ class PlayersDB():
                 'image' : None,
                 'lang': None,
                 'last_stats': dict(),
-                'verefied' : False,
+                'verified' : False,
                 'locked': False
             }
         self.db.commit()
