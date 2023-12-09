@@ -17,7 +17,7 @@ st = Config().get()
 class App():
     def __init__(self):
         self.intents = Intents.default()
-        self.intents.message_content = True
+        self.intents.message_content = False
         self.bot = commands.Bot(intents=self.intents, command_prefix=st.default.prefix)
         self.bot.remove_command('help')
 
