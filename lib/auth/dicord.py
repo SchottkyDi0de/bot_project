@@ -2,7 +2,7 @@ import hashlib
 import time
 
 from aiohttp import ClientSession
-from the_retry import retry
+# from the_retry import retry
 
 from lib.settings.settings import Config
 from lib.exceptions.api import APIError

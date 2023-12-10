@@ -14,3 +14,7 @@ default:
 
 internal:
   ignore_tankopedia_failures: true
+
+auth:
+  wg_redirect_uri: 'http://127.0.0.1:8000/auth/game'
+  wg_link: https://api.worldoftanks.<region>/wot/auth/login/?application_id=<app_id>?redirect_uri=<redirect_uri>
