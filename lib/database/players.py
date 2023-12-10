@@ -298,14 +298,14 @@ class PlayersDB():
                 _ = self.db['members'][i]['premium_time']
                 _ = self.db['members'][i]['last_stats']
                 _ = self.db['members'][i]['image']
-                _ = self.db['members'][i]['verefied']
+                _ = self.db['members'][i]['verified']
             except (KeyError, AttributeError):
                 print(f'Attempt to change database structure for player {i}')
                 try:
                     self.db.db['members'][i]['premium'] = False
                     self.db.db['members'][i]['premium_time'] = None
                     self.db['members'][i]['image'] = None
-                    self.db['members'][i]['verefied'] = False
+                    self.db['members'][i]['verified'] = False
                     self.db['members'][i]['locked'] = False
                 except Exception:
                     _log.debug(traceback.format_exc())
