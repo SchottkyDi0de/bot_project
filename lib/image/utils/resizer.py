@@ -7,7 +7,7 @@ _log = get_logger(__name__, 'ImageUtilsResizerLogger', 'logs/image_utils_resizer
 def resize_image(image: Image.Image, size: tuple[int, int]) -> Image.Image:
     """
     Resizes an image to the specified size.
-    If image.width > or < target width more than 10% or image.height > or < target height more than 5%
+    If image.width > or < target width more than 15% or image.height > or < target height more than 10%
     image has be cropped, otherwise image is resized.
 
     Args:
@@ -57,7 +57,7 @@ def resize_image(image: Image.Image, size: tuple[int, int]) -> Image.Image:
             _log.debug(f'Height oversize: {image.size}')
 
         if width_oversize < 0 or height_oversize < 0:
-            bg = Image.new('RGBA', size, (0, 0, 0, 0))
+            bg = Image.new('RGBA', size, (0, 0, 0, 40))
             bg.paste(
                 image, (
                     (size[0] // 2 - image.size[0] // 2) if width_oversize < 0 else 0,

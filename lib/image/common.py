@@ -369,7 +369,7 @@ class ImageGen():
                 ctx: Context | None,
                 data: PlayerGlobalData, 
                 speed_test: bool = False, 
-                disable_cache: bool = False,
+                disable_cache: bool = True,
                 debug_label: bool = False,
                     ) -> BytesIO | float:
         
@@ -417,7 +417,7 @@ class ImageGen():
             if pdb.check_member_premium(ctx.author.id):
                 if pdb.get_member_image(ctx.author.id) is not None:
                     image_bytes = base64.b64decode(pdb.get_member_image(ctx.author.id))
-                    if image_bytes != None: 
+                    if image_bytes != None:
                         image_buffer = BytesIO(image_bytes)
                         self.image = Image.open(image_buffer)
                         # self.image.resize((700, 1250), Image.Resampling.BICUBIC)

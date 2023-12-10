@@ -300,7 +300,7 @@ class PlayersDB():
                 _ = self.db['members'][i]['image']
                 _ = self.db['members'][i]['verified']
             except (KeyError, AttributeError):
-                print(f'Attempt to change database structure for player {i}')
+                _log.debug(f'Attempt to change database structure for player {i}')
                 try:
                     self.db.db['members'][i]['premium'] = False
                     self.db.db['members'][i]['premium_time'] = None
@@ -310,6 +310,6 @@ class PlayersDB():
                 except Exception:
                     _log.debug(traceback.format_exc())
                 else:
-                    print('Succes...')
+                    _log.debug('Succes...')
 
         self.db.commit()
