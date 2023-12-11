@@ -61,6 +61,7 @@ class API:
             check_data_status: bool = True,
             check_battles: bool = False,
             check_data: bool = False,
+            check_meta: bool = False
             ) -> dict:
         """
         Asynchronously handles the response from the API and returns the data as a dictionary.
@@ -110,13 +111,14 @@ class API:
                     f'Data: {data}'
                 )
                 raise api_exceptions.EmptyDataError(f'API Returned empty `data` section')
-            
-        if data['meta']['count'] == 0:
-            _log.error(
-                f'API Returned `count 0`'
-                f'Data: {data["meta"]}'
-            )
-            raise api_exceptions.NoPlayersFound()
+        
+        if check_meta:
+            if data['meta']['count'] == 0:
+                _log.error(
+                    f'API Returned `count 0`'
+                    f'Data: {data["meta"]}'
+                )
+                raise api_exceptions.NoPlayersFound()
             
         if check_battles:
             if data['data'][list(data['data'].keys())[0]]['statistics']['all']['battles'] < 100:
