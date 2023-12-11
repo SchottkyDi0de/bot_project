@@ -16,14 +16,14 @@ from workers.pdb_checker import PDBWorker
 
 _log = get_logger(__name__, 'MainLogger', 'logs/main.log')
 
-_config = Config()
+_config = Config().get()
 
 class App():
     def __init__(self):
         self.intents = Intents.default()
         self.pbd_worker = PDBWorker()
         self.intents.message_content = True
-        self.bot = commands.Bot(intents=self.intents, command_prefix=_config.cfg.default.prefix)
+        self.bot = commands.Bot(intents=self.intents, command_prefix=_config.default.prefix)
         self.bot.remove_command('help')
 
         self.extension_names = [

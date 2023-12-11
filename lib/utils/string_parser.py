@@ -12,7 +12,7 @@ def insert_data(string: str, key_values: dict[str, str]) -> str:
         str: The updated string with placeholders replaced by values.
 
     Example:
-        insert_data("My name is <name>, ("name", ), ("Josh", ))
+        insert_data("My name is <name>, {"name" : "Josh"})
         >>> "My name is Josh"
     """
 
