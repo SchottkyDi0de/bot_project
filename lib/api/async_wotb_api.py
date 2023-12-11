@@ -177,11 +177,14 @@ class API:
             None
         """
         await self.rate_limiter.wait()
-        url_get_stats = (
-            f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
-            f'?application_id={self._get_id_by_reg(region)}'
-            f'&account_id={player_id}'
-            f'&fields=-statistics.clan'
+        
+        url_get_stats = insert_data(
+            _config.game_api.urls.get_stats,
+            {
+                'reg_url' : self._get_url_by_reg(region),
+                'application_id': self._get_id_by_reg(region),
+                'account_id': player_id
+            }
         )
         async with session.get(url_get_stats, verify_ssl=False) as response:
             try:

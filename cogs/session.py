@@ -199,14 +199,19 @@ class Session(commands.Cog):
 
                     text = insert_data(
                         self.text_obj.get().cmds.session_state.items.started,
-                        ('time', 'time_left', 'battles'),
-                        (
-                            TimeConverter.formatted_from_secs(int(passed_time), time_format),
-                            TimeConverter.formatted_from_secs(int(time_left), time_format),
-                            str(battles_after - battles_before)
-                        )
+                        {
+                            'time': TimeConverter.formatted_from_secs(int(passed_time), time_format),
+                            'time_left': TimeConverter.formatted_from_secs(int(time_left), time_format),
+                            'battles': str(battles_after - battles_before)
+                        }
+                    #     ('time', 'time_left', 'battles'),
+                    #     (
+                    #         TimeConverter.formatted_from_secs(int(passed_time), time_format),
+                    #         TimeConverter.formatted_from_secs(int(time_left), time_format),
+                    #         str(battles_after - battles_before)
+                    #     )
+                    # )
                     )
-                    
                     await ctx.respond(embed=self.inf_msg.session_state(text))
                 else:
                     await ctx.respond(

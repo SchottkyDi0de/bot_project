@@ -44,7 +44,7 @@ game_api:
     get_id: 
       "https://<reg_url>/wotb/account/list/\
       ?application_id=<app_id>\
-      &search=<nickanme>\
+      &search=<nickname>\
       &type=<search_type>"
 
     get_stats:
