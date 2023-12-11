@@ -1,6 +1,7 @@
 import os
 import traceback
 from itertools import cycle
+from pprint import pprint
 
 import yaml
 from dotenv import load_dotenv, find_dotenv
@@ -37,14 +38,15 @@ class EnvConfig():
     CLIENT_SECRET_DEV = os.getenv('CLIENT_SECRET_DEV')
 
     INTERNAL_API_KEY = os.getenv('INTERNAL_API_KEY')
-    
+
 
 @singleton
 class Config():
     def __init__(self) -> None:
         with open('settings/settings.yaml', encoding='utf-8') as f:
             try:
-                self.cfg = ConfigStruct.model_validate(yaml.safe_load(f))
+                self.yaml_dict = yaml.safe_load(f)
+                self.cfg = ConfigStruct.model_validate(self.yaml_dict)
             except Exception:
                 _log.critical('Failed to load settings.yaml')
                 _log.critical(traceback.format_exc())

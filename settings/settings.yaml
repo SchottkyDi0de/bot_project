@@ -41,34 +41,34 @@ game_api:
     asia: 'api.wotblitz.asia'
 
   urls:
-    get_id: >
-      'https://<reg_url>/wotb/account/list/'
-      '?application_id=<app_id>'
-      '&search=<nickanme>'
-      '&type=<search_type>'
+    get_id: 
+      "https://<reg_url>/wotb/account/list/\
+      ?application_id=<app_id>\
+      &search=<nickanme>\
+      &type=<search_type>"
 
-    get_stats: >
-      'https://<reg_url>/wotb/account/info/'
-      '?application_id=<app_id>'
-      '&account_id=<player_id>'
-      '&fields=-statistics.clan'
+    get_stats:
+      "https://<reg_url>/wotb/account/info/\
+      ?application_id=<app_id>\
+      &account_id=<player_id>\
+      &fields=-statistics.clan"
 
-    get_achievements: >
-      'https://<reg_url>/wotb/account/achievements/'
-      '?application_id=<app_id>'
-      '&fields=-max_series'
-      '&account_id=<player_id>'
+    get_achievements:
+      "https://<reg_url>/wotb/account/achievements/\
+      ?application_id=<app_id>\
+      &fields=-max_series\
+      &account_id=<player_id>"
 
-    get_clan_stats: >
-      'https://<reg_url>/wotb/clans/accountinfo/'
-      '?application_id=<app_id>'
-      '&account_id=<player_id>'
-      '&extra=clan'
+    get_clan_stats:
+      "https://<reg_url>/wotb/clans/accountinfo/\
+      ?application_id=<app_id>\
+      &account_id=<player_id>\
+      &extra=clan"
 
-    get_tank_stats: >
-      'https://<reg_url>/wotb/tanks/stats/'
-      '?application_id=<app_id>'
-      '&account_id=<player_id>'
+    get_tank_stats:
+      "https://<reg_url>/wotb/tanks/stats/\
+      ?application_id=<app_id>\
+      &account_id=<player_id>"
 
 ds_api:
   urls:

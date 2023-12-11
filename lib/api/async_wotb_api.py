@@ -2,7 +2,6 @@ import json
 import asyncio
 import traceback
 from time import time
-from random import choice
 from datetime import datetime
 from typing import Dict, Union
 
@@ -11,6 +10,7 @@ from aiohttp import client_exceptions
 from the_retry import retry
 from asynciolimiter import Limiter
 
+from lib.utils.string_parser import insert_data
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.data_classes.palyer_clan_stats import ClanStats
 from lib.data_classes.player_achievements import Achievements
@@ -95,13 +95,6 @@ class API:
                     
                 _log.error(f'Error get data, bad response status: {data}')
                 raise api_exceptions.APIError(f'Error get data, bad response status: {data}')
-            
-        if data['meta']['count'] == 0:
-            _log.error(
-                f'API Returned `count 0`'
-                f'Data: {data["meta"]}'
-            )
-            raise api_exceptions.NoPlayersFound()
 
         if check_data:
             if data['data'] == None:
@@ -118,6 +111,13 @@ class API:
                 )
                 raise api_exceptions.EmptyDataError(f'API Returned empty `data` section')
             
+        if data['meta']['count'] == 0:
+            _log.error(
+                f'API Returned `count 0`'
+                f'Data: {data["meta"]}'
+            )
+            raise api_exceptions.NoPlayersFound()
+            
         if check_battles:
             if data['data'][list(data['data'].keys())[0]]['statistics']['all']['battles'] < 100:
                 _log.error(f'Need more battles')
@@ -129,13 +129,13 @@ class API:
         reg = self._reg_normalizer(reg)
         match reg:
             case 'ru':
-                return 'papi.tanksblitz.ru'
+                return _config.game_api.reg_urls.ru
             case 'eu':
-                return 'api.wotblitz.eu'
+                return _config.game_api.reg_urls.eu
             case 'asia':
-                return 'api.wotblitz.asia'
+                return _config.game_api.reg_urls.asia
             case 'com':
-                return 'api.wotblitz.com'
+                return _config.game_api.reg_urls.na
             case _:
                 raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
     
@@ -386,17 +386,21 @@ class API:
             api_exceptions.UncorrectName: If the player name is incorrect.
             api_exceptions.MoreThanOnePlayerFound: If more than one player is found with the given nickname.
             api_exceptions.NoPlayersFound: If no players are found with the given nickname."""
-        url_get_id = (
-            f'https://{self._get_url_by_reg(region)}/wotb/account/list/'
-            f'?application_id={self._get_id_by_reg(region)}'
-            f'&search={nickname}'
-            f'&type={"exact" if self.exact else "startswith"}'
+            
+        url_get_id = insert_data(
+            _config.game_api.urls.get_id,
+            {   
+                'app_id'  : self._get_id_by_reg(region),
+                'reg_url' : self._get_url_by_reg(region),
+                'nickname': nickname,
+                'search_type' : 'exact' if self.exact else 'startswith',
+            }
         )
 
         await self.rate_limiter.wait()
         async with aiohttp.ClientSession() as self.session:
             async with self.session.get(url_get_id, verify_ssl=False) as response:
-                data = await self.response_handler(response, False)
+                data = await self.response_handler(response)
 
                 if data['status'] == 'error':
                     match data['error']['code']:
