@@ -4,7 +4,7 @@ import time
 from aiohttp import ClientSession
 # from the_retry import retry
 
-from lib.settings.settings import Config
+from lib.settings.settings import EnvConfig
 from lib.exceptions.api import APIError
 from lib.logger.logger import get_logger
 
@@ -13,8 +13,8 @@ _log = get_logger(__name__, 'DiscordOAuthLogger', 'logs/discord_oauth.log')
 
 class DiscordOAuth:
     redirect_url = 'http://188.170.203.33:80/auth'
-    client_id = Config().CLIENT_ID_DEV
-    client_secret = Config().CLIENT_SECRET_DEV
+    client_id = EnvConfig.CLIENT_ID_DEV
+    client_secret = EnvConfig.CLIENT_SECRET_DEV
     state = hashlib.sha256(str(time.time()).encode()).hexdigest()
     auth_url = (
         f'https://discord.com/api/oauth2/authorize?'

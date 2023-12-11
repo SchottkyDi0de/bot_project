@@ -11,7 +11,6 @@ from lib.exceptions.blacklist import UserBanned
 from lib.database.servers import ServersDB
 from lib.locale.locale import Text
 from lib.replay_parser.parser import ReplayParser
-from lib.replay_parser.parser import ReplayParserError
 from lib.data_parser.parse_replay import ParseReplayData
 from lib.logger.logger import get_logger
 from lib.embeds.errors import ErrorMSG
@@ -20,7 +19,7 @@ from lib.embeds.replay import EmbedReplayBuilder
 from lib.settings.settings import Config
 
 _log = get_logger(__name__, 'CogReplayParserLogger', 'logs/cog_replay_parser.log')
-
+_config = Config().get()
 
 class CogReplayParser(commands.Cog):
     def __init__(self, bot):
@@ -60,7 +59,7 @@ class CogReplayParser(commands.Cog):
                             'uk': Text().get('ua').frequent.common.region
                         },
                         required=True,
-                        choices=Config().settings.default.available_regions
+                        choices=_config.default.available_regions
                     ),
                     output_type: Option(
                         str,

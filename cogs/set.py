@@ -8,7 +8,6 @@ from discord.ext import commands
 
 from lib.image.utils.resizer import resize_image
 from lib.settings.settings import Config
-from lib.exceptions.database import MemberNotFound
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.locale.locale import Text
@@ -17,12 +16,12 @@ from lib.embeds.info import InfoMSG
 from lib.blacklist.blacklist import check_user
 from lib.exceptions.blacklist import UserBanned
 from lib.logger.logger import get_logger
-from lib.settings.settings import Config
 from lib.api.async_wotb_api import API
 from lib.exceptions import api
 from lib.auth.dicord import DiscordOAuth
 
 _log = get_logger(__name__, 'CogSetLogger', 'logs/cog_set.log')
+_config = Config().get()
 
 
 class Set(commands.Cog):
@@ -53,7 +52,7 @@ class Set(commands.Cog):
                     'pl': Text().get('pl').cmds.set_lang.descr.sub_descr.lang_list,
                     'uk': Text().get('ua').cmds.set_lang.descr.sub_descr.lang_list
                 },
-                choices=Config().get().default.available_locales,
+                choices=_config.default.available_locales,
                 required=True
             ),
         ):
@@ -100,7 +99,7 @@ class Set(commands.Cog):
                     'pl': Text().get('pl').frequent.common.region,
                     'uk': Text().get('ua').frequent.common.region
                 },
-                choices=Config().get().default.available_regions,
+                choices=_config.default.available_regions,
                 required=True
             )
         ):

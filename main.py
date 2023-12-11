@@ -11,20 +11,19 @@ from lib.database import tankopedia
 from lib.logger.logger import get_logger
 from api_server import Server
 from lib.exceptions.api import APIError
-from lib.settings.settings import Config
+from lib.settings.settings import Config, EnvConfig
 from workers.pdb_checker import PDBWorker
 
 _log = get_logger(__name__, 'MainLogger', 'logs/main.log')
 
-st = Config().get()
-
+_config = Config()
 
 class App():
     def __init__(self):
         self.intents = Intents.default()
         self.pbd_worker = PDBWorker()
         self.intents.message_content = True
-        self.bot = commands.Bot(intents=self.intents, command_prefix=st.default.prefix)
+        self.bot = commands.Bot(intents=self.intents, command_prefix=_config.cfg.default.prefix)
         self.bot.remove_command('help')
 
         self.extension_names = [
@@ -65,7 +64,7 @@ class App():
             await self.apply_presence()
 
         self.load_extension(self.extension_names)
-        self.bot.run(st.DISCORD_TOKEN_DEV)
+        self.bot.run(EnvConfig.DISCORD_TOKEN_DEV)
 
     @staticmethod 
     async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:
