@@ -20,11 +20,10 @@ from lib.data_parser.parse_data import get_normalized_data
 from lib.database.players import PlayersDB
 from lib.exceptions import api as api_exceptions
 from lib.logger.logger import get_logger
-from lib.settings.settings import Config, EnvConfig
+from lib.settings import settings
 
 _log = get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
-_config = Config().get()
-
+st = settings.Config()
 
 class API:
     def __init__(self) -> None:
@@ -40,19 +39,11 @@ class API:
     def _get_id_by_reg(self, reg: str) -> str:
         reg = reg.lower()
         if reg == 'ru':
-            return choice(
-                [
-                    EnvConfig.LT_APP_ID_CL0,
-                    EnvConfig.LT_APP_ID_CL1,
-                ]
-            )
+            return next(st.LT_APP_IDS)
         elif reg in ['eu', 'com', 'asia', 'na', 'as']:
-            return choice(
-                [
-                    EnvConfig.WG_APP_ID_CL0,
-                    EnvConfig.WG_APP_ID_CL1,
-                ]
-            )
+            tok = next(st.WG_APP_IDS)
+            _log.debug(f'Used app ID: {tok}')
+            return tok
         raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
 
     def _reg_normalizer(self, reg: str) -> str:
@@ -69,6 +60,7 @@ class API:
             check_data_status: bool = True,
             check_battles: bool = False,
             check_data: bool = False,
+            check_meta: bool = False
             ) -> dict:
         """
         Asynchronously handles the response from the API and returns the data as a dictionary.
@@ -137,18 +129,19 @@ class API:
         reg = self._reg_normalizer(reg)
         match reg:
             case 'ru':
-                return _config.game_api.reg_urls.ru
+                return 'papi.tanksblitz.ru'
             case 'eu':
-                return _config.game_api.reg_urls.eu
+                return 'api.wotblitz.eu'
             case 'asia':
-                return _config.game_api.reg_urls.na
+                return 'api.wotblitz.asia'
             case 'com':
-                return _config.game_api.reg_urls.asia
+                return 'api.wotblitz.com'
             case _:
                 raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
     
     def get_players_callback(self, task: asyncio.Task) -> PlayerStats:
         self._palyers_stats.append(task.result())
+        
             
     async def get_players_stats(self, players_id: list[int], region: str) -> list[PlayerStats | bool]:
         """
@@ -349,7 +342,7 @@ class API:
         self.player['timestamp'] = int(datetime.now().timestamp())
         self.player['end_timestamp'] = int(
             self.player['timestamp'] +
-            _config.session_ttl
+            settings.Config().get().session_ttl
         )
         self.player['data'] = self.player_stats
 

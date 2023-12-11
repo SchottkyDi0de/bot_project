@@ -144,8 +144,7 @@ class Stats(commands.Cog):
 
 
 async def on_error(self, ctx: commands.Context, _):
-        _log.error(traceback.format_exc())
-        await ctx.respond(embed=self.err_msg.cooldown_not_expired())
+        await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
 
 
 def setup(bot):

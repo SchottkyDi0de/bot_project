@@ -6,92 +6,93 @@ from lib.locale.locale import Text
 
 @singleton
 class InfoMSG:
+    text_obj = Text()
 
     def player_not_registred(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().frequent.info.player_not_registred,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().frequent.info.player_not_registred,
             colour=Colour.orange()
         )
 
     def set_player_ok(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().cmds.set_player.info.set_player_ok,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().cmds.set_player.info.set_player_ok,
             colour=Colour.green()
         )
 
     def player_not_registred_session(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().cmds.start_session.info.player_not_registred,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().cmds.start_session.info.player_not_registred,
             colour=Colour.orange()
         )
     
     def player_not_registred_astats(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().cmds.astats.info.player_not_registred,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().cmds.astats.info.player_not_registred,
             colour=Colour.orange()
         )
 
     def session_started(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().cmds.start_session.info.started,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().cmds.start_session.info.started,
             colour=Colour.green()
         )
 
     def set_lang_ok(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().cmds.set_lang.info.set_lang_ok,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().cmds.set_lang.info.set_lang_ok,
             color=Colour.green()
         )
 
     def help_syntax(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().cmds.help.items.syntax,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().cmds.help.items.syntax,
             colour=Colour.blurple()
         )
 
     def help_setup(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().cmds.help.items.setup,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().cmds.help.items.setup,
             colour=Colour.blurple()
         )
 
     def help_statistics(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().cmds.help.items.statistics,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().cmds.help.items.statistics,
             colour=Colour.blurple()
         )
 
     def help_session(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().cmds.help.items.session,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().cmds.help.items.session,
             colour=Colour.blurple()
         )
     def help_other(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().cmds.help.items.other,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().cmds.help.items.other,
             colour=Colour.blurple()
         )
 
     def help_send_ok(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
-            description=Text().get().cmds.help.info.send_ok,
+            title=self.text_obj.get().frequent.info.info,
+            description=self.text_obj.get().cmds.help.info.send_ok,
             colour=Colour.green()
         )
     def session_state(self, text: str) -> Embed:
         return Embed(
-            title=Text().get().frequent.info.info,
+            title=self.text_obj.get().frequent.info.info,
             description=text,
             colour=Colour.green()
         )
@@ -100,13 +101,13 @@ class InfoMSG:
         return Embed(
             title=self.text_obj.get().frequent.info.warning,
             description=self.text_obj.get().cmds.cooldown.info.cooldown_not_expired,
-            color=Colour.red()
+            color=Colour.orange()
         )
     
     def custom(
             self,
             text: str,
-            title: str = Text().get().frequent.info.info,
+            title: str = text_obj.get().frequent.info.info,
             colour: str = 'blurple'
         ) -> Embed:
     
