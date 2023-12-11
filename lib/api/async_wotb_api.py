@@ -20,10 +20,11 @@ from lib.data_parser.parse_data import get_normalized_data
 from lib.database.players import PlayersDB
 from lib.exceptions import api as api_exceptions
 from lib.logger.logger import get_logger
-from lib.settings import settings
+from lib.settings.settings import Config, EnvConfig
 
 _log = get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
-st = settings.Config()
+_config = Config().get()
+
 
 class API:
     def __init__(self) -> None:
@@ -39,9 +40,9 @@ class API:
     def _get_id_by_reg(self, reg: str) -> str:
         reg = reg.lower()
         if reg == 'ru':
-            return next(st.LT_APP_IDS)
+            return next(EnvConfig.LT_APP_IDS)
         elif reg in ['eu', 'com', 'asia', 'na', 'as']:
-            tok = next(st.WG_APP_IDS)
+            tok = next(EnvConfig.WG_APP_IDS)
             _log.debug(f'Used app ID: {tok}')
             return tok
         raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
@@ -60,7 +61,6 @@ class API:
             check_data_status: bool = True,
             check_battles: bool = False,
             check_data: bool = False,
-            check_meta: bool = False
             ) -> dict:
         """
         Asynchronously handles the response from the API and returns the data as a dictionary.
@@ -342,7 +342,7 @@ class API:
         self.player['timestamp'] = int(datetime.now().timestamp())
         self.player['end_timestamp'] = int(
             self.player['timestamp'] +
-            settings.Config().get().session_ttl
+            _config.session_ttl
         )
         self.player['data'] = self.player_stats
 

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from pydantic import BaseModel
 
@@ -8,19 +8,12 @@ class Server(BaseModel):
     port: int
 
 
-class LocaleAlliases(BaseModel):
-    ru: str
-    en: str
-    pl: str
-    uk: str
-
-
 class Default(BaseModel):
     prefix: str
     lang: str
     available_locales: List[str]
     available_regions: List[str]
-    locale_alliases: LocaleAlliases
+    locale_alliases: Dict[str, str]
 
 
 class Internal(BaseModel):

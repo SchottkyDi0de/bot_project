@@ -1,5 +1,6 @@
 import os
 import traceback
+from itertools import cycle
 
 import yaml
 from dotenv import load_dotenv, find_dotenv
@@ -21,12 +22,13 @@ load_dotenv(dotenv_path)
 class EnvConfig():
     DISCORD_TOKEN_DEV = os.getenv('DISCORD_TOKEN_DEV')
     DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
-    
-    WG_APP_ID_CL0 = os.getenv('WG_APP_ID_CL0')
-    WG_APP_ID_CL1 = os.getenv('WG_APP_ID_CL1')
 
-    LT_APP_ID_CL0 = os.getenv('LT_APP_ID_CL0')
-    LT_APP_ID_CL1 = os.getenv('LT_APP_ID_CL1')
+    WG_APP_ID_CL0, WG_APP_ID_CL1 = os.getenv('WG_APP_ID_CL0'), os.getenv('WG_APP_ID_CL1')
+    LT_APP_ID_CL0, LT_APP_ID_CL1 = os.getenv('LT_APP_ID_CL0'), os.getenv('LT_APP_ID_CL1')
+
+    WG_APP_IDS = cycle((WG_APP_ID_CL0, WG_APP_ID_CL1))
+
+    LT_APP_IDS = cycle((LT_APP_ID_CL0, LT_APP_ID_CL1))
 
     CLIENT_ID = os.getenv('CLIENT_ID')
     CLIENT_SECRET = os.getenv('CLIENT_SECRET')
