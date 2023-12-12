@@ -2,6 +2,18 @@ from typing import List
 
 from pydantic import BaseModel
 
+class TankSessionData(BaseModel):
+    tank_name: str
+    tank_tier: int
+    tank_type: str
+    
+    d_winrate: float
+    d_avg_damage: int
+    d_battles: int
+    
+    s_winrate: float
+    s_avg_damage: int
+    s_battles: int
 
 class TankDiff(BaseModel):
     winrate: float = 0
@@ -44,6 +56,5 @@ class SesionDiffData(BaseModel):
     main_session: MainSession
     rating_diff: RatingDiff
     rating_session: RatingSession
-    tank_diff: TankDiff
-    tank_session: TankSession
+    tank_stats: List[TankSessionData]
     tank_id: List[int]

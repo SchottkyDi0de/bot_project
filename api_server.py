@@ -1,7 +1,7 @@
 import traceback
-from typing import Union
+from typing import Union, Annotated
 
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, Header
 from fastapi.responses import JSONResponse, RedirectResponse
 from pywebio.input import *
 from pywebio.output import *
@@ -9,17 +9,18 @@ from pywebio.platform.fastapi import asgi_app
 import uvicorn
 
 from lib.api.async_wotb_api import API
-from lib.data_classes.db_player import DBPlayer
+from lib.data_classes.db_player import DBPlayer, DBPlayerSetResponse
 from lib.data_classes.internal_api.err_response import ErrorResponse
 from lib.data_classes.internal_api.inf_response import InfoResponse
 from lib.database.players import PlayersDB
+from lib.data_classes.internal_api.restart_session import RestartSession
 from lib.internal_api.responses import ErrorResponses, InfoResponses
 from lib.logger.logger import get_logger
-from lib.settings.settings import Config
+from lib.settings.settings import Config, EnvConfig
 
 _current_user = None
 _pdb = PlayersDB()
-_config = Config()
+_config = EnvConfig()
 _api = API()
 
 _log = get_logger(__name__, 'ServerLogger', 'logs/server.log')
@@ -40,46 +41,45 @@ class Server:
     async def root():
         return
     
-    @app.get(
-        '/bot/api/ping', 
+    @app.get('/bot/api/ping', 
         responses={
             501: {'model' : ErrorResponse, 'description' : 'Acces denied'},
             200: {'model' : InfoResponse, 'description' : 'Pong!'}
         }
     )
-    async def ping(api_key: str):
+    async def ping(api_key: Annotated[str, Header()]):
         if api_key != _config.INTERNAL_API_KEY:
             return JSONResponse(ErrorResponses.acces_denied.model_dump(), status_code=501)
         
         return InfoResponses.pong
 
     @app.get('/bot/api', responses={
-        501: {'model' : ErrorResponse, 'description' : 'Root method not allowed'},
+        500: {'model' : ErrorResponse, 'description' : 'Root method not allowed'},
         }
     )
     async def api(response = Response) -> ErrorResponse:
         return JSONResponse(ErrorResponses.method_not_allowed.model_dump(), status_code=500)
     
-    @app.get('/bot/api/restart_session', responses={
+    @app.post('/bot/api/restart_session', responses={
         501: {'model' : ErrorResponse, 'description' : 'Acces denied'},
         502: {'model' : ErrorResponse, 'description' : 'Player not found'},
         504: {'model' : ErrorResponse, 'description' : 'Player session not found'},
-        200: {'model' : InfoResponse, 'description' : 'Player updated'}
+        200: {'model' : InfoResponse, 'description' : 'Player updated'},
         }
     )
-    async def restart_session(api_key: str, discord_id: str | int) -> ErrorResponse:
+    async def restart_session(api_key: Annotated[str, Header()], data: RestartSession) -> ErrorResponse:
         if api_key != _config.INTERNAL_API_KEY:
             return JSONResponse(ErrorResponses.acces_denied.model_dump(), status_code=501)
         
-        if _pdb.check_member(discord_id):
-            if _pdb.check_member_last_stats(discord_id):
-                player = _pdb.get_member(discord_id)
+        if _pdb.check_member(data.discord_id):
+            if _pdb.check_member_last_stats(data.discord_id):
+                player = _pdb.get_member(data.discord_id)
                 
                 if player is None:
                     return JSONResponse(ErrorResponses.player_not_found.model_dump(), status_code=502)
                 
                 player_data = await _api.get_stats(player['nickname'], player['region'])
-                _pdb.set_member_last_stats(discord_id, player_data.model_dump())
+                _pdb.set_member_last_stats(data.discord_id, player_data.model_dump())
                 return JSONResponse(InfoResponses.player_updated.model_dump(), status_code=200)
             
             return JSONResponse(ErrorResponses.player_session_not_found.model_dump(), status_code=504)
@@ -91,10 +91,9 @@ class Server:
         200: {'model' : DBPlayer, 'description' : 'Player data'}
         }
     )
-    async def get_player(api_key: str, discord_id: str | int, include_traceback: bool = False, response = Response) -> DBPlayer | ErrorResponse:
+    async def get_player(api_key: Annotated[str, Header()], discord_id: str | int, include_traceback: bool = False) -> DBPlayer | ErrorResponse:
         if api_key != _config.INTERNAL_API_KEY:
-            response.status_code = 501
-            return
+            return JSONResponse(ErrorResponses.acces_denied.model_dump(), status_code=501)
         
         player = _pdb.get_member(discord_id)
 
@@ -102,23 +101,22 @@ class Server:
             try:
                 player = DBPlayer.model_validate(player)
                 player.last_stats = None
-                return player
+                return JSONResponse(player.model_dump(), status_code=200)
+            
             except:
                 _log.error(traceback.format_exc())
-                response.status_code = 503
                 err_response = ErrorResponses.validation_error
                 if include_traceback:
                     err_response.traceback = traceback.format_exc()
                     
-                return err_response
+                return JSONResponse(err_response.model_dump(), status_code=503)
                 
         else:
-            response.status_code = 502
             err_response = ErrorResponses.player_not_found
             if include_traceback:
                 err_response.traceback = traceback.format_exc()
                 
-            return err_response
+            return JSONResponse(err_response.model_dump(), status_code=502)
     
     @app.post('/bot/api/set_player', responses={
         501: {'model' : ErrorResponse, 'description' : 'Acces denied'},
@@ -126,7 +124,7 @@ class Server:
         200: {'model' : InfoResponse, 'description' : 'Player updated'}
         }
     ) 
-    async def set_player(api_key: str, player: DBPlayer) -> ErrorResponse | InfoResponse:
+    async def set_player(api_key: Annotated[str, Header()], player: DBPlayer) -> ErrorResponse | InfoResponse:
         if api_key != _config.INTERNAL_API_KEY:
             return JSONResponse(ErrorResponses.acces_denied.model_dump(), status_code=501)
         

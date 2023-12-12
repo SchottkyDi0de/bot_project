@@ -44,114 +44,114 @@ class Leagues():
 class Cache():
     cache_label = Image.open('res/image/other/cached_label.png', formats=['png'])
 
-
-class Coordinates():
-    def __init__(self, img_size: tuple[int]):
+class RelativeCoordinates():
+    def __init__(self, image_size):
         """
         Class to store coordinates for labels and stats in an image.
 
         Args:
         - img_size (tuple): Size of the image (width, height)
         """
-        _center_x = img_size[0] // 2
+        
+        self.center_x = image_size[0] // 2
+        
+        # Any categories / tank names position
+        self.category_label = (self.center_x, 15)  
 
-        # Category labels
-        self.category_labels = {
-            'main': (_center_x, 100),  # Main category label
-            'rating': (_center_x, 360)  # Rating category label
+        # Main stats lables position in the stats block
+    def main_stast_labels(self, offset_y):
+        return {
+            'winrate': (150, offset_y + 196),  # Winrate label
+            'avg_damage': (self.center_x, offset_y + 196),  # Average damage label
+            'battles': (553, offset_y + 196),  # Battles label
         }
 
-        # Main labels
-        self.main_labels = {
-            'winrate': (150, 275),  # Winrate label
-            'avg_damage': (_center_x, 275),  # Average damage label
-            'battles': (553, 275),  # Battles label
+    # Main stats values position in the stats block
+    def main_stats_values(self, offset_y): 
+        return {
+            'winrate': (150, offset_y + 97),  # Winrate stat
+            'avg_damage': (self.center_x, offset_y + 97),  # Average damage stat
+            'battles': (553, offset_y + 97),  # Battles stat
         }
 
-        # Main stats
-        self.main_stats = {
-            'winrate': (150, 165),  # Winrate stat
-            'avg_damage': (_center_x, 165),  # Average damage stat
-            'battles': (553, 165),  # Battles stat
+    # Main difference stats position in the stats block
+    def main_diff_stats(self, offset_y):
+        return {
+            'winrate': (150, offset_y),  # Winrate difference stat
+            'avg_damage': (self.center_x, offset_y),  # Average damage difference stat
+            'battles': (553, offset_y),  # Battles difference stat
         }
 
-        # Main difference stats
-        self.main_diff_stats = {
-            'winrate': (150, 240),  # Winrate difference stat
-            'avg_damage': (_center_x, 240),  # Average damage difference stat
-            'battles': (553, 240),  # Battles difference stat
-        }
+    # # Main session stats
+    # def main_session_stats():
+    #     'winrate': (150, 205),  # Winrate session stat
+    #     'avg_damage': (self.center_x, 205),  # Average damage session stat
+    #     'battles': (553, 205),  # Battles session stat
+    # }
 
-        # Main session stats
-        self.main_session_stats = {
-            'winrate': (150, 205),  # Winrate session stat
-            'avg_damage': (_center_x, 205),  # Average damage session stat
-            'battles': (553, 205),  # Battles session stat
-        }
+    # # Rating labels
+    # self.rating_labels = {
+    #     'rating_battles': (553, 560),  # Rating battles label
+    #     'winrate': (150, 560),  # Winrate label
+    # }
 
-        # Rating labels
-        self.rating_labels = {
-            'rating_battles': (553, 560),  # Rating battles label
-            'winrate': (150, 560),  # Winrate label
-        }
+    # # Rating league label
+    # self.rating_league_label = _center_x, 560,
 
-        # Rating league label
-        self.rating_league_label = _center_x, 560,
+    # # Rating league icon
+    # self.rating_league_icon = _center_x - Leagues.empty.size[0]//2, 380,
 
-        # Rating league icon
-        self.rating_league_icon = _center_x - Leagues.empty.size[0]//2, 380,
+    # # Rating stats
+    # self.rating_stats = {
+    #     'winrate': (150, 425),  # Winrate stat
+    #     'rating': (_center_x, 440),  # Rating stat
+    #     'battles': (553, 425),  # Battles stat
+    # }
 
-        # Rating stats
-        self.rating_stats = {
-            'winrate': (150, 425),  # Winrate stat
-            'rating': (_center_x, 440),  # Rating stat
-            'battles': (553, 425),  # Battles stat
-        }
+    # # Ratings session stats
+    # self.rating_session_stats = {
+    #     'winrate': (150, 480),  # Winrate session stat
+    #     'rating': (_center_x, 480),  # Rating session stat
+    #     'battles': (553, 480),  # Battles session stat
+    # }
 
-        # Ratings session stats
-        self.rating_session_stats = {
-            'winrate': (150, 480),  # Winrate session stat
-            'rating': (_center_x, 480),  # Rating session stat
-            'battles': (553, 480),  # Battles session stat
-        }
+    # # Rating difference stats
+    # self.rating_diff_stats = {
+    #     'winrate': (150, 520),  # Winrate difference stat
+    #     'rating': (_center_x, 520),  # Rating difference stat
+    #     'battles': (553, 520),  # Battles difference stat
+    # }
 
-        # Rating difference stats
-        self.rating_diff_stats = {
-            'winrate': (150, 520),  # Winrate difference stat
-            'rating': (_center_x, 520),  # Rating difference stat
-            'battles': (553, 520),  # Battles difference stat
-        }
+    # # Tank name
+    # self.tank_name = (_center_x, 630)
 
-        # Tank name
-        self.tank_name = (_center_x, 630)
+    # # Tank stats
+    # self.tank_stats = {
+    #     'winrate': (150, 710),  # Winrate stat
+    #     'avg_damage': (_center_x, 710),  # Average damage stat
+    #     'battles': (553, 710)  # Battles stat
+    # }
 
-        # Tank stats
-        self.tank_stats = {
-            'winrate': (150, 710),  # Winrate stat
-            'avg_damage': (_center_x, 710),  # Average damage stat
-            'battles': (553, 710)  # Battles stat
-        }
+    # # Tank difference stats
+    # self.tank_diff_stats = {
+    #     'winrate': (150, 795),  # Winrate difference stat
+    #     'avg_damage': (_center_x, 795),  # Average damage difference stat
+    #     'battles': (553, 795)  # Battles difference stat
+    # }
 
-        # Tank difference stats
-        self.tank_diff_stats = {
-            'winrate': (150, 795),  # Winrate difference stat
-            'avg_damage': (_center_x, 795),  # Average damage difference stat
-            'battles': (553, 795)  # Battles difference stat
-        }
+    # # Tank session stats
+    # self.tank_session_stats = {
+    #     'winrate': (150, 755),  # Winrate session stat
+    #     'avg_damage': (_center_x, 755),  # Average damage session stat
+    #     'battles': (553, 755)  # Battles session stat
+    # }
 
-        # Tank session stats
-        self.tank_session_stats = {
-            'winrate': (150, 755),  # Winrate session stat
-            'avg_damage': (_center_x, 755),  # Average damage session stat
-            'battles': (553, 755)  # Battles session stat
-        }
-
-        # Tank labels
-        self.tank_labels = {
-            'winrate': (150, 830),  # Winrate label
-            'avg_damage': (_center_x, 830),  # Average damage label
-            'battles': (553, 830)  # Battles label
-        }
+    # # Tank labels
+    # self.tank_labels = {
+    #     'winrate': (150, 830),  # Winrate label
+    #     'avg_damage': (_center_x, 830),  # Average damage label
+    #     'battles': (553, 830)  # Battles label
+    # }
 
 
 class DiffValues():
@@ -253,6 +253,85 @@ class Values():
             'avg_damage': self.val_normalizer.other(tank_data[str(tank_id)].all.avg_damage),
             'battles': self.val_normalizer.other(tank_data[str(tank_id)].all.battles)
         }
+
+
+class StatsBlockSize:
+    main_stats = 240
+    rating_stats = 260
+    full_tank_stats = 260
+    short_tank_stats = 200
+
+
+class BlockOffsets:
+    first_indent = 80
+    block_indent = 20
+    horizontal_indent = 55
+    
+
+class ImageSize:
+    max: int = 1350
+
+
+class LayoutDefiner:
+    def __init__(self, session_data: SesionDiffData) -> None:
+        self.data = session_data
+        self.blocks = 1
+        self.small_blocks = 0
+        
+        self.include_rating = True if self.data.rating_diff.battles > 0 else False
+        self.tanks_count = 0
+        
+    def _calculate_stats_blocks(self) -> None:
+        self.tanks_count = len(self.data.tank_stats)
+        
+        if self.include_rating:
+            self.blocks += 1
+        
+        if self.tanks_count >= 1:
+            self.blocks += 1
+            
+        if self.tanks_count >= 2:
+            self.blocks += 1
+        
+        if self.tanks_count >= 3:
+            if self.include_rating:
+                self.small_blocks == 2
+                self.blocks -= 1
+            else:
+                self.blocks += 1
+                
+        if self.tanks_count >= 4:
+            if not self.include_rating:
+                self.small_blocks == 2
+                self.blocks -= 1
+    
+    def _calculate_image_size(self) -> None:
+        if self.blocks == 3 and self.small_blocks == 2:
+            self.image_size = 1350
+            return
+        
+        self.image_size = (
+            BlockOffsets.first_indent + StatsBlockSize.main_stats +
+            BlockOffsets.block_indent * (self.blocks + self.small_blocks) +
+            StatsBlockSize.full_tank_stats * (self.blocks - 1) +
+            StatsBlockSize.short_tank_stats * self.small_blocks
+        )
+
+    def _prepare_background(self):
+        self.layout_map = Image.new(
+            'RGBA',
+            (700, self.image_size),
+            (0, 0, 0, 0)
+        )
+
+    def create_rectangle_map(self) -> Image.Image:
+        self._calculate_stats_blocks()
+        self._calculate_image_size()
+        self._prepare_background()
+        
+        drawable_layout = ImageDraw.Draw(self.layout_map)
+        
+        
 
 
 class Flags():

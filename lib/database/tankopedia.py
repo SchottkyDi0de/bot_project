@@ -27,3 +27,9 @@ class TanksDB():
             return self.db['root']['data'][id]
         except KeyError:
             raise TankNotFoundInTankopedia(f'Tank with id {id} not found')
+        
+    def safe_get_tank_by_id(self, id: str | int) -> dict | None:
+        try:
+            return self.get_tank_by_id(id)
+        except TankNotFoundInTankopedia:
+            return None

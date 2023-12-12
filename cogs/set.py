@@ -113,7 +113,7 @@ class Set(commands.Cog):
             Text().load_from_context(ctx)
             
             try:
-                await self.api.check_player(nickname, region)
+                game_id = await self.api.check_player(nickname, region)
             except api.NoPlayersFound:
                 await ctx.respond(embed=ErrorMSG().player_not_found())
             except api.NeedMoreBattlesError:
@@ -121,7 +121,7 @@ class Set(commands.Cog):
             except api.APIError:
                 await ctx.respond(embed=ErrorMSG().api_error())
             else:
-                self.db.set_member(ctx.author.id, nickname, region)
+                self.db.set_member(ctx.author.id, nickname, region, game_id)
                 _log.debug(f'Set player: {ctx.author.id} {nickname} {region}')
                 await ctx.respond(embed=self.inf_msg.set_player_ok())
 

@@ -4,6 +4,7 @@ import traceback
 import traceback
 from datetime import datetime
 
+from asyncio import run
 import elara
 from discord.ext.commands import Context
 
@@ -12,6 +13,7 @@ from lib.exceptions import database
 from lib.logger.logger import get_logger
 from lib.utils.singleton_factory import singleton
 from lib.settings.settings import Config
+from lib.api.async_wotb_api import API
 
 _log = get_logger(__name__, logger_name='PlayersDBLogger', file_name='logs/playersdb_logger.log')
 
@@ -24,7 +26,7 @@ class PlayersDB():
     def __len__(self):
         return len(self.db['members'].keys())
     
-    def set_member(self, member_id: int, nickname: str, region: str, data: DBPlayer = None) -> None:
+    def set_member(self, member_id: int, nickname: str, region: str, game_id: int,  data: DBPlayer = None) -> None:
         member_id = str(member_id)
 
         if data is not None:
@@ -41,6 +43,7 @@ class PlayersDB():
         else:
             self.db['members'][member_id] = {
                 'id': int(member_id),
+                'game_id' : game_id,
                 'nickname': nickname,
                 'region': region,
                 'premium': False,
@@ -90,35 +93,6 @@ class PlayersDB():
             self.db['members'][member_id]['premium'] = False
             self.db['members'][member_id]['premium_time'] = None
             self.db.commit()
-
-    def set_member_premium(self, member_id: int, time_secs: int):
-        member_id = str(member_id)
-
-        self.db['members'][member_id]['premium'] = True
-        self.db['members'][member_id]['premium_time'] = datetime.now().timestamp() + time_secs
-        self.db.commit()
-
-    def check_member_premium(self, member_id: int) -> bool:
-        member_id = str(member_id)
-
-        if self.check_member(member_id):
-            if self.db['members'][member_id]['premium_time'] == None:
-                self.unset_member_premium(member_id)
-                return False
-            if self.db['members'][member_id]['premium_time'] > datetime.now().timestamp():
-                if self.db['members'][member_id]['premium']:
-                    return True
-
-        self.unset_member_premium(member_id)
-        return False
-
-    def get_member_image(self, member_id: int) -> str | None:
-        member_id = str(member_id)
-
-        if self.check_member(member_id):
-            return self.db['members'][member_id]['image']
-        
-        return None
     
     def set_member_lock(self, member_id: int):
         member_id = str(member_id)
@@ -142,21 +116,6 @@ class PlayersDB():
             return
         
         raise database.MemberNotFound(f'Member not found, id: {member_id}')
-    
-    def set_member_image(self, member_id: int, image: str):
-        member_id = str(member_id)
-
-        if self.check_member(member_id):
-            self.db['members'][member_id]['image'] = image
-            self.db.commit()
-        
-    def unset_member_premium(self, member_id: int):
-        member_id = str(member_id)
-
-        if self.check_member(member_id):
-            self.db['members'][member_id]['premium'] = False
-            self.db['members'][member_id]['premium_time'] = None
-            self.db.commit()
 
     def set_member_premium(self, member_id: int, time_secs: int):
         member_id = str(member_id)
@@ -216,8 +175,13 @@ class PlayersDB():
         del self.db['members'][member_id]['last_stats']
         self.db.commit()
 
-    def delete_member(self, member_id: int):
-        del self.db['members'][member_id]
+    def delete_member(self, member_id: str | int):
+        member_id = str(member_id)
+        try:
+            del self.db['members'][member_id]
+        except (KeyError, TypeError):
+            _log.warning(f'Member not found, id: {member_id}')
+        
         self.db.commit()
 
     def set_member_last_stats(self, member_id: int, data: dict) -> None:
@@ -285,13 +249,15 @@ class PlayersDB():
         except (KeyError, TypeError):
             return False
         
-    def _change_database_structure(self):
+    async def _change_database_structure(self):
         """
         Please DONT USE THIS FUNCTION ON WORK DB
         """
-        for i in self.db.db['members'].keys():
+        keys = self.db.db['members'].copy()
+        for i in keys.keys():
             try:
                 _ = self.db['members'][i]['id']
+                _ = self.db['members'][i]['game_id']
                 _ = self.db['members'][i]['nickname']
                 _ = self.db['members'][i]['region']
                 _ = self.db['members'][i]['premium']
@@ -299,9 +265,13 @@ class PlayersDB():
                 _ = self.db['members'][i]['last_stats']
                 _ = self.db['members'][i]['image']
                 _ = self.db['members'][i]['verified']
+                _ = self.db['members'][i]['locked']
             except (KeyError, AttributeError):
+                _log.debug('Deliting invalid player from database')
+                self.delete_member(i)
                 _log.debug(f'Attempt to change database structure for player {i}')
                 try:
+                    self.db.db['members'][i]['game_id'] = await API().check_player(self.db.db['members'][i]['nickname'], self.db.db['members'][i]['region'])
                     self.db.db['members'][i]['premium'] = False
                     self.db.db['members'][i]['premium_time'] = None
                     self.db['members'][i]['image'] = None
@@ -309,6 +279,7 @@ class PlayersDB():
                     self.db['members'][i]['locked'] = False
                 except Exception:
                     _log.debug(traceback.format_exc())
+                    continue
                 else:
                     _log.debug('Succes...')
 

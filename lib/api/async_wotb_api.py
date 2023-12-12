@@ -14,10 +14,10 @@ from lib.utils.string_parser import insert_data
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.data_classes.palyer_clan_stats import ClanStats
 from lib.data_classes.player_achievements import Achievements
-from lib.data_classes.player_stats import PlayerStats
+from lib.data_classes.player_stats import PlayerStats, PlayerData
 from lib.data_classes.tanks_stats import TankStats
 from lib.data_parser.parse_data import get_normalized_data
-from lib.database.players import PlayersDB
+# from lib.database.players import PlayersDB
 from lib.exceptions import api as api_exceptions
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config, EnvConfig
@@ -32,7 +32,7 @@ class API:
         self.raw_dict = False
         self._palyers_stats = []
         self.start_time = 0
-        self.rate_limiter = Limiter(9.8)
+        self.rate_limiter = Limiter(19)
 
         self.player_stats = {}
         self.player = {}
@@ -247,7 +247,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def check_player(self, nickname: str, region: str) -> None:
+    async def check_player(self, nickname: str, region: str) -> int:
         """
         Check a player's information.
 
@@ -275,6 +275,7 @@ class API:
             async with session.get(url_get_id, verify_ssl=False) as response:
                 try:
                     data = await self.response_handler(response, check_meta=True)
+                    player_id = data['data'][0]['account_id']
                 except Exception as e:
                     _log.debug(f'Error check player\n{traceback.format_exc()}')
                     raise e
@@ -282,7 +283,7 @@ class API:
             url_get_stats = (
                 f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
                 f'?application_id={self._get_id_by_reg(region)}'
-                f'&account_id={data["data"][0]["account_id"]}'
+                f'&account_id={player_id}'
                 f'&fields=-statistics.clan'
             )
             await self.rate_limiter.wait()
@@ -292,6 +293,8 @@ class API:
                 except Exception as e:
                     _log.debug(f'Error check player\n{traceback.format_exc()}')
                     raise e
+                else:
+                    return player_id
             
     def done_callback(self, task: asyncio.Task):
         pass
@@ -648,7 +651,7 @@ async def test(
     ) -> PlayerGlobalData | tuple[PlayerGlobalData, float | None]:
     if speed_test:
         start_time = time()
-    db = PlayersDB()
+    # db = PlayersDB()
     api = API()
     data = await api.get_stats(nickname, region)
     if speed_test:

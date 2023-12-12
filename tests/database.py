@@ -28,7 +28,7 @@ def sdb_to_json(db_name: str = 'servers'):
 def tdb_to_json(db_name: str = 'tankopedia'):
     db_name += '.json'
     with open(db_name, 'w', encoding='utf-8') as f:
-        f.write(json.dumps(tdb['root']['id_list'], indent=4))
+        f.write(json.dumps(tdb['root'], indent=4))
         print('database written to json')
 
 def members_count():
@@ -57,4 +57,4 @@ Expiried at: {expiried_at}")
 
 
 if __name__ == '__main__':
-    db_to_json('players')
+    tdb_to_json('tanks')

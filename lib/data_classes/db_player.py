@@ -13,3 +13,7 @@ class DBPlayer(BaseModel):
     image: Optional[str] = None
     locked: bool = False
     verified: bool = False
+    
+class DBPlayerSetResponse(BaseModel):
+    player_data: DBPlayer
+    api_key: str
