@@ -14,6 +14,8 @@ from lib.exceptions.api import APIError
 from lib.settings.settings import Config, EnvConfig
 from workers.pdb_checker import PDBWorker
 
+from lib.database.players import PlayersDB
+
 _log = get_logger(__name__, 'MainLogger', 'logs/main.log')
 
 _config = Config().get()
@@ -75,7 +77,7 @@ class App():
             except APIError:
                 _log.warning('Failed to get tankopedia data, trying next server...')
 
-        if not Config().settings.internal.ignore_tankopedia_failures:
+        if not _config.internal.ignore_tankopedia_failures:
             _log.critical('Failed to get tankopedia data')
             quit(1)
         

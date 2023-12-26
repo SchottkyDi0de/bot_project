@@ -21,6 +21,7 @@ from lib.data_parser.parse_data import get_normalized_data
 from lib.exceptions import api as api_exceptions
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config, EnvConfig
+from lib.data_classes.db_player import DBPlayer
 
 _log = get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
 _config = Config().get()
@@ -182,8 +183,8 @@ class API:
             _config.game_api.urls.get_stats,
             {
                 'reg_url' : self._get_url_by_reg(region),
-                'application_id': self._get_id_by_reg(region),
-                'account_id': player_id
+                'app_id': self._get_id_by_reg(region),
+                'player_id': player_id
             }
         )
         async with session.get(url_get_stats, verify_ssl=False) as response:
@@ -225,7 +226,7 @@ class API:
         _log.debug('Get tankopedia data')
         url_get_tankopedia = (
             f'https://{self._get_url_by_reg(region)}/wotb/encyclopedia/vehicles/'
-            f'?application_id={self._get_id_by_reg(region)}&fields='
+            f'?application_id={self._get_id_by_reg(region)}&language=en&fields='
             f'-description%2C+-engines%2C+-guns%2C-next_tanks%2C+-prices_xp%2C+'
             f'-suspensions%2C+-turrets%2C+-cost%2C+-default_profile%2C+-modules_tree%2C+-images'
         )
@@ -247,7 +248,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def check_player(self, nickname: str, region: str) -> int:
+    async def check_and_get_player(self, nickname: str, region: str, dicrord_id: int) -> DBPlayer | None:
         """
         Check a player's information.
 
@@ -260,7 +261,7 @@ class API:
             SourceNotAvailable: If the source is not available.
 
         Returns:
-            None
+            dict | None: The player's information or None if the player is not found.
         """
         url_get_id = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/list/'
@@ -275,7 +276,13 @@ class API:
             async with session.get(url_get_id, verify_ssl=False) as response:
                 try:
                     data = await self.response_handler(response, check_meta=True)
-                    player_id = data['data'][0]['account_id']
+                    data = data['data'][0]
+                    db_palyer = {
+                        'nickname': data['nickname'],
+                        'game_id': data['account_id'],
+                        'region': region,
+                        'id': dicrord_id
+                    }
                 except Exception as e:
                     _log.debug(f'Error check player\n{traceback.format_exc()}')
                     raise e
@@ -283,7 +290,7 @@ class API:
             url_get_stats = (
                 f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
                 f'?application_id={self._get_id_by_reg(region)}'
-                f'&account_id={player_id}'
+                f'&account_id={db_palyer["game_id"]}'
                 f'&fields=-statistics.clan'
             )
             await self.rate_limiter.wait()
@@ -294,7 +301,7 @@ class API:
                     _log.debug(f'Error check player\n{traceback.format_exc()}')
                     raise e
                 else:
-                    return player_id
+                    return DBPlayer.model_validate(db_palyer)
             
     def done_callback(self, task: asyncio.Task):
         pass
@@ -349,7 +356,7 @@ class API:
             
         self.player['timestamp'] = int(datetime.now().timestamp())
         self.player['end_timestamp'] = int(
-            self.player['timestamp'] +
+            datetime.now().timestamp() +
             _config.session_ttl
         )
         self.player['data'] = self.player_stats

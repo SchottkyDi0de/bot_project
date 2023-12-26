@@ -17,5 +17,5 @@ def insert_data(string: str, key_values: dict[str, str]) -> str:
     """
 
     for _, (key, value) in enumerate(key_values.items()):
-        string = string.replace(f'<{key}>', value, 1)
+        string = string.replace(f'<{key}>', str(value), 1)
     return string

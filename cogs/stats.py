@@ -12,6 +12,7 @@ from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
+from lib.data_classes.db_player import ImageSettings
 from lib.blacklist.blacklist import check_user
 from lib.exceptions.blacklist import UserBanned
 from lib.logger.logger import get_logger
@@ -73,7 +74,13 @@ class Stats(commands.Cog):
         try:
             await ctx.defer()
             Text().load_from_context(ctx)
-            img = await self.get_stats(ctx, nickname, region)
+            user_exists = self.db.check_member(ctx.author.id)
+            if user_exists:
+                image_settings = self.db.get_image_settings(ctx.author.id)
+            else:
+                image_settings = ImageSettings()
+            
+            img = await self.get_stats(ctx, nickname, region, image_settings)
 
             if img is not None:
                 await ctx.respond(file=File(img, 'stats.png'))
@@ -107,17 +114,19 @@ class Stats(commands.Cog):
                 
             else:
                 player_data = self.db.get_member(ctx.author.id)
-                img = await self.get_stats(ctx, player_data['nickname'], player_data['region'])
+                if player_data is not None:
+                    image_settings = self.db.get_image_settings(ctx.author.id)
+                    img = await self.get_stats(ctx, player_data.nickname, player_data.region, image_settings)
 
-                if img is not None:
-                    await ctx.respond(file=File(img, 'stats.png'))
-                    img.close()
+                    if img is not None:
+                        await ctx.respond(file=File(img, 'stats.png'))
+                        img.close()
 
         except Exception:
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
     
-    async def get_stats(self, ctx: commands.Context, nickname: str, region: str):
+    async def get_stats(self, ctx: commands.Context, nickname: str, region: str, image_settings: ImageSettings):
         exception = None
         try:
             data = await self.api.get_stats(nickname, region)
@@ -139,7 +148,7 @@ class Stats(commands.Cog):
             await ctx.respond(embed=getattr(self.err_msg, exception)())
             return None
         else:
-            img_data = self.img_gen.generate(ctx, data)
+            img_data = self.img_gen.generate(ctx, data, image_settings)
             return img_data
 
 

@@ -63,7 +63,6 @@ class PDBWorker:
             None: This function does not return anything.
         """
 
-        for member_id in self.db.db['members'].keys():
+        for member_id in self.db.get_players_ids():
             if self.db.check_member(member_id):
-                self.db._check_data_timestamp(member_id)
                 self.db.check_member_premium(member_id)

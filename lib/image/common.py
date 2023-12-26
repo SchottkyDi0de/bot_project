@@ -14,6 +14,7 @@ from discord.ext.commands import Context
 
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
+from lib.data_classes.db_player import ImageSettings
 import lib.api.async_wotb_api as async_wotb_api
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.locale.locale import Text
@@ -66,10 +67,10 @@ class MedalCoords(Enum):
 
 class BackgroundRectangleMap():
     """Class that defines the coordinates of the background rectangle in the image."""
-    main = (25, 85, 675, 230)
-    medals = (25, 245, 675, 410)
-    rating = (25, 425, 675, 575)
-    total = (25, 590, 675, 1210)
+    main = (55, 85, 645, 230)
+    medals = (55, 245, 645, 410)
+    rating = (55, 425, 645, 575)
+    total = (55, 590, 645, 1210)
 
 class Fonts():
     """Class that defines different fonts used in the application."""
@@ -261,7 +262,7 @@ class ValueNormalizer():
         return '{:.2f}'.format(val)
 
     @staticmethod
-    def other(val, enable_null=False):
+    def other(val, enable_null=False, str_bypass=False):
         """
         Normalizes a value.
 
@@ -278,6 +279,10 @@ class ValueNormalizer():
                     rounded to 2 decimal places and appended with 'M'.
                   Otherwise, returns the value as a string.
         """
+        if str_bypass:
+            if type(val) == str:
+                return val
+        
         if round(val) == 0:
             if not enable_null:
                 return '—'
@@ -343,6 +348,7 @@ class Colors():
     cyan = (30, 187, 169)    # Represents the color cyan
     grey = (121, 121, 121)   # Represents the color grey
     l_grey = (200, 200, 200) # Represents the color light grey
+    white = (240, 240, 240)  # Represents the color white
 
 
 @singleton
@@ -350,7 +356,6 @@ class ImageGen():
     text = None
     fonts = Fonts()
     leagues = Leagues()
-    cache = FIFOCache(maxsize=100, ttl=60)
     flags = Flags()
     value = None
     data = None
@@ -367,45 +372,18 @@ class ImageGen():
 
     def generate(self,
                 ctx: Context | None,
-                data: PlayerGlobalData, 
-                speed_test: bool = False, 
-                disable_cache: bool = True,
+                data: PlayerGlobalData,
+                image_settings: ImageSettings,
+                speed_test: bool = False,
                 debug_label: bool = False,
                     ) -> BytesIO | float:
-        
-        default_bg = False
+            
         self.text = Text().get()
         start_time = time()
-        need_caching = False
-        current_lang = Text().get_current_lang()
         pdb = PlayersDB()
         sdb = ServersDB()
-
-        if speed_test:
-            disable_cache = True
-
-        cached_data = self.cache.get((str(data.id), current_lang))
-
-        if disable_cache:
-            cached_data = None
-        if cached_data is None:
-            need_caching = True
-            _log.debug('Cache miss')
-        else:
-            _log.debug('Image loaded from cache')
-            self.draw_cache_label(cached_data)
-            bin_image = BytesIO()
-            cached_data.save(bin_image, 'PNG')
-            bin_image.seek(0)
-            _log.debug(
-                'Image was sent in %s sec.', 
-                round(time() - start_time, 4)
-                )
-            return bin_image
+        self.image_settings = image_settings
         
-        if ctx == None:
-            default_bg = True
-
         bin_image = None
         self.data = data
         self.values = Values(data)
@@ -413,30 +391,33 @@ class ImageGen():
         self.stat_rating = data.data.statistics.rating
         self.achievements = data.data.achievements
 
-        if not default_bg:
-            if pdb.check_member_premium(ctx.author.id):
-                if pdb.get_member_image(ctx.author.id) is not None:
-                    image_bytes = base64.b64decode(pdb.get_member_image(ctx.author.id))
-                    if image_bytes != None:
-                        image_buffer = BytesIO(image_bytes)
-                        self.image = Image.open(image_buffer)
-                        # self.image.resize((700, 1250), Image.Resampling.BICUBIC)
-                        # self.image = self.image.convert('RGBA')
+        if image_settings.use_custom_bg:
+            if pdb.get_member_image(ctx.author.id) is not None:
+                image_bytes = base64.b64decode(pdb.get_member_image(ctx.author.id))
+                if image_bytes != None:
+                    image_buffer = BytesIO(image_bytes)
+                    self.image = Image.open(image_buffer)
+                    self.image = self.image.convert('RGBA')
             
-            elif sdb.check_server_premium(ctx.guild.id):
-                if sdb.get_server_image(ctx.guild.id) is not None:
-                    image_bytes = base64.b64decode(sdb.get_server_image(ctx.guild.id))
-                    if image_bytes != None:   
-                        image_buffer = BytesIO(image_bytes)
-                        self.image = Image.open(image_buffer)
-                        # self.image = self.image.resize((700, 1250), Image.Resampling.BICUBIC)
-                        # self.image = self.image.convert('RGBA')
+            elif sdb.get_server_image(ctx.guild.id) is not None:
+                image_bytes = base64.b64decode(sdb.get_server_image(ctx.guild.id))
+                if image_bytes != None:   
+                    image_buffer = BytesIO(image_bytes)
+                    self.image = Image.open(image_buffer)
             else:
-                self.image = Image.open('res/image/default_image/common_stats.png')
-                default_bg = True
+                self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
+
+                if self.image.mode != 'RGBA':
+                    self.image.convert('RGBA').save('res/image/default_image/default_bg.png')
+                    self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
         else:
-            self.image = Image.open('res/image/default_image/common_stats.png')
-            default_bg = True
+            self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
+
+            if self.image.mode != 'RGBA':
+                self.image.convert('RGBA').save('res/image/default_image/default_bg.png')
+                self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
+        
+        self.image = self.image.crop((0, 50, 700, 1300))
 
         self.img_size = self.image.size
         self.coord = Coordinates(self.img_size)
@@ -444,12 +425,13 @@ class ImageGen():
 
         _log.debug(f'Generate modele debug: image size: {self.image.size}')
 
-        if not default_bg:
-            self.darw_backround()
-            self.draw_stats_icons()
-            self.draw_medals()
+        self.darw_backround()
+        self.draw_stats_icons()
+        self.draw_medals()
 
-        self.draw_flag()
+        if not image_settings.disable_flag:
+            self.draw_flag()
+        
         self.draw_rating_icon()
         self.draw_category_labels(img_draw)
         self.draw_medals_labels(img_draw)
@@ -470,10 +452,6 @@ class ImageGen():
         # self.draw_main_points(img_draw)
         # self.draw_rating_points(img_draw)
         # self.darw_common_points(img_draw)
-
-        if need_caching:
-            self.cache.set((str(data.id), current_lang), self.image)
-            _log.debug('Image added to cache')
 
         bin_image = BytesIO()
         self.image.save(bin_image, 'PNG')
@@ -505,8 +483,10 @@ class ImageGen():
         )
 
     def darw_backround(self) -> None:
-        background_map = Image.new(mode='RGBA', size=self.image.size, color=(0, 0, 0, 0))
+        gaussian_filter = ImageFilter.GaussianBlur(radius=self.image_settings.glass_effect)
+        background_map = Image.new('RGBA', (700, 1250), (0, 0, 0, 0))
         img_draw = ImageDraw.Draw(background_map)
+        print(f'Image {self.image.mode} size: {self.image.size}')
 
         # draw nickanme rectangle
         text_box = img_draw.textbbox(
@@ -535,10 +515,10 @@ class ImageGen():
         img_draw.rounded_rectangle(self.background_rectangles_map.total, radius=30, fill=(0, 0, 0))
 
         bg = self.image.copy()
-        gaussian_filter = ImageFilter.GaussianBlur(radius=5)
-
-        bg = bg.filter(gaussian_filter)
-        bg = ImageEnhance.Brightness(bg).enhance(0)
+        if not self.image_settings.glass_effect == 0:
+            bg = bg.filter(gaussian_filter)
+        if not self.image_settings.blocks_bg_brightness == 100:
+            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_brightness)
 
         self.image.paste(bg, (0, 0), background_map)
 
@@ -562,13 +542,47 @@ class ImageGen():
         self.image.paste(rt_img, (326, 460), rt_img)
 
 
-    def draw_nickname(self, img: Image.Image):
-        img.text(
-            (self.img_size[0]//2, 20),
-            text=self.data.data.name_and_tag,
-            font=self.fonts.roboro_icon,
-            anchor='ma',
-            fill=Colors.blue)
+    def draw_nickname(self, img: ImageDraw.ImageDraw):
+        if self.image_settings.hide_nickanme:
+            self.data.nickname = 'PLAYER'
+        if self.image_settings.hide_clan_tag:
+            self.data.data.clan_tag = None
+        if not self.data.data.clan_tag is None:
+            tag = {
+                'text':     f'[{self.data.data.clan_stats.tag}]',
+                'font':     self.fonts.roboto,
+            }
+            nickname = {
+                'text':     self.data.nickname,
+                'font':     self.fonts.roboto,
+            }
+            
+            tag_length = img.textlength(**tag) + 10
+            nick_length = img.textlength(**nickname)
+            full_length = tag_length + nick_length
+            
+            img.text(
+                xy=(self.img_size[0]//2 - tag_length//2, 20),
+                text=self.data.nickname,
+                font=self.fonts.roboto,
+                anchor='ma',
+                fill=self.image_settings.nickname_color)
+            
+            img.text(
+                xy=(self.img_size[0]//2 + full_length//2 - tag_length//2, 20),
+                text=tag['text'],
+                font=self.fonts.roboto,
+                anchor='ma',
+                fill=self.image_settings.clan_tag_color)
+        else:
+            img.text(
+                (self.img_size[0]//2, 20),
+                text=self.data.nickname,
+                font=self.fonts.roboto,
+                anchor='ma',
+                fill=self.image_settings.nickname_color
+            )
+        
         img.text(
             (self.img_size[0]//2, 55),
             text=f'ID: {str(self.data.id)}',
@@ -587,7 +601,7 @@ class ImageGen():
                 text=getattr(self.text.for_image, i),
                 font=self.fonts.roboto_small,
                 anchor='mm',
-                fill=Colors.blue
+                fill=self.image_settings.main_text_color
             )
 
     def draw_medals_labels(self, img: ImageDraw.ImageDraw):
@@ -598,7 +612,7 @@ class ImageGen():
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
-                fill=Colors.blue
+                fill=self.image_settings.stats_text_color
             )
 
     def draw_common_labels(self, img: ImageDraw.ImageDraw):
@@ -609,7 +623,7 @@ class ImageGen():
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
-                fill=Colors.blue
+                fill=self.image_settings.stats_text_color
             )
 
     def draw_cache_label(self, img: Image.Image):
@@ -623,7 +637,7 @@ class ImageGen():
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
-                fill=Colors.blue
+                fill=self.image_settings.stats_text_color
             )
 
     def draw_rating_labels(self, img: ImageDraw.ImageDraw):
@@ -634,7 +648,7 @@ class ImageGen():
                 font=self.fonts.roboto_small2,
                 anchor='ma',
                 align='center',
-                fill=Colors.blue
+                fill=self.image_settings.stats_text_color
             )
         self._rating_label_handler(img)
 
@@ -659,7 +673,7 @@ class ImageGen():
             font=self.fonts.roboto_small2,
             anchor='ma',
             # align='center',
-            fill=Colors.blue
+            fill=self.image_settings.stats_text_color
         )
 
     def draw_main_stats(self, img: Image.Image):
@@ -669,6 +683,7 @@ class ImageGen():
                 text=self.values.main[i],
                 font=self.fonts.roboto,
                 anchor='mm',
+                fill=self.image_settings.stats_color
             )
 
     def draw_rating_stats(self, img: Image.Image):
@@ -678,6 +693,7 @@ class ImageGen():
                 text=self.values.rating[i],
                 font=self.fonts.roboto,
                 anchor='ma',
+                fill=self.image_settings.stats_color
             )
 
     def darw_common_stats(self, img: Image.Image):
@@ -687,6 +703,7 @@ class ImageGen():
                 text=self.values.common[i],
                 font=self.fonts.roboto,
                 anchor='ma',
+                fill=self.image_settings.stats_color
             )
 
     def darw_medal_count(self, img: Image.Image):
@@ -696,6 +713,7 @@ class ImageGen():
                 text=str(getattr(self.achievements, i)),
                 font=self.fonts.roboto_small2,
                 anchor='ma',
+                fill=self.image_settings.stats_color
             )
 
     def draw_main_points(self, img: Image.Image):
@@ -716,17 +734,6 @@ class ImageGen():
                 font=self.fonts.point,
                 anchor='mm',
                 fill=self.point_coloring(i, getattr(self.data.data.statistics.all, i))
-            )
-
-    def draw_rating_points(self, img: Image.Image):
-        for i in self.coord.rating_stats_point.keys():
-            img.text(
-                self.coord.rating_stats_point[i],
-                text='.',
-                font=self.fonts.point,
-                anchor='mm',
-                fill=self.point_coloring(i, getattr(
-                    self.data.data.statistics.rating, i), rating=True)
             )
 
     def darw_common_points(self, img: Image.Image):

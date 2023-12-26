@@ -57,4 +57,4 @@ Expiried at: {expiried_at}")
 
 
 if __name__ == '__main__':
-    tdb_to_json('tanks')
+    db_to_json('players')

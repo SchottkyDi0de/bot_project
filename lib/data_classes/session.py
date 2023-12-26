@@ -6,6 +6,7 @@ class TankSessionData(BaseModel):
     tank_name: str
     tank_tier: int
     tank_type: str
+    tank_id: int
     
     d_winrate: float
     d_avg_damage: int
@@ -51,10 +52,10 @@ class RatingSession(BaseModel):
     battles: int
     
 
-class SesionDiffData(BaseModel):
+class SessionDiffData(BaseModel):
     main_diff: MainDiff
     main_session: MainSession
     rating_diff: RatingDiff
     rating_session: RatingSession
     tank_stats: List[TankSessionData]
-    tank_id: List[int]
+    tank_ids: List[int]

@@ -59,7 +59,7 @@ class Session(commands.Cog):
 
             if self.db.check_member(ctx.author.id):
                 member = self.db.get_member(ctx.author.id)
-                last_stats = await self.api.get_stats(member['nickname'], member['region'])
+                last_stats = await self.api.get_stats(member.nickname, member.region)
                 self.db.set_member_last_stats(ctx.author.id, last_stats.model_dump())
                 await ctx.respond(embed=self.inf_msg.session_started())
             else:
@@ -83,7 +83,7 @@ class Session(commands.Cog):
                 }
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def get_session(self, ctx):
+    async def get_session(self, ctx: commands.Context):
         try:
             check_user(ctx)
         except UserBanned:
@@ -95,14 +95,15 @@ class Session(commands.Cog):
 
             if self.db.check_member(ctx.author.id):
                 member = self.db.get_member(ctx.author.id)
+                image_settings = self.db.get_image_settings(ctx.author.id)
 
                 try:
-                    stats = await self.api.get_stats(member['nickname'], member['region'])
+                    stats = await self.api.get_stats(member.nickname, member.region)
                 except api.APIError:
                     await ctx.respond(embed=self.err_msg.api_error())
                     return
 
-                last_stats = self.db.get_member_last_stats(member['id'])
+                last_stats = self.db.get_member_last_stats(member.id)
 
                 if last_stats is None:
                     await ctx.respond(embed=self.err_msg.session_not_found())
@@ -122,7 +123,7 @@ class Session(commands.Cog):
                     await ctx.respond(embed=self.err_msg.session_not_updated())
                     return
                 
-                image = ImageGen().generate(stats, diff_stats)
+                image = ImageGen().generate(stats, diff_stats, ctx, image_settings)
                 self.db.extend_session(ctx.author.id)
                 await ctx.respond(file=File(image, 'session.png'))
                 return
@@ -174,7 +175,7 @@ class Session(commands.Cog):
                     now_time = datetime.now().timestamp()
                     passed_time = now_time - session_timestamp
                     try:
-                        end_time = self.db.get_session_endtime(ctx.author.id)
+                        end_time = self.db.get_session_end_time(ctx.author.id)
                     except database.MemberNotFound:
                         await ctx.respond(
                             embed=self.inf_msg.custom(
@@ -236,7 +237,7 @@ class Session(commands.Cog):
 
 async def on_error(self, ctx: commands.Context, _):
         _log.error(traceback.format_exc())
-        await ctx.respond(embed=self.err_msg.cooldown_not_expired())
+        await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
 
 def setup(bot):
     for i in ['get_session', 'session_state']:

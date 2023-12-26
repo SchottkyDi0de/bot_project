@@ -55,6 +55,6 @@ class Config():
     def get(self) -> ConfigStruct:
         """
         Return settings object.
-        See struct in: lib/data_classes/settings.py
+        See struct in: `lib/data_classes/settings.py`
         """
         return self.cfg

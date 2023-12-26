@@ -9,7 +9,7 @@ from pywebio.platform.fastapi import asgi_app
 import uvicorn
 
 from lib.api.async_wotb_api import API
-from lib.data_classes.db_player import DBPlayer, DBPlayerSetResponse
+from lib.data_classes.db_player import DBPlayer
 from lib.data_classes.internal_api.err_response import ErrorResponse
 from lib.data_classes.internal_api.inf_response import InfoResponse
 from lib.database.players import PlayersDB
