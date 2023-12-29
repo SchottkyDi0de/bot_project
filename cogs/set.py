@@ -1,10 +1,13 @@
+import io
+import base64
 import traceback
 
-from discord import Option
+from PIL import Image
+from discord import Option, Attachment
 from discord.ext import commands
 
+from lib.image.utils.resizer import resize_image, ResizeMode
 from lib.settings.settings import Config
-from lib.exceptions.database import MemberNotFound
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.locale.locale import Text
@@ -13,21 +16,27 @@ from lib.embeds.info import InfoMSG
 from lib.blacklist.blacklist import check_user
 from lib.exceptions.blacklist import UserBanned
 from lib.logger.logger import get_logger
-from lib.settings.settings import Config
 from lib.api.async_wotb_api import API
 from lib.exceptions import api
+from lib.auth.dicord import DiscordOAuth
+from lib.data_classes.db_server import DBServer, ServerSettings, set_server_settings
+from lib.data_classes.db_player import DBPlayer, ImageSettings, set_image_settings
+from lib.image.utils.hex_color_validator import hex_color_validate
+from lib.utils.string_parser import insert_data
 
 _log = get_logger(__name__, 'CogSetLogger', 'logs/cog_set.log')
+_config = Config().get()
 
 
 class Set(commands.Cog):
     def __init__(self, bot) -> None:
-        self.bot = bot
-        self.db = PlayersDB()
-        self.sdb = ServersDB()
+        self.discord_oauth = DiscordOAuth()
         self.err_msg = ErrorMSG()
         self.inf_msg = InfoMSG()
+        self.sdb = ServersDB()
+        self.db = PlayersDB()
         self.api = API()
+        self.bot = bot
         
     @commands.slash_command(
             guild_only=True,
@@ -47,7 +56,7 @@ class Set(commands.Cog):
                     'pl': Text().get('pl').cmds.set_lang.descr.sub_descr.lang_list,
                     'uk': Text().get('ua').cmds.set_lang.descr.sub_descr.lang_list
                 },
-                choices=Config().get().default.available_locales,
+                choices=_config.default.available_locales,
                 required=True
             ),
         ):
@@ -72,7 +81,15 @@ class Set(commands.Cog):
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
         
-    @commands.slash_command(guild_only=True)
+    @commands.slash_command(
+        guild_only=True,
+        description=Text().get('en').cmds.set_player.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.set_player.descr.this,
+            'pl': Text().get('pl').cmds.set_player.descr.this,
+            'uk': Text().get('ua').cmds.set_player.descr.this
+            }
+        )
     async def set_player(self, ctx: commands.Context, 
             nickname: Option(
                 str,
@@ -94,7 +111,7 @@ class Set(commands.Cog):
                     'pl': Text().get('pl').frequent.common.region,
                     'uk': Text().get('ua').frequent.common.region
                 },
-                choices=Config().get().default.available_regions,
+                choices=_config.default.available_regions,
                 required=True
             )
         ):
@@ -108,7 +125,7 @@ class Set(commands.Cog):
             Text().load_from_context(ctx)
             
             try:
-                await self.api.check_player(nickname, region)
+                player = await self.api.check_and_get_player(nickname, region, ctx.author.id)
             except api.NoPlayersFound:
                 await ctx.respond(embed=ErrorMSG().player_not_found())
             except api.NeedMoreBattlesError:
@@ -116,15 +133,609 @@ class Set(commands.Cog):
             except api.APIError:
                 await ctx.respond(embed=ErrorMSG().api_error())
             else:
-                self.db.set_member(ctx.author.id, nickname, region)
+                self.db.set_member(player, override=True)
                 _log.debug(f'Set player: {ctx.author.id} {nickname} {region}')
                 await ctx.respond(embed=self.inf_msg.set_player_ok())
 
-            
         except Exception :
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
+
+    # @commands.slash_command(guild_only=True)
+    # async def setup_server(
+    #         self,
+    #         ctx: commands.Context
+    #     ):
+    #     try:
+    #         check_user(ctx)
+    #     except UserBanned:
+    #         return
         
+    #     try:
+    #         if not self.sdb.check_server(ctx.guild.id):
+    #             self.sdb.set_new_server(ctx.guild.id, ctx.guild.name)
+    #             await ctx.respond('`Set ok`')
+    #         else:
+    #             await ctx.respond('`Error, server already set`')
+    #     except Exception:
+    #         _log.error(traceback.format_exc())
+    #         await ctx.respond(embed=self.err_msg.unknown_error())
+
+    @commands.slash_command(
+        guild_only=True,
+        description=Text().get('en').cmds.server_settings.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.server_settings.descr.this,
+            'pl': Text().get('pl').cmds.server_settings.descr.this,
+            'uk': Text().get('ua').cmds.server_settings.descr.this
+            }
+        )
+    async def server_settings (
+            self,
+            ctx: commands.Context,
+            allow_custom_backgrounds: Option(
+                bool,
+                description=Text().get('en').cmds.server_settings.descr.sub_descr.allow_custom_backgrounds,
+                description_localizations={
+                    'ru': Text().get('ru').cmds.server_settings.descr.sub_descr.allow_custom_backgrounds,
+                    'pl': Text().get('pl').cmds.server_settings.descr.sub_descr.allow_custom_backgrounds,
+                    'uk': Text().get('ua').cmds.server_settings.descr.sub_descr.allow_custom_backgrounds
+                },
+                required=False,
+            )
+        ):
+        Text().load_from_context(ctx)
+        
+        try:
+            check_user(ctx)
+        except UserBanned:
+            return
+
+        try:
+            if ctx.author.guild_permissions.administrator:
+                settings = self.sdb.get_server_settings(ctx)
+                self.sdb.set_server_settings(
+                    ctx,
+                    set_server_settings(
+                        allow_custom_backgrounds=allow_custom_backgrounds if allow_custom_backgrounds is not None else settings.allow_custom_backgrounds
+                    )
+                )
+                await ctx.respond(
+                    embed=self.inf_msg.custom(
+                        Text().get(),
+                        Text().get().cmds.server_settings.info.set_ok,
+                    )
+                )
+            else:
+                await ctx.respond(embed=self.err_msg.custom(
+                    Text().get(),
+                    Text().get().cmds.server_settings.errors.permission_denied
+                    )
+                )
+        except Exception:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
+
+    @commands.slash_command(
+        guild_only=True,
+        description=Text().get().cmds.set_background.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.set_background.descr.this,
+            'pl': Text().get('pl').cmds.set_background.descr.this,
+            'uk': Text().get('ua').cmds.set_background.descr.this
+            }
+        )
+    async def set_background(
+            self,
+            ctx: commands.Context,
+            image: Option(
+                Attachment,
+                description=Text().get().cmds.set_background.descr.sub_descr.image,
+                description_localizations={
+                    'ru': Text().get('ru').cmds.set_background.descr.sub_descr.image,
+                    'pl': Text().get('pl').cmds.set_background.descr.sub_descr.image,
+                    'uk': Text().get('ua').cmds.set_background.descr.sub_descr.image
+                },
+                required=True
+                ),
+                server: Option(
+                    bool,
+                    description=Text().get().cmds.set_background.descr.sub_descr.server,
+                    description_localizations={
+                        'ru': Text().get('ru').cmds.set_background.descr.sub_descr.server,
+                        'pl': Text().get('pl').cmds.set_background.descr.sub_descr.server,
+                        'uk': Text().get('ua').cmds.set_background.descr.sub_descr.server
+                    },
+                    required=False
+                ),
+                resize_mode: Option(
+                    str, #TODO
+                    description='Test resize mode',
+                    required=False,
+                    default='AUTO',
+                    choices=['AUTO', 'RESIZE', 'CROP_OR_FILL'],
+                )
+            ):
+        try:
+            check_user(ctx)
+        except UserBanned:
+            return
+        
+        if not self.db.check_member(ctx.author.id):
+            await ctx.respond(
+                    embed=self.err_msg.custom(
+                        Text().get(),
+                        text=Text().get().cmds.set_background.errors.player_not_registred
+                        )
+                )
+            return
+        
+        
+        try:
+            Text().load_from_context(ctx)
+            image: Attachment = image
+            await ctx.defer()
+
+            if image.content_type not in ['image/png', 'image/jpeg']:
+                await ctx.respond(
+                    embed=self.err_msg.custom(
+                        Text().get(),
+                        text=Text().get().cmds.set_background.errors.file_error
+                    )
+                )
+                return
+            
+            if image.size > 2_097_152:
+                await ctx.respond(
+                    embed=self.err_msg.custom(
+                        Text().get(),
+                        text=Text().get().cmds.set_background.errors.oversize
+                    )
+                )
+                return
+            
+            if image.width > 2048 or image.height > 2048:
+                await ctx.respond(
+                    embed=self.err_msg.custom(
+                        Text().get(),
+                        text=Text().get().cmds.set_background.errors.overresolution
+                    )
+                )
+                return
+            
+            if image.width < 256 or image.height < 256:
+                await ctx.respond(
+                    embed=self.err_msg.custom(
+                        Text().get(),
+                        text=Text().get().cmds.set_background.errors.small_resolution
+                    )
+                )
+                return
+
+            if server:
+                if ctx.author.guild_permissions.administrator:
+                    with io.BytesIO() as buffer:
+                        await image.save(buffer)
+                        pil_image = Image.open(buffer)
+                        pil_image = pil_image.convert('RGBA')
+                        pil_image = resize_image(pil_image, (700, 1350), mode=getattr(ResizeMode, resize_mode))
+                    with io.BytesIO() as buffer:
+                        pil_image.save(buffer, format='PNG')
+                        self.sdb.set_server_image(
+                            base64.b64encode(buffer.getvalue()).decode(),
+                            ctx
+                        )
+                        await ctx.respond(
+                            embed=self.inf_msg.custom(
+                            Text().get(),
+                            text=Text().get().cmds.set_background.info.set_background_ok,
+                            colour='green'
+                            )
+                        )
+                else:
+                    await ctx.respond(
+                        embed=self.err_msg.custom(
+                            Text().get(),
+                            text=Text().get().cmds.set_background.errors.permission_denied
+                        )
+                    )
+                    
+                return
+
+            with io.BytesIO() as buffer:
+                await image.save(buffer)
+                pil_image = Image.open(buffer)
+                pil_image = pil_image.convert('RGBA')
+                pil_image = resize_image(pil_image, (700, 1350), mode=getattr(ResizeMode, resize_mode))
+            with io.BytesIO() as buffer:
+                pil_image.save(buffer, format='PNG')
+                self.db.set_member_image(
+                    ctx.author.id,
+                    base64.b64encode(buffer.getvalue()).decode(),
+                )
+                await ctx.respond(
+                    embed=self.inf_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.set_background.info.set_background_ok,
+                    colour='green'
+                        )
+                    )
+                    
+        except Exception:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
+            
+    @commands.slash_command(
+        description=Text().get('en').cmds.image_settings.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.image_settings.descr.this,
+            'pl': Text().get('pl').cmds.image_settings.descr.this,
+            'uk': Text().get('ua').cmds.image_settings.descr.this
+            }
+        )
+    async def image_settings(
+        self,
+        ctx: commands.Context,
+        use_custom_bg: Option(
+            bool,
+            required=False,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.use_custom_bg,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.use_custom_bg,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.use_custom_bg,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.use_custom_bg
+                }
+            ),
+        glass_effect: Option(
+            int,
+            required=False,
+            min_value=0,
+            max_value=15,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.glass_effect,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.glass_effect,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.glass_effect,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.glass_effect
+                }
+            ),
+        blocks_bg_brightness: Option(
+            int,
+            min_value=0,
+            max_value=100,
+            required=False,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.blocks_bg_brightness,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.blocks_bg_brightness,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.blocks_bg_brightness,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.blocks_bg_brightness
+                }
+            ),
+        nickname_color: Option(
+            str,
+            required=False,
+            min_length=4,
+            max_length=7,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.nickname_color,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.nickname_color,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.nickname_color,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.nickname_color
+                }
+            ),
+        clan_tag_color: Option(
+            str,
+            required=False,
+            min_length=4,
+            max_length=7,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.clan_tag_color,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.clan_tag_color,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.clan_tag_color,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.clan_tag_color
+                }
+            ),
+        stats_color: Option(
+            str,
+            required=False,
+            min_length=4,
+            max_length=7,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.stats_color,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.stats_color,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.stats_color,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.stats_color
+                }
+            ),
+        main_text_color: Option(
+            str,
+            required=False,
+            min_length=4,
+            max_length=7,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.main_text_color,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.main_text_color,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.main_text_color,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.main_text_color
+                }
+            ),
+        stats_text_color: Option(
+            str,
+            required=False,
+            min_length=4,
+            max_length=7,  
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.stats_text_color,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.stats_text_color,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.stats_text_color,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.stats_text_color
+                }
+            ),
+        disable_flag: Option(
+            bool,
+            required=False,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.disable_flag,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.disable_flag,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_flag,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_flag
+                }
+            ),
+        hide_nickname: Option(
+            bool,
+            required=False,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.hide_nickname,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.hide_nickname,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.hide_nickname,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.hide_nickname
+                }
+            ),
+        hide_clan_tag: Option(
+            bool,
+            required=False,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.hide_clan_tag,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.hide_clan_tag,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.hide_clan_tag,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.hide_clan_tag
+                }
+            ),
+        disable_stats_blocks: Option(
+            bool,
+            required=False,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.disable_stats_blocks,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.disable_stats_blocks,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_stats_blocks,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_stats_blocks
+                }
+            ),
+        disable_rating_stats: Option(
+            bool,
+            required=False,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.disable_rating_stats,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.disable_rating_stats,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_rating_stats,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_rating_stats
+                }
+            )
+        ):
+        try:
+            check_user(ctx)
+        except UserBanned:
+            return
+        
+        try:
+            image_settings = self.db.get_image_settings(ctx.author.id)
+            Text().load_from_context(ctx)
+            image_settings = set_image_settings(
+                use_custom_bg=use_custom_bg if use_custom_bg is not None else image_settings.use_custom_bg,
+                blocks_bg_brightness=(blocks_bg_brightness / 100) if blocks_bg_brightness is not None else image_settings.blocks_bg_brightness,
+                glass_effect=glass_effect if glass_effect is not None else image_settings.glass_effect,
+                nickname_color=nickname_color if hex_color_validate(nickname_color) else image_settings.nickname_color,
+                clan_tag_color=clan_tag_color if hex_color_validate(clan_tag_color) else image_settings.clan_tag_color,
+                stats_color=stats_color if hex_color_validate(stats_color) else image_settings.stats_color,
+                main_text_color=main_text_color if hex_color_validate(main_text_color) else image_settings.main_text_color,
+                stats_text_color=stats_text_color if hex_color_validate(stats_text_color) else image_settings.stats_text_color,
+                disable_flag=disable_flag if disable_flag is not None else image_settings.disable_flag,
+                hide_nickname=hide_nickname if hide_nickname is not None else image_settings.hide_nickname,
+                hide_clan_tag=hide_clan_tag if hide_clan_tag is not None else image_settings.hide_clan_tag,
+                disable_stats_blocks=disable_stats_blocks if disable_stats_blocks is not None else image_settings.disable_stats_blocks,
+                disable_rating_stats=disable_rating_stats if disable_rating_stats is not None else image_settings.disable_rating_stats
+            )
+            self.db.set_image_settings(ctx.author.id, image_settings)
+            await ctx.respond(
+                embed=self.inf_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.image_settings.info.set_ok,
+                    colour='green'
+                )
+            )
+        except Exception:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
+        
+    @commands.slash_command(
+        description=Text().get('en').cmds.image_settings_get.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.image_settings_get.descr.this,
+            'pl': Text().get('pl').cmds.image_settings_get.descr.this,
+            'uk': Text().get('ua').cmds.image_settings_get.descr.this
+            }
+        )
+    async def image_settings_get(self, ctx: commands.Context):
+        try:
+            check_user(ctx)
+        except UserBanned:
+            return
+        
+        try:
+            Text().load_from_context(ctx)
+            image_settings = self.db.get_image_settings(ctx.author.id)
+            embed = self.inf_msg.custom(
+                Text().get(),
+                title=Text().get().cmds.image_settings_get.info.get_ok,
+                text=insert_data(
+                    Text().get().cmds.image_settings_get.items.settings_list,
+                    {
+                        'use_custom_bg': image_settings.use_custom_bg,
+                        'blocks_bg_brightness': image_settings.blocks_bg_brightness,
+                        'glass_effect': image_settings.glass_effect,
+                        'nickname_color': image_settings.nickname_color,
+                        'clan_tag_color': image_settings.clan_tag_color,
+                        'stats_color': image_settings.stats_color,
+                        'main_text_color': image_settings.main_text_color,
+                        'stats_text_color': image_settings.stats_text_color,
+                        'disable_flag': image_settings.disable_flag,
+                        'hide_nickname': image_settings.hide_nickname,
+                        'hide_clan_tag': image_settings.hide_clan_tag,
+                        'disable_stats_blocks': image_settings.disable_stats_blocks,
+                        'disable_rating_stats': image_settings.disable_rating_stats
+                    }
+                ),
+            )
+            await ctx.respond(embed=embed)
+        except Exception:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
+            
+    @commands.slash_command(
+        description=Text().get('en').cmds.image_settings_reset.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.image_settings_reset.descr.this,
+            'pl': Text().get('pl').cmds.image_settings_reset.descr.this,
+            'uk': Text().get('ua').cmds.image_settings_reset.descr.this
+        }
+        )
+    async def image_settings_reset(self, ctx: commands.Context):
+        try:
+            check_user(ctx)
+        except UserBanned:
+            return
+        try:
+            self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate({}))
+            await ctx.respond(
+                embed=self.inf_msg.custom(
+                    Text().get(),
+                    Text().get().cmds.image_settings_reset.info.reset_ok
+                    )
+                )
+        except Exception:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
+    
+    @commands.slash_command(
+        guild_only=True,
+        description=Text().get('en').cmds.server_settings_get.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.server_settings_get.descr.this,
+            'pl': Text().get('pl').cmds.server_settings_get.descr.this,
+            'uk': Text().get('ua').cmds.server_settings_get.descr.this
+        }
+    )
+    async def server_settings_get(self, ctx: commands.Context):
+        try:
+            check_user(ctx)
+        except UserBanned:
+            return
+        
+        try:
+            Text().load_from_context(ctx)
+            server_settings = self.sdb.get_server_settings(ctx)
+            embed = self.inf_msg.custom(
+                Text().get(),
+                title=Text().get().cmds.server_settings_get.info.get_ok,
+                text=insert_data(
+                    Text().get().cmds.server_settings_get.items.settings_list,
+                    {
+                        'allow_custom_backgrounds': server_settings.allow_custom_backgrounds
+                    }
+                ),
+            )
+            await ctx.respond(embed=embed)
+            
+        except Exception:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
+            
+    @commands.slash_command(
+        description=Text().get('en').cmds.reset_background.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.reset_background.descr.this,
+            'pl': Text().get('pl').cmds.reset_background.descr.this,
+            'uk': Text().get('ua').cmds.reset_background.descr.this
+        }
+    )   
+    async def unset_background(
+        self,
+        ctx: commands.Context,
+        server: Option(
+            bool,
+            description=Text().get().cmds.reset_background.descr.sub_descr.server,
+            description_localizations={
+                'ru': Text().get('ru').cmds.reset_background.descr.sub_descr.server,
+                'pl': Text().get('pl').cmds.reset_background.descr.sub_descr.server,
+                'uk': Text().get('ua').cmds.reset_background.descr.sub_descr.server
+            },
+            required=False,
+            default=False
+            )
+        ):
+        try:
+            check_user(ctx)
+        except UserBanned:
+            return
+        
+        Text().load_from_context(ctx)
+        try:
+            if server:
+                if ctx.author.guild_permissions.administrator:
+                    self.sdb.del_server_image(ctx.guild.id)
+                    await ctx.respond(
+                        embed=self.inf_msg.custom(
+                            Text().get(),
+                            text=Text().get().cmds.reset_background.info.unset_background_ok,
+                            colour='green'
+                        )
+                    )
+                else:
+                    await ctx.respond(
+                        embed=self.err_msg.custom(
+                            Text().get(),
+                            text=Text().get().cmds.reset_background.errors.permission_denied
+                        )
+                    )
+            elif self.db.check_member(ctx.author.id):
+                self.db.del_member_image(ctx.author.id)
+                await ctx.respond(
+                    embed=self.inf_msg.custom(
+                        Text().get(),
+                        text=Text().get().cmds.reset_background.info.unset_background_ok,
+                        colour='green'
+                    )
+                )
+            else:
+                await ctx.respond(
+                    embed=self.err_msg.custom(
+                        Text().get(),
+                        tetx=Text().get().cmds.set_background.errors.player_not_registred
+                    )
+                )
+                
+        except Exception:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
+
+    # @commands.slash_command(description='Test authorization')
+    # async def auth(self, ctx: commands.Context):
+    #     try:
+    #         check_user(ctx)
+    #     except UserBanned:
+    #         return
+        
+    #     await ctx.user.send(self.discord_oauth.auth_url)
+    #     # TODO: Authorization added in next update
 
 def setup(bot):
     bot.add_cog(Set(bot))

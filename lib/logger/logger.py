@@ -1,7 +1,6 @@
 import logging
 
 
-# Если один раз настроить root logger, то не понадобится настраивать каждый именованый логгер.
 def get_logger(python_name: str, logger_name: str, file_name: str):
 
     logger = logging.getLogger(logger_name)

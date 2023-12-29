@@ -1,4 +1,5 @@
 ---
+
 # This localization file use placeholders:
 # format: <key_name>
 #
@@ -126,7 +127,7 @@ gamemodes:
 
 frequent:
   errors:
-    error: Ошибка.
+    error: Ошибка
     unknown_error: Неизвестная ошибка
     user_banned: Вы заблокированы и не можете использовать команды этого бота.
     api_error: Ошибка при работе с API.
@@ -136,10 +137,13 @@ frequent:
     info: Информация
     player_not_registred: Игрок не зарегестрирован. Сначала введите команду `/set_player`
     err_info_sent: Информация об ошибке была отправлена разработчику.
+    warning: Внимание
 
   common:
     nickname: Никнейм
     region: Регион
+    'yes': Да
+    'no': Нет
     time_units:
       h: 'ч'
       m: 'м'
@@ -254,7 +258,141 @@ cmds:
       started: Сессия запущена. Теперь можете сыграть несколько боёв и получить сессионную статистику используя `/get_session`
     items:
       ''
-    
+
+# Set background command
+  set_background: 
+    descr:
+      this: Смена фона
+      sub_descr:
+        image: Загрузите фон в формате PNG или JPEG (макс. 2 МБ) (700 X 1350px)
+        server: Задать фон по умолчанию для данного сервера (нужны права админастратора).
+    errors:
+      player_not_registred: Для смены фона сохраните свои данные командой `/astats`
+      permission_denied: Для утановки фона для сервера вы должны обладать правами администратора.
+      file_error: Файл не является подходящим изображением.
+      oversize: Файл слишком большой (максимум 2 Мб).
+      overresolution: Картинка имеет слишком большое разрешение (максимум 2048x2048).
+      small_resolution: Картинка имеет слишком маленькое разрешение (минимум 256x256).
+    info:
+      set_background_ok: Фон успешно изменён.
+    items:
+      ''
+# image_settings command
+  image_settings:
+    descr:
+      this: Настройки изображения
+      sub_descr:
+        use_custom_bg: Использовать нестандартный фон
+        glass_effect: Эффект стекла 0 - Выключить (0-30)
+        blocks_bg_brightness: Яркость блоков со статистикой (0-100)
+        nickname_color: 'Цвет никнейма (HEX Color)'
+        clan_tag_color: 'Цвет тега клана (HEX Color)'
+        stats_color: 'Цвет основыных статистик (HEX Color)'
+        main_text_color: 'Цвет основного текста (HEX Color)'
+        stats_text_color: 'Цвет текста статистик (HEX Color)'
+        disable_flag: 'Отключить отрисовку флага региона'
+        hide_nickname: 'Скрыть никнейм, будет заменён на Player'
+        hide_clan_tag: 'Скрыть тег клана, будет удалён'
+        disable_stats_blocks: 'Отключить отрисовку блоков статистик'
+        disable_rating_stats: 'Отключить рейтинговую статистику'
+    errors:
+      ''
+    info:
+      set_ok: 'Настройки изображения успешно применены, получить текущие настройки: `/image_settings_get`'
+    items:
+      ''
+
+  server_settings:
+    descr:
+      this: Настройки сервера
+      sub_descr:
+        allow_custom_backgrounds: 'Разрешить пользовательские фоны'
+
+    errors:
+      permission_denied: Для изменения настроек сервера вы должны обладать правами администратора.
+
+    info:
+      set_ok: 'Настройки сервера успешно применены, посмотреть текущие настройки: `/server_settings_get`'
+    items:
+      ''
+
+  image_settings_get:
+    descr:
+      this: Получить текущие настройки изображения
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      get_ok: 'Текущие настройки изображения:'
+    items:
+      settings_list: |-
+        ```python
+        - Использовать нестандартный фон:     <use_custom_bg>
+        - Эффект стекла:                      <glass_effect>
+        - Яркость блоков со статистикой:      <blocks_bg_brightness>
+        - Цвет никнейма:                      <nickname_color>
+        - Цвет тега клана:                    <clan_tag_color>
+        - Цвет основных статистик:            <stats_color>
+        - Цвет основного текста:              <main_text_color>
+        - Цвет текста статистик:              <stats_text_color>
+        - Отключить отрисовку флага:          <disable_flag>
+        - Скрывать никнейм:                   <hide_nickname>
+        - Скрывать тег клана:                 <hide_clan_tag>
+        - Отключить отрисовку блоков:         <disable_stats_blocks>
+        - Отключить рейтинговую статистику:   <disable_rating_stats>```
+
+  image_settings_reset:
+    descr:
+      this: Сброс настроек изображения
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      reset_ok: Настройки изображения были сброшены.
+    items:
+      ''
+
+  reset_background:
+    descr:
+      this: Сбросить пользовательский фон
+      sub_descr:
+        server: Сбросить фон для сервера (нужны права администратора).
+    errors:
+      permission_denied: Для сброса фона на всём сервере вы должны обладать правами администратора.
+    info:
+      unset_background_ok: Фон успешно сброшен.
+    items:
+      ''
+
+  server_settings_get:
+    descr:
+      this: Получить текущие настройки сервера
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      get_ok: 'Текущие настройки сервера:'
+    items:
+      settings_list: |-
+        ```python
+        - Разрешить пользовательские фоны:    <allow_custom_backgrounds>
+        ```
+
+  server_settings_reset:
+    descr:
+      this: Сброс настроек сервера
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      reset_ok: Настройки сервера были сброшены.
+    items:
+      ''
+
 # Help command
   help: 
     descr:
@@ -414,5 +552,11 @@ cmds:
         <enemies>
         ```
 
+#Cooldown for command
+  cooldown:
+    descr:
+      this: Предотвращает частое использование команд.
       
+    info:
+      cooldown_not_expired: Подождите немного перед следующим использованием.
       

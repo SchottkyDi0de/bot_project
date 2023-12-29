@@ -3,6 +3,7 @@ from discord import Embed
 
 from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
+from lib.data_classes.locale_struct import Localization
 
 @singleton
 class InfoMSG:
@@ -95,16 +96,25 @@ class InfoMSG:
             description=text,
             colour=Colour.green()
         )
+    
+    def cooldown_not_expired(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.warning,
+            description=Text().get().cmds.cooldown.info.cooldown_not_expired,
+            color=Colour.orange()
+        )
+    
     def custom(
             self,
+            locale: Localization,
             text: str,
-            title: str = Text().get().frequent.info.info,
+            title: str = None,
             colour: str = 'blurple'
         ) -> Embed:
     
         colour = getattr(Colour, colour)
         return Embed(
-            title=title,
+            title=title if title is not None else locale.frequent.info.info,
             description=text,
             colour=colour()
         )

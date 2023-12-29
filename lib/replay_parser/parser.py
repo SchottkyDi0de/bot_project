@@ -25,6 +25,22 @@ class ReplayParser:
 
     @staticmethod
     def parse(replay_path: str, auto_clear: bool = True, save_json: bool = False) -> ReplayData:
+        """
+        Parse a replay file and return the parsed data.
+        
+        Args:
+            replay_path (str): The path to the replay file.
+            auto_clear (bool, optional): Whether to automatically delete the replay file after parsing. Defaults to True.
+            save_json (bool, optional): Whether to save the parsed data as a JSON file. Defaults to False.
+        
+        Returns:
+            ReplayData: The parsed replay data.
+        
+        Raises:
+            PathNotExists: If the specified replay file does not exist.
+            ReplayParserError: If an error occurs while parsing the replay file.
+        
+        """
         path = pathlib.PurePath(replay_path)
         if not pathlib.Path(replay_path).exists():
             _log.error(f'Path {replay_path} does not exist')

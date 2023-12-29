@@ -1,1 +1,563 @@
+---
 
+# This localization file use placeholders:
+# format: <key_name>
+#
+# Example:
+#   srv_id: "server_id: <id>"
+#
+# Please do not change the placeholders names when translating the file.
+# _Zener
+
+for_image:
+  main: ОСНОВНІ
+  winrate: ПЕРЕМОГИ
+  avg_damage: |-
+    СЕРЕДНІЙ
+    УРОН
+  battles: БОЇ
+  medals: МЕДАЛІ
+  mainGun: |-
+    ОСНОВНИЙ
+    КАЛІБР
+  medalKolobanov: КОЛОБАНОВ
+  warrior: ВОЇН
+  medalRadleyWalters: |-
+    РЕДЛІ
+    УОЛТЕРС
+  markOfMastery: МАСТЕР
+  rating: РЕЙТИНГ
+  personal_rating: |-
+    ОСОБИСТИЙ
+    РЕЙТИНГ
+  rating_battles: |-
+    РЕЙТИНГОВІ
+    БОЇ
+  no_rating: НЕМАЄ РЕЙТИНГУ
+  tank: 'ТАНК'
+  leagues:
+    gold: ЗОЛОТО
+    platinum: ПЛАТИНА
+    brilliant: БРИЛІАНТ
+    no_league: |-
+      НЕМАЄ
+      ЛІГИ
+    calibration: КАЛІБРУВАННЯ
+  total: ЗАГАЛЬНІ
+  kills_per_battle: |-
+    ЗНИЩЕНО
+    ЗА БІЙ
+  max_frags: |-
+    МАКС.
+    ЗНИЩЕНО
+  enemies_destroyed: |-
+    ЗНИЩЕНО
+    ПРОТИВНИКІВ
+  destruction_ratio: |-
+    КОЕФІЦІЄНТ
+    ЗНИЩЕННЯ
+  damage_caused: |-
+    НАНЕСЕНО
+    УРОНУ
+  damage_ratio: |-
+    КОЕФІЦІЄНТ
+    УРОНУ
+  average_spotted: |-
+    ВИЯВЛЕНО
+    ЗА БІЙ
+  battles_survived: |-
+    ВИЖИВ У
+    БОЯХ
+  all_xp: |-
+    ВСЬОГО
+    ДОСВІДУ
+  max_xp: |-
+    МАКС. ДОСВІДУ
+    ЗА БІЙ
+  shots: ВИСТРІЛИ
+  accuracy: |-
+    ТОЧНІСТЬ
+    СТРІЛЬБИ
+  no_clan: НЕМАЄ КЛАНУ
+  no_data: НЕМАЄ ДАНИХ
+
+map_names:
+  desert_sands: Ель-Аламейн
+  middleburg: Міддлбург
+  copperfield: Кар'єри
+  alpenstadt: Альпенштадт
+  mines: Рудники
+  dead_rail: Ешелон
+  fort_despair: Форт
+  himmelsdorf: Хіммельсдорф
+  black_goldville: Золота долина
+  basis_palm: Гарячі піски
+  ghost_factory: Промзона
+  molendijk: Молендейк
+  port_bay: Порт
+  winter_malinovka: Зимова малиновка
+  castilia: Кастилія
+  canal: Канал
+  vineyards: Виноградники
+  canyon: Каньйон
+  mayan_ruins: Давні піраміди
+  dynasty_pearl: Жемчужне місто
+  naval_frontier: Морський рубіж
+  falls_creek: Протока
+  new_bay: Нью-Бей
+  normandy: Нормандія
+  yamato_harbor: не визначено
+  wasteland: не визначено
+  unknown: не визначено
+
+gamemodes:
+  any: Невідомо
+  regular: Звичайний
+  training_room: Тренувальна кімната
+  tournament: Турнір
+  quick_tournament: Швидкий турнір
+  rating: Рейтинг
+  mad_games: Божевільні ігри
+  realistic_battles: Реалістичні бої
+  urprising: Виживання
+  gravity_mode: Гравітація
+  skirmish: Зіткнення
+  burning_games: Возрождення
+  unknown: Невідомий
+
+frequent:
+  errors:
+    error: Помилка.
+    unknown_error: Невідома помилка
+    user_banned: Ви заблоковані і не можете використовувати команди цього бота.
+    api_error: Помилка при роботі з API.
+    parser_error: Помилка обробки даних.
+
+  info:
+    info: Інформація
+    player_not_registred: Гравець не зареєстрований. Спочатку введіть команду `/set_player`
+    err_info_sent: Інформація про помилку була відправлена розробнику.
+    warning: Увага
+
+  common:
+    'yes': Так
+    'no': Ні
+    nickname: Нікнейм
+    region: Регіон
+    time_units:
+      h: 'г'
+      m: 'м'
+      s: 'с'
+      
+cmds:
+# Команда astats
+  astats:
+    descr:
+      this: Показати статистику гравця без введення даних.
+      sub_descr:
+        ''
+    errors:
+      player_not_found: Гравець з даним нікнеймом не знайдений.
+    info:
+      player_not_registred: Для відображення статистики без введення даних збережіть свої дані за допомогою команди `/set_player`
+    items:
+      ''
+
+# Команда stats
+  stats:
+    descr:
+      this: Запит статистики гравця.
+      sub_descr:
+        nickname: Ігровий нікнейм.
+        region: Вибір регіону зі списку.
+    errors:
+      player_not_found: Гравець з даним нікнеймом не знайдений.
+      no_battles: Недостатньо боїв для того, щоб згенерувати статистику!
+      uncorrect_nickname: Некоректний нікнейм гравця. Нікнейм може складатися з латинських букв A-Z, цифр 0-9 і символа '_'.
+    info:
+      ''
+    items:
+      ''
+
+# Команда set_player
+  set_player:
+    descr:
+      this: Збереження даних для подальших запитань.
+      sub_descr:
+        nickname: Ігровий нікнейм гравця.
+        region: Вибір регіону зі списку.
+    errors:
+      player_not_found: Гравець з даним нікнеймом не знайдений.
+    info:
+      set_player_ok: 'Інформація про гравця успішно збережена, тепер можете використовувати `/astats` для автоматичного відображення статистики на основі збережених даних.'
+    items:
+      ''
+
+# Set lang command
+  set_lang:
+    descr:
+      this: Зміна мови.
+      sub_descr:
+        lang_list: Список мов.
+        to_server: Зберегти для сервера.
+    errors:
+      player_not_registred: Для зміни мови спочатку збережіть свої дані за допомогою команди `/set_player`
+      permission_denied: Для зміни мови на всьому сервері ви повинні мати права адміністратора.
+    info:
+      set_lang_ok: Мова локалізації успішно змінена.
+
+# Session state command
+  session_state:
+    descr:
+      this: Статус сесії
+      sub_descr:
+        ''
+    errors:
+      session_not_found: Сесійні дані не знайдені, можливо ви не запустили сесію або прошло більше 24 годин з початку минулої сесії.
+    info:
+      player_not_registred: Для перегляду статусу сесії спочатку збережіть свої дані за допомогою команди `/set_player`
+    items:
+      # The translation will probably change the length of the lines. 
+      # In your editor, select monospaced font and try to align everything.
+      started: |- 
+        ```py
+        Сесія запущена.
+        +----------------------------+
+        Час сесії:   <time>     
+        До скидання:      <time_left>
+        Боїв сіграно:   <battles>  
+        +----------------------------+
+        >>> Скинути сесію: /start_session
+        ```
+      not_started: '`Сесія не запущена.`'
+
+# Get session command
+  get_session:
+    descr:
+      this: Отримати сесію
+      sub_descr:
+        ''
+    errors:
+      session_not_found: Сесійні дані не знайдені, можливо ви не запустили сесію або прошло більше 24 годин з початку минулої сесії.
+      session_not_updated: Не знайдено змінення статистики, можливо ви не робили боїв або API не обновило дані, спробуйте пізніше.
+    info:
+      player_not_registred: Для просмотра сессионой статистики сначала сохраните свои данные с помощью `/set_player`
+    items:
+      ''
+
+# Start session command
+  start_session:
+    descr:
+      this: Запуск сесії
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      player_not_registred: Для запуска сесії спочатку збережіть свої дані за допомогою команди `/set_player`
+      started: Сесія запущена. Тепер можете зіграти декілька боїв та отримати сесійну статистику використовуючи `/get_session`
+    items:
+      ''
+
+  set_background: 
+    descr:
+      this: Зміна фону
+      sub_descr:
+        image: Завантажте фон у форматі PNG або JPEG (макс. 2 MB) (700 X 1250px)
+        server: Задати фон за замовчуванням для данного сервера (потрібні права адміністратора).
+    errors:
+      player_not_registred: Для зміни фона збережіть свої дані командою `/astats`
+      permission_denied: Для встановлення фону на сервері ви повинні мати права адміністратора.
+      file_error: Файл не є підходящим зображенням.
+      oversize: Файл занадто великий (максимум 2 MB).
+      overresolution: Картинка має занадто велике розширення (maximum 2048x2048).
+      small_resolution: Картинка має занадто мале розширення (minimum 256x256).
+    info:
+      set_background_ok: Фон успішно змінено.
+    items:
+      ''
+
+# image_settings command
+  image_settings:
+    descr:
+      this: Image settings
+      sub_descr:
+        use_custom_bg: Use custom background
+        glass_effect: Glass effect 0 - Disable (0-30)
+        blocks_bg_brightness: Blocks background brightness (0-100)
+        nickname_color: 'Nickname color (HEX Color)'
+        clan_tag_color: 'Clan tag color (HEX Color)'
+        stats_color: 'Main statistics color (HEX Color)'
+        main_text_color: 'Main text color (HEX Color)'
+        stats_text_color: 'Statistics text color (HEX Color)'
+        disable_flag: 'Disable region flag rendering'
+        hide_nickname: 'Hide nickname, will be replaced with Player'
+        hide_clan_tag: 'Hide clan tag, will be removed'
+        disable_stats_blocks: 'Disable statistics blocks rendering'
+        disable_rating_stats: 'Disable rating statistics'
+    errors:
+      ''
+    info:
+      set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
+    items:
+      ''
+
+  server_settings:
+    descr:
+      this: Server settings
+      sub_descr:
+        allow_custom_backgrounds: 'Allow custom backgrounds'
+    errors:
+      permission_denied: You must have administrator rights to modify server settings.
+    info:
+      set_ok: 'Server settings applied successfully, view current settings: `/server_settings_get`'
+    items:
+      ''
+
+  image_settings_get:
+    descr:
+      this: Get current image settings
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      get_ok: 'Current image settings:'
+    items:
+      settings_list: |-
+        ```python
+        - Use custom background:              <use_custom_bg>
+        - Glass effect:                       <glass_effect>
+        - Block background brightness:        <blocks_bg_brightness>
+        - Nickname color:                     <nickname_color>
+        - Clan tag color:                     <clan_tag_color>
+        - Main statistics color:              <stats_color>'
+        - Main text color:                    <main_text_color>
+        - Statistics text color:              <stats_text_color>
+        - Disable region flag rendering:      <disable_flag>
+        - Hide nickname:                      <hide_nickname>
+        - Hide clan tag:                      <hide_clan_tag>
+        - Disable statistics blocks:          <disable_stats_blocks>
+        - Disable rating statistics:          <disable_rating_stats>```
+
+  server_settings_get:
+    descr:
+      this: Get current server settings
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      get_ok: 'Current server settings:'
+    items:
+      settings_list: |-
+        ```Python
+        - Allow custom backgrounds:           <allow_custom_backgrounds>
+        ```
+
+  reset_background:
+    descr:
+      this: Reset custom background
+      sub_descr:
+        server: Reset default background for this server (admin privileges required).
+    errors:
+      permission_denied: You must have administrator rights to reset the background on the server.
+    info:
+      unset_background_ok: Custom background reset successfully
+    items:
+      ''
+
+  image_settings_reset:
+    descr:
+      this: Сброс настроек изображения
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      reset_ok: Настройки изображения были сброшены.
+    items:
+      ''
+
+  server_settings_reset:
+    descr:
+      this: Reset server settings
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      reset_ok: Server settings were reset.
+    items:
+      ''
+
+# Команда help
+  help: 
+    descr:
+      this: Допомога
+      sub_descr:
+        help_types: Вибір категорії
+    errors:
+      ''
+    info:
+      send_ok: Допомога була відправлена.
+    items:
+      help: Допомога
+      help_types: [syntax, setup, statistics, session, other, all]
+      syntax: |-
+        > ***Синтаксис команд***:
+        >
+        > `/command [arg_1] <arg_2> <arg_3>`
+        > - Деякі команди мають аргументи, які можуть бути обов'язковими або необов'язковими.
+        > `/command [arg]`
+        > - Якщо аргумент вказаний в квадратних дужках `[]`, то він обов'язковий.
+        > - Якщо аргумент вказаний в трикутних дужках `<>`, то він необов'язковий.
+        > `[arg_name] <arg_name>`
+        > 
+        > ***Приклад:***
+        > `/parse_replay [replay] [region] <output_type>`
+        > - Аргумент `nickname` є обов'язковим.
+        > - Аргумент `output_type` є необов'язковим, тому його можна не вказувати.
+      setup: |-
+        **Команди налаштування:**
+        >
+        > 1: `/set_lang [lang]`
+        > ***Аргументи:***
+        > - `lang` Список доступних мов (рядок)
+        > - Мова `default` включає автоматичний вибір мови.
+        > Автоматичний вибір спирається на мову, встановлену в інтерфейсі дискорду у вас.
+        > ***Що робить:***
+        > - Встановлює мову локалізації бота для вас.
+        > 
+        > 2: `/set_player [nickname] [region]`
+        > ***Аргументи:***
+        > - `nickname` Нікнейм гравця для збереження (рядок)
+        > - `region` Регіон для пошуку (рядок)
+        > 3: ***Що робить:***
+        > - Записує гравця в базу даних для подальшого використання, наприклад для команди 
+        > `/astats`
+      statistics: |-
+        > **Команди для виклику статистики:**
+        >
+        > 1: `/stats [nickname] [region]`
+        > ***Аргументи:***
+        > - `nickname` Нікнейм гравця для пошуку (рядок)
+        > - `region` Регіон для пошуку (рядок)
+        > ***Що робить:***
+        > - Проводить пошук гравця з заданим нікнеймом у заданому регіоні. 
+        > Якщо гравець знайдений, то повертається зображення з докладною статистикою.
+        > В іншому випадку повертається помилка.
+        > 
+        > 2: `/astats`
+        > ***Що робить:***
+        > - Те саме, що і `/stats`, але дані вводити не потрібно, вони беруться з бази даних після реєстрації їх командою `/set_player`
+      session: |-
+        > **Команди управління гральними сесіями:**
+        >
+        > 1: `/start_session`
+        > ***Що робить:***
+        > - Запускає сесію, після запуску сесії вам потрібно зіграти кілька боїв для генерації сесії.
+        > Для використання необхідно зберегти свої дані за допомогою `/set_player`
+        > 
+        > 2: `/get_session`
+        > ***Що робить:***
+        > - Генерує сесію гравця і відправляє відповідь з зображенням із сесійною статистикою.
+        > Для використання збережіть свої дані командою `/set_player` і запустіть сесію командою `/start_session`
+        > 
+        > 3: `/session_state`
+        > ***Що робить:***
+        > - Відображає активна чи сесія і час, протягом якого сесія активна.
+      other: |-
+        > **Інші команди:**
+        > 
+        > 1: `/parse_replay [replay] [region] <output_type>`
+        > ***Що робить:***
+        > - Показує основну інформацію про реплей, список учасників бою з реплея та їх статистику.
+        > 
+        > 2: `/ping`
+        > ***Що робить:***
+        > - Відображає час реакції бота.
+  
+# Команда parse_replay
+  parse_replay:
+    descr:
+      this: Показати інформацію про реплей.
+      sub_descr:
+        file: Прикріпіть файл (.wotbreplay)
+    errors:
+      parsing_error: Помилка при розборі реплея.
+      uncorrect_file_format: Некоректний формат файлу.
+    info:
+      ''
+    items:
+      avg_stats: Сер. Знач.
+      empty_player: '[немає даних]'
+      title: |-
+        Дані реплея від <member_id>
+        Акаунт: <nickname>
+      common:
+        win: Перемога
+        lose: Поразка
+        # When localizing, use an editor with a monospaced font 
+        # and align placeholders relative to each other
+        # I recomended VS Code or Sublime Text with monospaced font
+        # _Zener
+      description: |-
+        ```py
+        Основна інформація:
+        +-----------------------+
+        Вихід бою:    <battle_result>
+        Тип бою:      <battle_type>
+        Танк:         <tank_name>
+        Рівень:       <tier>
+        Карта:        <map>
+        Бій зіграний:
+        <time>
+        +-----------------------+
+
+        Урон:
+        +-----------------------+
+        нанесено:      <damage_dealt>
+        з допомогою:   <damage_assisted>
+        заблоковано:   <damage_blocked>
+        +-----------------------+
+
+        Очки захоплення:
+        +-----------------------+
+        Захоплено:     <point_captured>
+        Захищено:      <point_defended>
+        +-----------------------+
+
+        Вистріли:
+        +-----------------------+
+        зроблено:      <shots_fired>
+        попадань:      <shots_hit>
+        пробиття:      <shots_penetrated>
+        +-----------------------+
+
+        Ефективність:
+        +-----------------------+
+        Точність:      <accuracy>%
+        Пробиття:      <penetration>%
+
+        Союзники:
+        +-----------------------+
+        Нік:           ПП:  Бої:
+        ==============+====+=====
+        <allies>
+        Противники:
+        +-----------------------+
+        Нік:           ПП:  Бої:
+        ==============+====+=====
+        <enemies>
+        ```
+
+#Cooldown for command
+  cooldown:
+    descr:
+      this: Запобігає частому використанню команд.
+      
+    info:
+      cooldown_not_expired: Зачекайте трішки перед наступним використанням.
+      
+      

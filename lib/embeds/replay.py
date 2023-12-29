@@ -141,55 +141,37 @@ class EmbedReplayBuilder():
 
         self.embed = Embed(
             title=insert_data(
-                self.text.cmds.parse_replay.items.title, 
-                ('member_id', 'nickname'),
-                (str(ctx.author.name), str(author_stats.player_info.nickname))
+                self.text.cmds.parse_replay.items.title,
+                {
+                    'member_id' : ctx.author.name,
+                    'nickname'  : author_stats.player_info.nickname
+                }
             ),
             description=insert_data(
                 self.text.cmds.parse_replay.items.description,
-                (
-                    'battle_result',
-                    'battle_type',
-                    'tank_name',
-                    'tier',
-                    'map',
-                    'time',
-                    'damage_dealt',
-                    'damage_assisted',
-                    'damage_blocked',
-                    'point_captured',
-                    'point_defended',
-                    'shots_fired',
-                    'shots_hit',
-                    'shots_penetrated',
-                    'accuracy',
-                    'penetration',
-                    'allies',
-                    'enemies'
-                ),
-                (
-                    self.text.cmds.parse_replay.items.common.win if data.author.winner \
-                        else self.text.cmds.parse_replay.items.common.lose,
-                    self.get_map_name(data.room_name),
-                    self.get_tank_name(data.author.tank_id),
-                    self.get_tank_tier(data.author.tank_id),
-                    self.get_map_name(data.map_name),
-                    str(data.time_string),
-                    str(author_stats.info.damage_dealt),
-                    str(author_stats.info.damage_assisted_1),
-                    str(author_stats.info.damage_blocked),
-                    str(author_stats.info.victory_points_earned),
-                    str(author_stats.info.victory_points_seized),
-                    str(author_stats.info.n_shots),
-                    str(author_stats.info.n_hits_dealt),
-                    str(author_stats.info.n_penetrations_dealt),
-                    str(round(data.author.accuracy, 2)),
-                    str(round(data.author.penertarions_percent, 2)),
-                    self.avg_stats_counter(data, False)+\
-                        self.gen_players_list(data, False),
-                    self.avg_stats_counter(data, True)+\
-                        self.gen_players_list(data, True)
-                )
+                {
+                    'battle_result'     :   self.text.cmds.parse_replay.items.common.win if data.author.winner \
+                                                else self.text.cmds.parse_replay.items.common.lose,
+                    'battle_type'       :   self.get_map_name(data.room_name),
+                    'tank_name'         :   self.get_tank_name(data.author.tank_id),
+                    'tier'              :   self.get_tank_tier(data.author.tank_id),
+                    'map'               :   self.get_map_name(data.map_name),
+                    'time'              :   str(data.time_string),
+                    'damage_dealt'      :   str(author_stats.info.damage_dealt),
+                    'damage_assisted'   :   str(author_stats.info.damage_assisted_1),
+                    'damage_blocked'    :   str(author_stats.info.damage_blocked),
+                    'point_captured'    :   str(author_stats.info.victory_points_earned),
+                    'point_defended'    :   str(author_stats.info.victory_points_seized),
+                    'shots_fired'       :   str(author_stats.info.n_shots),
+                    'shots_hit'         :   str(author_stats.info.n_hits_dealt),
+                    'shots_penetrated'  :   str(author_stats.info.n_penetrations_dealt),
+                    'accuracy'          :   str(round(data.author.accuracy, 2)),
+                    'penetration'       :   str(round(data.author.penertarions_percent, 2)),
+                    'allies'            :   self.avg_stats_counter(data, False)+\
+                                                self.gen_players_list(data, False),
+                    'enemies'           :   self.avg_stats_counter(data, True)+\
+                                                self.gen_players_list(data, True)
+                }
             )
         )
         return self.embed

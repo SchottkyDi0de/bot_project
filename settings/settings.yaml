@@ -1,12 +1,82 @@
 ---
+
+# This YAML file use placeholders:
+# format: <key_name>
+#
+# Example:
+#   srv_id: "server_id: <id>"
+#
+# _Zener
+
 bot_name:
   'Blitz Statistics'
 
-session_ttl: 86400
+server:
+  host: '127.0.0.1'
+  port: 8000
 
-default: 
-  prefix : '!'
+session_ttl: 86400 # in seconds
+
+default:
+  prefix : '!'  # deprecated
   lang: 'en'
   available_locales: ['ru', 'en', 'pl', 'ua', 'auto']
-  locale_alliases: {ru: 'ru', en: 'en', pl: 'pl', uk: 'ua'}
   available_regions: ['ru', 'eu', 'na', 'asia']
+  locale_alliases: {ru: 'ru', en: 'en', pl: 'pl', uk: 'ua'}
+
+image:
+  default_bg_path: 'res/image/default_image/default_bg.png'
+
+internal:
+  ignore_tankopedia_failures: true
+
+help_urls:
+  ru: https://github.com/SchottkyDi0de/Blitz_Statistics-docs/blob/main/docs/RU.md
+  en: https://github.com/SchottkyDi0de/Blitz_Statistics-docs/blob/main/docs/EN.md
+
+auth:
+  wg_redirect_uri: 'http://<host>:<port>/auth/game'
+  wg_uri: 'https://api.worldoftanks.<region>/wot/auth/login/?application_id=<app_id>?redirect_uri=<redirect_uri>'
+
+  ds_auth_redirect_url: 'http://<host>:<port>/auth/discord'
+
+game_api:
+  reg_urls:
+    ru:   'papi.tanksblitz.ru'
+    eu:   'api.wotblitz.eu'
+    na:   'api.wotblitz.com'
+    asia: 'api.wotblitz.asia'
+
+  urls:
+    get_id: 
+      "https://<reg_url>/wotb/account/list/\
+      ?application_id=<app_id>\
+      &search=<nickname>\
+      &type=<search_type>"
+
+    get_stats:
+      "https://<reg_url>/wotb/account/info/\
+      ?application_id=<app_id>\
+      &account_id=<player_id>\
+      &fields=-statistics.clan"
+
+    get_achievements:
+      "https://<reg_url>/wotb/account/achievements/\
+      ?application_id=<app_id>\
+      &fields=-max_series\
+      &account_id=<player_id>"
+
+    get_clan_stats:
+      "https://<reg_url>/wotb/clans/accountinfo/\
+      ?application_id=<app_id>\
+      &account_id=<player_id>\
+      &extra=clan"
+
+    get_tank_stats:
+      "https://<reg_url>/wotb/tanks/stats/\
+      ?application_id=<app_id>\
+      &account_id=<player_id>"
+
+ds_api:
+  urls:
+    get_user: 'https://discord.com/api/v9/users/@me'

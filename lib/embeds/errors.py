@@ -2,6 +2,7 @@ from discord import Colour, Embed
 
 from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
+from lib.data_classes.locale_struct import Localization
 
 
 @singleton
@@ -83,15 +84,17 @@ class ErrorMSG:
             description=Text().get().cmds.set_lang.errors.player_not_registred,
             colour=Colour.red()
         )
+
     def custom(
-            self, 
+            self,
+            locale: Localization,
             text: str,
-            title: str = Text().get().frequent.errors.error,
+            title: str = None,
             colour: str = 'red',
             err_inf_sent: bool = False
             ) -> Embed:
         embed =  Embed(
-            title=title,
+            title=title if title is not None else locale.frequent.errors.error,
             description=text,
             colour=getattr(Colour, colour)()
         )
