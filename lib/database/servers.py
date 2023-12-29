@@ -7,6 +7,7 @@ from discord.ext.commands import Context
 from lib.exceptions.database import ServerNotFound
 from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
+from lib.data_classes.db_server import DBServer, ServerSettings
 
 
 @singleton
@@ -22,7 +23,7 @@ class ServersDB():
             self.collection.insert_one({
                 'id': int(server_id),
                 'name': server_name,
-                'settings': dict(),
+                'settings': ServerSettings().model_dump(),
                 'premium': False,
                 'custom_background': None,
                 'allow_user_backgrounds': True
@@ -96,3 +97,31 @@ class ServersDB():
             return server['premium']
         else:
             return False
+        
+    def set_server_settings(self, ctx: Context, settings: ServerSettings) -> None:
+        server_id = str(ctx.guild.id)
+        if self.check_server(server_id):
+            self.collection.update_one(
+                {'id': int(server_id)},
+                {'$set': {'settings': settings.model_dump()}}
+            )
+        else:
+            self.set_new_server(server_id, ctx.guild.name)
+            self.collection.update_one(
+                {'id': int(server_id)},
+                {'$set': {'settings': settings.model_dump()}}
+            )
+            
+    def get_server_settings(self, ctx: Context) -> ServerSettings:
+        server_id = str(ctx.guild.id)
+        if self.check_server(server_id):
+            data =  self.collection.find_one({'id': int(server_id)})['settings']
+            if data is not None:
+                return ServerSettings.model_validate(data)
+            else:
+                self.set_server_settings(ctx, ServerSettings.model_validate({}))
+                return ServerSettings.model_validate({})
+        else:
+            self.set_new_server(server_id, ctx.guild.name)
+            self.set_server_settings(ctx, ServerSettings.model_validate({}))
+            return ServerSettings.model_validate({})

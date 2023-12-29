@@ -113,6 +113,8 @@ class TimeUnits(BaseModel):
 
 
 class Common(BaseModel):
+    yes: str
+    no: str
     nickname: str
     region: str
     time_units: TimeUnits
@@ -167,14 +169,9 @@ class Stats(BaseModel):
     items: str
 
 
-class SubDescr1(BaseModel):
-    nickname: str
-    region: str
-
-
 class Descr2(BaseModel):
     this: str
-    sub_descr: SubDescr1
+    sub_descr: SubDescr
 
 
 class Errors3(BaseModel):
@@ -242,30 +239,16 @@ class SessionState(BaseModel):
     items: Items
 
 
-class Descr5(BaseModel):
-    this: str
-    sub_descr: str
-
-
 class Errors6(BaseModel):
     session_not_found: str
     session_not_updated: str
 
 
-class Info5(BaseModel):
-    player_not_registred: str
-
-
 class GetSession(BaseModel):
-    descr: Descr5
+    descr: Descr4
     errors: Errors6
-    info: Info5
+    info: Info4
     items: str
-
-
-class Descr6(BaseModel):
-    this: str
-    sub_descr: str
 
 
 class Info6(BaseModel):
@@ -274,7 +257,7 @@ class Info6(BaseModel):
 
 
 class StartSession(BaseModel):
-    descr: Descr6
+    descr: Descr4
     errors: str
     info: Info6
     items: str
@@ -292,8 +275,6 @@ class Descr7(BaseModel):
 
 class Errors7(BaseModel):
     player_not_registred: str
-    premium_not_found: str
-    server_premium_not_found: str
     permission_denied: str
     file_error: str
     oversize: str
@@ -313,7 +294,19 @@ class SetBackground(BaseModel):
 
 
 class SubDescr4(BaseModel):
-    help_types: str
+    use_custom_bg: str
+    glass_effect: str
+    blocks_bg_brightness: str
+    nickname_color: str
+    clan_tag_color: str
+    stats_color: str
+    main_text_color: str
+    stats_text_color: str
+    disable_flag: str
+    hide_nickname: str
+    hide_clan_tag: str
+    disable_stats_blocks: str
+    disable_rating_stats: str
 
 
 class Descr8(BaseModel):
@@ -322,10 +315,115 @@ class Descr8(BaseModel):
 
 
 class Info8(BaseModel):
-    send_ok: str
+    set_ok: str
+
+
+class ImageSettings(BaseModel):
+    descr: Descr8
+    errors: str
+    info: Info8
+    items: str
+
+
+class SubDescr5(BaseModel):
+    allow_custom_backgrounds: str
+
+
+class Descr9(BaseModel):
+    this: str
+    sub_descr: SubDescr5
+
+
+class Errors8(BaseModel):
+    permission_denied: str
+
+
+class ServerSettings(BaseModel):
+    descr: Descr9
+    errors: Errors8
+    info: Info8
+    items: str
+
+
+class Descr10(BaseModel):
+    this: str
+    sub_descr: str
+
+
+class Info10(BaseModel):
+    get_ok: str
 
 
 class Items1(BaseModel):
+    settings_list: str
+
+
+class ImageSettingsGet(BaseModel):
+    descr: Descr10
+    errors: str
+    info: Info10
+    items: Items1
+
+
+class ServerSettingsGet(BaseModel):
+    descr: Descr10
+    errors: str
+    info: Info10
+    items: Items1
+
+
+class Info12(BaseModel):
+    reset_ok: str
+
+
+class ServerSettingsReset(BaseModel):
+    descr: Descr10
+    errors: str
+    info: Info12
+    items: str
+
+
+class ImageSettingsReset(BaseModel):
+    descr: Descr10
+    errors: str
+    info: Info12
+    items: str
+
+
+class SubDescr6(BaseModel):
+    server: str
+
+
+class Descr14(BaseModel):
+    this: str
+    sub_descr: SubDescr6
+
+
+class Info14(BaseModel):
+    unset_background_ok: str
+
+
+class ResetBackground(BaseModel):
+    descr: Descr14
+    errors: Errors8
+    info: Info14
+    items: str
+
+
+class SubDescr7(BaseModel):
+    help_types: str
+
+
+class Descr15(BaseModel):
+    this: str
+    sub_descr: SubDescr7
+
+
+class Info15(BaseModel):
+    send_ok: str
+
+
+class Items3(BaseModel):
     help_types: List[str]
     help: str
     syntax: str
@@ -336,22 +434,22 @@ class Items1(BaseModel):
 
 
 class Help(BaseModel):
-    descr: Descr8
+    descr: Descr15
     errors: str
-    info: Info8
-    items: Items1
+    info: Info15
+    items: Items3
 
 
-class SubDescr5(BaseModel):
+class SubDescr8(BaseModel):
     file: str
 
 
-class Descr9(BaseModel):
+class Descr16(BaseModel):
     this: str
-    sub_descr: SubDescr5
+    sub_descr: SubDescr8
 
 
-class Errors8(BaseModel):
+class Errors10(BaseModel):
     parsing_error: str
     uncorrect_file_format: str
 
@@ -361,7 +459,7 @@ class Common1(BaseModel):
     lose: str
 
 
-class Items2(BaseModel):
+class Items4(BaseModel):
     avg_stats: str
     empty_player: str
     title: str
@@ -370,23 +468,23 @@ class Items2(BaseModel):
 
 
 class ParseReplay(BaseModel):
-    descr: Descr9
-    errors: Errors8
+    descr: Descr16
+    errors: Errors10
     info: str
-    items: Items2
+    items: Items4
 
 
-class Descr10(BaseModel):
+class Descr17(BaseModel):
     this: str
 
 
-class Info9(BaseModel):
+class Info16(BaseModel):
     cooldown_not_expired: str
 
 
 class Cooldown(BaseModel):
-    descr: Descr10
-    info: Info9
+    descr: Descr17
+    info: Info16
 
 
 class Cmds(BaseModel):
@@ -398,6 +496,13 @@ class Cmds(BaseModel):
     get_session: GetSession
     start_session: StartSession
     set_background: SetBackground
+    image_settings: ImageSettings
+    server_settings: ServerSettings
+    image_settings_get: ImageSettingsGet
+    server_settings_get: ServerSettingsGet
+    server_settings_reset: ServerSettingsReset
+    image_settings_reset: ImageSettingsReset
+    reset_background: ResetBackground
     help: Help
     parse_replay: ParseReplay
     cooldown: Cooldown

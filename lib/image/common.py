@@ -8,7 +8,6 @@ from io import BytesIO
 import base64
 from time import time
 
-from cacheout import FIFOCache
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 from discord.ext.commands import Context
 
@@ -18,14 +17,16 @@ from lib.data_classes.db_player import ImageSettings
 import lib.api.async_wotb_api as async_wotb_api
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.locale.locale import Text
-from lib.logger import logger
+from lib.logger.logger import get_logger
+from lib.data_classes.db_server import ServerSettings
 from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
 from lib.image.for_iamge.icons import StatsIcons
 from lib.image.for_iamge.medals import Medals
+from lib.settings.settings import Config
 
-_log = logger.get_logger(__name__, 'ImageCommonLogger',
-                         'logs/image_common.log')
+_log = get_logger(__name__, 'ImageCommonLogger', 'logs/image_common.log')
+_config = Config().get()
 
 
 class IconsCoords(Enum):
@@ -65,12 +66,14 @@ class MedalCoords(Enum):
     medal_kolobanov: tuple[int] = (420, 270)
     warrior: tuple[int] = (526, 270)
 
+
 class BackgroundRectangleMap():
     """Class that defines the coordinates of the background rectangle in the image."""
     main = (55, 85, 645, 230)
     medals = (55, 245, 645, 410)
     rating = (55, 425, 645, 575)
     total = (55, 590, 645, 1210)
+
 
 class Fonts():
     """Class that defines different fonts used in the application."""
@@ -217,16 +220,15 @@ class Coordinates():
         }
 
 
-
 class ValueNormalizer():
     @staticmethod
     def winrate(val, enable_null=False):
         """
         Normalizes a winrate value.
-        
+
         Args:
             val (float): The winrate value to normalize.
-        
+
         Returns:
             str: The normalized winrate value as a string.
                   If val is 0, returns '—'.
@@ -244,10 +246,10 @@ class ValueNormalizer():
     def ratio(val, enable_null=False):
         """
         Normalizes a ratio value.
-        
+
         Args:
             val (float): The ratio value to normalize.
-        
+
         Returns:
             str: The normalized ratio value as a string.
                   If val is 0, returns '—'.
@@ -268,7 +270,7 @@ class ValueNormalizer():
 
         Args:
             val (float or int): The value to normalize.
-        
+
         Returns:
             str: The normalized value as a string.
                   If val is 0, returns '—'.
@@ -282,13 +284,13 @@ class ValueNormalizer():
         if str_bypass:
             if type(val) == str:
                 return val
-        
+
         if round(val) == 0:
             if not enable_null:
                 return '—'
             else:
                 return '0'
-        
+
         if type(val) == str:
             return '—'
 
@@ -302,6 +304,7 @@ class ValueNormalizer():
             return str(val)
 
         return val
+
 
 class Values():
     def __init__(self, data: PlayerGlobalData) -> None:
@@ -347,7 +350,7 @@ class Colors():
     green = (30, 255, 38)    # Represents the color green
     cyan = (30, 187, 169)    # Represents the color cyan
     grey = (121, 121, 121)   # Represents the color grey
-    l_grey = (200, 200, 200) # Represents the color light grey
+    l_grey = (200, 200, 200)  # Represents the color light grey
     white = (240, 240, 240)  # Represents the color white
 
 
@@ -369,54 +372,65 @@ class ImageGen():
     icons = StatsIcons()
     medals = Medals()
     background_rectangles_map = BackgroundRectangleMap()
+    
+    def load_image(self, bytes_ot_path: str | BytesIO) -> None:
+        image = Image.open(bytes_ot_path)
+        if image.mode != 'RGBA':
+            image = image.convert('RGBA')
+
+        self.image = image
 
     def generate(self,
-                ctx: Context | None,
-                data: PlayerGlobalData,
-                image_settings: ImageSettings,
-                speed_test: bool = False,
-                debug_label: bool = False,
-                    ) -> BytesIO | float:
-            
+                 ctx: Context | None,
+                 data: PlayerGlobalData,
+                 image_settings: ImageSettings,
+                 server_settings: ServerSettings,
+                 speed_test: bool = False,
+                 debug_label: bool = False,
+                 ) -> BytesIO | float:
+
         self.text = Text().get()
         start_time = time()
         pdb = PlayersDB()
         sdb = ServersDB()
         self.image_settings = image_settings
-        
+
         bin_image = None
         self.data = data
         self.values = Values(data)
         self.stat_all = data.data.statistics.all
         self.stat_rating = data.data.statistics.rating
         self.achievements = data.data.achievements
+        
+        user_bg = pdb.get_member_image(ctx.author.id) is not None
+        server_bg = sdb.get_server_image(ctx.guild.id) is not None
+        allow_bg = server_settings.allow_custom_backgrounds
 
-        if image_settings.use_custom_bg:
-            if pdb.get_member_image(ctx.author.id) is not None:
+        if image_settings.use_custom_bg or server_bg:
+            if user_bg and allow_bg and image_settings.use_custom_bg:
                 image_bytes = base64.b64decode(pdb.get_member_image(ctx.author.id))
                 if image_bytes != None:
                     image_buffer = BytesIO(image_bytes)
-                    self.image = Image.open(image_buffer)
-                    self.image = self.image.convert('RGBA')
-            
-            elif sdb.get_server_image(ctx.guild.id) is not None:
+                    self.load_image(image_buffer)
+
+            elif server_bg:
                 image_bytes = base64.b64decode(sdb.get_server_image(ctx.guild.id))
-                if image_bytes != None:   
+                if image_bytes != None:
                     image_buffer = BytesIO(image_bytes)
-                    self.image = Image.open(image_buffer)
+                    self.load_image(image_buffer)
             else:
-                self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
+                self.load_image(_config.image.default_bg_path)
 
                 if self.image.mode != 'RGBA':
-                    self.image.convert('RGBA').save('res/image/default_image/default_bg.png')
-                    self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
+                    self.image.convert('RGBA').save(_config.image.default_bg_path)
+                    self.load_image(_config.image.default_bg_path)
         else:
-            self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
+            self.load_image(_config.image.default_bg_path)
 
             if self.image.mode != 'RGBA':
                 self.image.convert('RGBA').save('res/image/default_image/default_bg.png')
-                self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
-        
+                self.load_image(_config.image.default_bg_path)
+
         self.image = self.image.crop((0, 50, 700, 1300))
 
         self.img_size = self.image.size
@@ -431,7 +445,7 @@ class ImageGen():
 
         if not image_settings.disable_flag:
             self.draw_flag()
-        
+
         self.draw_rating_icon()
         self.draw_category_labels(img_draw)
         self.draw_medals_labels(img_draw)
@@ -508,11 +522,12 @@ class ImageGen():
             fill=(0, 0, 0, 20),
         )
 
+        if not self.image_settings.disable_stats_blocks:
         # draw stats rectangles
-        img_draw.rounded_rectangle(self.background_rectangles_map.main, radius=30, fill=(0, 0, 0))
-        img_draw.rounded_rectangle(self.background_rectangles_map.rating, radius=30, fill=(0, 0, 0))
-        img_draw.rounded_rectangle(self.background_rectangles_map.medals, radius=30, fill=(0, 0, 0))
-        img_draw.rounded_rectangle(self.background_rectangles_map.total, radius=30, fill=(0, 0, 0))
+            img_draw.rounded_rectangle(self.background_rectangles_map.main, radius=30, fill=(0, 0, 0))
+            img_draw.rounded_rectangle(self.background_rectangles_map.rating, radius=30, fill=(0, 0, 0))
+            img_draw.rounded_rectangle(self.background_rectangles_map.medals, radius=30, fill=(0, 0, 0))
+            img_draw.rounded_rectangle(self.background_rectangles_map.total, radius=30, fill=(0, 0, 0))
 
         bg = self.image.copy()
         if not self.image_settings.glass_effect == 0:
@@ -541,10 +556,9 @@ class ImageGen():
 
         self.image.paste(rt_img, (326, 460), rt_img)
 
-
     def draw_nickname(self, img: ImageDraw.ImageDraw):
-        if self.image_settings.hide_nickanme:
-            self.data.nickname = 'PLAYER'
+        if self.image_settings.hide_nickname:
+            self.data.nickname = 'Player'
         if self.image_settings.hide_clan_tag:
             self.data.data.clan_tag = None
         if not self.data.data.clan_tag is None:
@@ -556,18 +570,18 @@ class ImageGen():
                 'text':     self.data.nickname,
                 'font':     self.fonts.roboto,
             }
-            
+
             tag_length = img.textlength(**tag) + 10
             nick_length = img.textlength(**nickname)
             full_length = tag_length + nick_length
-            
+
             img.text(
                 xy=(self.img_size[0]//2 - tag_length//2, 20),
                 text=self.data.nickname,
                 font=self.fonts.roboto,
                 anchor='ma',
                 fill=self.image_settings.nickname_color)
-            
+
             img.text(
                 xy=(self.img_size[0]//2 + full_length//2 - tag_length//2, 20),
                 text=tag['text'],
@@ -582,17 +596,16 @@ class ImageGen():
                 anchor='ma',
                 fill=self.image_settings.nickname_color
             )
-        
+
         img.text(
             (self.img_size[0]//2, 55),
             text=f'ID: {str(self.data.id)}',
             font=self.fonts.roboto_small2,
             anchor='ma',
             fill=Colors.l_grey)
-        
+
     def draw_nickname_box(self, img: ImageDraw.ImageDraw):
         pass
-        
 
     def draw_category_labels(self, img: ImageDraw.ImageDraw):
         for i in self.coord.category_labels.keys():
@@ -904,22 +917,18 @@ class ImageGen():
                 return Colors.cyan
             if val >= 85:
                 return Colors.purple
-            
+
     async def speed_test(self):
         try:
             data, response_time = await async_wotb_api.test('rtx4080', 'eu', speed_test=True)
         except:
             return (0, 0)
-        generate_time = self.generate(ctx=None, data=data, speed_test=True)
-        return(
+        generate_time = self.generate(ctx=None, 
+                                      data=data, 
+                                      speed_test=True, 
+                                      image_settings=ImageSettings.model_validate({}),
+                                      server_settings=ServerSettings.model_validate({}))
+        return (
             round(response_time, 3),
             round(generate_time, 3)
         )
-
-    async def test(self):
-        import lib.api.async_wotb_api as async_wotb_api
-        player_data = await async_wotb_api.test('rtx4080', 'eu')
-        self.generate(ctx=None, data=player_data[0], disable_cache=True, debug_label=False)
-        self.image.show()
-        quit()
-

@@ -100,7 +100,7 @@ class CogReplayParser(commands.Cog):
             _log.error(traceback.format_exc())
             await ctx.respond(
                 embed=ErrorMSG().custom(
-                    title=Text().get().frequent.errors.error,
+                    Text().get(),
                     text=Text().get().cmds.parse_replay.errors.parsing_error
                     )
                 )

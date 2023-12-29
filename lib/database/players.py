@@ -22,7 +22,6 @@ class PlayersDB:
         self.collection = self.db['players']
 
     def set_member(self, data: DBPlayer, override: bool = False) -> bool:
-        member_id = int(member_id)
         data = DBPlayer.model_dump(data)
         if self.check_member(data['id']) and override:
             self.collection.update_one({'id': data['id']}, {'$set': {**data}})
@@ -197,7 +196,8 @@ class PlayersDB:
             if member_exist:
                 field_exist = self.collection.find_one({'id': member_id, 'image_settings': {'$exists': True}}) is not None
                 if field_exist:
-                    return ImageSettings.model_validate(self.collection.find_one({'id': member_id})['image_settings'])
+                    if self.collection.find_one({'id': member_id})['image_settings'] is not None:
+                        return ImageSettings.model_validate(self.collection.find_one({'id': member_id})['image_settings'])
                 else:
                     self.set_image_settings(member_id, ImageSettings.model_validate({}))
                     return ImageSettings.model_validate({})
@@ -362,15 +362,17 @@ class PlayersDB:
                         end_time = int(member['last_stats']['end_timestamp'])
                         if end_time > curr_time:
                             return True
+                        else:
+                            self.del_member_last_stats(member_id)
                 else:
-                    raise database.LastStatsNotFound(f'Last stats for user: {member_id} not found')
+                    return False
             else:
                 raise database.MemberNotFound(f'Member not found, id: {member_id}')
         except Exception:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
-    def delete_member_last_stats(self, member_id: int | str):
+    def del_member_last_stats(self, member_id: int | str):
         member_id = int(member_id)
         try:
             if self.check_member(member_id):
@@ -507,7 +509,7 @@ def test_db():
         _log.debug('Test complete')
 
         _log.debug("Testing `delete_member_last_stats`...")
-        assert pdb.delete_member_last_stats(data['id']), "`delete_member_last_stats` failed"
+        assert pdb.del_member_last_stats(data['id']), "`delete_member_last_stats` failed"
         assert not pdb.check_member_last_stats(data['id']), "`delete_member_last_stats` failed"
         _log.debug('Test complete')
 

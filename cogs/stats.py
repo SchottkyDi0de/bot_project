@@ -15,6 +15,7 @@ from lib.database.servers import ServersDB
 from lib.data_classes.db_player import ImageSettings
 from lib.blacklist.blacklist import check_user
 from lib.exceptions.blacklist import UserBanned
+from lib.data_classes.db_server import ServerSettings
 from lib.logger.logger import get_logger
 
 _log = get_logger(__name__, 'CogStatsLogger', 'logs/cog_stats.log')
@@ -80,7 +81,8 @@ class Stats(commands.Cog):
             else:
                 image_settings = ImageSettings()
             
-            img = await self.get_stats(ctx, nickname, region, image_settings)
+            server_settings = self.sdb.get_server_settings(ctx)
+            img = await self.get_stats(ctx, nickname, region, image_settings, server_settings)
 
             if img is not None:
                 await ctx.respond(file=File(img, 'stats.png'))
@@ -116,7 +118,8 @@ class Stats(commands.Cog):
                 player_data = self.db.get_member(ctx.author.id)
                 if player_data is not None:
                     image_settings = self.db.get_image_settings(ctx.author.id)
-                    img = await self.get_stats(ctx, player_data.nickname, player_data.region, image_settings)
+                    server_settings = self.sdb.get_server_settings(ctx)
+                    img = await self.get_stats(ctx, player_data.nickname, player_data.region, image_settings, server_settings)
 
                     if img is not None:
                         await ctx.respond(file=File(img, 'stats.png'))
@@ -126,7 +129,7 @@ class Stats(commands.Cog):
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
     
-    async def get_stats(self, ctx: commands.Context, nickname: str, region: str, image_settings: ImageSettings):
+    async def get_stats(self, ctx: commands.Context, nickname: str, region: str, image_settings: ImageSettings, server_settings: ServerSettings):
         exception = None
         try:
             data = await self.api.get_stats(nickname, region)
@@ -148,7 +151,7 @@ class Stats(commands.Cog):
             await ctx.respond(embed=getattr(self.err_msg, exception)())
             return None
         else:
-            img_data = self.img_gen.generate(ctx, data, image_settings)
+            img_data = self.img_gen.generate(ctx, data, image_settings, server_settings)
             return img_data
 
 

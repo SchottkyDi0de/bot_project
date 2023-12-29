@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel
 
 
 class ImageSettings(BaseModel):
@@ -13,7 +13,7 @@ class ImageSettings(BaseModel):
     main_text_color: str = '#0088fc'
     stats_text_color: str = '#0088fc'
     disable_flag: bool = False
-    hide_nickanme: bool = False
+    hide_nickname: bool = False
     hide_clan_tag: bool = False
     disable_stats_blocks: bool = False
     disable_rating_stats: bool = False
@@ -28,6 +28,7 @@ def set_image_settings(**kwargs) -> ImageSettings:
 
 
 class DBPlayer(BaseModel):
+    _id: object | None = None
     id: int
     game_id: int
     nickname: str

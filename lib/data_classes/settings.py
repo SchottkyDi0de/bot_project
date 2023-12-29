@@ -16,8 +16,17 @@ class Default(BaseModel):
     locale_alliases: Dict[str, str]
 
 
+class Image(BaseModel):
+    default_bg_path: str
+
+
 class Internal(BaseModel):
     ignore_tankopedia_failures: bool
+
+
+class HelpUrls(BaseModel):
+    ru: str
+    en: str
 
 
 class Auth(BaseModel):
@@ -59,7 +68,9 @@ class ConfigStruct(BaseModel):
     server: Server
     session_ttl: int
     default: Default
+    image: Image
     internal: Internal
+    help_urls: HelpUrls
     auth: Auth
     game_api: GameApi
     ds_api: DsApi

@@ -21,7 +21,7 @@ from lib.data_parser.parse_data import get_normalized_data
 from lib.exceptions import api as api_exceptions
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config, EnvConfig
-from lib.data_classes.db_player import DBPlayer
+from lib.data_classes.db_player import DBPlayer, ImageSettings
 
 _log = get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
 _config = Config().get()
@@ -281,7 +281,8 @@ class API:
                         'nickname': data['nickname'],
                         'game_id': data['account_id'],
                         'region': region,
-                        'id': dicrord_id
+                        'id': dicrord_id,
+                        'image_settings': ImageSettings().model_dump()
                     }
                 except Exception as e:
                     _log.debug(f'Error check player\n{traceback.format_exc()}')

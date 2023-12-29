@@ -61,7 +61,7 @@ def resize_image(image: Image.Image, size: tuple[int, int], mode: ResizeMode = R
                 _log.debug(f'Height oversize: {image.size}')
                 
             if width_oversize < 0 or height_oversize < 0:
-                filter = ImageFilter.GaussianBlur(radius=15)
+                filter = ImageFilter.GaussianBlur(radius=100)
                 bg = image.copy().resize(size, resample=Image.Resampling.LANCZOS).filter(filter)
                 bg.paste(
                     image, (
@@ -100,7 +100,7 @@ def resize_image(image: Image.Image, size: tuple[int, int], mode: ResizeMode = R
 
             if width_oversize < 0 or height_oversize < 0:
                 # bg = Image.new('RGBA', size, (0, 0, 0, 40))
-                filter = ImageFilter.GaussianBlur(radius=15)
+                filter = ImageFilter.GaussianBlur(radius=100)
                 bg = image.copy().resize(size, resample=Image.Resampling.LANCZOS).filter(filter)
                 bg.paste(
                     image, (

@@ -4,7 +4,6 @@ from typing import Dict
 from enum import Enum
 import base64
 from discord.ext import commands
-from base64 import b64decode
 
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 
@@ -15,13 +14,16 @@ from lib.data_classes.db_player import ImageSettings
 from lib.data_classes.session import SessionDiffData
 from lib.utils.singleton_factory import singleton
 from lib.image.for_iamge.icons import StatsIcons
+from lib.data_classes.db_server import ServerSettings
 from lib.database.tankopedia import TanksDB
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.locale.locale import Text
-from lib.logger import logger
+from lib.logger.logger import get_logger
+from lib.settings.settings import Config
 
-_log = logger.get_logger(__name__, 'ImageSessionLogger', 'logs/image_session.log')
+_log = get_logger(__name__, 'ImageSessionLogger', 'logs/image_session.log')
+_config = Config().get()
 
 
 class BlockTypes(Enum):
@@ -461,6 +463,13 @@ class ImageGen():
     image = None
     data = None
     text = None
+    
+    def load_image(self, bytes_ot_path: str | BytesIO) -> None:
+        image = Image.open(bytes_ot_path)
+        if image.mode != 'RGBA':
+            image = image.convert('RGBA')
+
+        self.image = image
 
     def generate(
             self, 
@@ -468,6 +477,7 @@ class ImageGen():
             diff_data: SessionDiffData,
             ctx: commands.Context,
             image_settings: ImageSettings,
+            server_settings: ServerSettings,
             test = False, 
             debug_label = True
             ):
@@ -512,32 +522,36 @@ class ImageGen():
                 )
             except TankNotFoundInTankopedia:
                 self.tank_names.append('Unknown')
+                
+        user_bg = self.pdb.get_member_image(ctx.author.id) is not None
+        server_bg = self.sdb.get_server_image(ctx.guild.id) is not None
+        allow_custom_background = server_settings.allow_custom_backgrounds
     
-        if image_settings.use_custom_bg:
-            if self.pdb.get_member_image(ctx.author.id) is not None:
+        if image_settings.use_custom_bg or server_bg:
+            if user_bg and allow_custom_background and image_settings.use_custom_bg:
                 image_bytes = base64.b64decode(self.pdb.get_member_image(ctx.author.id))
                 if image_bytes != None:
                     image_buffer = BytesIO(image_bytes)
                     self.image = Image.open(image_buffer)
-                    self.image = self.image.convert('RGBA')
+                    self.load_image(image_buffer)
             
-            elif self.sdb.get_server_image(ctx.guild.id) is not None:
+            elif server_bg:
                 image_bytes = base64.b64decode(self.sdb.get_server_image(ctx.guild.id))
                 if image_bytes != None:   
                     image_buffer = BytesIO(image_bytes)
-                    self.image = Image.open(image_buffer)
+                    self.load_image(image_buffer)
             else:
                 self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
 
                 if self.image.mode != 'RGBA':
                     self.image.convert('RGBA').save('res/image/default_image/default_bg.png')
-                    self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
+                    self.load_image(_config.image.default_bg_path)
         else:
-            self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
+            self.load_image(_config.image.default_bg_path)
 
             if self.image.mode != 'RGBA':
-                self.image.convert('RGBA').save('res/image/default_image/default_bg.png')
-                self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
+                self.image.convert('RGBA').save(_config.image.default_bg_path)
+                self.load_image()
 
         strt_time = time()
         self.image = self.image.convert('RGBA')
@@ -736,7 +750,7 @@ class ImageGen():
                 return ' • ?'
 
     def draw_nickname(self, img: ImageDraw.ImageDraw):
-        if self.image_settings.hide_nickanme:
+        if self.image_settings.hide_nickname:
             self.data.nickname = '~nickname hidden~'
         if self.image_settings.hide_clan_tag:
             self.data.data.clan_tag = None

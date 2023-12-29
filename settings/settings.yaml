@@ -24,8 +24,15 @@ default:
   available_regions: ['ru', 'eu', 'na', 'asia']
   locale_alliases: {ru: 'ru', en: 'en', pl: 'pl', uk: 'ua'}
 
+image:
+  default_bg_path: 'res/image/default_image/default_bg.png'
+
 internal:
   ignore_tankopedia_failures: true
+
+help_urls:
+  ru: https://github.com/SchottkyDi0de/Blitz_Statistics-docs/blob/main/docs/RU.md
+  en: https://github.com/SchottkyDi0de/Blitz_Statistics-docs/blob/main/docs/EN.md
 
 auth:
   wg_redirect_uri: 'http://<host>:<port>/auth/game'

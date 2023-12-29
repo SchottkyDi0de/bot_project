@@ -66,3 +66,5 @@ class PDBWorker:
         for member_id in self.db.get_players_ids():
             if self.db.check_member(member_id):
                 self.db.check_member_premium(member_id)
+                self.db.check_member_last_stats(member_id)
+                    

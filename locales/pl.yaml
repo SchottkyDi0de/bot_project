@@ -139,6 +139,8 @@ frequent:
     warning: Warning
 
   common:
+    'yes': 'Yes'
+    'no': 'No'
     nickname: Pseudonim
     region: Region
     time_units:
@@ -264,8 +266,6 @@ cmds:
         server: Set default background for this server (admin privileges required).
     errors:
       player_not_registred: To change the background, save your data using the `/astats` command
-      premium_not_found: You must be a premium user to change the background. For more information, visit the support server.
-      server_premium_not_found: To change the profile background on the server, the server must have premium status.
       permission_denied: You must have administrator rights to set the background for the server.
       file_error: The file is not a valid image.
       oversize: The file is too large (maximum 2 MB).
@@ -273,6 +273,120 @@ cmds:
       small_resolution: The image has too low resolution (minimum 256x256).
     info:
       set_background_ok: Background successfully changed.
+    items:
+      ''
+
+# image_settings command
+  image_settings:
+    descr:
+      this: Image settings
+      sub_descr:
+        use_custom_bg: Use custom background
+        glass_effect: Glass effect 0 - Disable (0-30)
+        blocks_bg_brightness: Block background brightness (0-100)
+        nickname_color: 'Nickname color (HEX Color)'
+        clan_tag_color: 'Clan tag color (HEX Color)'
+        stats_color: 'Main statistics color (HEX Color)'
+        main_text_color: 'Main text color (HEX Color)'
+        stats_text_color: 'Statistics text color (HEX Color)'
+        disable_flag: 'Disable region flag rendering'
+        hide_nickname: 'Hide nickname, will be replaced with Player'
+        hide_clan_tag: 'Hide clan tag, will be removed'
+        disable_stats_blocks: 'Disable statistics blocks rendering'
+        disable_rating_stats: 'Disable rating statistics'
+    errors:
+      ''
+    info:
+      set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
+    items:
+      ''
+
+  server_settings:
+    descr:
+      this: Server settings
+      sub_descr:
+        allow_custom_backgrounds: 'Allow custom backgrounds'
+    errors:
+      permission_denied: You must have administrator rights to modify server settings.
+    info:
+      set_ok: 'Server settings applied successfully, view current settings: `/server_settings_get`'
+    items:
+      ''
+
+  image_settings_get:
+    descr:
+      this: Get current image settings
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      get_ok: 'Current image settings:'
+    items:
+      settings_list: |-
+        ```python
+        - Use custom background:              <use_custom_bg>
+        - Glass effect:                       <glass_effect>
+        - Block background brightness:        <blocks_bg_brightness>
+        - Nickname color:                     <nickname_color>
+        - Clan tag color:                     <clan_tag_color>
+        - Main statistics color:              <stats_color>
+        - Main text color:                    <main_text_color>
+        - Statistics text color:              <stats_text_color>
+        - Disable region flag rendering:      <disable_flag>
+        - Hide nickname:                      <hide_nickname>
+        - Hide clan tag:                      <hide_clan_tag>
+        - Disable statistics blocks:          <disable_stats_blocks>
+        - Disable rating statistics:          <disable_rating_stats>```
+
+  server_settings_get:
+    descr:
+      this: Get current server settings
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      get_ok: 'Current server settings:'
+    items:
+      settings_list: |-
+        ```Python
+        - Allow custom backgrounds:           <allow_custom_backgrounds>
+        ```
+
+  server_settings_reset:
+    descr:
+      this: Reset server settings
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      reset_ok: Server settings were reset.
+    items:
+      ''
+
+  reset_background:
+    descr:
+      this: Reset custom background
+      sub_descr:
+        server: Reset default background for this server (admin privileges required).
+    errors:
+      permission_denied: You must have administrator rights to reset the background on the server.
+    info:
+      unset_background_ok: Custom background reset successfully
+    items:
+      ''
+  
+  image_settings_reset:
+    descr:
+      this: Reset image settings
+      sub_descr:
+        ''
+    errors:
+      ''
+    info:
+      reset_ok: Image settings were reset.
     items:
       ''
 

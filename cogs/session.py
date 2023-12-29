@@ -65,6 +65,7 @@ class Session(commands.Cog):
             else:
                 await ctx.respond(
                     embed=self.inf_msg.custom(
+                        Text().get(),
                         self.text_obj.get().cmds.start_session.info.player_not_registred
                     )
                 )
@@ -96,6 +97,7 @@ class Session(commands.Cog):
             if self.db.check_member(ctx.author.id):
                 member = self.db.get_member(ctx.author.id)
                 image_settings = self.db.get_image_settings(ctx.author.id)
+                server_settings = self.sdb.get_server_settings(ctx)
 
                 try:
                     stats = await self.api.get_stats(member.nickname, member.region)
@@ -123,13 +125,14 @@ class Session(commands.Cog):
                     await ctx.respond(embed=self.err_msg.session_not_updated())
                     return
                 
-                image = ImageGen().generate(stats, diff_stats, ctx, image_settings)
+                image = ImageGen().generate(stats, diff_stats, ctx, image_settings, server_settings)
                 self.db.extend_session(ctx.author.id)
                 await ctx.respond(file=File(image, 'session.png'))
                 return
 
             await ctx.respond(
                 embed=self.inf_msg.custom(
+                    Text().get(),
                     self.text_obj.get().cmds.get_session.info.player_not_registred,
                     colour='orange'
                     )
@@ -179,8 +182,8 @@ class Session(commands.Cog):
                     except database.MemberNotFound:
                         await ctx.respond(
                             embed=self.inf_msg.custom(
+                                Text().get(),
                                 self.text_obj.get().frequent.info.player_not_registred,
-                                self.text_obj.get().frequent.info.info
                                 )
                             )
                         return
@@ -217,16 +220,16 @@ class Session(commands.Cog):
                 else:
                     await ctx.respond(
                         embed=self.inf_msg.custom(
+                            Text().get(),
                             self.text_obj.get().cmds.session_state.items.not_started,
-                            self.text_obj.get().frequent.info.info,
                             colour='orange'
                             )
                         )
             else:
                 await ctx.respond(
                     embed=self.inf_msg.custom(
+                        Text().get(),
                         self.text_obj.get().cmds.session_state.info.player_not_registred,
-                        self.text_obj.get().frequent.info.info,
                         colour='blue'
                         )
                     )

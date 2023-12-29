@@ -11,8 +11,10 @@ from lib.locale.locale import Text
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.logger.logger import get_logger
+from lib.settings.settings import Config
 
 _log = get_logger(__name__, 'CogHelpLogger', 'logs/cog_help.log')
+_config = Config().get()
 
 
 class Help(commands.Cog):
@@ -39,17 +41,6 @@ class Help(commands.Cog):
     async def help(
         self, 
         ctx: commands.Context,
-        h_type: Option(
-            str,
-            description=Text().get().cmds.help.descr.sub_descr.help_types,
-            description_localizations={
-                'ru': Text().get('ru').cmds.help.descr.sub_descr.help_types,
-                'pl': Text().get('pl').cmds.help.descr.sub_descr.help_types,
-                'uk': Text().get('ua').cmds.help.descr.sub_descr.help_types
-                },
-            choices=Text().get().cmds.help.items.help_types,
-            default='all'
-            )
         ):
         try:
             check_user(ctx)
@@ -60,54 +51,48 @@ class Help(commands.Cog):
             Text().load_from_context(ctx)
             await ctx.defer()
             try:
-                match h_type:
-                    case 'syntax':
-                        await ctx.user.send(embed=InfoMSG().help_syntax())
-                    case 'setup':
-                        await ctx.user.send(embed=InfoMSG().help_setup())
-                    case 'statistics':
-                        await ctx.user.send(embed=InfoMSG().help_statistics())
-                    case 'session':
-                        await ctx.user.send(embed=InfoMSG().help_session())
-                    case 'other':
-                        await ctx.user.send(embed=InfoMSG().help_other())
-                    case 'all':
-                        for i in Text().get().cmds.help.items.help_types:
-                            if i == 'all':
-                                continue
-                            await ctx.user.send(embed=getattr(InfoMSG(), f'help_{i}')())
-                            await sleep(0.5)
+                match Text().current_lang:
+                    case 'ru':
+                        await ctx.author.send(
+                            embed=InfoMSG().custom(
+                                Text().get(),
+                                title=Text().get().cmds.help.items.help,
+                                text=_config.help_urls.ru
+                                )
+                            )
                     case _:
-                        await ctx.respond(embed=ErrorMSG().unknown_error())
+                        await ctx.author.send(
+                            embed=InfoMSG().custom(
+                                Text().get(),
+                                title=Text().get().cmds.help.items.help,
+                                text=_config.help_urls.en
+                                )
+                            )
+                        
                 await ctx.respond(embed=InfoMSG().help_send_ok())
                 return
+            
             except errors.Forbidden:
-                try:
-                    match h_type:
-                        case 'syntax':
-                            await ctx.channel.send(embed=InfoMSG().help_syntax())
-                        case 'setup':
-                            await ctx.channel.send(embed=InfoMSG().help_setup())
-                        case 'statistics':
-                            await ctx.channel.send(embed=InfoMSG().help_statistics())
-                        case 'session':
-                            await ctx.channel.send(embed=InfoMSG().help_session())
-                        case 'other':
-                            await ctx.channel.send(embed=InfoMSG().help_other())
-                        case 'all':
-                            for i in Text().get('en').cmds.help.items.help_types:
-                                if i == 'all':
-                                    continue
-                                await ctx.channel.send(embed=getattr(InfoMSG(), f'help_{i}')())
-                                await sleep(0.5)
-                        case _:
-                            await ctx.respond(embed=ErrorMSG().unknown_error())
-                            return
-                except Exception:
-                    await ctx.respond(embed=ErrorMSG().unknown_error())
-                    _log.error(traceback.format_exc())
-                    return
+                match Text().current_lang:
+                    case 'ru':
+                        await ctx.respond(
+                            embed=InfoMSG().custom(
+                                Text().get(),
+                                title=Text().get().cmds.help.items.help,
+                                text=_config.help_urls.ru
+                                )
+                            )
+                    case _:
+                        await ctx.respond(
+                            embed=InfoMSG().custom(
+                                Text().get(),
+                                title=Text().get().cmds.help.items.help,
+                                text=_config.help_urls.en
+                                )
+                            )
                 await ctx.respond(embed=InfoMSG().help_send_ok())
+                return
+
         except:
             _log.error(traceback.format_exc())
             await ctx.respond(embed=ErrorMSG().unknown_error())
