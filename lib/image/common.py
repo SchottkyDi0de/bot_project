@@ -350,7 +350,7 @@ class Colors():
     green = (30, 255, 38)    # Represents the color green
     cyan = (30, 187, 169)    # Represents the color cyan
     grey = (121, 121, 121)   # Represents the color grey
-    l_grey = (200, 200, 200)  # Represents the color light grey
+    l_grey = (200, 200, 200) # Represents the color light grey
     white = (240, 240, 240)  # Represents the color white
 
 
@@ -442,6 +442,9 @@ class ImageGen():
         self.darw_backround()
         self.draw_stats_icons()
         self.draw_medals()
+        
+        if data.from_cache and not image_settings.disable_cache_label:
+            self.draw_cache_label(self.image)
 
         if not image_settings.disable_flag:
             self.draw_flag()

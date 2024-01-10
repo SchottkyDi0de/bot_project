@@ -1,5 +1,5 @@
 from discord import Colour
-from discord import Embed
+from discord import Embed, File
 
 from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
@@ -109,13 +109,22 @@ class InfoMSG:
             locale: Localization,
             text: str,
             title: str = None,
+            footer: str = None,
+            image: File = None,
             colour: str = 'blurple'
         ) -> Embed:
     
         colour = getattr(Colour, colour)
-        return Embed(
+        embed = Embed(
             title=title if title is not None else locale.frequent.info.info,
             description=text,
-            colour=colour()
+            colour=colour(),
         )
+        
+        if footer is not None:
+            embed.set_footer(text=footer)
+        if image is not None:
+            embed.set_image(url=image)
+        return embed
+    
         

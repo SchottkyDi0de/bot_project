@@ -294,12 +294,15 @@ cmds:
         hide_clan_tag: 'Hide clan tag, will be removed'
         disable_stats_blocks: 'Disable statistics blocks rendering'
         disable_rating_stats: 'Disable rating statistics'
+        disable_cahce_label: 'Disable cache label'
     errors:
-      ''
+      color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
+      changes_not_found: No parameter change detected, change at least one parameter.
     info:
       set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
     items:
-      ''
+      color_error_note: 'All invalid values will be ignored.'
+      color_error_footer: 'Color code format: #rrggbb or #rgb. Example of valid color: #FF9900 - Orange.'
 
   server_settings:
     descr:
@@ -323,21 +326,22 @@ cmds:
     info:
       get_ok: 'Current image settings:'
     items:
-      settings_list: |-
-        ```python
-        - Use custom background:              <use_custom_bg>
-        - Glass effect:                       <glass_effect>
-        - Block background brightness:        <blocks_bg_brightness>
-        - Nickname color:                     <nickname_color>
-        - Clan tag color:                     <clan_tag_color>
-        - Main statistics color:              <stats_color>
-        - Main text color:                    <main_text_color>
-        - Statistics text color:              <stats_text_color>
-        - Disable region flag rendering:      <disable_flag>
-        - Hide nickname:                      <hide_nickname>
-        - Hide clan tag:                      <hide_clan_tag>
-        - Disable statistics blocks:          <disable_stats_blocks>
-        - Disable rating statistics:          <disable_rating_stats>```
+      use_custom_bg: Custom background
+      glass_effect: Glass effect
+      blocks_bg_transparency: Blocks transparency with statistics
+      nickname_color: Nickname color
+      clan_tag_color: Clan tag color
+      stats_color: Main Statistics Color
+      main_text_color: Main Text Color
+      stats_text_color: Statistics Text Color
+      negative_stats_color: Negative Statistics Color
+      positive_stats_color: Positive Statistics Color
+      disable_flag: Hide region flag
+      hide_nickname: Hide nickname
+      hide_clan_tag: Hide clan tag
+      disable_stats_blocks: Hide statistics blocks
+      disable_rating_stats: Hide rating statistics
+      disable_cahce_label: Hide cache icon
 
   server_settings_get:
     descr:

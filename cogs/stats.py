@@ -82,7 +82,13 @@ class Stats(commands.Cog):
                 image_settings = ImageSettings()
             
             server_settings = self.sdb.get_server_settings(ctx)
-            img = await self.get_stats(ctx, nickname, region, image_settings, server_settings)
+            img = await self.get_stats(
+                ctx, 
+                region=region, 
+                nickname=nickname, 
+                image_settings=image_settings, 
+                server_settings=server_settings
+                )
 
             if img is not None:
                 await ctx.respond(file=File(img, 'stats.png'))
@@ -119,7 +125,13 @@ class Stats(commands.Cog):
                 if player_data is not None:
                     image_settings = self.db.get_image_settings(ctx.author.id)
                     server_settings = self.sdb.get_server_settings(ctx)
-                    img = await self.get_stats(ctx, player_data.nickname, player_data.region, image_settings, server_settings)
+                    img = await self.get_stats(
+                        ctx,
+                        region=player_data.region,
+                        game_id=player_data.game_id, 
+                        image_settings=image_settings, 
+                        server_settings=server_settings
+                        )
 
                     if img is not None:
                         await ctx.respond(file=File(img, 'stats.png'))
@@ -129,10 +141,20 @@ class Stats(commands.Cog):
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
     
-    async def get_stats(self, ctx: commands.Context, nickname: str, region: str, image_settings: ImageSettings, server_settings: ServerSettings):
+    async def get_stats(
+            self, 
+            ctx: commands.Context, 
+            image_settings: ImageSettings, 
+            server_settings: ServerSettings,
+            region: str,
+            game_id: int | None = None,
+            nickname: str | None = None, 
+        ):
         exception = None
         try:
-            data = await self.api.get_stats(nickname, region)
+            data = await self.api.get_stats(
+                game_id=game_id, search=nickname, region=region
+                )
         except* api.EmptyDataError:
             exception = 'unknown_error'
         except* api.NeedMoreBattlesError:

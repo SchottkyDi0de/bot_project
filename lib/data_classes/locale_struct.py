@@ -307,6 +307,7 @@ class SubDescr4(BaseModel):
     hide_clan_tag: str
     disable_stats_blocks: str
     disable_rating_stats: str
+    disable_cahce_label: str
 
 
 class Descr8(BaseModel):
@@ -314,15 +315,25 @@ class Descr8(BaseModel):
     sub_descr: SubDescr4
 
 
+class Errors8(BaseModel):
+    color_error: str
+    changes_not_found: str
+
+
 class Info8(BaseModel):
     set_ok: str
 
 
+class Items1(BaseModel):
+    color_error_note: str
+    color_error_footer: str
+
+
 class ImageSettings(BaseModel):
     descr: Descr8
-    errors: str
+    errors: Errors8
     info: Info8
-    items: str
+    items: Items1
 
 
 class SubDescr5(BaseModel):
@@ -334,13 +345,13 @@ class Descr9(BaseModel):
     sub_descr: SubDescr5
 
 
-class Errors8(BaseModel):
+class Errors9(BaseModel):
     permission_denied: str
 
 
 class ServerSettings(BaseModel):
     descr: Descr9
-    errors: Errors8
+    errors: Errors9
     info: Info8
     items: str
 
@@ -354,22 +365,41 @@ class Info10(BaseModel):
     get_ok: str
 
 
-class Items1(BaseModel):
-    settings_list: str
+class Items2(BaseModel):
+    use_custom_bg: str
+    glass_effect: str
+    blocks_bg_transparency: str
+    nickname_color: str
+    clan_tag_color: str
+    stats_color: str
+    main_text_color: str
+    stats_text_color: str
+    negative_stats_color: str
+    positive_stats_color: str
+    disable_flag: str
+    hide_nickname: str
+    hide_clan_tag: str
+    disable_stats_blocks: str
+    disable_rating_stats: str
+    disable_cahce_label: str
 
 
 class ImageSettingsGet(BaseModel):
     descr: Descr10
     errors: str
     info: Info10
-    items: Items1
+    items: Items2
+
+
+class Items3(BaseModel):
+    settings_list: str
 
 
 class ServerSettingsGet(BaseModel):
     descr: Descr10
     errors: str
     info: Info10
-    items: Items1
+    items: Items3
 
 
 class Info12(BaseModel):
@@ -405,7 +435,7 @@ class Info14(BaseModel):
 
 class ResetBackground(BaseModel):
     descr: Descr14
-    errors: Errors8
+    errors: Errors9
     info: Info14
     items: str
 
@@ -423,7 +453,7 @@ class Info15(BaseModel):
     send_ok: str
 
 
-class Items3(BaseModel):
+class Items4(BaseModel):
     help_types: List[str]
     help: str
     syntax: str
@@ -437,7 +467,7 @@ class Help(BaseModel):
     descr: Descr15
     errors: str
     info: Info15
-    items: Items3
+    items: Items4
 
 
 class SubDescr8(BaseModel):
@@ -449,7 +479,7 @@ class Descr16(BaseModel):
     sub_descr: SubDescr8
 
 
-class Errors10(BaseModel):
+class Errors11(BaseModel):
     parsing_error: str
     uncorrect_file_format: str
 
@@ -459,7 +489,7 @@ class Common1(BaseModel):
     lose: str
 
 
-class Items4(BaseModel):
+class Items5(BaseModel):
     avg_stats: str
     empty_player: str
     title: str
@@ -469,9 +499,9 @@ class Items4(BaseModel):
 
 class ParseReplay(BaseModel):
     descr: Descr16
-    errors: Errors10
+    errors: Errors11
     info: str
-    items: Items4
+    items: Items5
 
 
 class Descr17(BaseModel):

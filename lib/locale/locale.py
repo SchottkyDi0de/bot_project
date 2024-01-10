@@ -10,35 +10,40 @@ from lib.settings.settings import Config
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 
+_config = Config().get()
+
 
 @singleton
 class Text():
     def __init__(self) -> None:
         self.sdb = ServersDB()
         self.pdb = PlayersDB()
-        self.default_lang = Config().get().default.lang
+        self.default_lang = _config.default.lang
         self.current_lang = self.default_lang
         self.datas: Dict[str, Localization] = {}
 
-        for i in ['pl', 'en', 'ru', 'ua']:
+        for i in _config.default.available_locales:
+            if i == 'auto':
+                continue
             with open(f'locales/{i}.yaml', encoding='utf-8') as f:
                 self.datas |= {i: Localization.model_validate(yaml.safe_load(f))}
         
     def load_from_context(self, ctx: Context) -> None:
-        if self.pdb.get_member_lang(ctx.author.id) is not None:
-            self.load(self.pdb.get_member_lang(ctx.author.id))
+        member_lang = self.pdb.get_member_lang(ctx.author.id)
+        if member_lang is not None:
+            self.load(member_lang)
         else:
-            if ctx.interaction.locale in list(Config().get().default.locale_alliases.keys()):
-                self.load(Config().get().default.locale_alliases[ctx.interaction.locale])
+            if ctx.interaction.locale in list(_config.default.locale_alliases.keys()):
+                self.load(_config.default.locale_alliases[ctx.interaction.locale])
             else:
                 self.load(self.default_lang)
 
-    def load(self, lang: str) -> Localization | None:
-        if self.current_lang == lang:
-            return
-
-        if lang not in Config().get().default.available_locales:
-            lang = Config().get().default.lang
+    def load(self, lang: str | None) -> Localization:
+        if lang not in _config.default.available_locales:
+            lang = _config.default.lang
+        
+        if lang is None:
+            lang = self.default_lang
         
         self.current_lang = lang
 
@@ -49,8 +54,6 @@ class Text():
 
     def get(self, lang: str | None = None) -> Localization:
         if lang is None:
-            return self.datas[self.current_lang]
+            return self.load(self.current_lang)
         
-        else:
-            return self.load(lang)
-
+        return self.load(lang)

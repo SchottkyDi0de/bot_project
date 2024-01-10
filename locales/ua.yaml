@@ -295,12 +295,15 @@ cmds:
         hide_clan_tag: 'Hide clan tag, will be removed'
         disable_stats_blocks: 'Disable statistics blocks rendering'
         disable_rating_stats: 'Disable rating statistics'
+        disable_cahce_label: 'Disabble cache label'
     errors:
-      ''
+      color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
+      changes_not_found: No parameter change detected, change at least one parameter.
     info:
       set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
     items:
-      ''
+      color_error_note: 'All invalid values will be ignored.'
+      color_error_footer: 'Color code format: #rrggbb or #rgb. Example of valid color: #FF9900 - Orange.'
 
   server_settings:
     descr:
@@ -323,22 +326,23 @@ cmds:
       ''
     info:
       get_ok: 'Current image settings:'
-    items:
-      settings_list: |-
-        ```python
-        - Use custom background:              <use_custom_bg>
-        - Glass effect:                       <glass_effect>
-        - Block background brightness:        <blocks_bg_brightness>
-        - Nickname color:                     <nickname_color>
-        - Clan tag color:                     <clan_tag_color>
-        - Main statistics color:              <stats_color>'
-        - Main text color:                    <main_text_color>
-        - Statistics text color:              <stats_text_color>
-        - Disable region flag rendering:      <disable_flag>
-        - Hide nickname:                      <hide_nickname>
-        - Hide clan tag:                      <hide_clan_tag>
-        - Disable statistics blocks:          <disable_stats_blocks>
-        - Disable rating statistics:          <disable_rating_stats>```
+    items: # translated with GPT4
+      use_custom_bg: Використовувати користувацький фон
+      glass_effect: Ефект скла
+      blocks_bg_transparency: Прозорість блоків зі статистикою
+      nickname_color: Колір нікнейму
+      clan_tag_color: Колір тегу клану
+      stats_color: Колір основних статистик
+      main_text_color: Колір основного тексту
+      stats_text_color: Колір тексту статистики
+      negative_stats_color: Колір негативних статистик
+      positive_stats_color: Колір позитивних статистик
+      disable_flag: Вимкнути відображення прапора
+      hide_nickname: Приховати нікнейм
+      hide_clan_tag: Приховати тег клану
+      disable_stats_blocks: Приховати блоки зі статистикою
+      disable_rating_stats: Приховати рейтингову статистику
+      disable_cahce_label: Приховати позначку кешу
 
   server_settings_get:
     descr:

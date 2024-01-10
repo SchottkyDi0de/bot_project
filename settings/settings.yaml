@@ -15,7 +15,11 @@ server:
   host: '127.0.0.1'
   port: 8000
 
-session_ttl: 86400 # in seconds
+session:
+  ttl: 86_400 # in seconds
+
+autosession:
+  ttl: 2_592_000 # in seconds
 
 default:
   prefix : '!'  # deprecated
@@ -33,6 +37,7 @@ internal:
 help_urls:
   ru: https://github.com/SchottkyDi0de/Blitz_Statistics-docs/blob/main/docs/RU.md
   en: https://github.com/SchottkyDi0de/Blitz_Statistics-docs/blob/main/docs/EN.md
+  ua: https://github.com/SchottkyDi0de/Blitz_Statistics-docs/blob/main/docs/UA.md
 
 auth:
   wg_redirect_uri: 'http://<host>:<port>/auth/game'
@@ -58,6 +63,7 @@ game_api:
       "https://<reg_url>/wotb/account/info/\
       ?application_id=<app_id>\
       &account_id=<player_id>\
+      &extra=statistics.rating\
       &fields=-statistics.clan"
 
     get_achievements:

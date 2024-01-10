@@ -27,6 +27,7 @@ class Internal(BaseModel):
 class HelpUrls(BaseModel):
     ru: str
     en: str
+    ua: str
 
 
 class Auth(BaseModel):
@@ -61,12 +62,21 @@ class Urls1(BaseModel):
 
 class DsApi(BaseModel):
     urls: Urls1
+    
+
+class Session(BaseModel):
+    ttl: int
+    
+
+class AutoSession(BaseModel):
+    ttl: int
 
 
 class ConfigStruct(BaseModel):
     bot_name: str
     server: Server
-    session_ttl: int
+    session: Session
+    autosession: AutoSession
     default: Default
     image: Image
     internal: Internal

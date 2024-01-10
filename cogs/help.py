@@ -3,6 +3,7 @@ from asyncio import sleep
 
 from discord import Option, errors
 from discord.ext import commands
+
 from lib.blacklist.blacklist import check_user
 from lib.exceptions.blacklist import UserBanned
 from lib.database.servers import ServersDB
@@ -60,6 +61,14 @@ class Help(commands.Cog):
                                 text=_config.help_urls.ru
                                 )
                             )
+                    case 'ua':
+                        await ctx.author.send(
+                            embed=InfoMSG().custom(
+                                Text().get(),
+                                title=Text().get().cmds.help.items.help,
+                                text=_config.help_urls.ua
+                            )
+                        )
                     case _:
                         await ctx.author.send(
                             embed=InfoMSG().custom(
@@ -82,6 +91,14 @@ class Help(commands.Cog):
                                 text=_config.help_urls.ru
                                 )
                             )
+                    case 'ua':
+                        await ctx.respond(
+                            embed=InfoMSG().custom(
+                                Text().get(),
+                                title=Text().get().cmds.help.items.help,
+                                text=_config.help_urls.ua
+                            )
+                        )
                     case _:
                         await ctx.respond(
                             embed=InfoMSG().custom(

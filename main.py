@@ -24,7 +24,6 @@ class App():
     def __init__(self):
         self.intents = Intents.default()
         self.pbd_worker = PDBWorker()
-        self.intents.message_content = True
         self.bot = commands.Bot(intents=self.intents, command_prefix=_config.default.prefix)
         self.bot.remove_command('help')
 

@@ -284,7 +284,7 @@ cmds:
       sub_descr:
         use_custom_bg: Использовать нестандартный фон
         glass_effect: Эффект стекла 0 - Выключить (0-30)
-        blocks_bg_brightness: Яркость блоков со статистикой (0-100)
+        blocks_bg_brightness: Прозрачность блоков со статистикой (0-100)
         nickname_color: 'Цвет никнейма (HEX Color)'
         clan_tag_color: 'Цвет тега клана (HEX Color)'
         stats_color: 'Цвет основыных статистик (HEX Color)'
@@ -295,12 +295,15 @@ cmds:
         hide_clan_tag: 'Скрыть тег клана, будет удалён'
         disable_stats_blocks: 'Отключить отрисовку блоков статистик'
         disable_rating_stats: 'Отключить рейтинговую статистику'
+        disable_cahce_label: 'Отключить отрисовку иконки кэша'
     errors:
-      ''
+      color_error: 'Недопустимый цветовой код для `<param_name>`, значение: `<value>`'
+      changes_not_found: Не обнаружено изменение параметров, измените хотябы один параметр.
     info:
       set_ok: 'Настройки изображения успешно применены, получить текущие настройки: `/image_settings_get`'
     items:
-      ''
+      color_error_note: 'Все недопустимые значение будут проигнорированы.'
+      color_error_footer: 'Формат цветового кода: #rrggbb или #rgb. Пример правильного цвета: #FF9900 - Оранжевый.'
 
   server_settings:
     descr:
@@ -326,21 +329,22 @@ cmds:
     info:
       get_ok: 'Текущие настройки изображения:'
     items:
-      settings_list: |-
-        ```python
-        - Использовать нестандартный фон:     <use_custom_bg>
-        - Эффект стекла:                      <glass_effect>
-        - Яркость блоков со статистикой:      <blocks_bg_brightness>
-        - Цвет никнейма:                      <nickname_color>
-        - Цвет тега клана:                    <clan_tag_color>
-        - Цвет основных статистик:            <stats_color>
-        - Цвет основного текста:              <main_text_color>
-        - Цвет текста статистик:              <stats_text_color>
-        - Отключить отрисовку флага:          <disable_flag>
-        - Скрывать никнейм:                   <hide_nickname>
-        - Скрывать тег клана:                 <hide_clan_tag>
-        - Отключить отрисовку блоков:         <disable_stats_blocks>
-        - Отключить рейтинговую статистику:   <disable_rating_stats>```
+      use_custom_bg: Пользовательский фон
+      glass_effect: Эффект стекла
+      blocks_bg_transparency: Прозрачность блоков со статистикой
+      nickname_color: Цвет никнейма
+      clan_tag_color: Цвет тега клана
+      stats_color: Цвет основных статистик
+      main_text_color: Цвет основного текста
+      stats_text_color: Цвет текста статистик
+      negative_stats_color: Цвет отрицательной статистики
+      positive_stats_color: Цвет положительной статистики
+      disable_flag: Отключить отрисовку флага
+      hide_nickname: Скрыть никнейм
+      hide_clan_tag: Скрыть тег клана
+      disable_stats_blocks: Скрыть блоки со статистикой
+      disable_rating_stats: Скрыть рейтинговую статистику
+      disable_cahce_label: Скрыть иконку кэша
 
   image_settings_reset:
     descr:

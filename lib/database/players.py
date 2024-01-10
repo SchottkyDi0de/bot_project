@@ -5,7 +5,7 @@ import time
 from pymongo import MongoClient
 from pymongo.results import DeleteResult
 from lib.logger.logger import get_logger
-from lib.data_classes.db_player import DBPlayer, ImageSettings
+from lib.data_classes.db_player import DBPlayer, ImageSettings, SessionSettings
 from datetime import datetime
 from lib.exceptions import database
 from lib.settings.settings import Config
@@ -351,6 +351,19 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
+    def session_settings_checker(self, member_id: int | str) -> bool:
+        if self.check_member(member_id):
+            if self.collection.find_one({'id': member_id})['session_settings'] is not None:
+                return True
+        else:
+            return False
+        
+    def autosession_handler(self, member_id: int | str) -> bool:
+        pass
+    
+    def get_member_autosession(self, member_id: int | str) -> SessionSettings:
+        pass
+        
     def check_member_last_stats(self, member_id: int | str) -> bool:
         member_id = int(member_id)
         try:
@@ -432,7 +445,7 @@ class PlayersDB:
             if self.check_member(member_id):
                 if self.check_member_last_stats(member_id):
                     user = self.collection.find_one({'id': member_id})
-                    user['last_stats']['end_timestamp'] = int(datetime.now().timestamp()) + _config.session_ttl
+                    user['last_stats']['end_timestamp'] = int(datetime.now().timestamp()) + _config.session.ttl
                     self.collection.update_one(
                         {'id': member_id},
                         {'$set': user}
@@ -445,88 +458,3 @@ class PlayersDB:
         except Exception:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
-
-def test_db():
-    _log.debug("Testing PDB methodss...")
-
-    data = {
-            "id": 924242252014972959, "game_id": 0, "nickname": "test", "region": "eu", 
-            "premium": False, "premium_time": None, "lang": "ru", "last_stats": None, 
-            "image": None, "locked": False, "verified": False
-            }
-    
-    _log.debug(f"Testing on data: {data}")
-    try:
-        pdb = PlayersDB()
-        
-        _log.debug(f'Testing `set_member`...')
-        assert pdb.set_member(DBPlayer.model_validate(data), True), "`set_member` failed set data"
-        _log.debug('Test complete')
-        
-        _log.debug('Testing `check_member_is_verefied`\t`verefied` is False...')
-        assert not pdb.check_member_is_verefied(data['id']), "`check_member_is_verefied` failed test1"
-        _log.debug("`check_member_is_verefied` complete test1, next test 'verefied is True'...")
-        data['verified'] = True
-        pdb.set_member(DBPlayer.model_validate(data), True)
-        assert pdb.check_member_is_verefied(data['id']), "`check_member_is_verefied` failed test2"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `set_member_lock`...")
-        assert pdb.set_member_lock(data['id']), "`set_member_lock` failed"
-        assert pdb.check_member_is_verefied(data['id']), "`set_member_lock` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `unset_member_lock`...")
-        assert pdb.unset_member_lock(data['id']), "`set_member_lock` failed"
-        assert not pdb.check_member_lock(data['id']), "`unset_member_lock` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `set_member_verefied`...")
-        assert pdb.set_member_verified(data['id']), "`set_member_verefied` failed"
-        assert pdb.check_member_is_verefied(data['id']), "`set_member_verefied` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `unset_member_verefied`...")
-        assert pdb.unset_member_verified(data['id']), "`unset_member_verefied` failed"
-        assert not pdb.check_member_is_verefied(data['id']), "`unset_member_verefied` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `set_member_last_stats`...")
-        assert not pdb.check_member_last_stats(data['id']), "`check_member_last_stats` failed"
-        _log.debug('test1 complete')
-        data['last_stats'] = {}
-        pdb.set_member(DBPlayer.model_validate(data), True)
-        assert pdb.check_member_last_stats(data['id']), "`check_member_last_stats` failed"
-        _log.debug('Test complete')
-        
-        _log.debug("Testing `get_member_last_stats`...")
-        assert pdb.get_member_last_stats(data['id']) == data['last_stats'], "`get_member_last_stats` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `set_member_last_stats`...")
-        assert pdb.set_member_last_stats(data['id'], {}), "`set_member_last_stats` failed"
-        assert pdb.check_member_last_stats(data['id']), "`set_member_last_stats` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `delete_member_last_stats`...")
-        assert pdb.del_member_last_stats(data['id']), "`delete_member_last_stats` failed"
-        assert not pdb.check_member_last_stats(data['id']), "`delete_member_last_stats` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `get_member_lang`...")
-        assert pdb.get_member_lang(data['id']) == data['lang'], "`set_member_lang` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `set_member_lang`...")
-        assert pdb.set_member_lang(data['id'], 'en'), "`set_member_lang` failed"
-        assert pdb.get_member_lang(data['id']) == 'en', "`set_member_lang` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `del_member`...")
-        assert pdb.del_member(data['id']), "`del_member` failed"
-        assert not pdb.check_member(data['id']), "`del_member` failed"
-        _log.debug('Test complete')
-
-        _log.debug("All tests completed")
-    except AssertionError:
-        _log.error(f"Database error during testing: {traceback.format_exc()}")

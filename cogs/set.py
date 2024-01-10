@@ -23,6 +23,7 @@ from lib.data_classes.db_server import DBServer, ServerSettings, set_server_sett
 from lib.data_classes.db_player import DBPlayer, ImageSettings, set_image_settings
 from lib.image.utils.hex_color_validator import hex_color_validate
 from lib.utils.string_parser import insert_data
+from lib.utils.bool_to_text import bool_handler
 
 _log = get_logger(__name__, 'CogSetLogger', 'logs/cog_set.log')
 _config = Config().get()
@@ -141,26 +142,6 @@ class Set(commands.Cog):
             _log.error(traceback.format_exc())
             await ctx.respond(embed=self.err_msg.unknown_error())
 
-    # @commands.slash_command(guild_only=True)
-    # async def setup_server(
-    #         self,
-    #         ctx: commands.Context
-    #     ):
-    #     try:
-    #         check_user(ctx)
-    #     except UserBanned:
-    #         return
-        
-    #     try:
-    #         if not self.sdb.check_server(ctx.guild.id):
-    #             self.sdb.set_new_server(ctx.guild.id, ctx.guild.name)
-    #             await ctx.respond('`Set ok`')
-    #         else:
-    #             await ctx.respond('`Error, server already set`')
-    #     except Exception:
-    #         _log.error(traceback.format_exc())
-    #         await ctx.respond(embed=self.err_msg.unknown_error())
-
     @commands.slash_command(
         guild_only=True,
         description=Text().get('en').cmds.server_settings.descr.this,
@@ -225,6 +206,7 @@ class Set(commands.Cog):
             'uk': Text().get('ua').cmds.set_background.descr.this
             }
         )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def set_background(
             self,
             ctx: commands.Context,
@@ -519,6 +501,16 @@ class Set(commands.Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_rating_stats,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_rating_stats
                 }
+            ),
+        disable_cache_label: Option(
+            bool,
+            required=False,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.disable_cahce_label,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.disable_cahce_label,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_cahce_label,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_cahce_label
+                }
             )
         ):
         try:
@@ -527,24 +519,76 @@ class Set(commands.Cog):
             return
         
         try:
-            image_settings = self.db.get_image_settings(ctx.author.id)
             Text().load_from_context(ctx)
-            image_settings = set_image_settings(
-                use_custom_bg=use_custom_bg if use_custom_bg is not None else image_settings.use_custom_bg,
-                blocks_bg_brightness=(blocks_bg_brightness / 100) if blocks_bg_brightness is not None else image_settings.blocks_bg_brightness,
-                glass_effect=glass_effect if glass_effect is not None else image_settings.glass_effect,
-                nickname_color=nickname_color if hex_color_validate(nickname_color) else image_settings.nickname_color,
-                clan_tag_color=clan_tag_color if hex_color_validate(clan_tag_color) else image_settings.clan_tag_color,
-                stats_color=stats_color if hex_color_validate(stats_color) else image_settings.stats_color,
-                main_text_color=main_text_color if hex_color_validate(main_text_color) else image_settings.main_text_color,
-                stats_text_color=stats_text_color if hex_color_validate(stats_text_color) else image_settings.stats_text_color,
-                disable_flag=disable_flag if disable_flag is not None else image_settings.disable_flag,
-                hide_nickname=hide_nickname if hide_nickname is not None else image_settings.hide_nickname,
-                hide_clan_tag=hide_clan_tag if hide_clan_tag is not None else image_settings.hide_clan_tag,
-                disable_stats_blocks=disable_stats_blocks if disable_stats_blocks is not None else image_settings.disable_stats_blocks,
-                disable_rating_stats=disable_rating_stats if disable_rating_stats is not None else image_settings.disable_rating_stats
-            )
-            self.db.set_image_settings(ctx.author.id, image_settings)
+            image_settings = self.db.get_image_settings(ctx.author.id)
+            color_error_data = []
+            color_error = False
+            
+            current_settings = {
+                'use_custom_bg': use_custom_bg,
+                'glass_effect': glass_effect,
+                'main_text_color': main_text_color,
+                'blocks_bg_brightness': blocks_bg_brightness,
+                'nickname_color': nickname_color,
+                'clan_tag_color': clan_tag_color,
+                'stats_color': stats_color,
+                'stats_text_color': stats_text_color,
+                'disable_flag': disable_flag,
+                'hide_nickname': hide_nickname,
+                'hide_clan_tag': hide_clan_tag,
+                'disable_stats_blocks': disable_stats_blocks,
+                'disable_rating_stats': disable_rating_stats,
+                'disable_cache_label': disable_cache_label
+            }
+            
+            set_values_count = 0
+            for key, value in current_settings.items():
+                if value is None:
+                    current_settings[key] = getattr(image_settings, key)
+                else:
+                    set_values_count += 1
+                if 'color' in key and value is not None:
+                    set_values_count += 1
+                    if not hex_color_validate(value):
+                        color_error = True
+                        color_error_data.append({'param_name': key, 'value': value})
+                        current_settings[key] = getattr(image_settings, key)
+                        
+            if set_values_count == 0:
+                await ctx.respond(
+                    embed=self.inf_msg.custom(
+                        Text().get(),
+                        text=Text().get().cmds.image_settings.errors.changes_not_found,
+                        title=Text().get().frequent.info.warning,
+                        colour='orange'
+                    )
+                )
+                return
+            
+            if color_error:
+                text = ''
+                for i in color_error_data:
+                    text += insert_data(
+                        Text().get().cmds.image_settings.errors.color_error,
+                        {
+                            'param_name': i['param_name'],
+                            'value': i['value']
+                        }
+                    ) + '\n'
+                    
+                await ctx.respond(
+                    embed=self.inf_msg.custom(
+                        Text().get(),
+                        text=text + Text().get().cmds.image_settings.items.color_error_note,
+                        title=Text().get().frequent.info.warning,
+                        footer=Text().get().cmds.image_settings.items.color_error_footer,
+                        colour='orange',
+                    ).add_field(name='Color picker', value='[Click here](https://g.co/kgs/FwKjhNE)', inline=False)
+                )
+                self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(current_settings))
+                return
+                
+            self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(current_settings))
             await ctx.respond(
                 embed=self.inf_msg.custom(
                     Text().get(),
@@ -579,7 +623,7 @@ class Set(commands.Cog):
                 text=insert_data(
                     Text().get().cmds.image_settings_get.items.settings_list,
                     {
-                        'use_custom_bg': image_settings.use_custom_bg,
+                        'use_custom_bg': bool_handler(image_settings.use_custom_bg),
                         'blocks_bg_brightness': image_settings.blocks_bg_brightness,
                         'glass_effect': image_settings.glass_effect,
                         'nickname_color': image_settings.nickname_color,
@@ -587,11 +631,12 @@ class Set(commands.Cog):
                         'stats_color': image_settings.stats_color,
                         'main_text_color': image_settings.main_text_color,
                         'stats_text_color': image_settings.stats_text_color,
-                        'disable_flag': image_settings.disable_flag,
-                        'hide_nickname': image_settings.hide_nickname,
-                        'hide_clan_tag': image_settings.hide_clan_tag,
-                        'disable_stats_blocks': image_settings.disable_stats_blocks,
-                        'disable_rating_stats': image_settings.disable_rating_stats
+                        'disable_flag': bool_handler(image_settings.disable_flag),
+                        'hide_nickname': bool_handler(image_settings.hide_nickname),
+                        'hide_clan_tag': bool_handler(image_settings.hide_clan_tag),
+                        'disable_stats_blocks': bool_handler(image_settings.disable_stats_blocks),
+                        'disable_rating_stats': bool_handler(image_settings.disable_rating_stats),
+                        'disable_cache_label': bool_handler(image_settings.disable_cache_label)
                     }
                 ),
             )
@@ -649,7 +694,7 @@ class Set(commands.Cog):
                 text=insert_data(
                     Text().get().cmds.server_settings_get.items.settings_list,
                     {
-                        'allow_custom_backgrounds': server_settings.allow_custom_backgrounds
+                        'allow_custom_backgrounds': bool_handler(server_settings.allow_custom_backgrounds)
                     }
                 ),
             )
