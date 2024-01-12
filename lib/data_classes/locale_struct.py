@@ -368,7 +368,7 @@ class Info10(BaseModel):
 class Items2(BaseModel):
     use_custom_bg: str
     glass_effect: str
-    blocks_bg_transparency: str
+    blocks_bg_opacity: str
     nickname_color: str
     clan_tag_color: str
     stats_color: str
@@ -381,7 +381,7 @@ class Items2(BaseModel):
     hide_clan_tag: str
     disable_stats_blocks: str
     disable_rating_stats: str
-    disable_cahce_label: str
+    disable_cache_label: str
 
 
 class ImageSettingsGet(BaseModel):

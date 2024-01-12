@@ -331,7 +331,7 @@ cmds:
     items:
       use_custom_bg: Пользовательский фон
       glass_effect: Эффект стекла
-      blocks_bg_transparency: Прозрачность блоков со статистикой
+      blocks_bg_opacity: Прозрачность блоков со статистикой
       nickname_color: Цвет никнейма
       clan_tag_color: Цвет тега клана
       stats_color: Цвет основных статистик
@@ -344,7 +344,7 @@ cmds:
       hide_clan_tag: Скрыть тег клана
       disable_stats_blocks: Скрыть блоки со статистикой
       disable_rating_stats: Скрыть рейтинговую статистику
-      disable_cahce_label: Скрыть иконку кэша
+      disable_cache_label: Скрыть иконку кэша
 
   image_settings_reset:
     descr:

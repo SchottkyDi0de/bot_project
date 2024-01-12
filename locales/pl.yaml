@@ -328,7 +328,7 @@ cmds:
     items:
       use_custom_bg: Niestandardowe tło
       glass_effect: Efekt szkła
-      blocks_bg_transparency: Przezroczystość bloków ze statystykami
+      blocks_bg_opacity: Przezroczystość bloków ze statystykami
       nickname_color: Kolor nazwy użytkownika
       clan_tag_color: Kolor tagu klanu
       stats_color: Kolor podstawowych statystyk
@@ -341,7 +341,7 @@ cmds:
       hide_clan_tag: Ukryj tag klanu
       disable_stats_blocks: Ukryj bloki ze statystykami
       disable_rating_stats: Ukryj statystyki rankingowe
-      disable_cahce_label: Ukryj ikonkę pamięci podręcznej
+      disable_cache_label: Ukryj ikonkę pamięci podręcznej
 
   server_settings_get:
     descr:

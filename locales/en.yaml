@@ -328,20 +328,20 @@ cmds:
     items:
       use_custom_bg: Custom background
       glass_effect: Glass effect
-      blocks_bg_transparency: Blocks transparency with statistics
+      blocks_bg_opacity: Statistics blocks transparency 
       nickname_color: Nickname color
       clan_tag_color: Clan tag color
-      stats_color: Main Statistics Color
-      main_text_color: Main Text Color
-      stats_text_color: Statistics Text Color
-      negative_stats_color: Negative Statistics Color
-      positive_stats_color: Positive Statistics Color
+      stats_color: Main statistics color
+      main_text_color: Main text color
+      stats_text_color: Statistics text color
+      negative_stats_color: Negative statistics color
+      positive_stats_color: Positive statistics color
       disable_flag: Hide region flag
       hide_nickname: Hide nickname
       hide_clan_tag: Hide clan tag
       disable_stats_blocks: Hide statistics blocks
       disable_rating_stats: Hide rating statistics
-      disable_cahce_label: Hide cache icon
+      disable_cache_label: Hide cache icon
 
   server_settings_get:
     descr:

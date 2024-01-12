@@ -329,7 +329,7 @@ cmds:
     items: # translated with GPT4
       use_custom_bg: Використовувати користувацький фон
       glass_effect: Ефект скла
-      blocks_bg_transparency: Прозорість блоків зі статистикою
+      blocks_bg_opacity: Прозорість блоків зі статистикою
       nickname_color: Колір нікнейму
       clan_tag_color: Колір тегу клану
       stats_color: Колір основних статистик
@@ -342,7 +342,7 @@ cmds:
       hide_clan_tag: Приховати тег клану
       disable_stats_blocks: Приховати блоки зі статистикою
       disable_rating_stats: Приховати рейтингову статистику
-      disable_cahce_label: Приховати позначку кешу
+      disable_cache_label: Приховати позначку кешу
 
   server_settings_get:
     descr:
