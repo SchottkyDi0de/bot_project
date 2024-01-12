@@ -474,7 +474,7 @@ class ImageGen():
         text_box = img_draw.textbbox(
             (self.img_size[0]//2, 20),
             text=self.data.data.name_and_tag,
-            font=self.fonts.roboro_icon,
+            font=self.fonts.roboto_icon,
             anchor='ma'
         )
 
@@ -500,8 +500,8 @@ class ImageGen():
         bg = self.image.copy()
         if not self.image_settings.glass_effect == 0:
             bg = bg.filter(gaussian_filter)
-        if not self.image_settings.blocks_bg_brightness == 100:
-            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_brightness)
+        if not self.image_settings.blocks_bg_opacity == 100:
+            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_opacity)
 
         self.image.paste(bg, (0, 0), background_map)
 

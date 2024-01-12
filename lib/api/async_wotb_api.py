@@ -378,13 +378,13 @@ class API:
         self.player['timestamp'] = int(datetime.now().timestamp())
         self.player['end_timestamp'] = int(
             datetime.now().timestamp() +
-            _config.session_ttl
+            _config.session.ttl
         )
         self.player['id'] = player['account_id']
         self.player['region'] = self._reg_normalizer(region)
         self.player['lower_nickname'] = player['nickname'].lower()
         self.player['timestamp'] = int(datetime.now().timestamp())
-        self.player['end_timestamp'] = int(datetime.now().timestamp()) + _config.session_ttl
+        self.player['end_timestamp'] = int(datetime.now().timestamp()) + _config.session.ttl
         self.player['nickname'] = player['nickname']
         self.player['data'] = self.player_stats
 

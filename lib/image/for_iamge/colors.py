@@ -1,8 +1,4 @@
-from lib.utils.singleton_factory import singleton
-
-
-@singleton
-class Colors():
+class Colors:
     """
     A class that represents different colors.
     """
