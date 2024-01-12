@@ -1,26 +1,28 @@
+import base64
+from enum import Enum
 from io import BytesIO
 from time import time
 from typing import Dict
-from enum import Enum
-import base64
+
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 from discord.ext import commands
 
-from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
-
-from lib.exceptions.database import TankNotFoundInTankopedia
-from lib.image.common import Colors, Fonts, ValueNormalizer
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.data_classes.db_player import ImageSettings
-from lib.data_classes.session import SessionDiffData
-from lib.utils.singleton_factory import singleton
-from lib.image.for_iamge.icons import StatsIcons
 from lib.data_classes.db_server import ServerSettings
-from lib.database.tankopedia import TanksDB
+from lib.data_classes.session import SessionDiffData
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
+from lib.database.tankopedia import TanksDB
+from lib.exceptions.database import TankNotFoundInTankopedia
+from lib.image.common import ValueNormalizer
+from lib.image.for_iamge.colors import Colors
+from lib.image.for_iamge.fonts import Fonts
+from lib.image.for_iamge.icons import StatsIcons
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
+from lib.utils.singleton_factory import singleton
 
 _log = get_logger(__name__, 'ImageSessionLogger', 'logs/image_session.log')
 _config = Config().get()
@@ -31,20 +33,6 @@ class BlockTypes(Enum):
     rating_stats = 1
     full_tank_stats = 2
     short_tank_stats = 3
-
-
-class Fonts():
-    """A class that holds different font styles for the images."""
-
-    roboto = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=28)  # Roboto font with size 28
-    roboto_25 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=25)  # Roboto font with size 25
-    roboto_medium = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=22)  # Roboto font with size 22
-    roboto_small = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=18)  # Roboto font with size 18
-    roboto_small2 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=15)  # Roboto font with size 15
-    roboto_40 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=40)  # Roboto font with size 40
-    roboto_icons = ImageFont.truetype('res/fonts/Roboto-icons.ttf', size=22)  # Roboto font with size 28
-    point = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=100)  # Roboto font with size 100
-
 
 class Leagues:
     """A class that holds different league images."""
@@ -1020,7 +1008,6 @@ class ImageGen():
             )
     
     def draw_flag(self) -> None:
-        # self.data.region = 'asia' - Only for test
         match self.data.region:
             case 'ru':
                 self.image.paste(self.flags.ru, (10, 10), self.flags.ru)
@@ -1041,13 +1028,3 @@ class ImageGen():
             return Colors.red
         if value == 0:
             return Colors.grey
-
-# if __name__ == '__main__':
-
-#     from lib.api.async_wotb_api import test
-#     from lib.data_parser import parse_data
-
-#     data = test('VegaS_202', region='eu')
-#     player_stats = PlayerGlobalData(PlayersDB().get_member_last_stats(683407510820225098))
-#     session_stats = parse_data.get_session_stats(player_stats, data)
-#     ImageGen().generate(data=data, diff_data=session_stats, test=True)

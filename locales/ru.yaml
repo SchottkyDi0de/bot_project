@@ -332,15 +332,15 @@ cmds:
       use_custom_bg: Пользовательский фон
       glass_effect: Эффект стекла
       blocks_bg_opacity: Прозрачность блоков со статистикой
-      nickname_color: Цвет никнейма
-      clan_tag_color: Цвет тега клана
+      nickname_color: Цвет ника игрока
+      clan_tag_color: Цвет клан-тега
       stats_color: Цвет основных статистик
       main_text_color: Цвет основного текста
       stats_text_color: Цвет текста статистик
       negative_stats_color: Цвет отрицательной статистики
       positive_stats_color: Цвет положительной статистики
       disable_flag: Отключить отрисовку флага
-      hide_nickname: Скрыть никнейм
+      hide_nickname: Скрыть ник игрока
       hide_clan_tag: Скрыть тег клана
       disable_stats_blocks: Скрыть блоки со статистикой
       disable_rating_stats: Скрыть рейтинговую статистику

@@ -3,12 +3,11 @@
 со статистикой.
 '''
 from enum import Enum
-from datetime import datetime
 from io import BytesIO
 import base64
 from time import time
 
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 from discord.ext.commands import Context
 
 from lib.database.players import PlayersDB
@@ -24,6 +23,8 @@ from lib.locale.locale import Text
 from lib.image.for_iamge.icons import StatsIcons
 from lib.image.for_iamge.medals import Medals
 from lib.settings.settings import Config
+from lib.image.for_iamge.colors import Colors
+from lib.image.for_iamge.fonts import Fonts
 
 _log = get_logger(__name__, 'ImageCommonLogger', 'logs/image_common.log')
 _config = Config().get()
@@ -316,22 +317,6 @@ class Values():
             'max_frags': self.val_normalizer.other(shorted_data.all.max_frags),
             'accuracy': self.val_normalizer.winrate(shorted_data.all.accuracy),
         }
-
-
-class Colors():
-    """
-    A class that represents different colors.
-    """
-    blue = (0, 136, 252)     # Represents the color blue
-    yellow = (255, 252, 0)   # Represents the color yellow
-    red = (192, 21, 21)      # Represents the color red
-    purple = (116, 30, 169)  # Represents the color purple
-    orange = (205, 106, 29)  # Represents the color orange
-    green = (30, 255, 38)    # Represents the color green
-    cyan = (30, 187, 169)    # Represents the color cyan
-    grey = (121, 121, 121)   # Represents the color grey
-    l_grey = (200, 200, 200) # Represents the color light grey
-    white = (240, 240, 240)  # Represents the color white
 
 
 @singleton

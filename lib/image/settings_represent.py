@@ -4,7 +4,8 @@ from PIL import Image, ImageDraw, ImageChops, ImageFilter
 
 from lib.utils.singleton_factory import singleton
 from lib.data_classes.db_player import ImageSettings
-from lib.image.common import Fonts, Colors
+from lib.image.for_iamge.colors import Colors
+from lib.image.for_iamge.fonts import Fonts
 from lib.locale.locale import Text
 from lib.image.utils.png_trim import trim
 
@@ -21,7 +22,7 @@ class Offsets:
 @singleton
 class SettingsRepresent:
     def __init__(self):
-        self.font = Fonts.roboro_icon
+        self.font = Fonts().anca_coder
         self.global_offset = 0
         self.offsets = Offsets()
         
@@ -38,6 +39,7 @@ class SettingsRepresent:
         lines = 0
     
         for i in image_settings_dict.keys():
+            print(getattr(Text().get('ru').cmds.image_settings_get.items, i))
             img_draw.text(
                 (
                     self.offsets.base_offset, 
@@ -47,6 +49,6 @@ class SettingsRepresent:
                 font=self.font,
                 anchor='lm',
                 align='center',
-                fill=Colors.blue
+                fill=Colors().blue
             )
             lines += 1
