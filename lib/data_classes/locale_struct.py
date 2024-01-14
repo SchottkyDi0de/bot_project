@@ -382,6 +382,7 @@ class Items2(BaseModel):
     disable_stats_blocks: str
     disable_rating_stats: str
     disable_cache_label: str
+    stats_blocks_disabled: str
 
 
 class ImageSettingsGet(BaseModel):

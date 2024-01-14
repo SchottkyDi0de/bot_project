@@ -676,10 +676,10 @@ class ImageGen():
         bg = self.image.copy()
         gaussian_filter = ImageFilter.GaussianBlur(radius=5)
 
-        if not self.image_settings.glass_effect == 0:
+        if self.image_settings.glass_effect > 0:
             bg = bg.filter(gaussian_filter)
-        if not self.image_settings.blocks_bg_brightness == 0:
-            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_brightness)
+        if self.image_settings.blocks_bg_opacity > 0:
+            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_opacity)
 
         self.image.paste(bg, (0, 0), rectangle_map)
 

@@ -346,6 +346,8 @@ cmds:
       disable_rating_stats: Скрыть рейтинговую статистику
       disable_cache_label: Скрыть иконку кэша
 
+      stats_blocks_disabled: Отрисовка блоков со статистикой отключена
+
   image_settings_reset:
     descr:
       this: Сброс настроек изображения

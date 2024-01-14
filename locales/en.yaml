@@ -343,6 +343,8 @@ cmds:
       disable_rating_stats: Hide rating statistics
       disable_cache_label: Hide cache icon
 
+      stats_blocks_disabled: Drawing of blocks with statistics is disabled
+
   server_settings_get:
     descr:
       this: Get current server settings

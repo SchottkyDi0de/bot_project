@@ -18,7 +18,7 @@ class Fonts():
     roboto_icon = ImageFont.truetype('res/fonts/Roboto-icons.ttf', size=20)
     """The Roboto font with a size of 20."""
     
-    anca_coder = ImageFont.truetype('res/fonts/Anca-Coder_bold.ttf', size=22)
+    anca_coder = ImageFont.truetype('res/fonts/Anca-Coder_bold.ttf', size=18)
     """The Anca Coder font with a size of 22."""
 
     point = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=100)

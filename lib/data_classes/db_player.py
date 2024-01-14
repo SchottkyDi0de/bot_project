@@ -17,7 +17,7 @@ class ImageSettings(BaseModel):
     disable_flag: bool = False
     disable_rating_stats: bool = False
     disable_cache_label: bool = False
-    disable_stats_blocks: bool = False
+    disable_stats_blocks: bool = True
     blocks_bg_opacity: float = 0.5
     glass_effect: int = 5
     nickname_color: str = '#f0f0f0' # Hex RGB Format #RRGGBB or #RGB

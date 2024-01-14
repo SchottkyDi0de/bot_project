@@ -343,6 +343,8 @@ cmds:
       disable_rating_stats: Ukryj statystyki rankingowe
       disable_cache_label: Ukryj ikonkę pamięci podręcznej
 
+      stats_blocks_disabled: Rysowanie bloków ze statystykami jest wyłączone
+
   server_settings_get:
     descr:
       this: Get current server settings

@@ -326,7 +326,7 @@ cmds:
       ''
     info:
       get_ok: 'Current image settings:'
-    items: # translated with GPT4
+    items: # translated with GPT4 --> need review
       use_custom_bg: Використовувати користувацький фон
       glass_effect: Ефект скла
       blocks_bg_opacity: Прозорість блоків зі статистикою
@@ -343,6 +343,8 @@ cmds:
       disable_stats_blocks: Приховати блоки зі статистикою
       disable_rating_stats: Приховати рейтингову статистику
       disable_cache_label: Приховати позначку кешу
+
+      stats_bg_blocks_disabled: Відображення блоків зі статистикою вимкнено
 
   server_settings_get:
     descr:
