@@ -1,4 +1,4 @@
-from pprint import pprint
+from io import BytesIO
 
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 
@@ -25,10 +25,12 @@ class SettingsRepresent:
         self.font = Fonts.anca_coder
         self.global_offset = 0
         self.offsets = Offsets()
+        self.image = None
+        self.img_draw = None
+        
+    def draw(self, image_settings: ImageSettings) -> BytesIO:
         self.image = Image.new('RGBA', (700, 950), (40, 40, 40, 255))
         self.img_draw = ImageDraw.Draw(self.image)
-        
-    def draw(self, image_settings: ImageSettings = ImageSettings.model_validate({})) -> Image.Image:
         
         self.draw_text(self.img_draw, image_settings)
         self.draw_v_line(self.img_draw)
@@ -41,7 +43,11 @@ class SettingsRepresent:
         if image_settings.disable_stats_blocks:
             self.inactive_block_bg_settings(image_settings)
         
-        # self.image.save('test.png')
+        bin_image = BytesIO()
+        self.image.save(bin_image, 'PNG')
+        bin_image.seek(0)
+
+        return bin_image
 
     def draw_v_line(self, img_draw: ImageDraw.ImageDraw):
         img_draw.line(
@@ -66,8 +72,6 @@ class SettingsRepresent:
         
         for index, key in enumerate(image_settings.keys()):
             if key == 'disable_stats_blocks':
-                print(self.image.size[0] // 2,
-                        self.offsets.line_offset_y * (index + 2),)
                 img_draw.rounded_rectangle(
                     (
                         0,
@@ -84,7 +88,7 @@ class SettingsRepresent:
                         self.image.size[0] // 2,
                         self.offsets.line_offset_y * (index + 2),
                     ), 
-                    text=Text().get('').cmds.image_settings_get.items.stats_blocks_disabled.upper(),
+                    text=Text().get().cmds.image_settings_get.items.stats_blocks_disabled.upper(),
                     anchor='mm',
                     fill=Colors.red,
                     font=self.font
@@ -154,13 +158,12 @@ class SettingsRepresent:
         lines = 0
     
         for i in image_settings_dict.keys():
-            print(getattr(Text().get('').cmds.image_settings_get.items, i))
             img_draw.text(
                 (
                     self.offsets.base_offset, 
                     self.offsets.base_offset_y + lines * self.offsets.line_offset_y
                     ),
-                text=getattr(Text().get('').cmds.image_settings_get.items, i).upper(),
+                text=getattr(Text().get().cmds.image_settings_get.items, i).upper(),
                 font=self.font,
                 anchor='lm',
                 align='center',
@@ -191,7 +194,7 @@ class SettingsRepresent:
                         self.offsets.rect_offset + self.offsets.rect_size // 2,
                         self.offsets.line_offset_y * index + self.offsets.rect_size // 2 + self.offsets.base_offset_y,
                     ),
-                    fill=(0, 0, 0, int(255*value)),
+                    fill=(0, 0, 0, 255 - int(255*value)),
                     radius=4
                 )
                 img_draw.text(

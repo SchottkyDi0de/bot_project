@@ -3,7 +3,7 @@ import base64
 import traceback
 
 from PIL import Image
-from discord import Option, Attachment
+from discord import Option, Attachment, File
 from discord.ext import commands
 
 from lib.image.utils.resizer import resize_image, ResizeMode
@@ -18,9 +18,10 @@ from lib.exceptions.blacklist import UserBanned
 from lib.logger.logger import get_logger
 from lib.api.async_wotb_api import API
 from lib.exceptions import api
+from lib.image.settings_represent import SettingsRepresent
 from lib.auth.dicord import DiscordOAuth
-from lib.data_classes.db_server import DBServer, ServerSettings, set_server_settings
-from lib.data_classes.db_player import DBPlayer, ImageSettings, set_image_settings
+from lib.data_classes.db_server import set_server_settings
+from lib.data_classes.db_player import ImageSettings
 from lib.image.utils.hex_color_validator import hex_color_validate
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
@@ -61,26 +62,17 @@ class Set(commands.Cog):
                 required=True
             ),
         ):
-
-
-        try:
-            check_user(ctx)
-        except UserBanned:
+        check_user(ctx)
+        
+        Text().load_from_context(ctx)
+        lang = None if lang == 'auto' else lang
+        if self.db.set_member_lang(ctx.author.id, lang):
+            Text().load_from_context(ctx)
+        else:
+            await ctx.respond(embed=self.err_msg.set_lang_unregistred())
             return
         
-        try:
-            Text().load_from_context(ctx)
-            lang = None if lang == 'auto' else lang
-            if self.db.set_member_lang(ctx.author.id, lang):
-                Text().load_from_context(ctx)
-            else:
-                await ctx.respond(embed=self.err_msg.set_lang_unregistred())
-                return
-            
-            await ctx.respond(embed=self.inf_msg.set_lang_ok())
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+        await ctx.respond(embed=self.inf_msg.set_lang_ok())
         
     @commands.slash_command(
         guild_only=True,
@@ -116,31 +108,22 @@ class Set(commands.Cog):
                 required=True
             )
         ):
-
+        Text().load_from_context(ctx)
+        check_user(ctx)
+        await ctx.defer()
+        
         try:
-            check_user(ctx)
-        except UserBanned:
-            return
-        try:
-            await ctx.defer()
-            Text().load_from_context(ctx)
-            
-            try:
-                player = await self.api.check_and_get_player(nickname, region, ctx.author.id)
-            except api.NoPlayersFound:
-                await ctx.respond(embed=ErrorMSG().player_not_found())
-            except api.NeedMoreBattlesError:
-                await ctx.respond(embed=ErrorMSG().need_more_battles())
-            except api.APIError:
-                await ctx.respond(embed=ErrorMSG().api_error())
-            else:
-                self.db.set_member(player, override=True)
-                _log.debug(f'Set player: {ctx.author.id} {nickname} {region}')
-                await ctx.respond(embed=self.inf_msg.set_player_ok())
-
-        except Exception :
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+            player = await self.api.check_and_get_player(nickname, region, ctx.author.id)
+        except api.NoPlayersFound:
+            await ctx.respond(embed=ErrorMSG().player_not_found())
+        except api.NeedMoreBattlesError:
+            await ctx.respond(embed=ErrorMSG().need_more_battles())
+        except api.APIError:
+            await ctx.respond(embed=ErrorMSG().api_error())
+        else:
+            self.db.set_member(player, override=True)
+            _log.debug(f'Set player: {ctx.author.id} {nickname} {region}')
+            await ctx.respond(embed=self.inf_msg.set_player_ok())
 
     @commands.slash_command(
         guild_only=True,
@@ -166,36 +149,28 @@ class Set(commands.Cog):
             )
         ):
         Text().load_from_context(ctx)
-        
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
+        check_user(ctx)
 
-        try:
-            if ctx.author.guild_permissions.administrator:
-                settings = self.sdb.get_server_settings(ctx)
-                self.sdb.set_server_settings(
-                    ctx,
-                    set_server_settings(
-                        allow_custom_backgrounds=allow_custom_backgrounds if allow_custom_backgrounds is not None else settings.allow_custom_backgrounds
-                    )
+        if ctx.author.guild_permissions.administrator:
+            settings = self.sdb.get_server_settings(ctx)
+            self.sdb.set_server_settings(
+                ctx,
+                set_server_settings(
+                    allow_custom_backgrounds=allow_custom_backgrounds if allow_custom_backgrounds is not None else settings.allow_custom_backgrounds
                 )
-                await ctx.respond(
-                    embed=self.inf_msg.custom(
-                        Text().get(),
-                        Text().get().cmds.server_settings.info.set_ok,
-                    )
-                )
-            else:
-                await ctx.respond(embed=self.err_msg.custom(
+            )
+            await ctx.respond(
+                embed=self.inf_msg.custom(
                     Text().get(),
-                    Text().get().cmds.server_settings.errors.permission_denied
-                    )
+                    Text().get().cmds.server_settings.info.set_ok,
                 )
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+            )
+        else:
+            await ctx.respond(embed=self.err_msg.custom(
+                Text().get(),
+                Text().get().cmds.server_settings.errors.permission_denied
+                )
+            )
 
     @commands.slash_command(
         guild_only=True,
@@ -238,114 +213,106 @@ class Set(commands.Cog):
                     choices=['AUTO', 'RESIZE', 'CROP_OR_FILL'],
                 )
             ):
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
-        
+        check_user(ctx)
+
         if not self.db.check_member(ctx.author.id):
             await ctx.respond(
                     embed=self.err_msg.custom(
                         Text().get(),
                         text=Text().get().cmds.set_background.errors.player_not_registred
-                        )
+                    )
                 )
             return
         
+
+        Text().load_from_context(ctx)
+        image: Attachment = image
+        await ctx.defer()
+
+        if image.content_type not in ['image/png', 'image/jpeg']:
+            await ctx.respond(
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.set_background.errors.file_error
+                )
+            )
+            return
         
-        try:
-            Text().load_from_context(ctx)
-            image: Attachment = image
-            await ctx.defer()
+        if image.size > 2_097_152:
+            await ctx.respond(
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.set_background.errors.oversize
+                )
+            )
+            return
+        
+        if image.width > 2048 or image.height > 2048:
+            await ctx.respond(
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.set_background.errors.overresolution
+                )
+            )
+            return
+        
+        if image.width < 256 or image.height < 256:
+            await ctx.respond(
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.set_background.errors.small_resolution
+                )
+            )
+            return
 
-            if image.content_type not in ['image/png', 'image/jpeg']:
-                await ctx.respond(
-                    embed=self.err_msg.custom(
-                        Text().get(),
-                        text=Text().get().cmds.set_background.errors.file_error
+        if server:
+            if ctx.author.guild_permissions.administrator:
+                with io.BytesIO() as buffer:
+                    await image.save(buffer)
+                    pil_image = Image.open(buffer)
+                    pil_image = pil_image.convert('RGBA')
+                    pil_image = resize_image(pil_image, (700, 1350), mode=getattr(ResizeMode, resize_mode))
+                with io.BytesIO() as buffer:
+                    pil_image.save(buffer, format='PNG')
+                    self.sdb.set_server_image(
+                        base64.b64encode(buffer.getvalue()).decode(),
+                        ctx
                     )
-                )
-                return
-            
-            if image.size > 2_097_152:
-                await ctx.respond(
-                    embed=self.err_msg.custom(
-                        Text().get(),
-                        text=Text().get().cmds.set_background.errors.oversize
-                    )
-                )
-                return
-            
-            if image.width > 2048 or image.height > 2048:
-                await ctx.respond(
-                    embed=self.err_msg.custom(
-                        Text().get(),
-                        text=Text().get().cmds.set_background.errors.overresolution
-                    )
-                )
-                return
-            
-            if image.width < 256 or image.height < 256:
-                await ctx.respond(
-                    embed=self.err_msg.custom(
-                        Text().get(),
-                        text=Text().get().cmds.set_background.errors.small_resolution
-                    )
-                )
-                return
-
-            if server:
-                if ctx.author.guild_permissions.administrator:
-                    with io.BytesIO() as buffer:
-                        await image.save(buffer)
-                        pil_image = Image.open(buffer)
-                        pil_image = pil_image.convert('RGBA')
-                        pil_image = resize_image(pil_image, (700, 1350), mode=getattr(ResizeMode, resize_mode))
-                    with io.BytesIO() as buffer:
-                        pil_image.save(buffer, format='PNG')
-                        self.sdb.set_server_image(
-                            base64.b64encode(buffer.getvalue()).decode(),
-                            ctx
-                        )
-                        await ctx.respond(
-                            embed=self.inf_msg.custom(
-                            Text().get(),
-                            text=Text().get().cmds.set_background.info.set_background_ok,
-                            colour='green'
-                            )
-                        )
-                else:
                     await ctx.respond(
-                        embed=self.err_msg.custom(
-                            Text().get(),
-                            text=Text().get().cmds.set_background.errors.permission_denied
+                        embed=self.inf_msg.custom(
+                        Text().get(),
+                        text=Text().get().cmds.set_background.info.set_background_ok,
+                        colour='green'
                         )
                     )
-                    
-                return
-
-            with io.BytesIO() as buffer:
-                await image.save(buffer)
-                pil_image = Image.open(buffer)
-                pil_image = pil_image.convert('RGBA')
-                pil_image = resize_image(pil_image, (700, 1350), mode=getattr(ResizeMode, resize_mode))
-            with io.BytesIO() as buffer:
-                pil_image.save(buffer, format='PNG')
-                self.db.set_member_image(
-                    ctx.author.id,
-                    base64.b64encode(buffer.getvalue()).decode(),
-                )
+            else:
                 await ctx.respond(
-                    embed=self.inf_msg.custom(
+                    embed=self.err_msg.custom(
+                        Text().get(),
+                        text=Text().get().cmds.set_background.errors.permission_denied
+                    )
+                )
+                
+            return
+
+        with io.BytesIO() as buffer:
+            await image.save(buffer)
+            pil_image = Image.open(buffer)
+            pil_image = pil_image.convert('RGBA')
+            pil_image = resize_image(pil_image, (700, 1350), mode=getattr(ResizeMode, resize_mode))
+        with io.BytesIO() as buffer:
+            pil_image.save(buffer, format='PNG')
+            self.db.set_member_image(
+                ctx.author.id,
+                base64.b64encode(buffer.getvalue()).decode(),
+            )
+            await ctx.respond(
+                embed=self.inf_msg.custom(
                     Text().get(),
                     text=Text().get().cmds.set_background.info.set_background_ok,
                     colour='green'
-                        )
                     )
-                    
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+                )
             
     @commands.slash_command(
         description=Text().get('en').cmds.image_settings.descr.this,
@@ -380,7 +347,7 @@ class Set(commands.Cog):
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.glass_effect
                 }
             ),
-        blocks_bg_brightness: Option(
+        blocks_bg_opacity: Option(
             int,
             min_value=0,
             max_value=100,
@@ -511,96 +478,119 @@ class Set(commands.Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_cahce_label,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_cahce_label
                 }
+            ),
+        positive_stats_color: Option(
+            str,
+            required=False,
+            min_length=4,
+            max_length=7,
+            description=Text().get('en').cmds.image_settings_get.items.positive_stats_color,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings_get.items.positive_stats_color,
+                'pl': Text().get('pl').cmds.image_settings_get.items.positive_stats_color,
+                'uk': Text().get('ua').cmds.image_settings_get.items.positive_stats_color
+                }
+            ),
+        negative_stats_color: Option(
+            str,
+            required=False,
+            min_length=4,
+            max_length=7,
+            description=Text().get('en').cmds.image_settings_get.items.negative_stats_color,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings_get.items.negative_stats_color,
+                'pl': Text().get('pl').cmds.image_settings_get.items.negative_stats_color,
+                'uk': Text().get('ua').cmds.image_settings_get.items.negative_stats_color
+                }
             )
         ):
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
+        Text().load_from_context(ctx)
+        check_user(ctx)
+
+        image_settings = self.db.get_image_settings(ctx.author.id)
+        color_error_data = []
+        color_error = False
         
-        try:
-            Text().load_from_context(ctx)
-            image_settings = self.db.get_image_settings(ctx.author.id)
-            color_error_data = []
-            color_error = False
-            
-            current_settings = {
-                'use_custom_bg': use_custom_bg,
-                'glass_effect': glass_effect,
-                'main_text_color': main_text_color,
-                'blocks_bg_brightness': blocks_bg_brightness,
-                'nickname_color': nickname_color,
-                'clan_tag_color': clan_tag_color,
-                'stats_color': stats_color,
-                'stats_text_color': stats_text_color,
-                'disable_flag': disable_flag,
-                'hide_nickname': hide_nickname,
-                'hide_clan_tag': hide_clan_tag,
-                'disable_stats_blocks': disable_stats_blocks,
-                'disable_rating_stats': disable_rating_stats,
-                'disable_cache_label': disable_cache_label
-            }
-            
-            set_values_count = 0
-            for key, value in current_settings.items():
-                if value is None:
+        current_settings = {
+            'use_custom_bg': use_custom_bg,
+            'glass_effect': glass_effect,
+            'main_text_color': main_text_color,
+            'blocks_bg_opacity': blocks_bg_opacity,
+            'nickname_color': nickname_color,
+            'clan_tag_color': clan_tag_color,
+            'stats_color': stats_color,
+            'stats_text_color': stats_text_color,
+            'disable_flag': disable_flag,
+            'hide_nickname': hide_nickname,
+            'hide_clan_tag': hide_clan_tag,
+            'disable_stats_blocks': disable_stats_blocks,
+            'disable_rating_stats': disable_rating_stats,
+            'disable_cache_label': disable_cache_label,
+            'positive_stats_color': positive_stats_color,
+            'negative_stats_color': negative_stats_color
+        }
+        
+        set_values_count = 0
+        for key, value in current_settings.items():
+            if value is None:
+                current_settings[key] = getattr(image_settings, key)
+                continue
+            else:
+                set_values_count += 1
+            if 'color' in key:
+                set_values_count += 1
+                if not hex_color_validate(value):
+                    color_error = True
+                    color_error_data.append({'param_name': key, 'value': value})
                     current_settings[key] = getattr(image_settings, key)
-                else:
-                    set_values_count += 1
-                if 'color' in key and value is not None:
-                    set_values_count += 1
-                    if not hex_color_validate(value):
-                        color_error = True
-                        color_error_data.append({'param_name': key, 'value': value})
-                        current_settings[key] = getattr(image_settings, key)
-                        
-            if set_values_count == 0:
-                await ctx.respond(
-                    embed=self.inf_msg.custom(
-                        Text().get(),
-                        text=Text().get().cmds.image_settings.errors.changes_not_found,
-                        title=Text().get().frequent.info.warning,
-                        colour='orange'
-                    )
-                )
-                return
-            
-            if color_error:
-                text = ''
-                for i in color_error_data:
-                    text += insert_data(
-                        Text().get().cmds.image_settings.errors.color_error,
-                        {
-                            'param_name': i['param_name'],
-                            'value': i['value']
-                        }
-                    ) + '\n'
+            if key == 'blocks_bg_opacity':
+                set_values_count += 1
+                current_settings[key] = value / 100
                     
-                await ctx.respond(
-                    embed=self.inf_msg.custom(
-                        Text().get(),
-                        text=text + Text().get().cmds.image_settings.items.color_error_note,
-                        title=Text().get().frequent.info.warning,
-                        footer=Text().get().cmds.image_settings.items.color_error_footer,
-                        colour='orange',
-                    ).add_field(name='Color picker', value='[Click here](https://g.co/kgs/FwKjhNE)', inline=False)
-                )
-                self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(current_settings))
-                return
-                
-            self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(current_settings))
+        if set_values_count == 0:
             await ctx.respond(
                 embed=self.inf_msg.custom(
                     Text().get(),
-                    text=Text().get().cmds.image_settings.info.set_ok,
-                    colour='green'
+                    text=Text().get().cmds.image_settings.errors.changes_not_found,
+                    title=Text().get().frequent.info.warning,
+                    colour='orange'
                 )
             )
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+            return
+        
+        if color_error:
+            text = ''
+            for i in color_error_data:
+                text += insert_data(
+                    Text().get().cmds.image_settings.errors.color_error,
+                    {
+                        'param_name': i['param_name'],
+                        'value': i['value']
+                    }
+                ) + '\n'
+            await ctx.respond(
+                embed=self.inf_msg.custom(
+                    Text().get(),
+                    text=text + Text().get().cmds.image_settings.items.color_error_note,
+                    title=Text().get().frequent.info.warning,
+                    footer=Text().get().cmds.image_settings.items.color_error_footer,
+                    colour='orange',
+                ).add_field(name='Color picker', value='[Click here](https://g.co/kgs/FwKjhNE)', inline=False)
+            )
+            self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(current_settings))
+            return
+            
+        self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(current_settings))
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=Text().get().cmds.image_settings.info.set_ok,
+                colour='green'
+            )
+        )
         
     @commands.slash_command(
+        guild_only=True, 
         description=Text().get('en').cmds.image_settings_get.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.image_settings_get.descr.this,
@@ -608,67 +598,41 @@ class Set(commands.Cog):
             'uk': Text().get('ua').cmds.image_settings_get.descr.this
             }
         )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def image_settings_get(self, ctx: commands.Context):
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
+        Text().load_from_context(ctx)
+        check_user(ctx)
+        await ctx.defer()
         
-        try:
-            Text().load_from_context(ctx)
-            image_settings = self.db.get_image_settings(ctx.author.id)
-            embed = self.inf_msg.custom(
-                Text().get(),
-                title=Text().get().cmds.image_settings_get.info.get_ok,
-                text=insert_data(
-                    Text().get().cmds.image_settings_get.items.settings_list,
-                    {
-                        'use_custom_bg': bool_handler(image_settings.use_custom_bg),
-                        'blocks_bg_brightness': image_settings.blocks_bg_brightness,
-                        'glass_effect': image_settings.glass_effect,
-                        'nickname_color': image_settings.nickname_color,
-                        'clan_tag_color': image_settings.clan_tag_color,
-                        'stats_color': image_settings.stats_color,
-                        'main_text_color': image_settings.main_text_color,
-                        'stats_text_color': image_settings.stats_text_color,
-                        'disable_flag': bool_handler(image_settings.disable_flag),
-                        'hide_nickname': bool_handler(image_settings.hide_nickname),
-                        'hide_clan_tag': bool_handler(image_settings.hide_clan_tag),
-                        'disable_stats_blocks': bool_handler(image_settings.disable_stats_blocks),
-                        'disable_rating_stats': bool_handler(image_settings.disable_rating_stats),
-                        'disable_cache_label': bool_handler(image_settings.disable_cache_label)
-                    }
-                ),
-            )
-            await ctx.respond(embed=embed)
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+        image_settings = self.db.get_image_settings(ctx.author.id)
+        embed = self.inf_msg.custom(
+            Text().get(),
+            text=Text().get().cmds.image_settings_get.info.get_ok,
+        )
+        image = File(SettingsRepresent().draw(image_settings), filename='img_settings.png')
+        await ctx.respond(embed=embed)
+        await ctx.channel.send(file=image)
             
     @commands.slash_command(
+        guild_only=True,
         description=Text().get('en').cmds.image_settings_reset.descr.this,
-        description_localizations={
+        description_localizations = {
             'ru': Text().get('ru').cmds.image_settings_reset.descr.this,
             'pl': Text().get('pl').cmds.image_settings_reset.descr.this,
             'uk': Text().get('ua').cmds.image_settings_reset.descr.this
-        }
+            }
         )
     async def image_settings_reset(self, ctx: commands.Context):
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
-        try:
-            self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate({}))
-            await ctx.respond(
-                embed=self.inf_msg.custom(
-                    Text().get(),
-                    Text().get().cmds.image_settings_reset.info.reset_ok
-                    )
+        Text().load_from_context(ctx)
+        check_user(ctx)
+
+        self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate({}))
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                Text().get().cmds.image_settings_reset.info.reset_ok
                 )
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+            )
     
     @commands.slash_command(
         guild_only=True,
@@ -680,29 +644,21 @@ class Set(commands.Cog):
         }
     )
     async def server_settings_get(self, ctx: commands.Context):
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
+        check_user(ctx)
         
-        try:
-            Text().load_from_context(ctx)
-            server_settings = self.sdb.get_server_settings(ctx)
-            embed = self.inf_msg.custom(
-                Text().get(),
-                title=Text().get().cmds.server_settings_get.info.get_ok,
-                text=insert_data(
-                    Text().get().cmds.server_settings_get.items.settings_list,
-                    {
-                        'allow_custom_backgrounds': bool_handler(server_settings.allow_custom_backgrounds)
-                    }
-                ),
-            )
-            await ctx.respond(embed=embed)
-            
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+        Text().load_from_context(ctx)
+        server_settings = self.sdb.get_server_settings(ctx)
+        embed = self.inf_msg.custom(
+            Text().get(),
+            title=Text().get().cmds.server_settings_get.info.get_ok,
+            text=insert_data(
+                Text().get().cmds.server_settings_get.items.settings_list,
+                {
+                    'allow_custom_backgrounds': bool_handler(server_settings.allow_custom_backgrounds)
+                }
+            ),
+        )
+        await ctx.respond(embed=embed)
             
     @commands.slash_command(
         description=Text().get('en').cmds.reset_background.descr.this,
@@ -711,7 +667,8 @@ class Set(commands.Cog):
             'pl': Text().get('pl').cmds.reset_background.descr.this,
             'uk': Text().get('ua').cmds.reset_background.descr.this
         }
-    )   
+    )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def unset_background(
         self,
         ctx: commands.Context,
@@ -727,32 +684,12 @@ class Set(commands.Cog):
             default=False
             )
         ):
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
-        
         Text().load_from_context(ctx)
-        try:
-            if server:
-                if ctx.author.guild_permissions.administrator:
-                    self.sdb.del_server_image(ctx.guild.id)
-                    await ctx.respond(
-                        embed=self.inf_msg.custom(
-                            Text().get(),
-                            text=Text().get().cmds.reset_background.info.unset_background_ok,
-                            colour='green'
-                        )
-                    )
-                else:
-                    await ctx.respond(
-                        embed=self.err_msg.custom(
-                            Text().get(),
-                            text=Text().get().cmds.reset_background.errors.permission_denied
-                        )
-                    )
-            elif self.db.check_member(ctx.author.id):
-                self.db.del_member_image(ctx.author.id)
+        check_user(ctx)
+        
+        if server:
+            if ctx.author.guild_permissions.administrator:
+                self.sdb.del_server_image(ctx.guild.id)
                 await ctx.respond(
                     embed=self.inf_msg.custom(
                         Text().get(),
@@ -764,13 +701,25 @@ class Set(commands.Cog):
                 await ctx.respond(
                     embed=self.err_msg.custom(
                         Text().get(),
-                        tetx=Text().get().cmds.set_background.errors.player_not_registred
+                        text=Text().get().cmds.reset_background.errors.permission_denied
                     )
                 )
-                
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+        elif self.db.check_member(ctx.author.id):
+            self.db.del_member_image(ctx.author.id)
+            await ctx.respond(
+                embed=self.inf_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.reset_background.info.unset_background_ok,
+                    colour='green'
+                )
+            )
+        else:
+            await ctx.respond(
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    tetx=Text().get().cmds.set_background.errors.player_not_registred
+                )
+            )
 
     # @commands.slash_command(description='Test authorization')
     # async def auth(self, ctx: commands.Context):
@@ -781,6 +730,18 @@ class Set(commands.Cog):
         
     #     await ctx.user.send(self.discord_oauth.auth_url)
     #     # TODO: Authorization added in next update
+    
+    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
+        elif isinstance(error, UserBanned):
+            await ctx.respond(embed=self.err_msg.user_banned())
+        else:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
+    
 
 def setup(bot):
+    for i in ['image_settings_get', 'set_background']:
+        getattr(Set, i).error(on_error)
     bot.add_cog(Set(bot))

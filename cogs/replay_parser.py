@@ -69,48 +69,36 @@ class CogReplayParser(commands.Cog):
                     ),
                 ):
         Text().load_from_context(ctx)
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
+        check_user(ctx)
+        await ctx.defer()
         
-        try:
-            await ctx.defer()
-            
-            filename = randint(1000000, 9999999)
-            await replay.save(f'tmp/replay/{filename}.wotbreplay')
+        filename = randint(1000000, 9999999)
+        await replay.save(f'tmp/replay/{filename}.wotbreplay')
 
-            match output_type:
-                case 'raw (json)':
-                    with StringIO(self.parser.parse(f'tmp/replay/{filename}.wotbreplay')) as f:
-                        await ctx.respond(file=File(f, 'replay_data.json'))
-                case 'embed':
-                    replay_data = await ParseReplayData().parse(
-                                self.parser.parse(f'tmp/replay/{filename}.wotbreplay'),
-                                region
-                            )
-                    await ctx.respond(
-                        embed=EmbedReplayBuilder().build_embed(
-                            ctx,
-                            replay_data
-                            )
-                        )             
-
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(
-                embed=ErrorMSG().custom(
-                    Text().get(),
-                    text=Text().get().cmds.parse_replay.errors.parsing_error
+        match output_type:
+            case 'raw (json)':
+                with StringIO(self.parser.parse(f'tmp/replay/{filename}.wotbreplay')) as f:
+                    await ctx.respond(file=File(f, 'replay_data.json'))
+            case 'embed':
+                replay_data = await ParseReplayData().parse(
+                            self.parser.parse(f'tmp/replay/{filename}.wotbreplay'),
+                            region
+                        )
+                await ctx.respond(
+                    embed=EmbedReplayBuilder().build_embed(
+                        ctx,
+                        replay_data
+                        )
                     )
-                )
-    
-    @parse_replay.error
-    async def on_error(self, ctx: commands.Context, _):
-        _log.error(traceback.format_exc())
-        await ctx.respond(
-            embed=InfoMSG().cooldown_not_expired()
-            )
+        
+    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
+        elif isinstance(error, UserBanned):
+            await ctx.respond(embed=self.err_msg.user_banned())
+        else:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
 
 def setup(bot):
     bot.add_cog(CogReplayParser(bot))

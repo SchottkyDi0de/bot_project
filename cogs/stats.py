@@ -32,13 +32,13 @@ class Stats(commands.Cog):
         self.err_msg = ErrorMSG()
         
     @commands.slash_command(
-            description=Text().get().cmds.stats.descr.this,
-            description_localizations={
-                'ru' : Text().get('ru').cmds.stats.descr.this,
-                'pl' : Text().get('pl').cmds.stats.descr.this,
-                'uk' : Text().get('ua').cmds.stats.descr.this
-                }
-            )
+        description=Text().get().cmds.stats.descr.this,
+        description_localizations={
+            'ru' : Text().get('ru').cmds.stats.descr.this,
+            'pl' : Text().get('pl').cmds.stats.descr.this,
+            'uk' : Text().get('ua').cmds.stats.descr.this
+            }
+        )
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def stats(
             self, 
@@ -67,36 +67,30 @@ class Stats(commands.Cog):
                 required=True
             ),
         ):
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
+        check_user(ctx)
+        Text().load_from_context(ctx)
+        await ctx.defer()
+
+        user_exists = self.db.check_member(ctx.author.id)
+        if user_exists:
+            image_settings = self.db.get_image_settings(ctx.author.id)
+        else:
+            image_settings = ImageSettings()
         
-        try:
-            await ctx.defer()
-            Text().load_from_context(ctx)
-            user_exists = self.db.check_member(ctx.author.id)
-            if user_exists:
-                image_settings = self.db.get_image_settings(ctx.author.id)
-            else:
-                image_settings = ImageSettings()
-            
-            server_settings = self.sdb.get_server_settings(ctx)
-            img = await self.get_stats(
-                ctx, 
-                region=region, 
-                nickname=nickname, 
-                image_settings=image_settings, 
-                server_settings=server_settings
-                )
+        server_settings = self.sdb.get_server_settings(ctx)
+        img = await self.get_stats(
+            ctx, 
+            region=region, 
+            nickname=nickname, 
+            image_settings=image_settings, 
+            server_settings=server_settings
+            )
 
-            if img is not None:
-                await ctx.respond(file=File(img, 'stats.png'))
-                img.close()
-
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+        if img is not None:
+            await ctx.respond(file=File(img, 'stats.png'))
+            img.close()
+        else:
+            raise TypeError('Image is None')
 
     @commands.slash_command(
             description=Text().get().cmds.astats.descr.this,
@@ -108,38 +102,32 @@ class Stats(commands.Cog):
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def astats(self, ctx: commands.Context):
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
-        # _log.debug(f'User locale is: {ctx.interaction.locale}')
-        
+        check_user(ctx)
         Text().load_from_context(ctx)
-        try:
-            await ctx.defer()
-            if not self.db.check_member(ctx.author.id):
-                await ctx.respond(embed=self.inf_msg.player_not_registred_astats())
-                
-            else:
-                player_data = self.db.get_member(ctx.author.id)
-                if player_data is not None:
-                    image_settings = self.db.get_image_settings(ctx.author.id)
-                    server_settings = self.sdb.get_server_settings(ctx)
-                    img = await self.get_stats(
-                        ctx,
-                        region=player_data.region,
-                        game_id=player_data.game_id, 
-                        image_settings=image_settings, 
-                        server_settings=server_settings
-                        )
+        await ctx.defer()
+        
+        if not self.db.check_member(ctx.author.id):
+            await ctx.respond(embed=self.inf_msg.player_not_registred_astats())
+            
+        else:
+            player_data = self.db.get_member(ctx.author.id)
+            if player_data is not None:
+                image_settings = self.db.get_image_settings(ctx.author.id)
+                server_settings = self.sdb.get_server_settings(ctx)
+                img = await self.get_stats(
+                    ctx,
+                    region=player_data.region,
+                    game_id=player_data.game_id, 
+                    image_settings=image_settings, 
+                    server_settings=server_settings
+                    )
 
-                    if img is not None:
-                        await ctx.respond(file=File(img, 'stats.png'))
-                        img.close()
+                if img is not None:
+                    await ctx.respond(file=File(img, 'stats.png'))
+                    img.close()
+                else:
+                    raise TypeError('Image is None')
 
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
     
     async def get_stats(
             self, 
@@ -175,14 +163,16 @@ class Stats(commands.Cog):
         else:
             img_data = self.img_gen.generate(ctx, data, image_settings, server_settings)
             return img_data
-
-
-async def on_error(self, ctx: commands.Context, _):
-        await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
+        
+    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
+        elif isinstance(error, UserBanned):
+            await ctx.respond(embed=self.err_msg.user_banned())
+        else:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
 
 
 def setup(bot):
-    for i in ['stats', 'astats']:
-        getattr(Stats, i).error(on_error)
     bot.add_cog(Stats(bot))
-

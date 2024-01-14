@@ -43,76 +43,76 @@ class Help(commands.Cog):
         self, 
         ctx: commands.Context,
         ):
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
-        
-        try:
-            Text().load_from_context(ctx)
-            await ctx.defer()
-            try:
-                match Text().current_lang:
-                    case 'ru':
-                        await ctx.author.send(
-                            embed=InfoMSG().custom(
-                                Text().get(),
-                                title=Text().get().cmds.help.items.help,
-                                text=_config.help_urls.ru
-                                )
-                            )
-                    case 'ua':
-                        await ctx.author.send(
-                            embed=InfoMSG().custom(
-                                Text().get(),
-                                title=Text().get().cmds.help.items.help,
-                                text=_config.help_urls.ua
-                            )
-                        )
-                    case _:
-                        await ctx.author.send(
-                            embed=InfoMSG().custom(
-                                Text().get(),
-                                title=Text().get().cmds.help.items.help,
-                                text=_config.help_urls.en
-                                )
-                            )
-                        
-                await ctx.respond(embed=InfoMSG().help_send_ok())
-                return
-            
-            except errors.Forbidden:
-                match Text().current_lang:
-                    case 'ru':
-                        await ctx.respond(
-                            embed=InfoMSG().custom(
-                                Text().get(),
-                                title=Text().get().cmds.help.items.help,
-                                text=_config.help_urls.ru
-                                )
-                            )
-                    case 'ua':
-                        await ctx.respond(
-                            embed=InfoMSG().custom(
-                                Text().get(),
-                                title=Text().get().cmds.help.items.help,
-                                text=_config.help_urls.ua
-                            )
-                        )
-                    case _:
-                        await ctx.respond(
-                            embed=InfoMSG().custom(
-                                Text().get(),
-                                title=Text().get().cmds.help.items.help,
-                                text=_config.help_urls.en
-                                )
-                            )
-                await ctx.respond(embed=InfoMSG().help_send_ok())
-                return
+        Text().load_from_context(ctx)
+        check_user(ctx)
 
-        except:
+        await ctx.defer()
+        try:
+            match Text().current_lang:
+                case 'ru':
+                    await ctx.author.send(
+                        embed=InfoMSG().custom(
+                            Text().get(),
+                            title=Text().get().cmds.help.items.help,
+                            text=_config.help_urls.ru
+                            )
+                        )
+                case 'ua':
+                    await ctx.author.send(
+                        embed=InfoMSG().custom(
+                            Text().get(),
+                            title=Text().get().cmds.help.items.help,
+                            text=_config.help_urls.ua
+                        )
+                    )
+                case _:
+                    await ctx.author.send(
+                        embed=InfoMSG().custom(
+                            Text().get(),
+                            title=Text().get().cmds.help.items.help,
+                            text=_config.help_urls.en
+                            )
+                        )
+                    
+            await ctx.respond(embed=InfoMSG().help_send_ok())
+            return
+            
+        except errors.Forbidden:
+            match Text().current_lang:
+                case 'ru':
+                    await ctx.respond(
+                        embed=InfoMSG().custom(
+                            Text().get(),
+                            title=Text().get().cmds.help.items.help,
+                            text=_config.help_urls.ru
+                            )
+                        )
+                case 'ua':
+                    await ctx.respond(
+                        embed=InfoMSG().custom(
+                            Text().get(),
+                            title=Text().get().cmds.help.items.help,
+                            text=_config.help_urls.ua
+                        )
+                    )
+                case _:
+                    await ctx.respond(
+                        embed=InfoMSG().custom(
+                            Text().get(),
+                            title=Text().get().cmds.help.items.help,
+                            text=_config.help_urls.en
+                            )
+                        )
+            await ctx.respond(embed=InfoMSG().help_send_ok())
+            
+    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
+        elif isinstance(error, UserBanned):
+            await ctx.respond(embed=self.err_msg.user_banned())
+        else:
             _log.error(traceback.format_exc())
-            await ctx.respond(embed=ErrorMSG().unknown_error())
+            await ctx.respond(embed=self.err_msg.unknown_error())
 
 
 def setup(bot):

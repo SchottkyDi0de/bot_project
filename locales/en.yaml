@@ -328,7 +328,7 @@ cmds:
     items:
       use_custom_bg: Custom background
       glass_effect: Glass effect
-      blocks_bg_opacity: Statistics blocks transparency 
+      blocks_bg_opacity: Statistics blocks opacity
       nickname_color: Nickname color
       clan_tag_color: Clan tag color
       stats_color: Main statistics color

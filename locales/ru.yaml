@@ -331,7 +331,7 @@ cmds:
     items:
       use_custom_bg: Пользовательский фон
       glass_effect: Эффект стекла
-      blocks_bg_opacity: Прозрачность блоков со статистикой
+      blocks_bg_opacity: Непрозрачность блоков со статистикой
       nickname_color: Цвет ника игрока
       clan_tag_color: Цвет клан-тега
       stats_color: Цвет основных статистик
