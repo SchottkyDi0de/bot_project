@@ -344,7 +344,7 @@ cmds:
       disable_rating_stats: Приховати рейтингову статистику
       disable_cache_label: Приховати позначку кешу
 
-      stats_bg_blocks_disabled: Відображення блоків зі статистикою вимкнено
+      stats_blocks_disabled: Відображення блоків зі статистикою вимкнено
 
   server_settings_get:
     descr:

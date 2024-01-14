@@ -41,8 +41,7 @@ class SettingsRepresent:
         if image_settings.disable_stats_blocks:
             self.inactive_block_bg_settings(image_settings)
         
-        self.image.show()
-        self.image.save('test.png')
+        # self.image.save('test.png')
 
     def draw_v_line(self, img_draw: ImageDraw.ImageDraw):
         img_draw.line(
@@ -85,7 +84,7 @@ class SettingsRepresent:
                         self.image.size[0] // 2,
                         self.offsets.line_offset_y * (index + 2),
                     ), 
-                    text='BLOCK BG DRAW IS DISABLED',
+                    text=Text().get('').cmds.image_settings_get.items.stats_blocks_disabled.upper(),
                     anchor='mm',
                     fill=Colors.red,
                     font=self.font
@@ -155,13 +154,13 @@ class SettingsRepresent:
         lines = 0
     
         for i in image_settings_dict.keys():
-            print(getattr(Text().get('ru').cmds.image_settings_get.items, i))
+            print(getattr(Text().get('').cmds.image_settings_get.items, i))
             img_draw.text(
                 (
                     self.offsets.base_offset, 
                     self.offsets.base_offset_y + lines * self.offsets.line_offset_y
                     ),
-                text=getattr(Text().get('ru').cmds.image_settings_get.items, i).upper(),
+                text=getattr(Text().get('').cmds.image_settings_get.items, i).upper(),
                 font=self.font,
                 anchor='lm',
                 align='center',
