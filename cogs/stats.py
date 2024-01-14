@@ -67,8 +67,8 @@ class Stats(commands.Cog):
                 required=True
             ),
         ):
-        check_user(ctx)
         Text().load_from_context(ctx)
+        check_user(ctx)
         await ctx.defer()
 
         user_exists = self.db.check_member(ctx.author.id)
@@ -102,8 +102,8 @@ class Stats(commands.Cog):
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def astats(self, ctx: commands.Context):
-        check_user(ctx)
         Text().load_from_context(ctx)
+        check_user(ctx)
         await ctx.defer()
         
         if not self.db.check_member(ctx.author.id):

@@ -742,6 +742,4 @@ class Set(commands.Cog):
     
 
 def setup(bot):
-    for i in ['image_settings_get', 'set_background']:
-        getattr(Set, i).error(on_error)
     bot.add_cog(Set(bot))

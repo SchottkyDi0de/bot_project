@@ -26,6 +26,8 @@ class CogReplayParser(commands.Cog):
         self.bot = bot
         self.sdb = ServersDB()
         self.parser = ReplayParser()
+        self.err_msg = ErrorMSG()
+        self.inf_msg = InfoMSG()
 
     @commands.slash_command(
             guild_only=True, 
