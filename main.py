@@ -1,9 +1,9 @@
 import os
-from asyncio import sleep
+from asyncio import sleep, TaskGroup
 from multiprocessing import Process
 
 import uvicorn
-from discord import Intents, Activity, ActivityType
+from discord import Intents, Activity, ActivityType, Status
 from discord.ext import commands
 
 from lib.api import async_wotb_api
@@ -13,19 +13,23 @@ from api_server import Server
 from lib.exceptions.api import APIError
 from lib.settings.settings import Config, EnvConfig
 from workers.pdb_checker import PDBWorker
-
-from lib.database.players import PlayersDB
+from workers.presence_update import PresenceUpdater
 
 _log = get_logger(__name__, 'MainLogger', 'logs/main.log')
-
 _config = Config().get()
+
 
 class App():
     def __init__(self):
+        self.presence_updater = PresenceUpdater()
         self.intents = Intents.default()
         self.pbd_worker = PDBWorker()
         self.bot = commands.Bot(intents=self.intents, command_prefix=_config.default.prefix)
         self.bot.remove_command('help')
+        self.workers = [
+                self.pbd_worker.run_worker,
+                self.presence_updater.run_worker
+            ]
 
         self.extension_names = [
             f"cogs.{filename[:-3]}" for filename in os.listdir("./cogs") if filename.endswith(".py")
@@ -38,15 +42,11 @@ class App():
     def reload_extension(self, extension_names: list):
         for i in extension_names:
             self.bot.reload_extension(i)
-
-    async def apply_presence(self):
-        await self.bot.change_presence(
-            activity=Activity(
-                name=f'Servers: {len(self.bot.guilds)}',
-                type=ActivityType.watching
-            )
-        )
-        _log.debug('Presence applied')
+            
+    async def run_workers(self):
+        async with TaskGroup() as tg:
+            for worker in self.workers:
+                tg.create_task(worker(self.bot))
 
     def main(self):
 
@@ -59,15 +59,12 @@ class App():
 
             tp.set_tankopedia(await self.retrieve_tankopedia(api))
             _log.debug('Tankopedia set successfull\nBot started: %s', self.bot.user)
-            await self.pbd_worker.run_worker()
-
-            await sleep(5)
-            await self.apply_presence()
+            await self.run_workers()
 
         self.load_extension(self.extension_names)
         self.bot.run(EnvConfig.DISCORD_TOKEN_DEV)
 
-    @staticmethod 
+    @staticmethod
     async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:
         tankopedia_server_list = ['ru', 'eu']
         for i in tankopedia_server_list:

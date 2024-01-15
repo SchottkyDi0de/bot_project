@@ -26,7 +26,7 @@ class PDBWorker:
         _log.debug('WORKERS: setting STOP_WORKER_FLAG to True')
         self.STOP_WORKER_FLAG = True
 
-    async def run_worker(self):
+    async def run_worker(self, *args):
         """
         Asynchronously runs the worker in a loop.
 
