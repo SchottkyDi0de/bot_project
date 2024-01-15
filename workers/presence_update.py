@@ -12,14 +12,14 @@ class PresenceUpdater:
         self.STOP_FLAG = False
         
     async def run_worker(self, bot: Bot):
+        _log.info('WORKERS: Presence worker started')
         while not self.STOP_FLAG:
-            _log.info('WORKERS: Presence worker started')
             await bot.change_presence(
                 activity=Activity(
                     name=f'Servers: {len(bot.guilds)}',
                     type=ActivityType.watching,
                 ),
-                status=Status.streaming
+                status=Status.online
             )
             _log.debug('Presence updated')
             await sleep(300)

@@ -460,12 +460,12 @@ class PlayersDB:
             return False
         
     # Run 1 time for update database structure... TODO: For use uncomment this code.
-    # def database_update(self):
-    #     self.collection.update_many({}, { '$rename' :{ "image_settings.blocks_bg_brightness" : "image_settings.blocks_bg_opacity"}})
-    #     self.collection.update_many(
-    #         {}, { '$set' :{
-    #                 "image_settings.negative_stats_color" : '#c01515',
-    #                 "image_settings.positive_stats_color" : '#1eff26',
-    #             }
-    #             }
-    #         )
+    def database_update(self):
+        self.collection.update_many({}, { '$rename' :{ "image_settings.blocks_bg_brightness" : "image_settings.blocks_bg_opacity"}})
+        self.collection.update_many(
+            {}, { '$set' :{
+                    "image_settings.negative_stats_color" : '#c01515',
+                    "image_settings.positive_stats_color" : '#1eff26',
+                }
+                }
+            )

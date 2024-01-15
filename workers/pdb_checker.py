@@ -41,13 +41,10 @@ class PDBWorker:
             None
         """
         _log.info('WORKERS: PDB worker started')
-        while True:
-            if not self.STOP_WORKER_FLAG:
-                await self.check_database()
-                await sleep(60 * 5)
-            else:
-                _log.info('WORKERS: PDB worker stopped')
-                break
+        while not self.STOP_WORKER_FLAG:
+            await self.check_database()
+            await sleep(60 * 5)
+        _log.info('WORKERS: PDB worker stopped')
 
     async def check_database(self) -> None:
         """
