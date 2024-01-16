@@ -340,7 +340,6 @@ class API:
         need_caching: bool = False
         cahed_data = self.cache.get(((str(game_id), region)))
         if cahed_data is not None:
-            _log.debug('load data from cache')
             data = PlayerGlobalData.model_validate(cahed_data)
             data.from_cache = True
             return get_normalized_data(data)
@@ -395,13 +394,17 @@ class API:
         
         if need_caching:
             player_stats.from_cache = False
-            _log.debug(f'Caching data for {player["nickname"]}...')
             self.cache.add((str(game_id), region), player_stats.model_dump())
 
         return get_normalized_data(player_stats)
 
-    def create_task(self, tg: asyncio.TaskGroup, task_name: str, task, 
-                    params: Dict[str, Union[str, int]]) -> None:
+    def create_task(
+            self, 
+            tg: asyncio.TaskGroup, 
+            task_name: str, 
+            task, 
+            params: Dict[str, Union[str, int]]
+            ) -> None:
         task = tg.create_task(task(**params))
         task.set_name(task_name)
         task.add_done_callback(self.done_callback)

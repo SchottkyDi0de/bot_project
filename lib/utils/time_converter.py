@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+
+
 class TimeConverter:
     @staticmethod
     def formatted_from_secs(
@@ -33,3 +36,10 @@ class TimeConverter:
                 time_str = time_str.replace('%S', str(s), 1)
 
         return time_str
+    
+    def secs_from_time(time: datetime) -> int:
+        return int(timedelta(hours=time.hour, minutes=time.minute).total_seconds())
+    
+    def secs_from_str_time(time: str) -> int:
+        time_data = datetime.strptime(time, '%H:%M')
+        return int(timedelta(hours=time_data.hour, minutes=time_data.minute).total_seconds())

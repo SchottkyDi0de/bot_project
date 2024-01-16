@@ -1,14 +1,14 @@
-from datetime import time, datetime, timedelta
+from datetime import time, datetime
 import traceback
+import pytz
 
-from pydantic import ValidationError
-
-from discord import File
+from discord import File, Option
 from discord.ext import commands
 
 from lib.api.async_wotb_api import API
 from lib.blacklist.blacklist import check_user
 from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.db_player import SessionSettings
 from lib.data_parser.parse_data import get_session_stats
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
@@ -23,6 +23,8 @@ from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.utils.time_converter import TimeConverter
 from lib.exceptions.api import APIError
+from lib.utils.time_validator import validate
+
 
 _log = get_logger(__name__, 'CogSessionLogger', 'logs/cog_session.log')
 
@@ -37,14 +39,75 @@ class Session(commands.Cog):
         self.inf_msg = InfoMSG()
         
     @commands.slash_command(
-            guild_only=True, 
-            description=Text().get().cmds.start_session.descr.this,
+        guild_only=True,
+        description='Autosession start',
+        description_localizations={
+            'ru': 'Autosession start',
+            'pl': 'Autosession start',
+            'uk': 'Autosession start'
+        }
+    )
+    async def start_autosession(
+        self, 
+        ctx: commands.Context,
+        timezone: Option(
+            int,
+            description='TZ_Info',
+            default=0,
             description_localizations={
-                'ru': Text().get('ru').cmds.start_session.descr.this,
-                'pl': Text().get('pl').cmds.start_session.descr.this,
-                'uk': Text().get('ua').cmds.start_session.descr.this
-                }
+                'ru': 'TZ_Info',
+                'pl': 'TZ_Info',
+                'uk': 'TZ_Info'
+            },
+            min_value=0,
+            max_value=12,
+            required=False
+            ),
+        reset_time: Option(
+            str,
+            description='R_Time',
+            default='00:00',
+            description_localizations={
+                'ru': 'R_Time',
+                'pl': 'R_Time',
+                'uk': 'R_Time'
+            },
+            lenght=5,
+            required=False
             )
+        ):
+        Text().load_from_context(ctx)
+        check_user(ctx)
+        await ctx.defer()
+        
+        if self.db.check_member(ctx.author.id):
+            member = self.db.get_member(ctx.author.id)
+            session_settings = self.db.session_settings_get(ctx.author.id)
+            session_settings.last_get = int(datetime.now(tz=pytz.utc).timestamp())
+            session_settings.is_autosession = True
+            session_settings.timezone = timezone
+            session_settings.time_to_restart = reset_time if validate(reset_time) else '00:00'
+            
+            self.db.session_settings_set(session_settings)
+            self.db.set_member_last_stats(ctx.author.id, member.last_stats)
+            await ctx.respond(f'autosession_started, reset in <time> h')
+        else:
+            await ctx.respond(
+                embed=self.inf_msg.custom(
+                    Text().get(),
+                    Text().get().cmds.start_session.info.player_not_registred
+                )
+            )
+        
+    @commands.slash_command(
+        guild_only=True, 
+        description=Text().get().cmds.start_session.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.start_session.descr.this,
+            'pl': Text().get('pl').cmds.start_session.descr.this,
+            'uk': Text().get('ua').cmds.start_session.descr.this
+            }
+        )
     async def start_session(self, ctx: commands.Context):
         Text().load_from_context(ctx)
         check_user(ctx)
@@ -53,6 +116,10 @@ class Session(commands.Cog):
         if self.db.check_member(ctx.author.id):
             member = self.db.get_member(ctx.author.id)
             last_stats = await self.api.get_stats(member.nickname, member.region)
+            session_settings = self.db.session_settings_get(ctx.author.id)
+            session_settings.last_get = int(datetime.now(tz=pytz.utc).timestamp())
+            session_settings.is_autosession = False
+            self.db.session_settings_set()
             self.db.set_member_last_stats(ctx.author.id, last_stats.model_dump())
             await ctx.respond(embed=self.inf_msg.session_started())
         else:
@@ -94,13 +161,7 @@ class Session(commands.Cog):
             if last_stats is None:
                 await ctx.respond(embed=self.err_msg.session_not_found())
                 return
-            
-            if isinstance(last_stats['data']['tank_stats'], list):
-                tank_stats_dict = {}
-                for tank in last_stats['data']['tank_stats']:
-                    tank_stats_dict[str(tank['tank_id'])] = tank
-                last_stats['data']['tank_stats'] = tank_stats_dict
-            
+
             last_stats = PlayerGlobalData.model_validate(last_stats)
 
             try:
@@ -110,7 +171,6 @@ class Session(commands.Cog):
                 return
             
             image = ImageGen().generate(stats, diff_stats, ctx, image_settings, server_settings)
-            self.db.extend_session(ctx.author.id)
             await ctx.respond(file=File(image, 'session.png'))
             return
 

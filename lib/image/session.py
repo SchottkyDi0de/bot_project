@@ -467,7 +467,7 @@ class ImageGen():
             image_settings: ImageSettings,
             server_settings: ServerSettings,
             test = False, 
-            debug_label = True
+            debug_label = False
             ):
         """
         Generate the image for the given player's session stats.

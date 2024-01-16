@@ -505,48 +505,49 @@ cmds:
       description: |-
         ```py
         Main battle info:
-        +-----------------------+
+        +---------------------------+
         Outcome:       <battle_result>
         Battle type:   <battle_type>
         Tier:          <tier>
         Map:           <map>
-        Battle played: <time> UTC
-        +-----------------------+
+        Battle played: 
+        <time>
+        +---------------------------+
 
         Damage:
-        +-----------------------+
+        +---------------------------+
         Dealt:         <damage_dealt>
         Assisted:      <damage_assisted>
         Blocked:       <damage_blocked>
-        +-----------------------+
+        +---------------------------+
 
         Capture points:
-        +-----------------------+
+        +---------------------------+
         Earned:      <point_captured>
         Seized:      <point_defended>
-        +-----------------------+
+        +---------------------------+
 
         Shots:
-        +-----------------------+
+        +---------------------------+
         Fired:         <shots_fired>
         Hits:          <shots_hit>
         Penetrations:  <shots_penetrated>
-        +-----------------------+
+        +---------------------------+
 
         Efficiency:
-        +-----------------------+
+        +---------------------------+
         Accuracy:      <accuracy>
         Penetrations:  <penetration>
 
         Allies:
-        +-----------------------+
-        Nick:          WR:  Btls:
-        ==============+====+=====
+        +---------------------------+
+        Nick:              WR:  Btls:
+        ==================+====+=====
         <allies>
         Enemies:
-        +-----------------------+
-        Nick:          WR:  Btls:
-        ==============+====+=====
+        +---------------------------+
+        Nick:              WR:  Btls:
+        ==================+====+=====
         <enemies>
         ```
 #Cooldown for command

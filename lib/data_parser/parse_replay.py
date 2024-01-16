@@ -65,7 +65,8 @@ class ParseReplayData:
     async def parse(self, data: ReplayData, region: str) -> ParsedReplayData:
         try:
             parsed_data = ParsedReplayData.model_validate(data.model_dump())
-
+            
+            # _log.debug(f'Replay - MAP_ID: {parsed_data.room_type}')
             # get all players ids
             players_ids = []
             for player in data.players:

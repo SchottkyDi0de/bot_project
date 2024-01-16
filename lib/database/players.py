@@ -1,5 +1,5 @@
 import traceback
-from pprint import pprint, PrettyPrinter
+import pytz
 import time
 
 from pymongo import MongoClient
@@ -351,19 +351,23 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
-    def session_settings_checker(self, member_id: int | str) -> bool:
+    def session_settings_get(self, member_id: int | str) -> SessionSettings:
+        member_id = int(member_id)
         if self.check_member(member_id):
-            if self.collection.find_one({'id': member_id})['session_settings'] is not None:
-                return True
+            data = self.collection.find_one({'id': member_id})
+            return SessionSettings.model_validate(data['session_settings'])
         else:
-            return False
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
-    def autosession_handler(self, member_id: int | str) -> bool:
-        pass
-    
-    def get_member_autosession(self, member_id: int | str) -> SessionSettings:
-        pass
-        
+    def session_settings_set(self, member_id: int | str, session_settings: SessionSettings):
+        member_id = int(member_id)
+        if self.check_member(member_id):
+            self.collection.update_one(
+                {'id' : member_id}, {'$set' : {'session_settings' : session_settings.model_dump()}}
+            )
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+
     def check_member_last_stats(self, member_id: int | str) -> bool:
         member_id = int(member_id)
         try:
@@ -421,7 +425,11 @@ class PlayersDB:
         member_id = int(member_id)
         try:
             if self.check_member(member_id):
-                return self.collection.find_one({'id': member_id})['last_stats']
+                last_stats = self.collection.find_one({'id': member_id})['last_stats']
+                if last_stats is not None:
+                    member = DBPlayer.model_validate(self.collection.find_one({'id': member_id}))
+                    member.session_settings.last_get = int(datetime.now(pytz.utc).timestamp())
+                return last_stats
             else:
                 return None
         except Exception:
@@ -445,11 +453,8 @@ class PlayersDB:
             if self.check_member(member_id):
                 if self.check_member_last_stats(member_id):
                     user = self.collection.find_one({'id': member_id})
-                    user['last_stats']['end_timestamp'] = int(datetime.now().timestamp()) + _config.session.ttl
-                    self.collection.update_one(
-                        {'id': member_id},
-                        {'$set': user}
-                        )
+                    session_settings = SessionSettings.model_validate(user['session_settings'])
+                    session_settings.last_get = int(datetime.now(pytz.utc).timestamp())
                 else:
                     raise database.LastStatsNotFound(f'Last stats for user: {member_id} not found')
                 return True
@@ -466,6 +471,7 @@ class PlayersDB:
             {}, { '$set' :{
                     "image_settings.negative_stats_color" : '#c01515',
                     "image_settings.positive_stats_color" : '#1eff26',
-                }
+                    }
                 }
             )
+        self.collection.update_many({}, {'$set' : {'session_settings' : SessionSettings().model_dump()}})
