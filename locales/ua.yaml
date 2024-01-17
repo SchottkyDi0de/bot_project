@@ -82,6 +82,7 @@ for_image:
   no_data: НЕМАЄ ДАНИХ
 
 map_names:
+  rockfield: Балтійський щит
   desert_sands: Ель-Аламейн
   middleburg: Міддлбург
   copperfield: Кар'єри
@@ -108,6 +109,7 @@ map_names:
   normandy: Нормандія
   yamato_harbor: не визначено
   wasteland: не визначено
+  lagoon: Лагуна
   unknown: не визначено
 
 gamemodes:
@@ -500,10 +502,11 @@ cmds:
       empty_player: '[немає даних]'
       title: |-
         Дані реплея від <member_id>
-        Акаунт: <nickname>
+        Акаунт: `<nickname>`
       common:
         win: Перемога
         lose: Поразка
+        draw: Нічия
         # When localizing, use an editor with a monospaced font 
         # and align placeholders relative to each other
         # I recomended VS Code or Sublime Text with monospaced font
