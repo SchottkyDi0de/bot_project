@@ -150,8 +150,9 @@ class EmbedReplayBuilder():
             description=insert_data(
                 self.text.cmds.parse_replay.items.description,
                 {
-                    'battle_result'     :   self.text.cmds.parse_replay.items.common.win if data.author.winner \
-                                                else self.text.cmds.parse_replay.items.common.lose,
+                    'battle_result'     :   self.text.cmds.parse_replay.items.common.win if data.author.winner is True
+                                                else self.text.cmds.parse_replay.items.common.lose if data.author.winner is False else \
+                                                    self.text.cmds.parse_replay.items.common.draw,
                     'battle_type'       :   self.get_room_type(data.room_name),
                     'tank_name'         :   self.get_tank_name(data.author.tank_id),
                     'tier'              :   self.get_tank_tier(data.author.tank_id),

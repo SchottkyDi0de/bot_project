@@ -15,6 +15,7 @@ _log = get_logger(__name__, 'ReplayParserLogger', 'logs/replay_parser.log')
 
 
 class Maps(Enum):
+    rockfield = 1
     desert_sands = 2
     middleburg = 3
     copperfield = 4
@@ -33,6 +34,7 @@ class Maps(Enum):
     canal = 21
     vineyards = 23
     yamato_harbor = 25
+    lagoon = 26
     canyon = 27
     mayan_ruins = 30
     dynasty_pearl = 31
@@ -114,7 +116,9 @@ class ParseReplayData:
             except ValueError:
                 _log.debug(f'Room type is not defined, room_type {data.room_type}')
 
-            if parsed_data.author.team_number == parsed_data.winner_team_number:
+            if parsed_data.winner_team_number == None:
+                parsed_data.author.winner = None
+            elif parsed_data.author.team_number == parsed_data.winner_team_number:
                 parsed_data.author.winner = True
             else:
                 parsed_data.author.winner = False

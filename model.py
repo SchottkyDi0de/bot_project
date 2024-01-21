@@ -488,6 +488,7 @@ class Errors11(BaseModel):
 class Common1(BaseModel):
     win: str
     lose: str
+    draw: str
 
 
 class Items5(BaseModel):

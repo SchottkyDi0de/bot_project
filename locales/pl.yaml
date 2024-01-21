@@ -81,6 +81,7 @@ for_image:
   no_data: BRAK DANYCH
 
 map_names:
+  rockfield: Rockfield
   desert_sands: Pustynne piaski
   middleburg: Middleburg
   copperfield: Miedziane pole
@@ -107,6 +108,7 @@ map_names:
   normandy: Normandia
   yamato_harbor: Port Yamato
   wasteland: Oaza
+  lagoon: Lagoon
   unknown: Nieznane
 
 gamemodes:
@@ -495,10 +497,11 @@ cmds:
       empty_player: '[brak danych]'
       title: |-
         Replay data from <member_id>
-        Account: <nickname>
+        Account: `<nickname>`
       common:
         win: Wygrana
         lose: Przegrana
+        draw: Draw
         # When localizing, use an editor with a monospaced font 
         # and align placeholders relative to each other
         # I recomended VS Code or Sublime Text with monospaced font
