@@ -1,20 +1,15 @@
 import os, sys
-import json
 import pathlib
 import subprocess
 import traceback
 
-if __name__ == '__main__':
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    sys.path.insert(0, path)
-
+from lib.exceptions.replay_parser import ReplayParserError, PathNotExists
 from lib.data_classes.replay_data import ReplayData
 from lib.utils.singleton_factory import singleton
 from lib.logger.logger import get_logger
 
 _log = get_logger(__name__, 'ReplayParserLogger', 'logs/replay_parser.log')
 
-from lib.exceptions.replay_parser import ReplayParserError, PathNotExists
 
 _EXE = 'parser.exe'
 _PATH = 'lib/replay_parser/bin/' + _EXE

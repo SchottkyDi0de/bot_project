@@ -510,11 +510,11 @@ class ImageGen():
                 )
             except TankNotFoundInTankopedia:
                 self.tank_names.append('Unknown')
-                
+
         user_bg = self.pdb.get_member_image(ctx.author.id) is not None
         server_bg = self.sdb.get_server_image(ctx.guild.id) is not None
         allow_custom_background = server_settings.allow_custom_backgrounds
-    
+
         if image_settings.use_custom_bg or server_bg:
             if user_bg and allow_custom_background and image_settings.use_custom_bg:
                 image_bytes = base64.b64decode(self.pdb.get_member_image(ctx.author.id))

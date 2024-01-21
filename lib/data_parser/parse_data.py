@@ -136,6 +136,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
                 'tank_stats' : tank_stats,
                 'tank_ids' : [tank.tank_id for tank in tank_stats] if tank_stats is not None else None
             }
+            _log.debug(f'Tank ids: {diff_data_dict["tank_ids"]}')
 
         else:
             _log.debug('Different data generating error: player data not updated')

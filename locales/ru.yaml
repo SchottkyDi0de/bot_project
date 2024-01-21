@@ -500,7 +500,7 @@ cmds:
       empty_player: '[нет данных]'
       title: |-
         Данные реплея от <member_id>
-        Аккаунт: <nickname>
+        Аккаунт: `<nickname>`
       common:
         win: Победа
         lose: Поражение

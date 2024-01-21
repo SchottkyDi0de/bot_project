@@ -367,6 +367,19 @@ class PlayersDB:
             )
         else:
             raise database.MemberNotFound(f'Member not found, id: {member_id}')
+        
+    def check_member_session(self, member_id: int | str):
+        member_id = int(member_id)
+        try:
+            if self.check_member(member_id):
+                member = self.collection.find_one({'id': member_id})
+                if member['last_stats'] is None:
+                    raise database.LastStatsNotFound(f'Member last stats not found, member id: {member_id}')
+                session_settings = self.session_settings_get(member_id)
+                update_time = ...
+        except Exception:
+            _log.error(f'Database error: {traceback.format_exc()}')
+            raise database.DatabaseError()
 
     def check_member_last_stats(self, member_id: int | str) -> bool:
         member_id = int(member_id)
