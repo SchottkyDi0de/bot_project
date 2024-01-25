@@ -7,7 +7,7 @@ class SessionSettings(BaseModel):
     is_autosession: bool = False
     last_get: int = 0  # Unix timestamp
     timezone: int = 0  # Hours add to UTC
-    time_to_restart: str = 0  # HH:MM 24 hours format
+    time_to_restart: int = 0  # seconds
 
 
 class ImageSettings(BaseModel):

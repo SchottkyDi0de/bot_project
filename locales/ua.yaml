@@ -92,7 +92,7 @@ map_names:
   fort_despair: Форт
   himmelsdorf: Хіммельсдорф
   black_goldville: Золота долина
-  basis_palm: Гарячі піски
+  oasis_palm: Гарячі піски
   ghost_factory: Промзона
   molendijk: Молендейк
   port_bay: Порт
@@ -147,6 +147,7 @@ frequent:
     nickname: Нікнейм
     region: Регіон
     time_units:
+      d: 'д'
       h: 'г'
       m: 'м'
       s: 'с'
@@ -223,13 +224,22 @@ cmds:
       # In your editor, select monospaced font and try to align everything.
       started: |- 
         ```py
-        Сесія запущена.
-        +----------------------------+
-        Час сесії:   <time>     
-        До скидання:      <time_left>
-        Боїв сіграно:   <battles>  
-        +----------------------------+
-        >>> Скинути сесію: /start_session
+        Session started.
+        +----------------------------------+
+        Autosession:              <is_autosession>
+        +__________________________________+
+        Autosession restart time:
+        <update_time> | UTC + <timezone>
+        Restart in:               <restart_in>
+        +..................................+
+        Session time:             <time>
+        Battles played:           <battles>
+        Time remaining:           <time_left>
+        +----------------------------------+
+        >>> Reset session: 
+        /start_session
+        >>> Reset autosession:
+        /start_autosession
         ```
       not_started: '`Сесія не запущена.`'
 

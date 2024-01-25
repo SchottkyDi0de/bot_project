@@ -22,7 +22,7 @@ class PresenceUpdater:
                 status=Status.online
             )
             _log.debug('Presence updated')
-            await sleep(300)
+            await sleep(1200)
             
         _log.info('WORKERS: Prescence worker stopped')
             

@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel
 
 
@@ -46,6 +44,7 @@ class ForImage(BaseModel):
 
 
 class MapNames(BaseModel):
+    rockfield: str
     desert_sands: str
     middleburg: str
     copperfield: str
@@ -55,7 +54,7 @@ class MapNames(BaseModel):
     fort_despair: str
     himmelsdorf: str
     black_goldville: str
-    basis_palm: str
+    oasis_palm: str
     ghost_factory: str
     molendijk: str
     port_bay: str
@@ -72,6 +71,7 @@ class MapNames(BaseModel):
     normandy: str
     yamato_harbor: str
     wasteland: str
+    lagoon: str
     unknown: str
 
 
@@ -107,6 +107,7 @@ class Info(BaseModel):
 
 
 class TimeUnits(BaseModel):
+    d: str
     h: str
     m: str
     s: str

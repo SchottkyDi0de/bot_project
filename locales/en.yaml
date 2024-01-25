@@ -90,7 +90,7 @@ map_names:
   fort_despair: Fort
   himmelsdorf: Himmelsdorf
   black_goldville: Black Goldville
-  basis_palm: Basis Palm
+  oasis_palm: Basis Palm
   ghost_factory: Ghost Factory
   molendijk: Molendijk
   port_bay: Port
@@ -146,6 +146,7 @@ frequent:
     nickname: Nickname
     region: Region
     time_units:
+      d: 'd'
       h: 'h'
       m: 'm'
       s: 's'
@@ -221,13 +222,22 @@ cmds:
     items:
       started: |- 
         ```py
-        The session is running.
-        +----------------------------+
-        Session time: <time>
-        Before reset: <time_left>
-        Battles played: <battles>
-        +----------------------------+
-        >>> Reset session: /start_session
+        Session started.
+        +----------------------------------+
+        Autosession:              <is_autosession>
+        +__________________________________+
+        Autosession restart time:
+        <update_time> | UTC + <timezone>
+        Restart in:               <restart_in>
+        +..................................+
+        Session time:             <time>
+        Battles played:           <battles>
+        Time remaining:           <time_left>
+        +----------------------------------+
+        >>> Reset session: 
+        /start_session
+        >>> Reset autosession:
+        /start_autosession
         ```
       not_started: "Session not started."
 

@@ -474,7 +474,7 @@ class ImageGen():
         text_box = img_draw.textbbox(
             (self.img_size[0]//2, 20),
             text=self.data.data.name_and_tag,
-            font=self.fonts.roboto_icon,
+            font=self.fonts.roboto_icons,
             anchor='ma'
         )
 

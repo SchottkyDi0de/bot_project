@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel
 
 
@@ -109,6 +107,7 @@ class Info(BaseModel):
 
 
 class TimeUnits(BaseModel):
+    d: str
     h: str
     m: str
     s: str
@@ -457,7 +456,7 @@ class Info15(BaseModel):
 
 
 class Items4(BaseModel):
-    help_types: List[str]
+    help_types: list[str]
     help: str
     syntax: str
     setup: str

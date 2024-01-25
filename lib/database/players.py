@@ -340,7 +340,8 @@ class PlayersDB:
                     {'id': member_id}, 
                     {'$set': 
                             {
-                            'last_stats': last_stats
+                            'last_stats': last_stats,
+                            'session_settings.last_get' : int(datetime.now(pytz.utc).timestamp())
                             }
                         }
                     )
@@ -351,7 +352,7 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
-    def session_settings_get(self, member_id: int | str) -> SessionSettings:
+    def get_member_session_settings(self, member_id: int | str) -> SessionSettings:
         member_id = int(member_id)
         if self.check_member(member_id):
             data = self.collection.find_one({'id': member_id})
@@ -359,7 +360,7 @@ class PlayersDB:
         else:
             raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
-    def session_settings_set(self, member_id: int | str, session_settings: SessionSettings):
+    def set_member_session_settings(self, member_id: int | str, session_settings: SessionSettings):
         member_id = int(member_id)
         if self.check_member(member_id):
             self.collection.update_one(
@@ -375,7 +376,7 @@ class PlayersDB:
                 member = self.collection.find_one({'id': member_id})
                 if member['last_stats'] is None:
                     raise database.LastStatsNotFound(f'Member last stats not found, member id: {member_id}')
-                session_settings = self.session_settings_get(member_id)
+                session_settings = self.get_member_session_settings(member_id)
                 update_time = ...
         except Exception:
             _log.error(f'Database error: {traceback.format_exc()}')
@@ -387,13 +388,7 @@ class PlayersDB:
             if self.check_member(member_id):
                 member = self.collection.find_one({'id': member_id})
                 if member['last_stats'] is not None:
-                    if member['last_stats']['end_timestamp'] is not None:
-                        curr_time = int(datetime.now().timestamp())
-                        end_time = int(member['last_stats']['end_timestamp'])
-                        if end_time > curr_time:
-                            return True
-                        else:
-                            self.del_member_last_stats(member_id)
+                    return True
                 else:
                     return False
             else:
@@ -402,7 +397,31 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
-    def del_member_last_stats(self, member_id: int | str):
+    def validate_session(self, member_id: int | str):
+        member_id = int(member_id)
+        try:
+            if self.check_member_last_stats(member_id):
+                member_id = str(member_id)
+                session_settings = self.get_member_session_settings(member_id)
+                curr_time = int(datetime.now(pytz.utc).timestamp())
+                end_time = session_settings.last_get
+                if session_settings.is_autosession:
+                    end_time += _config.autosession.ttl
+                else:
+                    end_time += _config.session.ttl
+                    
+                if curr_time > end_time:
+                    self.reset_member_session(member_id)
+                    return False
+                
+                return True
+            else:
+                raise database.LastStatsNotFound(f'Last stats not found, id: {member_id}')
+        except Exception:
+            _log.error(f'Database error: {traceback.format_exc()}')
+            return False
+        
+    def reset_member_session(self, member_id: int | str):
         member_id = int(member_id)
         try:
             if self.check_member(member_id):
@@ -414,6 +433,7 @@ class PlayersDB:
                             }
                         }
                     )
+                self.set_member_session_settings(member_id, SessionSettings.model_validate({}))
                 return True
             else:
                 return False
@@ -427,9 +447,12 @@ class PlayersDB:
         try:
             if self.check_member(member_id):
                 if self.check_member_last_stats(member_id):
-                    return self.collection.find_one({'id': member_id})['last_stats']['end_timestamp']
+                    session_settings = self.get_member_session_settings(member_id)
+                    if session_settings.is_autosession:
+                        return session_settings.last_get + _config.autosession.ttl
+                    return session_settings.last_get + _config.session.ttl
             else:
-                return None
+                raise database.MemberNotFound
         except Exception:
             _log.error(f'Database error: {traceback.format_exc()}')
             return None
@@ -444,7 +467,7 @@ class PlayersDB:
                     member.session_settings.last_get = int(datetime.now(pytz.utc).timestamp())
                 return last_stats
             else:
-                return None
+                raise database.MemberNotFound()
         except Exception:
             _log.error(f'Database error: {traceback.format_exc()}')
             return None
@@ -477,14 +500,14 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
-    # Run 1 time for update database structure... TODO: For use uncomment this code.
-    def database_update(self):
-        self.collection.update_many({}, { '$rename' :{ "image_settings.blocks_bg_brightness" : "image_settings.blocks_bg_opacity"}})
-        self.collection.update_many(
-            {}, { '$set' :{
-                    "image_settings.negative_stats_color" : '#c01515',
-                    "image_settings.positive_stats_color" : '#1eff26',
-                    }
-                }
-            )
-        self.collection.update_many({}, {'$set' : {'session_settings' : SessionSettings().model_dump()}})
+    # Run 1 time for update database structure...
+    # def database_update(self):
+        # self.collection.update_many({}, { '$rename' :{ "image_settings.blocks_bg_brightness" : "image_settings.blocks_bg_opacity"}})
+        # self.collection.update_many(
+        #     {}, { '$set' :{
+        #             "image_settings.negative_stats_color" : '#c01515',
+        #             "image_settings.positive_stats_color" : '#1eff26',
+        #             }
+        #         }
+        #     )
+        # self.collection.update_many({}, {'$set' : {'session_settings' : SessionSettings().model_dump()}})
