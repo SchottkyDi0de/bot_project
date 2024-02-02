@@ -93,7 +93,6 @@ class Session(commands.Cog):
             time_to_restart = reset_time if validate(reset_time) else '00:00'
             session_settings.time_to_restart = \
                 now_time + timedelta(
-                    hours=timezone,
                     seconds=TimeConverter.secs_from_str_time(time_to_restart)
                     )
                 
@@ -135,6 +134,7 @@ class Session(commands.Cog):
             last_stats = await self.api.get_stats(game_id=member.game_id, region=member.region)
             session_settings = self.db.get_member_session_settings(ctx.author.id)
             session_settings.last_get = datetime.now(tz=pytz.utc)
+            session_settings.time_to_restart = datetime.now(tz=pytz.utc)
             session_settings.is_autosession = False
             
             self.db.set_member_session_settings(ctx.author.id, session_settings)
@@ -221,9 +221,8 @@ class Session(commands.Cog):
         if self.db.check_member(ctx.author.id):
             if self.db.check_member_last_stats(ctx.author.id):
                 self.db.validate_session(ctx.author.id)
-                
                 now_time = datetime.now(pytz.utc)
-                member = self.db.get_member(ctx.author.id)
+                
                 try:
                     last_stats = PlayerGlobalData.model_validate(self.db.get_member_last_stats(ctx.author.id))
                     session_settings = self.db.get_member_session_settings(ctx.author.id)
@@ -232,46 +231,56 @@ class Session(commands.Cog):
                     await ctx.respond(embed=self.err_msg.api_error())
                     return
                 
-                time_format = f'%H:' \
-                              f'%M'
-                big_time_format = f'%D{Text().get().frequent.common.time_units.d} | ' \
-                                  f'%H:' \
-                                  f'%M'
+                if session_settings.is_autosession:
                 
-                if session_settings.last_get is None or session_settings.time_to_restart is None:
-                    _log.error('last_get or time_to_restart is None')
-                    _log.error(traceback.format_exc())
-                    raise ValueError()
-                
-                update_time = session_settings.last_get - timedelta(hours=session_settings.timezone)
-                update_time = update_time - now_time.replace(hour=0, minute=0, second=0)
-                restart_in = session_settings.time_to_restart - now_time - timedelta(hours=session_settings.timezone)
-                
-                time_left = self.db.get_session_end_time(ctx.author.id) - now_time
-                
-                session_time = now_time - last_stats.timestamp
-                
-                try:
-                    battles_before = last_stats.data.statistics.all.battles
-                    battles_after = await self.api.get_player_battles(last_stats.region, str(last_stats.id))
-                except APIError:
-                    _log.error(traceback.format_exc())
-                    await ctx.respond(embed=self.err_msg.api_error())
-                    return
+                    time_format = f'%H:' \
+                                f'%M'
+                    long_time_format = f'%D{Text().get().frequent.common.time_units.d} | ' \
+                                    f'%H:' \
+                                    f'%M'
+                    
+                    if session_settings.last_get is None or session_settings.time_to_restart is None:
+                        _log.error('last_get or time_to_restart is None')
+                        _log.error(traceback.format_exc())
+                        raise ValueError()
+                    
+                    restart_in = session_settings.time_to_restart - (now_time + timedelta(hours=session_settings.timezone))
+                    time_left = self.db.get_session_end_time(ctx.author.id) - now_time
+                    session_time = now_time - last_stats.timestamp
+                    
+                    try:
+                        battles_before = last_stats.data.statistics.all.battles
+                        battles_after = await self.api.get_player_battles(last_stats.region, str(last_stats.id))
+                    except APIError:
+                        _log.error(traceback.format_exc())
+                        await ctx.respond(embed=self.err_msg.api_error())
+                        return
 
-                text = insert_data(
-                    Text().get().cmds.session_state.items.started,
-                    {
-                        'is_autosession' : bool_handler(session_settings.is_autosession),
-                        'restart_in' : TimeConverter.formatted_from_secs(int(restart_in.total_seconds()), time_format),
-                        'update_time' : (session_settings.time_to_restart - timedelta(hours=session_settings.timezone)).strftime(time_format),
-                        'timezone' : session_settings.timezone,
-                        'time': TimeConverter.formatted_from_secs(int(session_time.total_seconds()), big_time_format),
-                        'time_left': TimeConverter.formatted_from_secs(int(time_left.total_seconds()), time_format),
-                        'battles': str(battles_after - battles_before)
-                    }
-                )
-                await ctx.respond(embed=self.inf_msg.session_state(text))
+                    text = insert_data(
+                        Text().get().cmds.session_state.items.started,
+                        {
+                            'is_autosession' : bool_handler(session_settings.is_autosession),
+                            'restart_in' : TimeConverter.formatted_from_secs(int(restart_in.total_seconds()), time_format),
+                            'update_time' : (session_settings.time_to_restart).strftime(time_format),
+                            'timezone' : session_settings.timezone,
+                            'time': TimeConverter.formatted_from_secs(int(session_time.total_seconds()), long_time_format),
+                            'time_left': TimeConverter.formatted_from_secs(int(time_left.total_seconds()), long_time_format),
+                            'battles': str(battles_after - battles_before)
+                        }
+                    ) if session_settings.is_autosession else \
+                        insert_data(
+                        Text().get().cmds.session_state.items.started,
+                        {
+                            'is_autosession' : bool_handler(session_settings.is_autosession),
+                            'restart_in' : '00:00',
+                            'update_time' : (session_settings.time_to_restart).strftime(time_format),
+                            'timezone' : session_settings.timezone,
+                            'time': TimeConverter.formatted_from_secs(int(session_time.total_seconds()), long_time_format),
+                            'time_left': TimeConverter.formatted_from_secs(int(time_left.total_seconds()), long_time_format),
+                            'battles': str(battles_after - battles_before)
+                        }
+                    )
+                    await ctx.respond(embed=self.inf_msg.session_state(text))
             else:
                 await ctx.respond(
                     embed=self.inf_msg.custom(

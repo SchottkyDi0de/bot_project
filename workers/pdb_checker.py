@@ -80,9 +80,9 @@ class PDBWorker:
             self.db.check_member_premium(member_id)
             
             if session_settings.is_autosession:
-                now_time = datetime.now(pytz.utc) + timedelta(hours=session_settings.timezone)
+                now_time = datetime.now(pytz.utc)
                 
-                if now_time > session_settings.time_to_restart:
+                if now_time > (session_settings.time_to_restart - timedelta(hours=session_settings.timezone)):
                     session_settings.time_to_restart += timedelta(days=1)
                     last_stats = await self.api.get_stats(region=player.region, game_id=player.game_id)
                     self.db.start_autosession(member_id, last_stats, session_settings)

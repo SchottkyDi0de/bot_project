@@ -1,3 +1,4 @@
+import pytz
 from typing import Any
 from datetime import datetime
 
@@ -6,9 +7,9 @@ from pydantic import BaseModel
 
 class SessionSettings(BaseModel):
     is_autosession: bool = False
-    last_get: None | datetime = None  # UTC Time of last session get (Date object)
+    last_get: datetime = datetime.now(pytz.utc)  # UTC Time of last session get (Date object)
     timezone: int = 0  # Hours add to UTC (Simple timezone represent)
-    time_to_restart: None | datetime = None # Date object
+    time_to_restart: datetime = datetime.now(pytz.utc).replace(hour=0, minute=0, second=0) # Date object
 
 
 class ImageSettings(BaseModel):

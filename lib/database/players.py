@@ -25,7 +25,7 @@ class PlayersDB:
         )
         self.collection = self.db['players']
         
-        # self.database_update() # TODO: remove this
+        self.database_update() # TODO: remove this
 
     def set_member(self, data: DBPlayer, override: bool = False) -> bool:
         data = DBPlayer.model_dump(data)
@@ -500,28 +500,10 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return None
         
-    def extend_session(self, member_id: int | str) -> bool:
-        member_id = int(member_id)
-        try:
-            if self.check_member(member_id):
-                if self.check_member_last_stats(member_id):
-                    user = self.collection.find_one({'id': member_id})
-                    session_settings = SessionSettings.model_validate(user['session_settings'])
-                    session_settings.last_get = int(datetime.now(pytz.utc).timestamp())
-                else:
-                    raise database.LastStatsNotFound(f'Last stats for user: {member_id} not found')
-                return True
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
-        
     # Run 1 time for update database structure...
     def database_update(self):
         pass
         # self.collection.update_many({}, { '$set' :{ "last_stats" : None, "session_settings" : SessionSettings().model_dump()}})
-        # self.collection.update_many({}, { '$unset' :{ "last_stats:" : None } })
         # self.collection.update_many(
         #     {}, { '$set' :{
         #             "image_settings.negative_stats_color" : '#c01515',
