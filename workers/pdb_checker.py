@@ -69,6 +69,7 @@ class PDBWorker:
         """
         member_ids = self.db.get_players_ids()
         for member_id in member_ids:
+            player = self.db.get_member(member_id)
             
             if self.db.check_member_last_stats(member_id):
                 self.db.validate_session(member_id)
@@ -79,16 +80,11 @@ class PDBWorker:
             self.db.check_member_premium(member_id)
             
             if session_settings.is_autosession:
-                member = self.db.get_member(member_id)
-                now_time = int(datetime.now(pytz.utc).timestamp())
-                restart_in = session_settings.time_to_restart + session_settings.timezone * 60 * 60
-                restart_time = datetime.today().replace(
-                        hour=session_settings.timezone, second=0, minute=0, microsecond=0) + \
-                            timedelta(seconds=restart_in)
-                restart_time = int(restart_time.timestamp())
+                now_time = datetime.now(pytz.utc) + timedelta(hours=session_settings.timezone)
                 
-                if restart_time > now_time:
-                    stats = await self.api.get_stats(game_id=member.game_id, region=member.region)
-                    self.db.set_member_last_stats(member_id, stats.model_dump())
+                if now_time > session_settings.time_to_restart:
+                    session_settings.time_to_restart += timedelta(days=1)
+                    last_stats = await self.api.get_stats(region=player.region, game_id=player.game_id)
+                    self.db.start_autosession(member_id, last_stats, session_settings)
                 
             await sleep(0.05)

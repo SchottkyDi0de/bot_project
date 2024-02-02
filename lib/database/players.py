@@ -1,12 +1,14 @@
 import traceback
 import pytz
-import time
+from datetime import datetime, timedelta
 
 from pymongo import MongoClient
 from pymongo.results import DeleteResult
+from bson.codec_options import CodecOptions
+
+from lib.data_classes.api_data import PlayerGlobalData
 from lib.logger.logger import get_logger
 from lib.data_classes.db_player import DBPlayer, ImageSettings, SessionSettings
-from datetime import datetime
 from lib.exceptions import database
 from lib.settings.settings import Config
 
@@ -18,8 +20,12 @@ _log = get_logger(__name__, 'PlayersDBLogger', 'logs/playersdb.log')
 class PlayersDB:
     def __init__(self) -> None:
         self.client = MongoClient('mongodb://localhost:27017/')
-        self.db = self.client['PlayersDB']
+        self.db = self.client['PlayersDB'].with_options(
+            codec_options=CodecOptions(tz_aware=True)
+        )
         self.collection = self.db['players']
+        
+        # self.database_update() # TODO: remove this
 
     def set_member(self, data: DBPlayer, override: bool = False) -> bool:
         data = DBPlayer.model_dump(data)
@@ -298,13 +304,14 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
     
-    def get_member(self, member_id: int) -> DBPlayer | None:
+    def get_member(self, member_id: int | str) -> DBPlayer:
+        member_id = int(member_id)
         data = self.collection.find_one({'id': member_id})
         if data is not None:
             del data['_id']
             return DBPlayer.model_validate(data)
         else:
-            return None
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def del_member(self, member_id: int) -> DeleteResult:
         member_id = int(member_id)
@@ -341,7 +348,6 @@ class PlayersDB:
                     {'$set': 
                             {
                             'last_stats': last_stats,
-                            'session_settings.last_get' : int(datetime.now(pytz.utc).timestamp())
                             }
                         }
                     )
@@ -387,8 +393,9 @@ class PlayersDB:
         try:
             if self.check_member(member_id):
                 member = self.collection.find_one({'id': member_id})
-                if member['last_stats'] is not None:
-                    return True
+                session_settings = self.get_member_session_settings(member_id)
+                if member['last_stats'] is not None or session_settings.last_get is not None:
+                    return True  
                 else:
                     return False
             else:
@@ -397,18 +404,28 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
+    def start_autosession(self, member_id: int | str, last_stats: PlayerGlobalData, session_settings: SessionSettings):
+        member_id = int(member_id)
+        
+        self.set_member_last_stats(member_id, last_stats.model_dump())
+        self.set_member_session_settings(member_id, session_settings)
+        
     def validate_session(self, member_id: int | str):
         member_id = int(member_id)
         try:
             if self.check_member_last_stats(member_id):
                 member_id = str(member_id)
                 session_settings = self.get_member_session_settings(member_id)
-                curr_time = int(datetime.now(pytz.utc).timestamp())
+                curr_time = datetime.now(pytz.utc)
                 end_time = session_settings.last_get
+                
+                if end_time is None:
+                    return False
+                    
                 if session_settings.is_autosession:
-                    end_time += _config.autosession.ttl
+                    end_time += timedelta(seconds=_config.autosession.ttl)
                 else:
-                    end_time += _config.session.ttl
+                    end_time += timedelta(seconds=_config.session.ttl)
                     
                 if curr_time > end_time:
                     self.reset_member_session(member_id)
@@ -442,15 +459,15 @@ class PlayersDB:
             return False
         
         
-    def get_session_end_time(self, member_id: int | str) -> int | None:
+    def get_session_end_time(self, member_id: int | str) -> datetime:
         member_id = int(member_id)
         try:
             if self.check_member(member_id):
                 if self.check_member_last_stats(member_id):
                     session_settings = self.get_member_session_settings(member_id)
                     if session_settings.is_autosession:
-                        return session_settings.last_get + _config.autosession.ttl
-                    return session_settings.last_get + _config.session.ttl
+                        return session_settings.last_get + timedelta(seconds=_config.autosession.ttl)
+                    return session_settings.last_get + timedelta(seconds=_config.session.ttl)
             else:
                 raise database.MemberNotFound
         except Exception:
@@ -501,8 +518,10 @@ class PlayersDB:
             return False
         
     # Run 1 time for update database structure...
-    # def database_update(self):
-        # self.collection.update_many({}, { '$rename' :{ "image_settings.blocks_bg_brightness" : "image_settings.blocks_bg_opacity"}})
+    def database_update(self):
+        pass
+        # self.collection.update_many({}, { '$set' :{ "last_stats" : None, "session_settings" : SessionSettings().model_dump()}})
+        # self.collection.update_many({}, { '$unset' :{ "last_stats:" : None } })
         # self.collection.update_many(
         #     {}, { '$set' :{
         #             "image_settings.negative_stats_color" : '#c01515',

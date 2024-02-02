@@ -7,7 +7,7 @@ from pywebio.output import *
 from fastapi.responses import JSONResponse
 from aiohttp import ClientSession
 
-from lib.api.aync_discord_api import DiscordApi
+from lib.api.async_discord_api import DiscordApi
 from lib.auth.dicord import DiscordOAuth
 
 class AuthServer:

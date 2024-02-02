@@ -14,3 +14,4 @@ database_copy.*
 .tmp
 /.lprof
 *.dat
+/dump

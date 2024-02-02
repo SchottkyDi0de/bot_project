@@ -1,13 +1,14 @@
 from typing import Any
+from datetime import datetime
 
 from pydantic import BaseModel
 
 
 class SessionSettings(BaseModel):
     is_autosession: bool = False
-    last_get: int = 0  # Unix timestamp
-    timezone: int = 0  # Hours add to UTC
-    time_to_restart: int = 0  # seconds
+    last_get: None | datetime = None  # UTC Time of last session get (Date object)
+    timezone: int = 0  # Hours add to UTC (Simple timezone represent)
+    time_to_restart: None | datetime = None # Date object
 
 
 class ImageSettings(BaseModel):

@@ -1,4 +1,5 @@
 from typing import Dict, Optional
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -22,7 +23,6 @@ class PlayerGlobalData(BaseModel):
     data: Player
     region: str
     lower_nickname: str
-    timestamp: int
-    end_timestamp: int
+    timestamp: datetime
     nickname: str
     from_cache: Optional[bool] = False

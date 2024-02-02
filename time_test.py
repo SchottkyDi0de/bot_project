@@ -1,32 +1,16 @@
-data = {
-    '432' : {
-        'id' : 432,
-        'stats' : 44.2,
-        'diff_battles' : 2
-    },
-    '44' : {
-        'id' : 44,
-        'stats' : 24.2,
-        'diff_battles' : 1
-    },
-    '2234' : {
-        'id' : 2234,
-        'stats' : 28.2,
-        'diff_battles' : 5
-    },
-    '4433' : {
-        'id' : 4433,
-        'stats' : 64.2,
-        'diff_battles' : 8
-    }
-}
+def narcissistic(value: int) -> bool:
+    str_val = str(value)
+    val_len = len(str_val)
+    summ_of_elements = 0
     
-iterator = iter(data)
-while True:
+    for i in str_val:
+        summ_of_elements += int(i) ** val_len
+        
+    print(summ_of_elements)
+        
+    if summ_of_elements == value:
+        return True
     
-    try:
-        print(next(iterator))
-    except StopIteration:
-        print('stop')
-        break
-    
+    return False
+
+print(narcissistic(153))

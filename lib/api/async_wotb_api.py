@@ -1,8 +1,9 @@
-from pprint import pprint
+import pytz
 import json
 import asyncio
 import traceback
 from time import time
+from pprint import pprint
 from datetime import datetime
 from typing import Dict, Union
 
@@ -382,8 +383,7 @@ class API:
         self.player['id'] = player['account_id']
         self.player['region'] = self._reg_normalizer(region)
         self.player['lower_nickname'] = player['nickname'].lower()
-        self.player['timestamp'] = int(datetime.now().timestamp())
-        self.player['end_timestamp'] = int(datetime.now().timestamp()) + _config.session.ttl
+        self.player['timestamp'] = datetime.now(pytz.utc)
         self.player['nickname'] = player['nickname']
         self.player['data'] = self.player_stats
 
