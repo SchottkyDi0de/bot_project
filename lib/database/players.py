@@ -393,8 +393,7 @@ class PlayersDB:
         try:
             if self.check_member(member_id):
                 member = self.collection.find_one({'id': member_id})
-                session_settings = self.get_member_session_settings(member_id)
-                if member['last_stats'] is not None or session_settings.last_get is not None:
+                if member['last_stats'] is not None:
                     return True  
                 else:
                     return False
@@ -474,7 +473,7 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return None
         
-    def get_member_last_stats(self, member_id: int | str) -> dict | None:
+    def get_member_last_stats(self, member_id: int | str) -> PlayerGlobalData:
         member_id = int(member_id)
         try:
             if self.check_member(member_id):
@@ -482,7 +481,9 @@ class PlayersDB:
                 if last_stats is not None:
                     member = DBPlayer.model_validate(self.collection.find_one({'id': member_id}))
                     member.session_settings.last_get = int(datetime.now(pytz.utc).timestamp())
-                return last_stats
+                    return PlayerGlobalData.model_validate(last_stats)
+                else:
+                    raise database.LastStatsNotFound()
             else:
                 raise database.MemberNotFound()
         except Exception:

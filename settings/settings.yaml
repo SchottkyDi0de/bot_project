@@ -16,7 +16,7 @@ server:
   port: 8000
 
 session:
-  ttl: 86_400 # in seconds
+  ttl: 172_800 # in seconds
 
 autosession:
   ttl: 2_592_000 # in seconds
