@@ -14,6 +14,7 @@ from lib.exceptions.api import APIError
 from lib.settings.settings import Config, EnvConfig
 from workers.pdb_checker import PDBWorker
 from workers.presence_update import PresenceUpdater
+from workers.db_backup_worker import DBBackupWorker
 
 _log = get_logger(__name__, 'MainLogger', 'logs/main.log')
 _config = Config().get()
@@ -22,13 +23,15 @@ _config = Config().get()
 class App():
     def __init__(self):
         self.presence_updater = PresenceUpdater()
+        self.backup = DBBackupWorker()
         self.intents = Intents.default()
         self.pbd_worker = PDBWorker()
         self.bot = commands.Bot(intents=self.intents, command_prefix=_config.default.prefix)
         self.bot.remove_command('help')
         self.workers = [
                 self.pbd_worker.run_worker,
-                self.presence_updater.run_worker
+                self.presence_updater.run_worker,
+                self.backup.run_worker
             ]
 
         self.extension_names = [
