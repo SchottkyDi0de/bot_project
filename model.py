@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel
 
 
@@ -265,8 +267,8 @@ class StartSession(BaseModel):
 
 
 class SubDescr3(BaseModel):
-    image: str
-    server: str
+    timezone: str
+    restart_time: str
 
 
 class Descr7(BaseModel):
@@ -275,6 +277,27 @@ class Descr7(BaseModel):
 
 
 class Errors7(BaseModel):
+    uncorrect_r_time: str
+
+
+class StartAutosession(BaseModel):
+    descr: Descr7
+    errors: Errors7
+    info: Info6
+    items: str
+
+
+class SubDescr4(BaseModel):
+    image: str
+    server: str
+
+
+class Descr8(BaseModel):
+    this: str
+    sub_descr: SubDescr4
+
+
+class Errors8(BaseModel):
     player_not_registred: str
     permission_denied: str
     file_error: str
@@ -283,18 +306,18 @@ class Errors7(BaseModel):
     small_resolution: str
 
 
-class Info7(BaseModel):
+class Info8(BaseModel):
     set_background_ok: str
 
 
 class SetBackground(BaseModel):
-    descr: Descr7
-    errors: Errors7
-    info: Info7
+    descr: Descr8
+    errors: Errors8
+    info: Info8
     items: str
 
 
-class SubDescr4(BaseModel):
+class SubDescr5(BaseModel):
     use_custom_bg: str
     glass_effect: str
     blocks_bg_brightness: str
@@ -311,17 +334,17 @@ class SubDescr4(BaseModel):
     disable_cahce_label: str
 
 
-class Descr8(BaseModel):
+class Descr9(BaseModel):
     this: str
-    sub_descr: SubDescr4
+    sub_descr: SubDescr5
 
 
-class Errors8(BaseModel):
+class Errors9(BaseModel):
     color_error: str
     changes_not_found: str
 
 
-class Info8(BaseModel):
+class Info9(BaseModel):
     set_ok: str
 
 
@@ -331,38 +354,38 @@ class Items1(BaseModel):
 
 
 class ImageSettings(BaseModel):
-    descr: Descr8
-    errors: Errors8
-    info: Info8
+    descr: Descr9
+    errors: Errors9
+    info: Info9
     items: Items1
 
 
-class SubDescr5(BaseModel):
+class SubDescr6(BaseModel):
     allow_custom_backgrounds: str
-
-
-class Descr9(BaseModel):
-    this: str
-    sub_descr: SubDescr5
-
-
-class Errors9(BaseModel):
-    permission_denied: str
-
-
-class ServerSettings(BaseModel):
-    descr: Descr9
-    errors: Errors9
-    info: Info8
-    items: str
 
 
 class Descr10(BaseModel):
     this: str
+    sub_descr: SubDescr6
+
+
+class Errors10(BaseModel):
+    permission_denied: str
+
+
+class ServerSettings(BaseModel):
+    descr: Descr10
+    errors: Errors10
+    info: Info9
+    items: str
+
+
+class Descr11(BaseModel):
+    this: str
     sub_descr: str
 
 
-class Info10(BaseModel):
+class Info11(BaseModel):
     get_ok: str
 
 
@@ -387,9 +410,9 @@ class Items2(BaseModel):
 
 
 class ImageSettingsGet(BaseModel):
-    descr: Descr10
+    descr: Descr11
     errors: str
-    info: Info10
+    info: Info11
     items: Items2
 
 
@@ -398,52 +421,32 @@ class Items3(BaseModel):
 
 
 class ServerSettingsGet(BaseModel):
-    descr: Descr10
+    descr: Descr11
     errors: str
-    info: Info10
+    info: Info11
     items: Items3
 
 
-class Info12(BaseModel):
+class Info13(BaseModel):
     reset_ok: str
 
 
 class ServerSettingsReset(BaseModel):
-    descr: Descr10
+    descr: Descr11
     errors: str
-    info: Info12
+    info: Info13
     items: str
 
 
 class ImageSettingsReset(BaseModel):
-    descr: Descr10
+    descr: Descr11
     errors: str
-    info: Info12
-    items: str
-
-
-class SubDescr6(BaseModel):
-    server: str
-
-
-class Descr14(BaseModel):
-    this: str
-    sub_descr: SubDescr6
-
-
-class Info14(BaseModel):
-    unset_background_ok: str
-
-
-class ResetBackground(BaseModel):
-    descr: Descr14
-    errors: Errors9
-    info: Info14
+    info: Info13
     items: str
 
 
 class SubDescr7(BaseModel):
-    help_types: str
+    server: str
 
 
 class Descr15(BaseModel):
@@ -452,6 +455,26 @@ class Descr15(BaseModel):
 
 
 class Info15(BaseModel):
+    unset_background_ok: str
+
+
+class ResetBackground(BaseModel):
+    descr: Descr15
+    errors: Errors10
+    info: Info15
+    items: str
+
+
+class SubDescr8(BaseModel):
+    help_types: str
+
+
+class Descr16(BaseModel):
+    this: str
+    sub_descr: SubDescr8
+
+
+class Info16(BaseModel):
     send_ok: str
 
 
@@ -466,22 +489,22 @@ class Items4(BaseModel):
 
 
 class Help(BaseModel):
-    descr: Descr15
+    descr: Descr16
     errors: str
-    info: Info15
+    info: Info16
     items: Items4
 
 
-class SubDescr8(BaseModel):
+class SubDescr9(BaseModel):
     file: str
 
 
-class Descr16(BaseModel):
+class Descr17(BaseModel):
     this: str
-    sub_descr: SubDescr8
+    sub_descr: SubDescr9
 
 
-class Errors11(BaseModel):
+class Errors12(BaseModel):
     parsing_error: str
     uncorrect_file_format: str
 
@@ -501,23 +524,23 @@ class Items5(BaseModel):
 
 
 class ParseReplay(BaseModel):
-    descr: Descr16
-    errors: Errors11
+    descr: Descr17
+    errors: Errors12
     info: str
     items: Items5
 
 
-class Descr17(BaseModel):
+class Descr18(BaseModel):
     this: str
 
 
-class Info16(BaseModel):
+class Info17(BaseModel):
     cooldown_not_expired: str
 
 
 class Cooldown(BaseModel):
-    descr: Descr17
-    info: Info16
+    descr: Descr18
+    info: Info17
 
 
 class Cmds(BaseModel):
@@ -528,6 +551,7 @@ class Cmds(BaseModel):
     session_state: SessionState
     get_session: GetSession
     start_session: StartSession
+    start_autosession: StartAutosession
     set_background: SetBackground
     image_settings: ImageSettings
     server_settings: ServerSettings

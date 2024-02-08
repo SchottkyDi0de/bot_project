@@ -25,15 +25,15 @@ class PlayersDB:
         )
         self.collection = self.db['players']
         
-        self.database_update() # TODO: remove this
+        # self.database_update() # TODO: remove this
 
     def set_member(self, data: DBPlayer, override: bool = False) -> bool:
-        data = DBPlayer.model_dump(data)
-        if self.check_member(data['id']) and override:
-            self.collection.update_one({'id': data['id']}, {'$set': {**data}})
+        ds_id = data.id
+        if self.check_member(ds_id) and override:
+            self.collection.update_one({'id': ds_id}, {'$set': {**(data.model_dump())}})
             return True
-        elif self.collection.find_one({'id': data['id']}) is None:
-            self.collection.insert_one({'id': data['id'], **data})
+        elif self.collection.find_one({'id': ds_id}) is None:
+            self.collection.insert_one({data.model_dump()})
             return True
         else:
             return False
@@ -503,7 +503,7 @@ class PlayersDB:
         
     # Run 1 time for update database structure...
     def database_update(self):
-        pass
+        self.collection.update_many({}, {'$set' : {'image_settings' : ImageSettings().model_dump(), 'session_settings' : SessionSettings().model_dump()}})
         # self.collection.update_many({}, { '$set' :{ "last_stats" : None, "session_settings" : SessionSettings().model_dump()}})
         # self.collection.update_many(
         #     {}, { '$set' :{

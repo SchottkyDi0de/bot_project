@@ -85,52 +85,62 @@ class API:
         Returns:
             dict: The data returned from the API as a dictionary.
         """
-        if response.status != 200:
-            _log.error(f'Error get data, bad response code: {response.status}')
-            raise api_exceptions.APIError()
         
         data = await response.text()
         data = json.loads(data)
         if response.status == 504:
             raise api_exceptions.APISourceNotAvailable()
+        if response.status == 407:
+            raise api_exceptions.UncorrectName('Uncorrect nickname')
+        
+        if response.status != 200:
+            _log.error(f'Error get data, bad response code: {response.status}')
+            raise api_exceptions.APIError()
 
         if check_data_status:
             if data['status'] != 'ok':
                 if data['error']['message'] == 'REQUEST_LIMIT_EXCEEDED':
                     _log.warning(f'Ingnoring Exception caused by API: Request Limit Exceeded')
                     raise api_exceptions.RequestsLimitExceeded('Rate Limit Exceeded')
+                
+                elif data['error']['message'] == 'INVALID_SEARCH':
+                    _log.error(f'Exception caused by API: Invalid Search')
+                    raise api_exceptions.UncorrectName('Uncorrect nickname')
                     
                 _log.error(f'Error get data, bad response status: {data}')
                 raise api_exceptions.APIError(f'Error get data, bad response status: {data}')
 
-        if check_data:
-            if data['data'] == None:
-                _log.error(
-                    f'API Returned empty `data` section'
-                    f'Data: {data}'
-                )
-                raise api_exceptions.EmptyDataError(f'API Returned empty `data` section')
-                
-            elif data['data'][list(data['data'].keys())[0]] == None:
-                _log.error(
-                    f'API Returned empty `data` section'
-                    f'Data: {data}'
-                )
-                raise api_exceptions.EmptyDataError(f'API Returned empty `data` section')
-        
-        if check_meta:
+        if check_data or check_meta:
             if data['meta']['count'] == 0:
-                _log.error(
-                    f'API Returned `count 0`'
-                    f'Data: {data["meta"]}'
-                )
-                raise api_exceptions.NoPlayersFound()
+                raise api_exceptions.NoPlayersFound('No players found')
             
-        if check_battles:
-            if data['data'][list(data['data'].keys())[0]]['statistics']['all']['battles'] < 100:
-                _log.error(f'Need more battles')
-                raise api_exceptions.NeedMoreBattlesError()
-      
+            if data['data'] == None or data['data'] == []:
+                _log.error(
+                    f'API Returned empty `data` section'
+                    f'Data: {data}'
+                )
+                raise api_exceptions.EmptyDataError(f'API Returned empty `data` section')
+            
+            if isinstance(data['data'], list):
+                if len(data['data']) == 0:
+                    raise api_exceptions.NoPlayersFound('No players found')
+                
+            elif isinstance(data['data'], dict):
+                if len(data['data'].keys()) == 0:
+                    raise api_exceptions.NoPlayersFound('No players found')
+                
+                elif data['data'][list(data['data'].keys())[0]] is None:
+                    raise api_exceptions.NoPlayersFound('No players found')
+            
+        if check_battles and check_data:
+            if isinstance(data['data'], list):
+                if data['data'][0]['statistics']['all']['battles'] < 100:
+                    raise api_exceptions.NeedMoreBattlesError('Need more battles')
+                
+            elif isinstance(data['data'], dict):
+                if data['data'][list(data['data'].keys())[0]]['statistics']['all']['battles'] < 100:
+                    raise api_exceptions.NeedMoreBattlesError('Need more battles')
+            
         return data
 
     def _get_url_by_reg(self, reg: str):
@@ -454,13 +464,8 @@ class API:
         async with aiohttp.ClientSession() as self.session:
             if game_id is None:
                 async with self.session.get(url_get_id, verify_ssl=False) as response:
-                    data = await self.response_handler(response)
 
-                    if data['status'] == 'error':
-                        match data['error']['code']:
-                            case 407 | 402:
-                                raise api_exceptions.UncorrectName()
-                    
+                    data = await self.response_handler(response, check_meta=True)
                     game_id: int = data['data'][0]['account_id']
                     
             url_get_stats = insert_data(
@@ -473,7 +478,7 @@ class API:
             )
             
             async with self.session.get(url_get_stats, verify_ssl=False) as response:
-                data = await self.response_handler(response, check_battles=True)
+                data = await self.response_handler(response, check_data=True, check_battles=True)
                 return data['data'][str(game_id)]
             
     @retry(

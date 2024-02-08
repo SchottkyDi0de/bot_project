@@ -17,6 +17,9 @@ from lib.blacklist.blacklist import check_user
 from lib.exceptions.blacklist import UserBanned
 from lib.data_classes.db_server import ServerSettings
 from lib.logger.logger import get_logger
+from lib.utils.nickname_handler import handle_nickname, validate_nickname, \
+                                        CompositeNickname, NickTypes
+from lib.exceptions.nickname_validator import NicknameValidationError
 
 _log = get_logger(__name__, 'CogStatsLogger', 'logs/cog_stats.log')
 
@@ -52,8 +55,6 @@ class Stats(commands.Cog):
                     'uk': Text().get('ua').frequent.common.nickname
                 },
                 required=True,
-                max_lenght=24,
-                min_lenght=3
             ),
             region: Option(
                 str,
@@ -70,18 +71,29 @@ class Stats(commands.Cog):
         Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
-
-        user_exists = self.db.check_member(ctx.author.id)
-        if user_exists:
+        
+        image_settings = None
+        user_exist = self.db.check_member(ctx.author.id)
+        if user_exist:
             image_settings = self.db.get_image_settings(ctx.author.id)
         else:
             image_settings = ImageSettings()
         
         server_settings = self.sdb.get_server_settings(ctx)
+        
+        try:
+            nickname_type = validate_nickname(nickname)
+        except NicknameValidationError:
+            await ctx.respond(embed=self.err_msg.uncorrect_name())
+            return
+        
+        composite_nickname = handle_nickname(nickname, nickname_type)
+        
         img = await self.get_stats(
             ctx, 
-            region=region, 
-            nickname=nickname, 
+            region=region,
+            nickname=composite_nickname.nickname,
+            game_id=composite_nickname.player_id,
             image_settings=image_settings, 
             server_settings=server_settings
             )
@@ -89,8 +101,6 @@ class Stats(commands.Cog):
         if img is not None:
             await ctx.respond(file=File(img, 'stats.png'))
             img.close()
-        else:
-            raise TypeError('Image is None')
 
     @commands.slash_command(
             description=Text().get().cmds.astats.descr.this,

@@ -108,8 +108,29 @@ class Session(commands.Cog):
                 return
             
             self.db.start_autosession(ctx.author.id, last_stats, session_settings)
-            await ctx.respond(
-                f'> autosession started!'
+            if valid_time or restart_time is None:
+                await ctx.respond(
+                    embed=self.inf_msg.custom(
+                        Text().get(),
+                        Text().get().cmds.start_autosession.info.started,
+                        colour='green'
+                    )
+                )
+            else:
+                await ctx.respond(
+                    embed=self.inf_msg.custom(
+                        Text().get(),
+                        (
+                            insert_data(
+                                Text().get().cmds.start_autosession.errors.uncorrect_r_time,
+                                {'time': restart_time}
+                                ) + 
+                            '\n\n' +
+                            Text().get().cmds.start_autosession.info.started
+                        ),
+                        title=Text().get().frequent.info.warning,
+                        colour='orange'
+                    )
                 )
         else:
             await ctx.respond(

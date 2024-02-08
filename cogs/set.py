@@ -192,25 +192,25 @@ class Set(commands.Cog):
                     'ru': Text().get('ru').cmds.set_background.descr.sub_descr.image,
                     'pl': Text().get('pl').cmds.set_background.descr.sub_descr.image,
                     'uk': Text().get('ua').cmds.set_background.descr.sub_descr.image
-                },
+                    },
                 required=True
                 ),
-                server: Option(
-                    bool,
-                    description=Text().get().cmds.set_background.descr.sub_descr.server,
-                    description_localizations={
-                        'ru': Text().get('ru').cmds.set_background.descr.sub_descr.server,
-                        'pl': Text().get('pl').cmds.set_background.descr.sub_descr.server,
-                        'uk': Text().get('ua').cmds.set_background.descr.sub_descr.server
+            server: Option(
+                bool,
+                description=Text().get().cmds.set_background.descr.sub_descr.server,
+                description_localizations={
+                    'ru': Text().get('ru').cmds.set_background.descr.sub_descr.server,
+                    'pl': Text().get('pl').cmds.set_background.descr.sub_descr.server,
+                    'uk': Text().get('ua').cmds.set_background.descr.sub_descr.server
                     },
-                    required=False
+                required=False
                 ),
-                resize_mode: Option(
-                    str, #TODO
-                    description='Test resize mode',
-                    required=False,
-                    default='AUTO',
-                    choices=['AUTO', 'RESIZE', 'CROP_OR_FILL'],
+            resize_mode: Option(
+                str, #TODO
+                description='Test resize mode',
+                required=False,
+                default='AUTO',
+                choices=['AUTO', 'RESIZE', 'CROP_OR_FILL'],
                 )
             ):
         check_user(ctx)
@@ -224,7 +224,6 @@ class Set(commands.Cog):
                 )
             return
         
-
         Text().load_from_context(ctx)
         image: Attachment = image
         await ctx.defer()

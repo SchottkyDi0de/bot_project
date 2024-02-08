@@ -912,40 +912,40 @@ class ImageGen():
                 fill=self.image_settings.stats_color
             )
     
-    def draw_short_tank_stats(self, img: ImageDraw.ImageDraw):
+    def draw_short_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.short_tank_stats(self.current_offset)
         for key in coords.keys():
             img.text(
                 coords[key],
-                text=self.values.get_tank_stats(self.tank_stats_blocks_count)[key],
+                text=self.values.get_tank_stats(curr_tank.tank_id)[key],
                 font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_color
             )
 
-    def draw_short_tank_session_stats(self, img: ImageDraw.ImageDraw):
+    def draw_short_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.short_tank_session_stats(self.current_offset)
         for key in coords.keys():
             img.text(
                 coords[key],
-                text=self.session_values.tank_values(self.tank_stats_blocks_count)[key],
+                text=self.session_values.tank_values(curr_tank.tank_id)[key],
                 font=self.fonts.roboto_25,
                 anchor='ma',
                 align='center',
-                fill=self.value_colors(getattr(self.diff_data.tank_stats[self.tank_stats_blocks_count], f'd_{key}'))
-                )
-
+                fill=self.value_colors(getattr(curr_tank, f'd_{key}'))
+            )
+                
     def draw_tank_diff_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.tank_diff_stats(self.current_offset)
-        for i in coords.keys():
+        for key in coords.keys():
             img.text(
-                coords[i],
-                text=self.diff_values.tank_values(curr_tank.tank_id)[i],
+                coords[key],
+                text=self.diff_values.tank_values(curr_tank.tank_id)[key],
                 font=self.fonts.roboto_medium,
                 anchor='ma',
                 align='center',
-                fill=self.value_colors(getattr(curr_tank, f'd_{i}'))
+                fill=self.value_colors(getattr(curr_tank, f'd_{key}'))
             )
 
     def draw_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
@@ -999,8 +999,8 @@ class ImageGen():
             return Colors.grey
         value = round(value, 2)
         if value > 0:
-            return Colors.green
+            return self.image_settings.positive_stats_color
         if value < 0:
-            return Colors.red
+            return self.image_settings.negative_stats_color
         if value == 0:
             return Colors.grey

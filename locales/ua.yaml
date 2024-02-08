@@ -270,12 +270,33 @@ cmds:
       started: Сесія запущена. Тепер можете зіграти декілька боїв та отримати сесійну статистику використовуючи `/get_session`
     items:
       ''
+  
+# start autosession command
+  start_autosession:
+    descr:
+      this: Start autosession
+      sub_descr:
+        timezone: Time zone (0 - 12)
+        restart_time: 'Restart time in the format HH:MM'
+    errors:
+      uncorrect_r_time: |-
+        Incorrect restart time.
+        Expected time format: "HH:MM"
+        Received: <time>
+        Examples of correct time:
+        00:20, 03:15, 22:40, 13:20
+        The set value will be ignored.
+    info:
+      player_not_registred: To start a session, first save your data using `/set_player`
+      started: Autosession started. Now you can play several battles and get session statistics using `/get_session`
+    items:
+      ''
 
   set_background: 
     descr:
       this: Зміна фону
       sub_descr:
-        image: Завантажте фон у форматі PNG або JPEG (макс. 2 MB) (700 X 1250px)
+        image: Завантажте фон у форматі PNG або JPEG (макс. 2 MB) (700 X 1350px)
         server: Задати фон за замовчуванням для данного сервера (потрібні права адміністратора).
     errors:
       player_not_registred: Для зміни фона збережіть свої дані командою `/astats`

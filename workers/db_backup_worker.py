@@ -10,7 +10,7 @@ class DBBackupWorker:
     def __init__(self):
         self.STOP_FLAG = False
     
-    async def run_worker(self):
+    async def run_worker(self, *args):
         _log.info('WORKERS: DB backup worker started')
         while not self.STOP_FLAG:
             BackUp().dump()

@@ -83,7 +83,7 @@ class CogReplayParser(commands.Cog):
                     await ctx.respond(file=File(f, 'replay_data.json'))
             case 'embed':
                 replay_data = await ParseReplayData().parse(
-                            self.parser.parse(f'tmp/replay/{filename}.wotbreplay'),
+                            self.parser.parse(f'tmp/replay/{filename}.wotbreplay', save_json=True),
                             region
                         )
                 await ctx.respond(

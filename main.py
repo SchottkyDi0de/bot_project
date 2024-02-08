@@ -2,8 +2,7 @@ import os
 from asyncio import sleep, TaskGroup
 from multiprocessing import Process
 
-import uvicorn
-from discord import Intents, Activity, ActivityType, Status
+from discord import Intents
 from discord.ext import commands
 
 from lib.api import async_wotb_api
@@ -31,7 +30,7 @@ class App():
         self.workers = [
                 self.pbd_worker.run_worker,
                 self.presence_updater.run_worker,
-                self.backup.run_worker
+                # self.backup.run_worker
             ]
 
         self.extension_names = [

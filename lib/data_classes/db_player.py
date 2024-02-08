@@ -52,5 +52,5 @@ class DBPlayer(BaseModel):
     image: str | None = None
     locked: bool = False
     verified: bool = False
-    image_settings: ImageSettings | None = None
-    session_settings: SessionSettings | None = None
+    image_settings: ImageSettings = ImageSettings()
+    session_settings: SessionSettings = SessionSettings()

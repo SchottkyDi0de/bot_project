@@ -8,9 +8,6 @@ _config = Config().get()
 
 class RestartSession(BaseModel):
     discord_id: int
-    is_autosession: bool
-    timezone: int = 0
-    time_to_restart: int = 0
     
 class SessionState(BaseModel):
     active_session: bool

@@ -9,7 +9,7 @@ from pywebio.platform.fastapi import asgi_app
 import uvicorn
 
 from lib.api.async_wotb_api import API
-from lib.data_classes.db_player import DBPlayer
+from lib.data_classes.db_player import DBPlayer, ImageSettings
 from lib.data_classes.internal_api.err_response import ErrorResponse
 from lib.data_classes.internal_api.inf_response import InfoResponse
 from lib.database.players import PlayersDB
@@ -53,37 +53,9 @@ class Server:
         
         return InfoResponses.pong
 
-    @app.get('/bot/api', responses={
-        405: {'model' : ErrorResponse, 'description' : 'Root method not allowed'},
-        }
-    )
-    async def api(response = Response) -> ErrorResponse:
-        return JSONResponse(ErrorResponses.method_not_allowed.model_dump(), status_code=ErrorResponses.method_not_allowed.code)
-    
-    @app.post('/bot/api/restart_session', responses={
-        418: {'model' : ErrorResponse, 'description' : 'Acces denied'},
-        400: {'model' : ErrorResponse, 'description' : 'Player not found'},
-        400: {'model' : ErrorResponse, 'description' : 'Player session not found'},
-        200: {'model' : InfoResponse, 'description' : 'Player updated'},
-        }
-    )
-    async def start_session(api_key: Annotated[str, Header()], data: RestartSession) -> ErrorResponse:
-        if api_key != _config.INTERNAL_API_KEY:
-            return JSONResponse(ErrorResponses.acces_denied.model_dump(), status_code=ErrorResponses.acces_denied.code)
-        
-        if _pdb.check_member(data.discord_id):
-            if _pdb.check_member_last_stats(data.discord_id):
-                player = _pdb.get_member(data.discord_id)
-                
-                if player is None:
-                    return JSONResponse(ErrorResponses.player_not_found.model_dump(), status_code=ErrorResponses.player_not_found.code)
-                
-                player_data = await _api.get_stats(game_id=player.game_id, region=player.region)
-                _pdb.set_member_last_stats(data.discord_id, player_data.model_dump())
-                return JSONResponse(InfoResponses.player_updated.model_dump(), status_code=InfoResponses.player_updated.code)
-            
-            return JSONResponse(ErrorResponses.player_session_not_found.model_dump(), status_code=ErrorResponses.player_session_not_found)
-        return JSONResponse(ErrorResponses.player_not_found.model_dump(), status_code=ErrorResponses.player_not_found.code)
+    @app.get('/bot/api', include_in_schema=False)
+    def root(self):
+        pass
     
     @app.get('/bot/api/session_state', responses = {
         418: {'model' : ErrorResponse, 'description' : 'Acces denied'},
@@ -149,6 +121,41 @@ class Server:
                 
             return JSONResponse(err_response.model_dump(), status_code=err_response.code)
 
+    @app.get('/bot/api/get_image_settings', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Acces denied'},
+        400: {'model' : ErrorResponse, 'description' : 'Player not found'},
+        200: {'model' : ImageSettings, 'description' : 'Image settings'}
+        }
+    )
+    def get_image_settings(api_key: Annotated[str, Header()], discord_id: str | int) -> ImageSettings | ErrorResponse:
+        if api_key != _config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.acces_denied.model_dump(), status_code=ErrorResponses.acces_denied.code)
+        
+        if _pdb.check_member(discord_id):
+            image_settings = _pdb.get_image_settings(discord_id)
+            return JSONResponse(image_settings.model_dump(), status_code=200)
+        
+        else:
+            err_response = ErrorResponses.player_not_found
+            return JSONResponse(err_response.model_dump(), status_code=err_response.code)
+        
+    @app.post('/bot/api/set_image_settings', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Acces denied'},
+        400: {'model' : ErrorResponse, 'description' : 'Player not found'},
+        200: {'model' : InfoResponse, 'description' : 'Image settings updated'}
+        }
+    )
+    def set_image_settings(api_key: Annotated[str, Header()], discord_id: str | int, image_settings: ImageSettings) -> InfoResponse | ErrorResponse:
+        if api_key != _config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.acces_denied.model_dump(), status_code=ErrorResponses.acces_denied.code)
+        
+        if _pdb.check_member(discord_id):
+            image_settings = _pdb.set_image_settings(discord_id, image_settings)
+            return JSONResponse(InfoResponses.image_settings_updated.model_dump(), status_code=200)
+        
+        else:
+            err_response = ErrorResponses.player_not_found
+            return JSONResponse(err_response.model_dump(), status_code=err_response.code)
 
 if __name__ == '__main__':
     uvicorn.run(Server().app, host='127.0.0.1', port=8000)

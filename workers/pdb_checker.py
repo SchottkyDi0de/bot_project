@@ -14,7 +14,7 @@ _log = get_logger(__name__, 'WorkerPDBLogger', 'logs/worker_pdb.log')
 class PDBWorker:
     def __init__(self):
         self.db = PlayersDB()
-        self.STOP_WORKER_FLAG = False
+        self.STOP_FLAG = False
         self.api = API()
 
     def stop_worker(self):
@@ -30,7 +30,7 @@ class PDBWorker:
             None
         """
         _log.debug('WORKERS: setting STOP_WORKER_FLAG to True')
-        self.STOP_WORKER_FLAG = True
+        self.STOP_FLAG = True
 
     async def run_worker(self, *args):
         """
@@ -48,7 +48,7 @@ class PDBWorker:
         """
         _log.info('WORKERS: PDB worker started')
         
-        while not self.STOP_WORKER_FLAG:
+        while not self.STOP_FLAG:
             await self.check_database()
             await sleep(60 * 5)
             
