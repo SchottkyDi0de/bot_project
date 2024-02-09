@@ -25,6 +25,7 @@ from lib.data_classes.db_player import ImageSettings
 from lib.image.utils.hex_color_validator import hex_color_validate
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
+from lib.utils.nickname_handler import handle_nickname, validate_nickname, NicknameValidationError
 
 _log = get_logger(__name__, 'CogSetLogger', 'logs/cog_set.log')
 _config = Config().get()
@@ -92,8 +93,6 @@ class Set(commands.Cog):
                     'pl': Text().get('pl').frequent.common.nickname,
                     'uk': Text().get('ua').frequent.common.nickname
                 },
-                max_length=24,
-                min_length=3,
                 required=True
             ),
             region: Option(
@@ -113,7 +112,20 @@ class Set(commands.Cog):
         await ctx.defer()
         
         try:
-            player = await self.api.check_and_get_player(nickname, region, ctx.author.id)
+            nickname_type = validate_nickname(nickname)
+        except NicknameValidationError:
+            await ctx.respond(embed=self.err_msg.uncorrect_name())
+            return
+        
+        composite_nickname = handle_nickname(nickname, nickname_type)
+        
+        try:
+            player = await self.api.check_and_get_player(
+                nickname=composite_nickname.nickname,
+                region=region,
+                game_id=composite_nickname.player_id,
+                dicrord_id=ctx.author.id
+                )
         except api.NoPlayersFound:
             await ctx.respond(embed=ErrorMSG().player_not_found())
         except api.NeedMoreBattlesError:

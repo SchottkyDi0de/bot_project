@@ -297,6 +297,7 @@ cmds:
       sub_descr:
         image: Upload background in PNG or JPEG format (max. 2 MB) (700 X 1350px)
         server: Set default background for this server (admin privileges required).
+        resize_mode: Type of image resizing (if required)
     errors:
       player_not_registred: To change the background, save your data using the `/astats` command
       permission_denied: You must have administrator rights to set the background for the server.

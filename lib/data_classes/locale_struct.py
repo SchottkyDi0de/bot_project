@@ -290,6 +290,7 @@ class StartAutosession(BaseModel):
 class SubDescr4(BaseModel):
     image: str
     server: str
+    resize_mode: str
 
 
 class Descr8(BaseModel):

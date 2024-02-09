@@ -502,14 +502,14 @@ class PlayersDB:
             return None
         
     # Run 1 time for update database structure...
-    def database_update(self):
-        self.collection.update_many({}, {'$set' : {'image_settings' : ImageSettings().model_dump(), 'session_settings' : SessionSettings().model_dump()}})
-        # self.collection.update_many({}, { '$set' :{ "last_stats" : None, "session_settings" : SessionSettings().model_dump()}})
-        # self.collection.update_many(
-        #     {}, { '$set' :{
-        #             "image_settings.negative_stats_color" : '#c01515',
-        #             "image_settings.positive_stats_color" : '#1eff26',
-        #             }
-        #         }
-        #     )
-        # self.collection.update_many({}, {'$set' : {'session_settings' : SessionSettings().model_dump()}})
+    # def database_update(self):
+    #     self.collection.update_many({}, {'$set' : {'image_settings' : ImageSettings().model_dump(), 'session_settings' : SessionSettings().model_dump()}})
+    #     # self.collection.update_many({}, { '$set' :{ "last_stats" : None, "session_settings" : SessionSettings().model_dump()}})
+    #     # self.collection.update_many(
+    #     #     {}, { '$set' :{
+    #     #             "image_settings.negative_stats_color" : '#c01515',
+    #     #             "image_settings.positive_stats_color" : '#1eff26',
+    #     #             }
+    #     #         }
+    #     #     )
+    #     # self.collection.update_many({}, {'$set' : {'session_settings' : SessionSettings().model_dump()}})

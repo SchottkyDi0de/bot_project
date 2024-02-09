@@ -263,7 +263,13 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def check_and_get_player(self, nickname: str, region: str, dicrord_id: int) -> DBPlayer | None:
+    async def check_and_get_player(
+            self, 
+            region: str, 
+            dicrord_id: int, 
+            nickname: str | None = None, 
+            game_id: int | None = None
+        ) -> DBPlayer | None:
         """
         Check a player's information.
 
@@ -288,28 +294,24 @@ class API:
         region = self._reg_normalizer(region)
         async with aiohttp.ClientSession() as session:
             await self.rate_limiter.wait()
-            async with session.get(url_get_id, verify_ssl=False) as response:
-                try:
-                    data = await self.response_handler(response, check_meta=True)
-                    data = data['data'][0]
-                    db_palyer = {
-                        'nickname': data['nickname'],
-                        'game_id': data['account_id'],
-                        'region': region,
-                        'id': dicrord_id,
-                        'image_settings': ImageSettings().model_dump()
-                    }
-                except Exception as e:
-                    _log.debug(f'Error check player\n{traceback.format_exc()}')
-                    raise e
-                
+            if game_id is None:
+                async with session.get(url_get_id, verify_ssl=False) as response:
+                    try:
+                        data = await self.response_handler(response, check_data=True)
+                        data = data['data'][0]
+                        game_id = int(data['account_id'])
+                    except Exception as e:
+                        _log.debug(f'Error check player\n{traceback.format_exc()}')
+                        raise e
+                    
             url_get_stats = (
                 f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
                 f'?application_id={self._get_id_by_reg(region)}'
-                f'&account_id={db_palyer["game_id"]}'
+                f'&account_id={game_id}'
                 f'&fields=-statistics.clan'
             )
             await self.rate_limiter.wait()
+                
             async with session.get(url_get_stats, verify_ssl=False) as response:
                 try:
                     await self.response_handler(response, check_battles=True, check_data=True)
@@ -317,6 +319,13 @@ class API:
                     _log.debug(f'Error check player\n{traceback.format_exc()}')
                     raise e
                 else:
+                    data = data[list(data['data'].keys())[0]]
+                    db_palyer = {
+                            'nickname': data['nickname'],
+                            'game_id': int(data['account_id']),
+                            'region': region,
+                            'id': dicrord_id,
+                        }
                     return DBPlayer.model_validate(db_palyer)
             
     def done_callback(self, task: asyncio.Task):
