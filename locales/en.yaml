@@ -334,6 +334,7 @@ cmds:
       changes_not_found: No parameter change detected, change at least one parameter.
     info:
       set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
+      preview: 'Statistics preview:'
     items:
       color_error_note: 'All invalid values will be ignored.'
       color_error_footer: 'Color code format: #rrggbb or #rgb. Example of valid color: #FF9900 - Orange.'

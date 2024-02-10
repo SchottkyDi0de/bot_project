@@ -314,54 +314,55 @@ cmds:
 # image_settings command
   image_settings:
     descr:
-      this: Image settings
+      this: Налаштування зображення
       sub_descr:
-        use_custom_bg: Use custom background
-        glass_effect: Glass effect 0 - Disable (0-30)
-        blocks_bg_brightness: Blocks background brightness (0-100)
-        nickname_color: 'Nickname color (HEX Color)'
-        clan_tag_color: 'Clan tag color (HEX Color)'
-        stats_color: 'Main statistics color (HEX Color)'
-        main_text_color: 'Main text color (HEX Color)'
-        stats_text_color: 'Statistics text color (HEX Color)'
-        disable_flag: 'Disable region flag rendering'
-        hide_nickname: 'Hide nickname, will be replaced with Player'
-        hide_clan_tag: 'Hide clan tag, will be removed'
-        disable_stats_blocks: 'Disable statistics blocks rendering'
-        disable_rating_stats: 'Disable rating statistics'
-        disable_cahce_label: 'Disabble cache label'
+        use_custom_bg: Використовувати кастомний фон
+        glass_effect: Ефект скла 0 - Виключено (0-30)
+        blocks_bg_brightness: Прозорість блоків зі статистикою (0-100)
+        nickname_color: 'Кольор нікнейму (HEX Color)'
+        clan_tag_color: 'Кольор клан-тегу (HEX Color)'
+        stats_color: 'Колір основних ститистик (HEX Color)'
+        main_text_color: 'Колір основного тексту (HEX Color)'
+        stats_text_color: 'Колір тексту статистик (HEX Color)'
+        disable_flag: 'Вимкнути відображення прапору'
+        hide_nickname: 'Сховати нікнейм, буде заміно на Player'
+        hide_clan_tag: 'Сховати клан-тег, буде видалено'
+        disable_stats_blocks: 'Викмнути відображення блоків статистики'
+        disable_rating_stats: 'Вимкнути статистику в рейтингу'
+        disable_cahce_label: 'Вимкнути відображення іконки кешу'
     errors:
-      color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
-      changes_not_found: No parameter change detected, change at least one parameter.
+      color_error: 'Неправильно код кольору `<param_name>`, значення: `<value>`'
+      changes_not_found: Не знайдено зміни параметрів, змініть хочаб один параметр.
     info:
-      set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
+      set_ok: 'Налаштування зображення успішно застосовані, отримати поточні налаштування: `/image_settings_get`'
+      preview: 'Предперегляд статистики:'
     items:
-      color_error_note: 'All invalid values will be ignored.'
-      color_error_footer: 'Color code format: #rrggbb or #rgb. Example of valid color: #FF9900 - Orange.'
+      color_error_note: 'Усі неприпустимі значення будуть проігноровані.'
+      color_error_footer: 'Формат кольорового коду: #rrggbb або #rgb. Приклад правильного кольору: #FF9900 - Оранжевий.'
 
   server_settings:
     descr:
-      this: Server settings
+      this: Налаштування серверу
       sub_descr:
-        allow_custom_backgrounds: 'Allow custom backgrounds'
+        allow_custom_backgrounds: 'Дозволити користувацькі фони'
     errors:
-      permission_denied: You must have administrator rights to modify server settings.
+      permission_denied: Для змінення налаштувань сервера ви повинні мати права адміністратора.
     info:
-      set_ok: 'Server settings applied successfully, view current settings: `/server_settings_get`'
+      set_ok: 'Налаштування зображення успішно застосовані, отримати поточні налаштування: `/server_settings_get`'
     items:
       ''
 
   image_settings_get:
     descr:
-      this: Get current image settings
+      this: Отримати поточні налаштування зображення
       sub_descr:
         ''
     errors:
       ''
     info:
-      get_ok: 'Current image settings:'
-    items: # translated with GPT4 --> need review
-      use_custom_bg: Використовувати користувацький фон
+      get_ok: 'Поточні налаштування зображення:'
+    items: # 👌
+      use_custom_bg: Використовувати кастомний фон
       glass_effect: Ефект скла
       blocks_bg_opacity: Прозорість блоків зі статистикою
       nickname_color: Колір нікнейму
@@ -382,52 +383,52 @@ cmds:
 
   server_settings_get:
     descr:
-      this: Get current server settings
+      this: Отримати поточні налаштування серверу
       sub_descr:
         ''
     errors:
       ''
     info:
-      get_ok: 'Current server settings:'
+      get_ok: 'Поточні налаштування серверу:'
     items:
       settings_list: |-
         ```Python
-        - Allow custom backgrounds:           <allow_custom_backgrounds>
+        - Дозволити кастомні фони:           <allow_custom_backgrounds>
         ```
 
   reset_background:
     descr:
-      this: Reset custom background
+      this: Скинути кастомний фон
       sub_descr:
-        server: Reset default background for this server (admin privileges required).
+        server: Скинути фон для серверу (потрібні права адміністратора).
     errors:
-      permission_denied: You must have administrator rights to reset the background on the server.
+      permission_denied: Для скидання фону на всьому сервері ви повинні мати права адміністратора.
     info:
-      unset_background_ok: Custom background reset successfully
+      unset_background_ok: Фон успішно скинуто.
     items:
       ''
 
   image_settings_reset:
     descr:
-      this: Сброс настроек изображения
+      this: Скинути налаштування зображення
       sub_descr:
         ''
     errors:
       ''
     info:
-      reset_ok: Настройки изображения были сброшены.
+      reset_ok: Налаштування зображення було скинуто.
     items:
       ''
 
   server_settings_reset:
     descr:
-      this: Reset server settings
+      this: Скинути налаштування серверу
       sub_descr:
         ''
     errors:
       ''
     info:
-      reset_ok: Server settings were reset.
+      reset_ok: Налаштування серверу було скинуто.
     items:
       ''
 

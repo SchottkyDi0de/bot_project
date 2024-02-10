@@ -14,11 +14,19 @@ from asynciolimiter import Limiter
 from cacheout import FIFOCache
 
 from lib.utils.string_parser import insert_data
+<<<<<<< HEAD
 from lib.data_classes.api_data import PlayerGlobalData
-from lib.data_classes.palyer_clan_stats import ClanStats
+from lib.data_classes.player_clan_stats import ClanStats
 from lib.data_classes.player_achievements import Achievements
 from lib.data_classes.player_stats import PlayerStats, PlayerData
 from lib.data_classes.tanks_stats import TankStats
+=======
+from lib.data_classes.api.api_data import PlayerGlobalData
+from lib.data_classes.api.player_clan_stats import ClanStats
+from lib.data_classes.api.player_achievements import Achievements
+from lib.data_classes.api.player_stats import PlayerStats, PlayerData
+from lib.data_classes.api.tanks_stats import TankStats
+>>>>>>> 7f65afc71f82964e863f246dfc22cb3361711267
 from lib.utils.singleton_factory import singleton
 from lib.data_parser.parse_data import get_normalized_data
 from lib.exceptions import api as api_exceptions
@@ -47,14 +55,19 @@ class API:
         reg = reg.lower()
         if reg == 'ru':
             return next(EnvConfig.LT_APP_IDS)
+<<<<<<< HEAD
         elif reg in ['eu', 'com', 'asia', 'na', 'as']:
+            return next(EnvConfig.WG_APP_IDS)
+=======
+        elif reg in {'eu', 'com', 'asia', 'na', 'as'}:
             tok = next(EnvConfig.WG_APP_IDS)
             _log.debug(f'Used app ID: {tok}')
             return tok
+>>>>>>> 7f65afc71f82964e863f246dfc22cb3361711267
         raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
 
     def _reg_normalizer(self, reg: str) -> str:
-        if reg in ['ru', 'eu', 'asia']:
+        if reg in {'ru', 'eu', 'asia'}:
             return reg
         if reg == 'na':
             return 'com'
@@ -68,7 +81,7 @@ class API:
             check_battles: bool = False,
             check_data: bool = False,
             check_meta: bool = False
-            ) -> dict:
+            ) -> dict: 
         """
         Asynchronously handles the response from the API and returns the data as a dictionary.
 
@@ -249,11 +262,10 @@ class API:
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url_get_tankopedia, verify_ssl=False) as response:
-                    data = await self.response_handler(response, False)
+                    return await self.response_handler(response, False)
 
-                    return data
-        except client_exceptions.ClientConnectionError:
-            raise api_exceptions.APIError('Client Exception Occurred')
+        except client_exceptions.ClientConnectionError as e:
+            raise api_exceptions.APIError('Client Exception Occurred') from e
                 
     @retry(
             expected_exception=(
@@ -266,7 +278,7 @@ class API:
     async def check_and_get_player(
             self, 
             region: str, 
-            dicrord_id: int, 
+            discord_id: int, 
             nickname: str | None = None, 
             game_id: int | None = None
         ) -> DBPlayer | None:
@@ -319,14 +331,22 @@ class API:
                     _log.debug(f'Error check player\n{traceback.format_exc()}')
                     raise e
                 else:
-                    data = data[list(data['data'].keys())[0]]
+<<<<<<< HEAD
+                    try:
+                        data = data[[*data['data'].keys()][0]]
+                    except KeyError:
+                        ...
                     db_palyer = {
+=======
+                    data = data[list(data['data'].keys())[0]]
+                    db_player = {
+>>>>>>> 7f65afc71f82964e863f246dfc22cb3361711267
                             'nickname': data['nickname'],
                             'game_id': int(data['account_id']),
                             'region': region,
-                            'id': dicrord_id,
+                            'id': discord_id,
                         }
-                    return DBPlayer.model_validate(db_palyer)
+                    return DBPlayer.model_validate(db_player)
             
     def done_callback(self, task: asyncio.Task):
         pass
@@ -358,9 +378,9 @@ class API:
         - Returns the player statistics in the desired format.
         """
         need_caching: bool = False
-        cahed_data = self.cache.get(((str(game_id), region)))
-        if cahed_data is not None:
-            data = PlayerGlobalData.model_validate(cahed_data)
+        cached_data = self.cache.get(((str(game_id), region)))
+        if cached_data is not None:
+            data = PlayerGlobalData.model_validate(cached_data)
             data.from_cache = True
             return get_normalized_data(data)
         else:
@@ -517,8 +537,8 @@ class API:
             f'&fields=-statistics.clan'
         )
         await self.rate_limiter.wait()
-        async with aiohttp.ClientSession() as sesison:
-            async with sesison.get(url_get_battles, verify_ssl=False) as response:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_get_battles, verify_ssl=False) as response:
                 data = await self.response_handler(response)
 
         return data['data'][str(account_id)]['statistics']['all']['battles']

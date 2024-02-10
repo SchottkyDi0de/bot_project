@@ -347,6 +347,7 @@ class Errors9(BaseModel):
 
 class Info9(BaseModel):
     set_ok: str
+    preview: str
 
 
 class Items1(BaseModel):
@@ -374,10 +375,14 @@ class Errors10(BaseModel):
     permission_denied: str
 
 
+class Info10(BaseModel):
+    set_ok: str
+
+
 class ServerSettings(BaseModel):
     descr: Descr10
     errors: Errors10
-    info: Info9
+    info: Info10
     items: str
 
 

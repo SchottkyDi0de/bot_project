@@ -1,6 +1,6 @@
 '''
 Модуль для генерирования изображения
-со статистикой.
+со статистикой.no_league
 '''
 from enum import Enum
 from io import BytesIO
@@ -14,7 +14,7 @@ from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.data_classes.db_player import ImageSettings
 import lib.api.async_wotb_api as async_wotb_api
-from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.data_classes.db_server import ServerSettings
@@ -643,7 +643,7 @@ class ImageGen():
             text = self.text.for_image.leagues.gold
         elif rating >= 4000 and rating < 5000:
             text = self.text.for_image.leagues.platinum
-        elif rating > 5000:
+        elif rating >= 5000:
             text = self.text.for_image.leagues.brilliant
         else:
             text = self.text.for_image.leagues.no_league
