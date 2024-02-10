@@ -2,7 +2,7 @@ from discord import Embed
 from discord.ext.commands import Context
 
 from lib.locale.locale import Text
-from lib.data_classes.replay.replay_data_parsed import \
+from lib.data_classes.replay_data_parsed import \
     ParsedReplayData, PlayerResult, Statistics
 from lib.utils.string_parser import insert_data
 from lib.logger.logger import get_logger

@@ -1,9 +1,9 @@
 from pprint import pprint
 
-from lib.data_classes.api.tanks_stats import TankStats
+from lib.data_classes.tanks_stats import TankStats
 from lib.database.tankopedia import TanksDB
 from lib.data_classes.session import TankSessionData
-from lib.data_classes.api.api_data import PlayerGlobalData
+from lib.data_classes.api_data import PlayerGlobalData
 from lib.data_classes.session import SessionDiffData
 from lib.exceptions import data_parser
 from lib.logger import logger
