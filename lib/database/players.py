@@ -33,7 +33,7 @@ class PlayersDB:
             self.collection.update_one({'id': ds_id}, {'$set': {**(data.model_dump())}})
             return True
         elif self.collection.find_one({'id': ds_id}) is None:
-            self.collection.insert_one({data.model_dump()})
+            self.collection.insert_one(data.model_dump())
             return True
         else:
             return False
