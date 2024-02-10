@@ -10,7 +10,7 @@ _log = logger.get_logger(__name__, 'TankopediaLogger', 'logs/tankopedia.log')
 @singleton
 class TanksDB():
     def __init__(self) -> None:
-        _log.debug('Takopedia database initialized')
+        _log.debug('Tankopedia database initialized')
         self.db = elara.exe('database/tankopedia.eldb')
         self.db.commit()
 

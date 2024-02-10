@@ -14,19 +14,11 @@ from asynciolimiter import Limiter
 from cacheout import FIFOCache
 
 from lib.utils.string_parser import insert_data
-<<<<<<< HEAD
-from lib.data_classes.api_data import PlayerGlobalData
-from lib.data_classes.player_clan_stats import ClanStats
-from lib.data_classes.player_achievements import Achievements
-from lib.data_classes.player_stats import PlayerStats, PlayerData
-from lib.data_classes.tanks_stats import TankStats
-=======
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.api.player_clan_stats import ClanStats
 from lib.data_classes.api.player_achievements import Achievements
 from lib.data_classes.api.player_stats import PlayerStats, PlayerData
 from lib.data_classes.api.tanks_stats import TankStats
->>>>>>> 7f65afc71f82964e863f246dfc22cb3361711267
 from lib.utils.singleton_factory import singleton
 from lib.data_parser.parse_data import get_normalized_data
 from lib.exceptions import api as api_exceptions
@@ -43,7 +35,7 @@ class API:
     def __init__(self) -> None:
         self.exact = True
         self.raw_dict = False
-        self._palyers_stats = []
+        self._players_stats = []
         self.start_time = 0
         self.rate_limiter = Limiter(19)
         self.cache = FIFOCache(maxsize=100, ttl=60)
@@ -55,15 +47,10 @@ class API:
         reg = reg.lower()
         if reg == 'ru':
             return next(EnvConfig.LT_APP_IDS)
-<<<<<<< HEAD
-        elif reg in ['eu', 'com', 'asia', 'na', 'as']:
-            return next(EnvConfig.WG_APP_IDS)
-=======
         elif reg in {'eu', 'com', 'asia', 'na', 'as'}:
             tok = next(EnvConfig.WG_APP_IDS)
             _log.debug(f'Used app ID: {tok}')
             return tok
->>>>>>> 7f65afc71f82964e863f246dfc22cb3361711267
         raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
 
     def _reg_normalizer(self, reg: str) -> str:
@@ -113,7 +100,7 @@ class API:
         if check_data_status:
             if data['status'] != 'ok':
                 if data['error']['message'] == 'REQUEST_LIMIT_EXCEEDED':
-                    _log.warning(f'Ingnoring Exception caused by API: Request Limit Exceeded')
+                    _log.warning(f'Ignoring Exception caused by API: Request Limit Exceeded')
                     raise api_exceptions.RequestsLimitExceeded('Rate Limit Exceeded')
                 
                 elif data['error']['message'] == 'INVALID_SEARCH':
@@ -171,7 +158,7 @@ class API:
                 raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
     
     def get_players_callback(self, task: asyncio.Task) -> PlayerStats:
-        self._palyers_stats.append(task.result())
+        self._players_stats.append(task.result())
         
             
     async def get_players_stats(self, players_id: list[int], region: str) -> list[PlayerStats | bool]:
@@ -185,13 +172,13 @@ class API:
         Returns:
             list[PlayerStats | bool]: A list of PlayerStats objects representing the statistics of each player. If an error occurs during the retrieval, a boolean value indicating the success of the operation is returned.
         """
-        self._palyers_stats = []
+        self._players_stats = []
         async with aiohttp.ClientSession() as session:
             async with asyncio.TaskGroup() as tg:
                 for i in players_id:
                     tg.create_task(self._get_players_stats(i, region, session))
         
-        return self._palyers_stats
+        return self._players_stats
                 
     async def _get_players_stats(self, player_id: int, region: str, session: aiohttp.ClientSession) -> None:
         """
@@ -220,14 +207,14 @@ class API:
                 data = await self.response_handler(response, check_battles=False, check_data=True)
             except api_exceptions.EmptyDataError:
                 _log.debug(f'Error get player stats\n{traceback.format_exc()}')
-                self._palyers_stats.append(False)
+                self._players_stats.append(False)
             except api_exceptions.APIError:
                 _log.debug(f'Error get player stats\n{traceback.format_exc()}')
-                self._palyers_stats.append(False)
+                self._players_stats.append(False)
             else:
                 account_id = list(data['data'].keys())[0]
                 data['data'] = data['data'][account_id]
-                self._palyers_stats.append(PlayerStats.model_validate(data))
+                self._players_stats.append(PlayerStats.model_validate(data))
 
     async def retry_callback(self):
         _log.debug('Task failed, retrying...')
@@ -331,16 +318,11 @@ class API:
                     _log.debug(f'Error check player\n{traceback.format_exc()}')
                     raise e
                 else:
-<<<<<<< HEAD
                     try:
                         data = data[[*data['data'].keys()][0]]
                     except KeyError:
                         ...
-                    db_palyer = {
-=======
-                    data = data[list(data['data'].keys())[0]]
                     db_player = {
->>>>>>> 7f65afc71f82964e863f246dfc22cb3361711267
                             'nickname': data['nickname'],
                             'game_id': int(data['account_id']),
                             'region': region,

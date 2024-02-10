@@ -7,7 +7,7 @@ from discord.ext import commands
 
 from lib.api.async_wotb_api import API
 from lib.blacklist.blacklist import check_user
-from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import SessionSettings
 from lib.data_parser.parse_data import get_session_stats
 from lib.database.players import PlayersDB
@@ -17,7 +17,7 @@ from lib.embeds.info import InfoMSG
 from lib.exceptions import api, data_parser, database
 from lib.exceptions.blacklist import UserBanned
 from lib.image.session import ImageGen
-from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.utils.string_parser import insert_data
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger

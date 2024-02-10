@@ -19,7 +19,7 @@ from lib.logger.logger import get_logger
 from lib.api.async_wotb_api import API
 from lib.exceptions import api
 from lib.image.settings_represent import SettingsRepresent
-from lib.auth.dicord import DiscordOAuth
+from lib.auth.discord import DiscordOAuth
 from lib.data_classes.db_server import set_server_settings
 from lib.data_classes.db_player import ImageSettings
 from lib.image.utils.hex_color_validator import hex_color_validate
@@ -70,7 +70,7 @@ class Set(commands.Cog):
         if self.db.set_member_lang(ctx.author.id, lang):
             Text().load_from_context(ctx)
         else:
-            await ctx.respond(embed=self.err_msg.set_lang_unregistred())
+            await ctx.respond(embed=self.err_msg.set_lang_unregistered())
             return
         
         await ctx.respond(embed=self.inf_msg.set_lang_ok())
@@ -124,7 +124,7 @@ class Set(commands.Cog):
                 nickname=composite_nickname.nickname,
                 region=region,
                 game_id=composite_nickname.player_id,
-                dicrord_id=ctx.author.id
+                discord_id=ctx.author.id
                 )
         except api.NoPlayersFound:
             await ctx.respond(embed=ErrorMSG().player_not_found())
@@ -483,11 +483,11 @@ class Set(commands.Cog):
         disable_cache_label: Option(
             bool,
             required=False,
-            description=Text().get('en').cmds.image_settings.descr.sub_descr.disable_cahce_label,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.disable_cache_label,
             description_localizations={
-                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.disable_cahce_label,
-                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_cahce_label,
-                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_cahce_label
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.disable_cache_label,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_cache_label,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_cache_label
                 }
             ),
         positive_stats_color: Option(
@@ -728,7 +728,7 @@ class Set(commands.Cog):
             await ctx.respond(
                 embed=self.err_msg.custom(
                     Text().get(),
-                    tetx=Text().get().cmds.set_background.errors.player_not_registred
+                    text=Text().get().cmds.set_background.errors.player_not_registred
                 )
             )
 

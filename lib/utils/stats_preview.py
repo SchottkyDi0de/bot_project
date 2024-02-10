@@ -9,11 +9,11 @@ from lib.database.servers import ServersDB
 from lib.locale.locale import Text
 from lib.exceptions.database import MemberNotFound
 
-from lib.data_classes.api_data import PlayerGlobalData, Player
-from lib.data_classes.player_achievements import Achievements
-from lib.data_classes.player_stats import Statistics, All as all_player, Rating
-from lib.data_classes.tanks_stats import TankStats, All as all_tank
-from lib.data_classes.player_clan_stats import Clan
+from lib.data_classes.api.api_data import PlayerGlobalData, Player
+from lib.data_classes.api.player_achievements import Achievements
+from lib.data_classes.api.player_stats import Statistics, All as all_player, Rating
+from lib.data_classes.api.tanks_stats import TankStats, All as all_tank
+from lib.data_classes.api.player_clan_stats import Clan
 from lib.data_classes.db_player import ImageSettings
 
 class _PreviewData:
@@ -140,7 +140,7 @@ class _PreviewData:
         })
 
 
-class StatsPriview:
+class StatsPreview:
     def __init__(self) -> None:
         self.pdb = PlayersDB()
         self.sdb = ServersDB()

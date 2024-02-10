@@ -7,7 +7,7 @@ from typing import Dict
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 from discord.ext import commands
 
-from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import ImageSettings
 from lib.data_classes.session import TankSessionData
 from lib.data_classes.db_server import ServerSettings
@@ -17,14 +17,14 @@ from lib.database.servers import ServersDB
 # from lib.database.tankopedia import TanksDB
 # from lib.exceptions.database import TankNotFoundInTankopedia
 from lib.image.common import ValueNormalizer
-from lib.image.for_iamge.colors import Colors
-from lib.image.for_iamge.fonts import Fonts
-from lib.image.for_iamge.icons import StatsIcons
+from lib.image.for_image.colors import Colors
+from lib.image.for_image.fonts import Fonts
+from lib.image.for_image.icons import StatsIcons
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
-from lib.image.for_iamge.flags import Flags
+from lib.image.for_image.flags import Flags
 
 _log = get_logger(__name__, 'ImageSessionLogger', 'logs/image_session.log')
 _config = Config().get()
@@ -63,7 +63,7 @@ class RelativeCoordinates():
     def blocks_labels(self, offset_y):
         return (self.center_x, offset_y + 15)
 
-        # Main stats lables position in the stats block
+        # Main stats labels position in the stats block
     def main_stast_labels(self, offset_y) -> Dict[str, tuple]:
         return {
             'winrate': (150, offset_y + 196),  # Winrate label
@@ -202,7 +202,7 @@ class DiffValues():
         Initializes a DiffValues object with the given diff_data.
 
         Args:
-            diff_data (SesionDiffData): The diff_data object containing the differences.
+            diff_data (SessionDiffData): The diff_data object containing the differences.
 
         Returns:
             None
@@ -210,25 +210,25 @@ class DiffValues():
         self.diff_data = diff_data
         self.val_normalizer = ValueNormalizer()
         self.main = {
-            'winrate': self.vlue_add_plus(diff_data.main_diff.winrate) + self.val_normalizer.winrate(diff_data.main_diff.winrate),
-            'avg_damage': self.vlue_add_plus(diff_data.main_diff.avg_damage) + self.val_normalizer.other(diff_data.main_diff.avg_damage),
-            'battles': self.vlue_add_plus(diff_data.main_diff.battles) + self.val_normalizer.other(diff_data.main_diff.battles)
+            'winrate': self.value_add_plus(diff_data.main_diff.winrate) + self.val_normalizer.winrate(diff_data.main_diff.winrate),
+            'avg_damage': self.value_add_plus(diff_data.main_diff.avg_damage) + self.val_normalizer.other(diff_data.main_diff.avg_damage),
+            'battles': self.value_add_plus(diff_data.main_diff.battles) + self.val_normalizer.other(diff_data.main_diff.battles)
         }
         self.rating = {
-            'winrate': self.vlue_add_plus(diff_data.rating_diff.winrate) + self.val_normalizer.winrate(diff_data.rating_diff.winrate),
-            'rating': self.vlue_add_plus(diff_data.rating_diff.rating) + self.val_normalizer.other(diff_data.rating_diff.rating),
-            'battles': self.vlue_add_plus(diff_data.rating_diff.battles) + self.val_normalizer.other(diff_data.rating_diff.battles)
+            'winrate': self.value_add_plus(diff_data.rating_diff.winrate) + self.val_normalizer.winrate(diff_data.rating_diff.winrate),
+            'rating': self.value_add_plus(diff_data.rating_diff.rating) + self.val_normalizer.other(diff_data.rating_diff.rating),
+            'battles': self.value_add_plus(diff_data.rating_diff.battles) + self.val_normalizer.other(diff_data.rating_diff.battles)
         }
         
     def tank_values(self, tank_id: int | str):
         tank_id = str(tank_id)
         return {
-            'winrate': self.vlue_add_plus(self.diff_data.tank_stats[tank_id].d_winrate) + self.val_normalizer.winrate(self.diff_data.tank_stats[tank_id].d_winrate),
-            'avg_damage': self.vlue_add_plus(self.diff_data.tank_stats[tank_id].d_avg_damage) + self.val_normalizer.other(self.diff_data.tank_stats[tank_id].d_avg_damage),
-            'battles': self.vlue_add_plus(self.diff_data.tank_stats[tank_id].d_battles) + self.val_normalizer.other(self.diff_data.tank_stats[tank_id].d_battles)
+            'winrate': self.value_add_plus(self.diff_data.tank_stats[tank_id].d_winrate) + self.val_normalizer.winrate(self.diff_data.tank_stats[tank_id].d_winrate),
+            'avg_damage': self.value_add_plus(self.diff_data.tank_stats[tank_id].d_avg_damage) + self.val_normalizer.other(self.diff_data.tank_stats[tank_id].d_avg_damage),
+            'battles': self.value_add_plus(self.diff_data.tank_stats[tank_id].d_battles) + self.val_normalizer.other(self.diff_data.tank_stats[tank_id].d_battles)
         }
 
-    def vlue_add_plus(self, value: int | float) -> str:
+    def value_add_plus(self, value: int | float) -> str:
         """
         Determines if the given value is positive or negative and returns the corresponding symbol.
 
@@ -469,7 +469,7 @@ class ImageGen():
 
         Args:
             data (PlayerGlobalData): The global data of the player.
-            diff_data (SesionDiffData): The diff data of the session.
+            diff_data (SessionDiffData): The diff data of the session.
             test (bool): If True, the image will be displayed for testing purposes. 
 
         Returns:
@@ -518,9 +518,9 @@ class ImageGen():
                 self.image.convert('RGBA').save(_config.image.default_bg_path)
                 self.load_image()
 
-        strt_time = time()
+        start_time = time()
         self.image = self.image.convert('RGBA')
-        self.draw_backround(self.layout_map)
+        self.draw_background(self.layout_map)
         self.img_size = self.image.size
         img_draw = ImageDraw.Draw(self.image)
 
@@ -563,7 +563,7 @@ class ImageGen():
         bin_image = BytesIO()
         self.image.save(bin_image, 'PNG')
         bin_image.seek(0)
-        _log.debug('Image was sent in %s sec.', round(time() - strt_time, 4))
+        _log.debug('Image was sent in %s sec.', round(time() - start_time, 4))
         return bin_image
     
     def draw_main_stats_block(self, image_draw: ImageDraw.ImageDraw) -> None:
@@ -643,7 +643,7 @@ class ImageGen():
             fill=self.image_settings.main_text_color
         )
     
-    def draw_backround(self, rectangle_map: Image.Image) -> None:
+    def draw_background(self, rectangle_map: Image.Image) -> None:
         self.image = self.image.crop((0, 0, rectangle_map.size[0], rectangle_map.size[1]))
         if self.image_settings.disable_stats_blocks:
             return
