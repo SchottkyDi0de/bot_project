@@ -14,7 +14,7 @@ from lib.settings.settings import Config
 
 
 _config = Config().get()
-_log = get_logger(__name__, 'PlayersDBLogger', 'logs/playersdb.log')
+_log = get_logger(__name__, 'PlayersDBLogger', 'logs/players.log')
 
 
 class PlayersDB:
@@ -91,7 +91,7 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
-    def check_member_is_verefied(self, member_id: int | str) -> bool:
+    def check_member_is_verified(self, member_id: int | str) -> bool:
         member_id = int(member_id)
         try:
             member_exist = self.check_member(member_id)
