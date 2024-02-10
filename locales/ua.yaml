@@ -329,7 +329,7 @@ cmds:
         hide_clan_tag: 'Сховати клан-тег, буде видалено'
         disable_stats_blocks: 'Викмнути відображення блоків статистики'
         disable_rating_stats: 'Вимкнути статистику в рейтингу'
-        disable_cahce_label: 'Вимкнути відображення іконки кешу'
+        disable_cache_label: 'Вимкнути відображення іконки кешу'
     errors:
       color_error: 'Неправильно код кольору `<param_name>`, значення: `<value>`'
       changes_not_found: Не знайдено зміни параметрів, змініть хочаб один параметр.

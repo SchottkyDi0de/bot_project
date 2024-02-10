@@ -14,7 +14,7 @@ from lib.settings.settings import Config
 
 
 _config = Config().get()
-_log = get_logger(__name__, 'PlayersDBLogger', 'logs/playersdb.log')
+_log = get_logger(__name__, 'PlayersDBLogger', 'logs/players.log')
 
 
 class PlayersDB:
@@ -33,7 +33,7 @@ class PlayersDB:
             self.collection.update_one({'id': ds_id}, {'$set': {**(data.model_dump())}})
             return True
         elif self.collection.find_one({'id': ds_id}) is None:
-            self.collection.insert_one({data.model_dump()})
+            self.collection.insert_one(data.model_dump())
             return True
         else:
             return False
@@ -91,7 +91,7 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
-    def check_member_is_verefied(self, member_id: int | str) -> bool:
+    def check_member_is_verified(self, member_id: int | str) -> bool:
         member_id = int(member_id)
         try:
             member_exist = self.check_member(member_id)

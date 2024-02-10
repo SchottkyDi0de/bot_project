@@ -328,7 +328,7 @@ cmds:
         hide_clan_tag: 'Hide clan tag, will be removed'
         disable_stats_blocks: 'Disable statistics blocks rendering'
         disable_rating_stats: 'Disable rating statistics'
-        disable_cahce_label: 'Disable cache label'
+        disable_cache_label: 'Disable cache label'
     errors:
       changes_not_found: No parameter change detected, change at least one parameter.
       color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
