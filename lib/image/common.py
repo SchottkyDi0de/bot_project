@@ -1,6 +1,6 @@
 '''
 Модуль для генерирования изображения
-со статистикой.no_league
+со статистикой
 '''
 from enum import Enum
 from io import BytesIO
@@ -20,11 +20,11 @@ from lib.logger.logger import get_logger
 from lib.data_classes.db_server import ServerSettings
 from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
-from lib.image.for_iamge.icons import StatsIcons
-from lib.image.for_iamge.medals import Medals
+from lib.image.for_image.icons import StatsIcons
+from lib.image.for_image.medals import Medals
 from lib.settings.settings import Config
-from lib.image.for_iamge.colors import Colors
-from lib.image.for_iamge.fonts import Fonts
+from lib.image.for_image.colors import Colors
+from lib.image.for_image.fonts import Fonts
 
 _log = get_logger(__name__, 'ImageCommonLogger', 'logs/image_common.log')
 _config = Config().get()
@@ -350,9 +350,8 @@ class ImageGen():
                  data: PlayerGlobalData,
                  image_settings: ImageSettings,
                  server_settings: ServerSettings,
-                 speed_test: bool = False,
                  debug_label: bool = False,
-                 ) -> BytesIO | float:
+                 ) -> BytesIO:
 
         self.text = Text().get()
         start_time = time()
@@ -402,9 +401,9 @@ class ImageGen():
         self.coord = Coordinates(self.img_size)
         img_draw = ImageDraw.Draw(self.image)
 
-        _log.debug(f'Generate modele debug: image size: {self.image.size}')
+        _log.debug(f'Generate model debug: image size: {self.image.size}')
 
-        self.darw_backround()
+        self.draw_background()
         self.draw_stats_icons()
         self.draw_medals()
         
@@ -425,22 +424,22 @@ class ImageGen():
 
         self.draw_main_stats(img_draw)
         self.draw_rating_stats(img_draw)
-        self.darw_common_stats(img_draw)
-        self.darw_medal_count(img_draw)
+        self.draw_common_stats(img_draw)
+        self.draw_medal_count(img_draw)
 
         if debug_label:
             self.draw_debug_label(img_draw)
 
         # self.draw_main_points(img_draw)
         # self.draw_rating_points(img_draw)
-        # self.darw_common_points(img_draw)
+        # self.draw_common_points(img_draw)
 
         bin_image = BytesIO()
         self.image.save(bin_image, 'PNG')
         bin_image.seek(0)
         _log.debug('Image was sent in %s sec.', round(time() - start_time, 4))
 
-        return bin_image if not speed_test else time() - start_time
+        return bin_image
 
     def draw_stats_icons(self) -> None:
         for coord_item in IconsCoords:
@@ -464,13 +463,13 @@ class ImageGen():
             fill=Colors.red
         )
 
-    def darw_backround(self) -> None:
+    def draw_background(self) -> None:
         gaussian_filter = ImageFilter.GaussianBlur(radius=self.image_settings.glass_effect)
         background_map = Image.new('RGBA', (700, 1250), (0, 0, 0, 0))
         img_draw = ImageDraw.Draw(background_map)
         print(f'Image {self.image.mode} size: {self.image.size}')
 
-        # draw nickanme rectangle
+        # draw nickname rectangle
         text_box = img_draw.textbbox(
             (self.img_size[0]//2, 20),
             text=self.data.data.name_and_tag,
@@ -677,7 +676,7 @@ class ImageGen():
                 fill=self.image_settings.stats_color
             )
 
-    def darw_common_stats(self, img: Image.Image):
+    def draw_common_stats(self, img: Image.Image):
         for i in self.coord.common_stats.keys():
             img.text(
                 self.coord.common_stats[i],
@@ -687,7 +686,7 @@ class ImageGen():
                 fill=self.image_settings.stats_color
             )
 
-    def darw_medal_count(self, img: Image.Image):
+    def draw_medal_count(self, img: Image.Image):
         for i in self.coord.medals_count.keys():
             img.text(
                 self.coord.medals_count[i],
@@ -717,7 +716,7 @@ class ImageGen():
                 fill=self.point_coloring(i, getattr(self.data.data.statistics.all, i))
             )
 
-    def darw_common_points(self, img: Image.Image):
+    def draw_common_points(self, img: Image.Image):
         for i in self.coord.common_stats_point.keys():
             img.text(
                 self.coord.common_stats_point[i],

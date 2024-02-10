@@ -6,7 +6,7 @@ from pymongo import MongoClient
 from pymongo.results import DeleteResult
 from bson.codec_options import CodecOptions
 
-from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.logger.logger import get_logger
 from lib.data_classes.db_player import DBPlayer, ImageSettings, SessionSettings
 from lib.exceptions import database

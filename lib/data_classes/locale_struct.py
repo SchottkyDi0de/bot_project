@@ -332,7 +332,7 @@ class SubDescr5(BaseModel):
     hide_clan_tag: str
     disable_stats_blocks: str
     disable_rating_stats: str
-    disable_cahce_label: str
+    disable_cache_label: str
 
 
 class Descr9(BaseModel):
