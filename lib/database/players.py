@@ -6,7 +6,7 @@ from pymongo import MongoClient
 from pymongo.results import DeleteResult
 from bson.codec_options import CodecOptions
 
-from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.logger.logger import get_logger
 from lib.data_classes.db_player import DBPlayer, ImageSettings, SessionSettings
 from lib.exceptions import database
@@ -33,7 +33,7 @@ class PlayersDB:
             self.collection.update_one({'id': ds_id}, {'$set': {**(data.model_dump())}})
             return True
         elif self.collection.find_one({'id': ds_id}) is None:
-            self.collection.insert_one({data.model_dump()})
+            self.collection.insert_one(data.model_dump())
             return True
         else:
             return False
@@ -41,10 +41,7 @@ class PlayersDB:
     def check_member(self, member_id: int | str) -> bool:
         member_id = int(member_id)
         player = self.collection.find_one({'id': member_id})
-        if player is not None:
-            return True
-        else:
-            return False
+        return player is not None
         
     def get_players_ids(self) -> list:
         return [i['id'] for i in self.collection.find({})]
@@ -74,28 +71,27 @@ class PlayersDB:
         member_id = int(member_id)
         try:
             member_exist = self.check_member(member_id)
-            if member_exist:
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set': 
-                            {
-                            'premium': False, 
-                            'premium_time': None
-                            }
-                        }
-                    )
-                return True
-            else:
+            if not member_exist:
                 raise database.MemberNotFound(f'Member not found, id: {member_id}')
+            
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set': 
+                        {
+                        'premium': False, 
+                        'premium_time': None
+                        }
+                    }
+                )
+            return True
         except Exception:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
-    def check_member_is_verefied(self, member_id: int | str) -> bool:
+    def check_member_is_verified(self, member_id: int | str) -> bool:
         member_id = int(member_id)
         try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
+            if member_exist := self.check_member(member_id):
                 return self.collection.find_one({'id': member_id})['verified']
             else:
                 raise database.MemberNotFound(f'Member not found, id: {member_id}')
@@ -106,19 +102,19 @@ class PlayersDB:
     def check_member_premium(self, member_id: int | str) -> bool:
         member_id = int(member_id)
         try:
-            if self.check_member(member_id):
-                player = self.collection.find_one({'id': member_id})
-                premium = player['premium']
-                premium_time = player['premium_time']
-                if premium and premium_time is not None:
-                    if int(datetime.now().timestamp()) < self.collection.find_one({'id': member_id})['premium_time']:
-                        return True
-                    else:
-                        self.unset_member_premium(member_id)
-                else:
-                    return False
-            else:
+            if not self.check_member(member_id):
                 raise database.MemberNotFound(f'Member not found, id: {member_id}')
+            
+            player = self.collection.find_one({'id': member_id})
+            premium = player['premium']
+            premium_time = player['premium_time']
+            if premium and premium_time is not None:
+                if int(datetime.now().timestamp()) < self.collection.find_one({'id': member_id})['premium_time']:
+                    return True
+                else:
+                    self.unset_member_premium(member_id)
+            else:
+                return False
         except Exception:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False

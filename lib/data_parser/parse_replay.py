@@ -5,8 +5,8 @@ from enum import Enum
 from datetime import datetime
 
 from lib.api.async_wotb_api import API
-from lib.data_classes.replay_data import ReplayData
-from lib.data_classes.replay_data_parsed import ParsedReplayData
+from lib.data_classes.replay.replay_data import ReplayData
+from lib.data_classes.replay.replay_data_parsed import ParsedReplayData
 from lib.exceptions.data_parser import DataParserError
 from lib.logger.logger import get_logger
 from lib.replay_parser.parser import ReplayParser

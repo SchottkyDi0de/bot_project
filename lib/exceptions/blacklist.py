@@ -1,7 +1,7 @@
 from discord.ext.commands import CommandError
 
 
-class BlackListException(CommandError, BaseException):
+class BlackListException(CommandError):
     pass
 
 

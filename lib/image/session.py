@@ -7,7 +7,7 @@ from typing import Dict
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 from discord.ext import commands
 
-from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import ImageSettings
 from lib.data_classes.session import TankSessionData
 from lib.data_classes.db_server import ServerSettings

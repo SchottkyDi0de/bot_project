@@ -124,7 +124,7 @@ class Set(commands.Cog):
                 nickname=composite_nickname.nickname,
                 region=region,
                 game_id=composite_nickname.player_id,
-                dicrord_id=ctx.author.id
+                discord_id=ctx.author.id
                 )
         except api.NoPlayersFound:
             await ctx.respond(embed=ErrorMSG().player_not_found())
