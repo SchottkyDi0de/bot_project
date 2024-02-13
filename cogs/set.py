@@ -602,7 +602,7 @@ class Set(commands.Cog):
                 colour='green'
             )
         )
-        await StatsPreview().preview(ctx, image_settings)
+        await StatsPreview().preview(ctx, ImageSettings.model_validate(current_settings))
         
     @commands.slash_command(
         guild_only=True, 
