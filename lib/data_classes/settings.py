@@ -1,15 +1,6 @@
-from typing import List
+from typing import Dict, List
 
 from pydantic import BaseModel
-
-
-class LogLevels(BaseModel):
-    console: str
-    file: str
-
-
-class Logger(BaseModel):
-    log_levels: LogLevels
 
 
 class Server(BaseModel):
@@ -24,20 +15,12 @@ class Session(BaseModel):
 class Autosession(BaseModel):
     ttl: int
 
-
-class LocaleAlliases(BaseModel):
-    ru: str
-    en: str
-    pl: str
-    uk: str
-
-
 class Default(BaseModel):
     prefix: str
     lang: str
     available_locales: List[str]
     available_regions: List[str]
-    locale_alliases: LocaleAlliases
+    locale_aliases: Dict[str, str]
 
 
 class Image(BaseModel):
@@ -89,7 +72,6 @@ class DsApi(BaseModel):
 
 
 class ConfigStruct(BaseModel):
-    logger: Logger
     bot_name: str
     server: Server
     session: Session

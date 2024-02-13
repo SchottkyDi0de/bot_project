@@ -14,8 +14,7 @@ from lib.data_classes.db_server import ServerSettings
 from lib.data_classes.session import SessionDiffData
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-# from lib.database.tankopedia import TanksDB
-# from lib.exceptions.database import TankNotFoundInTankopedia
+from lib.image.for_image.watermark import Watermark
 from lib.image.common import ValueNormalizer
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
@@ -553,6 +552,8 @@ class ImageGen():
         if not self.image_settings.disable_flag:
             self.draw_flag()
             
+        self.draw_watermark()
+            
         if debug_label:
             self.draw_debug_label(img_draw)
 
@@ -671,6 +672,13 @@ class ImageGen():
             font=self.fonts.roboto_40,
             fill=Colors.red
         )
+        
+    def draw_watermark(self):
+        self.image.paste(Watermark.v1, (
+            self.img_size[0] - 40, 
+            self.img_size[1] // 2 - Watermark.v1.size[1] // 2
+            ), 
+        Watermark.v1)
         
     def tank_type_handler(self, tank_type: str):
         match tank_type:

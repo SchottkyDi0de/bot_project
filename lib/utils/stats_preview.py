@@ -154,4 +154,4 @@ class StatsPreview:
             nickname, region, lang = 'Nickname', 'ru', 'eu'
         player_global_data = _PreviewData.player_global_data(nickname, region)
         image = ImageGen().generate(ctx, player_global_data, image_settings, server_settings)
-        await ctx.respond(Text().get(lang).cmds.image_settings.info.preview, file=File(image, 'stats.png'), ephemeral=True)
+        await ctx.respond(Text().get(lang).cmds.image_settings.info.preview, file=File(image, 'preview.png'), ephemeral=True)

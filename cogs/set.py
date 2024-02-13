@@ -26,6 +26,7 @@ from lib.image.utils.hex_color_validator import hex_color_validate
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
 from lib.utils.nickname_handler import handle_nickname, validate_nickname, NicknameValidationError
+from lib.utils.stats_preview import StatsPreview
 
 _log = get_logger(__file__, 'CogSetLogger', 'logs/cog_set.log')
 _config = Config().get()
@@ -333,6 +334,7 @@ class Set(commands.Cog):
             'uk': Text().get('ua').cmds.image_settings.descr.this
             }
         )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def image_settings(
         self,
         ctx: commands.Context,
@@ -600,6 +602,7 @@ class Set(commands.Cog):
                 colour='green'
             )
         )
+        await StatsPreview().preview(ctx, image_settings)
         
     @commands.slash_command(
         guild_only=True, 
