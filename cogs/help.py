@@ -34,7 +34,7 @@ class Help(commands.Cog):
                 'pl': Text().get('pl').cmds.help.items.help.lower(),
                 'uk': Text().get('ua').cmds.help.items.help.lower()
             },
-            description=Text().get().cmds.help.descr.this,
+            description=Text().get('en').cmds.help.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.help.descr.this,
                 'pl': Text().get('pl').cmds.help.descr.this,
