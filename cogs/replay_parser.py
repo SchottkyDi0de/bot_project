@@ -18,7 +18,7 @@ from lib.embeds.info import InfoMSG
 from lib.embeds.replay import EmbedReplayBuilder
 from lib.settings.settings import Config
 
-_log = get_logger(__name__, 'CogReplayParserLogger', 'logs/cog_replay_parser.log')
+_log = get_logger(__file__, 'CogReplayParserLogger', 'logs/cog_replay_parser.log')
 _config = Config().get()
 
 class CogReplayParser(commands.Cog):
@@ -31,7 +31,7 @@ class CogReplayParser(commands.Cog):
 
     @commands.slash_command(
             guild_only=True, 
-            description=Text().get().cmds.parse_replay.descr.this,
+            description=Text().get('en').cmds.parse_replay.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.parse_replay.descr.this,
                 'pl': Text().get('pl').cmds.parse_replay.descr.this,
@@ -43,7 +43,7 @@ class CogReplayParser(commands.Cog):
                     ctx: commands.Context,
                     replay: Option(
                         Attachment,
-                        description=Text().get().cmds.parse_replay.descr.sub_descr.file,
+                        description=Text().get('en').cmds.parse_replay.descr.sub_descr.file,
                         description_localizations={
                             'ru': Text().get('ru').cmds.parse_replay.descr.sub_descr.file,
                             'pl': Text().get('pl').cmds.parse_replay.descr.sub_descr.file,
@@ -54,7 +54,7 @@ class CogReplayParser(commands.Cog):
                     ),
                     region: Option(
                         str,
-                        description=Text().get().frequent.common.region,
+                        description=Text().get('en').frequent.common.region,
                         description_localizations={
                             'ru': Text().get('ru').frequent.common.region,
                             'pl': Text().get('pl').frequent.common.region,

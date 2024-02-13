@@ -9,7 +9,7 @@ from lib.logger.logger import get_logger
 from lib.database.tankopedia import TanksDB
 from lib.exceptions.database import TankNotFoundInTankopedia
 
-_log = get_logger(__name__, 'EmbedReplayBuilder', 'logs/embed_replay.log')
+_log = get_logger(__file__, 'EmbedReplayBuilder', 'logs/embed_replay.log')
 
 class EmbedReplayBuilder():
     def __init__(self):

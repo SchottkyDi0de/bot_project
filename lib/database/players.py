@@ -14,7 +14,7 @@ from lib.settings.settings import Config
 
 
 _config = Config().get()
-_log = get_logger(__name__, 'PlayersDBLogger', 'logs/players.log')
+_log = get_logger(__file__, 'PlayersDBLogger', 'logs/players.log')
 
 
 class PlayersDB:

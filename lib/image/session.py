@@ -26,7 +26,7 @@ from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
 from lib.image.for_image.flags import Flags
 
-_log = get_logger(__name__, 'ImageSessionLogger', 'logs/image_session.log')
+_log = get_logger(__file__, 'ImageSessionLogger', 'logs/image_session.log')
 _config = Config().get()
 
 

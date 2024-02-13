@@ -21,7 +21,7 @@ from lib.utils.nickname_handler import handle_nickname, validate_nickname, \
                                         CompositeNickname, NickTypes
 from lib.exceptions.nickname_validator import NicknameValidationError
 
-_log = get_logger(__name__, 'CogStatsLogger', 'logs/cog_stats.log')
+_log = get_logger(__file__, 'CogStatsLogger', 'logs/cog_stats.log')
 
 
 class Stats(commands.Cog):
@@ -35,7 +35,7 @@ class Stats(commands.Cog):
         self.err_msg = ErrorMSG()
         
     @commands.slash_command(
-        description=Text().get().cmds.stats.descr.this,
+        description=Text().get('en').cmds.stats.descr.this,
         description_localizations={
             'ru' : Text().get('ru').cmds.stats.descr.this,
             'pl' : Text().get('pl').cmds.stats.descr.this,
@@ -46,9 +46,9 @@ class Stats(commands.Cog):
     async def stats(
             self, 
             ctx: commands.Context,
-            nickname: Option(
+            nick_or_id: Option(
                 str,
-                description=Text().get().frequent.common.nickname,
+                description=Text().get('en').frequent.common.nickname,
                 description_localizations={
                     'ru': Text().get('ru').frequent.common.nickname,
                     'pl': Text().get('pl').frequent.common.nickname,
@@ -58,7 +58,7 @@ class Stats(commands.Cog):
             ),
             region: Option(
                 str,
-                description=Text().get().frequent.common.region,
+                description=Text().get('en').frequent.common.region,
                 description_localizations={
                     'ru': Text().get('ru').frequent.common.region,
                     'pl': Text().get('pl').frequent.common.region,
@@ -82,12 +82,12 @@ class Stats(commands.Cog):
         server_settings = self.sdb.get_server_settings(ctx)
         
         try:
-            nickname_type = validate_nickname(nickname)
+            nickname_type = validate_nickname(nick_or_id)
         except NicknameValidationError:
             await ctx.respond(embed=self.err_msg.uncorrect_name())
             return
         
-        composite_nickname = handle_nickname(nickname, nickname_type)
+        composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
         img = await self.get_stats(
             ctx, 
@@ -103,7 +103,7 @@ class Stats(commands.Cog):
             img.close()
 
     @commands.slash_command(
-            description=Text().get().cmds.astats.descr.this,
+            description=Text().get('en').cmds.astats.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.astats.descr.this,
                 'pl': Text().get('pl').cmds.astats.descr.this,

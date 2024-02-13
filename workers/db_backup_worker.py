@@ -3,7 +3,7 @@ from asyncio import sleep
 from lib.database.utils.dump_handler import BackUp
 from lib.logger.logger import get_logger
 
-_log = get_logger(__name__, 'DBBackupWorkerLogger', 'logs/db_backup_worker.log')
+_log = get_logger(__file__, 'DBBackupWorkerLogger', 'logs/db_backup_worker.log')
 
 
 class DBBackupWorker:

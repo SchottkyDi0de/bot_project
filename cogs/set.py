@@ -27,7 +27,7 @@ from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
 from lib.utils.nickname_handler import handle_nickname, validate_nickname, NicknameValidationError
 
-_log = get_logger(__name__, 'CogSetLogger', 'logs/cog_set.log')
+_log = get_logger(__file__, 'CogSetLogger', 'logs/cog_set.log')
 _config = Config().get()
 
 
@@ -43,7 +43,7 @@ class Set(commands.Cog):
         
     @commands.slash_command(
             guild_only=True,
-            description=Text().get().cmds.set_lang.descr.this,
+            description=Text().get('en').cmds.set_lang.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.set_lang.descr.this,
                 'pl': Text().get('pl').cmds.set_lang.descr.this,
@@ -53,7 +53,7 @@ class Set(commands.Cog):
     async def set_lang(self, ctx: commands.Context,
             lang: Option(
                 str,
-                description=Text().get().cmds.set_lang.descr.sub_descr.lang_list,
+                description=Text().get('en').cmds.set_lang.descr.sub_descr.lang_list,
                 description_localizations={
                     'ru': Text().get('ru').cmds.set_lang.descr.sub_descr.lang_list,
                     'pl': Text().get('pl').cmds.set_lang.descr.sub_descr.lang_list,
@@ -85,23 +85,23 @@ class Set(commands.Cog):
             }
         )
     async def set_player(self, ctx: commands.Context, 
-            nickname: Option(
+            nick_or_id: Option(
                 str,
-                description=Text().get().frequent.common.nickname,
+                description=Text().get('en').cmds.set_player.descr.sub_descr.nickname,
                 description_localizations={
-                    'ru': Text().get('ru').frequent.common.nickname,
-                    'pl': Text().get('pl').frequent.common.nickname,
-                    'uk': Text().get('ua').frequent.common.nickname
+                    'ru': Text().get('ru').cmds.set_player.descr.sub_descr.nickname,
+                    'pl': Text().get('pl').cmds.set_player.descr.sub_descr.nickname,
+                    'uk': Text().get('ua').cmds.set_player.descr.sub_descr.nickname
                 },
                 required=True
             ),
             region: Option(
                 str,
-                description=Text().get().frequent.common.region,
+                description=Text().get('en').cmds.set_player.descr.sub_descr.region,
                 description_localizations={
-                    'ru': Text().get('ru').frequent.common.region,
-                    'pl': Text().get('pl').frequent.common.region,
-                    'uk': Text().get('ua').frequent.common.region
+                    'ru': Text().get('ru').cmds.set_player.descr.sub_descr.region,
+                    'pl': Text().get('pl').cmds.set_player.descr.sub_descr.region,
+                    'uk': Text().get('ua').cmds.set_player.descr.sub_descr.region
                 },
                 choices=_config.default.available_regions,
                 required=True
@@ -112,12 +112,12 @@ class Set(commands.Cog):
         await ctx.defer()
         
         try:
-            nickname_type = validate_nickname(nickname)
+            nickname_type = validate_nickname(nick_or_id)
         except NicknameValidationError:
             await ctx.respond(embed=self.err_msg.uncorrect_name())
             return
         
-        composite_nickname = handle_nickname(nickname, nickname_type)
+        composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
         try:
             player = await self.api.check_and_get_player(
@@ -134,7 +134,7 @@ class Set(commands.Cog):
             await ctx.respond(embed=ErrorMSG().api_error())
         else:
             self.db.set_member(player, override=True)
-            _log.debug(f'Set player: {ctx.author.id} {nickname} {region}')
+            _log.debug(f'Set player: {ctx.author.id} {nick_or_id} {region}')
             await ctx.respond(embed=self.inf_msg.set_player_ok())
 
     @commands.slash_command(
@@ -186,7 +186,7 @@ class Set(commands.Cog):
 
     @commands.slash_command(
         guild_only=True,
-        description=Text().get().cmds.set_background.descr.this,
+        description=Text().get('en').cmds.set_background.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.set_background.descr.this,
             'pl': Text().get('pl').cmds.set_background.descr.this,
@@ -199,7 +199,7 @@ class Set(commands.Cog):
             ctx: commands.Context,
             image: Option(
                 Attachment,
-                description=Text().get().cmds.set_background.descr.sub_descr.image,
+                description=Text().get('en').cmds.set_background.descr.sub_descr.image,
                 description_localizations={
                     'ru': Text().get('ru').cmds.set_background.descr.sub_descr.image,
                     'pl': Text().get('pl').cmds.set_background.descr.sub_descr.image,
@@ -209,7 +209,7 @@ class Set(commands.Cog):
                 ),
             server: Option(
                 bool,
-                description=Text().get().cmds.set_background.descr.sub_descr.server,
+                description=Text().get('en').cmds.set_background.descr.sub_descr.server,
                 description_localizations={
                     'ru': Text().get('ru').cmds.set_background.descr.sub_descr.server,
                     'pl': Text().get('pl').cmds.set_background.descr.sub_descr.server,
@@ -579,6 +579,7 @@ class Set(commands.Cog):
                         'value': i['value']
                     }
                 ) + '\n'
+                
             await ctx.respond(
                 embed=self.inf_msg.custom(
                     Text().get(),
@@ -685,7 +686,7 @@ class Set(commands.Cog):
         ctx: commands.Context,
         server: Option(
             bool,
-            description=Text().get().cmds.reset_background.descr.sub_descr.server,
+            description=Text().get('en').cmds.reset_background.descr.sub_descr.server,
             description_localizations={
                 'ru': Text().get('ru').cmds.reset_background.descr.sub_descr.server,
                 'pl': Text().get('pl').cmds.reset_background.descr.sub_descr.server,

@@ -14,7 +14,7 @@ from lib.embeds.info import InfoMSG
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 
-_log = get_logger(__name__, 'CogHelpLogger', 'logs/cog_help.log')
+_log = get_logger(__file__, 'CogHelpLogger', 'logs/cog_help.log')
 _config = Config().get()
 
 
@@ -28,7 +28,7 @@ class Help(commands.Cog):
 
     @commands.slash_command(
             guild_only=True,
-            name=Text().get().cmds.help.items.help.lower(),
+            name=Text().get('en').cmds.help.items.help.lower(),
             name_localizations={
                 'ru': Text().get('ru').cmds.help.items.help.lower(),
                 'pl': Text().get('pl').cmds.help.items.help.lower(),
@@ -55,7 +55,7 @@ class Help(commands.Cog):
                     await ctx.author.send(
                         embed=InfoMSG().custom(
                             Text().get(),
-                            title=Text().get().cmds.help.items.help,
+                            title=Text().get('ru').cmds.help.items.help,
                             text=_config.help_urls.ru
                             )
                         )
@@ -63,7 +63,7 @@ class Help(commands.Cog):
                     await ctx.author.send(
                         embed=InfoMSG().custom(
                             Text().get(),
-                            title=Text().get().cmds.help.items.help,
+                            title=Text().get('ua').cmds.help.items.help,
                             text=_config.help_urls.ua
                         )
                     )
@@ -71,7 +71,7 @@ class Help(commands.Cog):
                     await ctx.author.send(
                         embed=InfoMSG().custom(
                             Text().get(),
-                            title=Text().get().cmds.help.items.help,
+                            title=Text().get('en').cmds.help.items.help,
                             text=_config.help_urls.en
                             )
                         )
@@ -85,7 +85,7 @@ class Help(commands.Cog):
                     await ctx.respond(
                         embed=InfoMSG().custom(
                             Text().get(),
-                            title=Text().get().cmds.help.items.help,
+                            title=Text().get('ru').cmds.help.items.help,
                             text=_config.help_urls.ru
                             )
                         )
@@ -93,7 +93,7 @@ class Help(commands.Cog):
                     await ctx.respond(
                         embed=InfoMSG().custom(
                             Text().get(),
-                            title=Text().get().cmds.help.items.help,
+                            title=Text().get('ua').cmds.help.items.help,
                             text=_config.help_urls.ua
                         )
                     )
@@ -101,7 +101,7 @@ class Help(commands.Cog):
                     await ctx.respond(
                         embed=InfoMSG().custom(
                             Text().get(),
-                            title=Text().get().cmds.help.items.help,
+                            title=Text().get('en').cmds.help.items.help,
                             text=_config.help_urls.en
                             )
                         )

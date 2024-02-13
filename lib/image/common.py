@@ -26,7 +26,7 @@ from lib.settings.settings import Config
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
 
-_log = get_logger(__name__, 'ImageCommonLogger', 'logs/image_common.log')
+_log = get_logger(__file__, 'ImageCommonLogger', 'logs/image_common.log')
 _config = Config().get()
 
 
