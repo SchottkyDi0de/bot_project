@@ -60,7 +60,7 @@ class App():
             api = async_wotb_api.API()
 
             tp.set_tankopedia(await self.retrieve_tankopedia(api))
-            _log.debug('Tankopedia set successfull\nBot started: %s', self.bot.user)
+            _log.debug('Tankopedia set successful\nBot started: %s', self.bot.user)
             await self.run_workers()
 
         self.load_extension(self.extension_names)

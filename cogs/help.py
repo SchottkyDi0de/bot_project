@@ -34,7 +34,7 @@ class Help(commands.Cog):
                 'pl': Text().get('pl').cmds.help.items.help.lower(),
                 'uk': Text().get('ua').cmds.help.items.help.lower()
             },
-            description=Text().get().cmds.help.descr.this,
+            description=Text().get('en').cmds.help.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.help.descr.this,
                 'pl': Text().get('pl').cmds.help.descr.this,
@@ -54,7 +54,7 @@ class Help(commands.Cog):
                 case 'ru':
                     await ctx.author.send(
                         embed=InfoMSG().custom(
-                            Text().get(),
+                            Text().get('ru'),
                             title=Text().get('ru').cmds.help.items.help,
                             text=_config.help_urls.ru
                             )
@@ -62,15 +62,23 @@ class Help(commands.Cog):
                 case 'ua':
                     await ctx.author.send(
                         embed=InfoMSG().custom(
-                            Text().get(),
+                            Text().get('ua'),
                             title=Text().get('ua').cmds.help.items.help,
                             text=_config.help_urls.ua
                         )
                     )
+                case 'pl':
+                    await ctx.author.send(
+                        embed=InfoMSG().custom(
+                            Text().get('pl'),
+                            title=Text().get('pl').cmds.help.items.help,
+                            text=_config.help_urls.pl
+                            )
+                        )
                 case _:
                     await ctx.author.send(
                         embed=InfoMSG().custom(
-                            Text().get(),
+                            Text().get('en'),
                             title=Text().get('en').cmds.help.items.help,
                             text=_config.help_urls.en
                             )
@@ -84,7 +92,7 @@ class Help(commands.Cog):
                 case 'ru':
                     await ctx.respond(
                         embed=InfoMSG().custom(
-                            Text().get(),
+                            Text().get('ru'),
                             title=Text().get('ru').cmds.help.items.help,
                             text=_config.help_urls.ru
                             )
@@ -92,15 +100,23 @@ class Help(commands.Cog):
                 case 'ua':
                     await ctx.respond(
                         embed=InfoMSG().custom(
-                            Text().get(),
+                            Text().get('ua'),
                             title=Text().get('ua').cmds.help.items.help,
                             text=_config.help_urls.ua
+                        )
+                    )
+                case 'pl':
+                    await ctx.respond(
+                        embed=InfoMSG().custom(
+                            Text().get('pl'),
+                            title=Text().get('pl').cmds.help.items.help,
+                            text=_config.help_urls.pl
                         )
                     )
                 case _:
                     await ctx.respond(
                         embed=InfoMSG().custom(
-                            Text().get(),
+                            Text().get('en'),
                             title=Text().get('en').cmds.help.items.help,
                             text=_config.help_urls.en
                             )

@@ -35,6 +35,7 @@ class HelpUrls(BaseModel):
     ru: str
     en: str
     ua: str
+    pl: str
 
 
 class Auth(BaseModel):
