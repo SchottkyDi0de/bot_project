@@ -8,7 +8,7 @@ from lib.data_classes.replay_data import ReplayData
 from lib.utils.singleton_factory import singleton
 from lib.logger.logger import get_logger
 
-_log = get_logger(__name__, 'ReplayParserLogger', 'logs/replay_parser.log')
+_log = get_logger(__file__, 'ReplayParserLogger', 'logs/replay_parser.log')
 
 
 _EXE = 'parser.exe'

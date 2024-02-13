@@ -25,8 +25,9 @@ from lib.image.for_image.medals import Medals
 from lib.settings.settings import Config
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
+from lib.image.for_image.watermark import Watermark
 
-_log = get_logger(__name__, 'ImageCommonLogger', 'logs/image_common.log')
+_log = get_logger(__file__, 'ImageCommonLogger', 'logs/image_common.log')
 _config = Config().get()
 
 
@@ -426,6 +427,8 @@ class ImageGen():
         self.draw_rating_stats(img_draw)
         self.draw_common_stats(img_draw)
         self.draw_medal_count(img_draw)
+        
+        self.draw_watermark()
 
         if debug_label:
             self.draw_debug_label(img_draw)
@@ -726,6 +729,13 @@ class ImageGen():
                 fill=self.point_coloring(
                     i, getattr(self.data.data.statistics.all, i), rating=True)
             )
+            
+    def draw_watermark(self):
+        self.image.paste(Watermark.v1, (
+            self.img_size[0] - 40, 
+            self.img_size[1] // 2 - Watermark.v1.size[1] // 2
+            ), 
+        Watermark.v1)
 
     def draw_flag(self):
         # self.data.region = 'asia' - Only for test

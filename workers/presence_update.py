@@ -4,7 +4,7 @@ from discord import Status, Bot, Activity, ActivityType
 
 from lib.logger.logger import get_logger
 
-_log = get_logger(__name__, 'UpdatePresenceWorker', 'logs/update_prescence_worker.log')
+_log = get_logger(__file__, 'UpdatePresenceWorker', 'logs/update_prescence_worker.log')
 
 
 class PresenceUpdater:

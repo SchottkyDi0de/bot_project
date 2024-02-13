@@ -15,7 +15,7 @@ from workers.pdb_checker import PDBWorker
 from workers.presence_update import PresenceUpdater
 from workers.db_backup_worker import DBBackupWorker
 
-_log = get_logger(__name__, 'MainLogger', 'logs/main.log')
+_log = get_logger(__file__, 'MainLogger', 'logs/main.log')
 _config = Config().get()
 
 

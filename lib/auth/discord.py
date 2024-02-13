@@ -8,7 +8,7 @@ from lib.settings.settings import EnvConfig
 from lib.exceptions.api import APIError
 from lib.logger.logger import get_logger
 
-_log = get_logger(__name__, 'DiscordOAuthLogger', 'logs/discord_oauth.log')
+_log = get_logger(__file__, 'DiscordOAuthLogger', 'logs/discord_oauth.log')
 
 
 class DiscordOAuth:

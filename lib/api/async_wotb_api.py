@@ -26,7 +26,7 @@ from lib.logger.logger import get_logger
 from lib.settings.settings import Config, EnvConfig
 from lib.data_classes.db_player import DBPlayer, ImageSettings
 
-_log = get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
+_log = get_logger(__file__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
 _config = Config().get()
 
 
@@ -293,6 +293,7 @@ class API:
         region = self._reg_normalizer(region)
         async with aiohttp.ClientSession() as session:
             await self.rate_limiter.wait()
+            data = None
             if game_id is None:
                 async with session.get(url_get_id, verify_ssl=False) as response:
                     try:
@@ -313,7 +314,10 @@ class API:
                 
             async with session.get(url_get_stats, verify_ssl=False) as response:
                 try:
-                    await self.response_handler(response, check_battles=True, check_data=True)
+                    if data is None:
+                        data = await self.response_handler(response, check_battles=True, check_data=True)
+                    else:
+                        await self.response_handler(response, check_battles=True, check_data=True)
                 except Exception as e:
                     _log.debug(f'Error check player\n{traceback.format_exc()}')
                     raise e
@@ -322,6 +326,8 @@ class API:
                         data = data[[*data['data'].keys()][0]]
                     except KeyError:
                         ...
+                    
+                    pprint(data)
                     db_player = {
                             'nickname': data['nickname'],
                             'game_id': int(data['account_id']),

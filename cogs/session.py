@@ -27,7 +27,7 @@ from lib.utils.time_validator import validate
 from lib.utils.bool_to_text import bool_handler
 
 
-_log = get_logger(__name__, 'CogSessionLogger', 'logs/cog_session.log')
+_log = get_logger(__file__, 'CogSessionLogger', 'logs/cog_session.log')
 
 
 class Session(commands.Cog):
@@ -41,11 +41,11 @@ class Session(commands.Cog):
         
     @commands.slash_command(
         guild_only=True,
-        description='Autosession start',
+        description=Text().get('en').cmds.start_autosession.descr.this,
         description_localizations={
-            'ru': 'Autosession start',
-            'pl': 'Autosession start',
-            'uk': 'Autosession start'
+            'ru': Text().get('ru').cmds.start_autosession.descr.this,
+            'pl': Text().get('pl').cmds.start_autosession.descr.this,
+            'uk': Text().get('ua').cmds.start_autosession.descr.this
         }
     )
     async def start_autosession(
@@ -53,12 +53,12 @@ class Session(commands.Cog):
         ctx: commands.Context,
         timezone: Option(
             int,
-            description='TZ_Info',
+            description=Text().get('en').cmds.start_autosession.descr.sub_descr.timezone,
             default=None,
             description_localizations={
-                'ru': 'TZ_Info',
-                'pl': 'TZ_Info',
-                'uk': 'TZ_Info'
+                'ru': Text().get('ru').cmds.start_autosession.descr.sub_descr.timezone,
+                'pl': Text().get('pl').cmds.start_autosession.descr.sub_descr.timezone,
+                'uk': Text().get('ua').cmds.start_autosession.descr.sub_descr.timezone
             },
             min_value=0,
             max_value=12,
@@ -66,14 +66,14 @@ class Session(commands.Cog):
             ),
         restart_time: Option(
             str,
-            description='R_Time',
+            description=Text().get('en').cmds.start_autosession.descr.sub_descr.restart_time,
             default=None,
             description_localizations={
-                'ru': 'R_Time',
-                'pl': 'R_Time',
-                'uk': 'R_Time'
+                'ru': Text().get('ru').cmds.start_autosession.descr.sub_descr.restart_time,
+                'pl': Text().get('pl').cmds.start_autosession.descr.sub_descr.restart_time,
+                'uk': Text().get('ua').cmds.start_autosession.descr.sub_descr.restart_time
             },
-            lenght=5,
+            length=5,
             required=False
             )
         ):
@@ -142,7 +142,7 @@ class Session(commands.Cog):
         
     @commands.slash_command(
         guild_only=True, 
-        description=Text().get().cmds.start_session.descr.this,
+        description=Text().get('en').cmds.start_session.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.start_session.descr.this,
             'pl': Text().get('pl').cmds.start_session.descr.this,
@@ -174,7 +174,7 @@ class Session(commands.Cog):
 
     @commands.slash_command(
             guild_only=True, 
-            description=Text().get().cmds.get_session.descr.this,
+            description=Text().get('en').cmds.get_session.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.get_session.descr.this,
                 'pl': Text().get('pl').cmds.get_session.descr.this,
@@ -229,7 +229,7 @@ class Session(commands.Cog):
 
     @commands.slash_command(
             guild_only=True, 
-            description='None',
+            description=Text().get('en').cmds.session_state.descr.this,
             description_localizations={
                 'ru' : Text().get('ru').cmds.session_state.descr.this,
                 'pl' : Text().get('pl').cmds.session_state.descr.this,

@@ -9,7 +9,7 @@ from lib.exceptions import data_parser
 from lib.logger import logger
 import traceback
 
-_log = logger.get_logger(__name__, 'DataParserLogger', 'logs/data_parser.log')
+_log = logger.get_logger(__file__, 'DataParserLogger', 'logs/data_parser.log')
 _tdb = TanksDB()
 
 def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:

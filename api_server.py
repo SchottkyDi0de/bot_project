@@ -23,7 +23,7 @@ _pdb = PlayersDB()
 _config = EnvConfig()
 _api = API()
 
-_log = get_logger(__name__, 'ServerLogger', 'logs/server.log')
+_log = get_logger(__file__, 'ServerLogger', 'logs/server.log')
 
 app = FastAPI(docs_url='/bot/api/docs')
 

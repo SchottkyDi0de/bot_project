@@ -46,8 +46,8 @@ class Text():
         if member_lang is not None:
             self.load(member_lang)
         else:
-            if ctx.interaction.locale in list(_config.default.locale_alliases.keys()):
-                self.load(_config.default.locale_alliases[ctx.interaction.locale])
+            if ctx.interaction.locale in list(_config.default.locale_aliases.keys()):
+                self.load(_config.default.locale_aliases[ctx.interaction.locale])
             else:
                 self.load(self.default_lang)
     

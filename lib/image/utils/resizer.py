@@ -2,7 +2,7 @@ from PIL import Image, ImageFilter
 
 from lib.logger.logger import get_logger
 
-_log = get_logger(__name__, 'ImageUtilsResizerLogger', 'logs/image_utils_resizer.log')
+_log = get_logger(__file__, 'ImageUtilsResizerLogger', 'logs/image_utils_resizer.log')
 
 
 class ResizeMode:

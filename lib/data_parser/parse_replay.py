@@ -11,7 +11,7 @@ from lib.exceptions.data_parser import DataParserError
 from lib.logger.logger import get_logger
 from lib.replay_parser.parser import ReplayParser
 
-_log = get_logger(__name__, 'ReplayParserLogger', 'logs/replay_parser.log')
+_log = get_logger(__file__, 'ReplayParserLogger', 'logs/replay_parser.log')
 
 
 class Maps(Enum):

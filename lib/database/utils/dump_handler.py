@@ -7,7 +7,7 @@ from pymongo import MongoClient
 
 from lib.logger.logger import get_logger
 
-_log = get_logger(__name__, 'DumpHandlerLogger', 'logs/dump_handler.log')
+_log = get_logger(__file__, 'DumpHandlerLogger', 'logs/dump_handler.log')
 
 
 class BackUp:

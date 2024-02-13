@@ -3,7 +3,7 @@ import traceback
 from discord.ext import commands
 from lib.logger.logger import get_logger
 
-_log = get_logger(__name__, 'AuthCogLogger', 'logs/auth_cog_logs.log')
+_log = get_logger(__file__, 'AuthCogLogger', 'logs/auth_cog_logs.log')
 
 class Auth(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:

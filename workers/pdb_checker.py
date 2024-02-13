@@ -8,7 +8,7 @@ from lib.database.players import PlayersDB
 from lib.logger.logger import get_logger
 from lib.utils.time_converter import TimeConverter
 
-_log = get_logger(__name__, 'WorkerPDBLogger', 'logs/worker_pdb.log')
+_log = get_logger(__file__, 'WorkerPDBLogger', 'logs/worker_pdb.log')
 
 
 class PDBWorker:
