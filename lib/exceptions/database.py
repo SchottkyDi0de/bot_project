@@ -18,3 +18,6 @@ class MemberNotVerified(DatabaseError):
 
 class OperationAccessDenied(DatabaseError):
     pass
+
+class AutosessionNotFound(DatabaseError):
+    pass

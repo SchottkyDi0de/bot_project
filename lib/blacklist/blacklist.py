@@ -2,6 +2,18 @@ from discord.ext.commands import Context
 from lib.exceptions.blacklist import UserBanned
 
 def check_user(ctx: Context):
+    """
+    Checks if the user is in the block list and raises UserBanned exception if they are.
+
+    Args:
+        ctx (Context): The context object containing information about the user.
+
+    Raises:
+        UserBanned: If the user is in the block list.
+
+    Returns:
+        None
+    """
     if ctx.author.id in block_list:
         raise UserBanned
     else:

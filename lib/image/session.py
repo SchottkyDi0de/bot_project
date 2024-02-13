@@ -1,28 +1,31 @@
+import base64
+from enum import Enum
 from io import BytesIO
 from time import time
 from typing import Dict
-from enum import Enum
-import base64
+
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 from discord.ext import commands
 
-from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
-
-from lib.exceptions.database import TankNotFoundInTankopedia
-from lib.image.common import Colors, Fonts, ValueNormalizer
-from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import ImageSettings
-from lib.data_classes.session import SessionDiffData
-from lib.utils.singleton_factory import singleton
-from lib.image.for_iamge.icons import StatsIcons
+from lib.data_classes.session import TankSessionData
 from lib.data_classes.db_server import ServerSettings
-from lib.database.tankopedia import TanksDB
+from lib.data_classes.session import SessionDiffData
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
+from lib.image.for_image.watermark import Watermark
+from lib.image.common import ValueNormalizer
+from lib.image.for_image.colors import Colors
+from lib.image.for_image.fonts import Fonts
+from lib.image.for_image.icons import StatsIcons
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
+from lib.utils.singleton_factory import singleton
+from lib.image.for_image.flags import Flags
 
-_log = get_logger(__name__, 'ImageSessionLogger', 'logs/image_session.log')
+_log = get_logger(__file__, 'ImageSessionLogger', 'logs/image_session.log')
 _config = Config().get()
 
 
@@ -31,20 +34,6 @@ class BlockTypes(Enum):
     rating_stats = 1
     full_tank_stats = 2
     short_tank_stats = 3
-
-
-class Fonts():
-    """A class that holds different font styles for the images."""
-
-    roboto = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=28)  # Roboto font with size 28
-    roboto_25 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=25)  # Roboto font with size 25
-    roboto_medium = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=22)  # Roboto font with size 22
-    roboto_small = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=18)  # Roboto font with size 18
-    roboto_small2 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=15)  # Roboto font with size 15
-    roboto_40 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=40)  # Roboto font with size 40
-    roboto_icons = ImageFont.truetype('res/fonts/Roboto-icons.ttf', size=22)  # Roboto font with size 28
-    point = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=100)  # Roboto font with size 100
-
 
 class Leagues:
     """A class that holds different league images."""
@@ -73,7 +62,7 @@ class RelativeCoordinates():
     def blocks_labels(self, offset_y):
         return (self.center_x, offset_y + 15)
 
-        # Main stats lables position in the stats block
+        # Main stats labels position in the stats block
     def main_stast_labels(self, offset_y) -> Dict[str, tuple]:
         return {
             'winrate': (150, offset_y + 196),  # Winrate label
@@ -170,35 +159,35 @@ class RelativeCoordinates():
             'battles': (553, 155 + offset_y),  # Battles label
         }
         
-    def short_tank_stats(self, offset_y):
+    def short_tank_stats(self, offset_y: int):
         return {
             'winrate': (150, 90 + offset_y),  # Winrate label
             'avg_damage': (self.center_x, 90 + offset_y),  # Average damage label
             'battles': (553, 90 + offset_y),  # Battles label
         }
         
-    def tank_stats(self, offset_y):
+    def tank_stats(self, offset_y: int):
         return {
             'winrate': (150, 105 + offset_y),  # Winrate stat
             'avg_damage': (self.center_x, 105 + offset_y),  # Average damage stat
             'battles': (553, 105 + offset_y),  # Battles stat
         }
         
-    def tank_session_stats(self, offset_y):
+    def tank_session_stats(self, offset_y: int):
         return {
             'winrate': (150, 150 + offset_y),  # Winrate session stats
             'avg_damage': (self.center_x, 150 + offset_y),  # Average damage session stats
             'battles': (553, 150 + offset_y),  # Battles session stats
         }
         
-    def tank_diff_stats(self, offset_y):
+    def tank_diff_stats(self, offset_y: int):
         return {
             'winrate': (150, 185 + offset_y),  # Winrate difference stats
             'avg_damage': (self.center_x, 185 + offset_y),  # Average damage difference stats
             'battles': (553, 185 + offset_y),  # Battles difference stats
         }
         
-    def short_tank_session_stats(self, offset_y):
+    def short_tank_session_stats(self, offset_y: int):
         return {
             'winrate': (150, 120 + offset_y),  # Winrate session stats
             'avg_damage': (self.center_x, 120 + offset_y),  # Average damage session stats
@@ -212,7 +201,7 @@ class DiffValues():
         Initializes a DiffValues object with the given diff_data.
 
         Args:
-            diff_data (SesionDiffData): The diff_data object containing the differences.
+            diff_data (SessionDiffData): The diff_data object containing the differences.
 
         Returns:
             None
@@ -220,24 +209,25 @@ class DiffValues():
         self.diff_data = diff_data
         self.val_normalizer = ValueNormalizer()
         self.main = {
-            'winrate': self.vlue_add_plus(diff_data.main_diff.winrate) + self.val_normalizer.winrate(diff_data.main_diff.winrate),
-            'avg_damage': self.vlue_add_plus(diff_data.main_diff.avg_damage) + self.val_normalizer.other(diff_data.main_diff.avg_damage),
-            'battles': self.vlue_add_plus(diff_data.main_diff.battles) + self.val_normalizer.other(diff_data.main_diff.battles)
+            'winrate': self.value_add_plus(diff_data.main_diff.winrate) + self.val_normalizer.winrate(diff_data.main_diff.winrate),
+            'avg_damage': self.value_add_plus(diff_data.main_diff.avg_damage) + self.val_normalizer.other(diff_data.main_diff.avg_damage),
+            'battles': self.value_add_plus(diff_data.main_diff.battles) + self.val_normalizer.other(diff_data.main_diff.battles)
         }
         self.rating = {
-            'winrate': self.vlue_add_plus(diff_data.rating_diff.winrate) + self.val_normalizer.winrate(diff_data.rating_diff.winrate),
-            'rating': self.vlue_add_plus(diff_data.rating_diff.rating) + self.val_normalizer.other(diff_data.rating_diff.rating),
-            'battles': self.vlue_add_plus(diff_data.rating_diff.battles) + self.val_normalizer.other(diff_data.rating_diff.battles)
+            'winrate': self.value_add_plus(diff_data.rating_diff.winrate) + self.val_normalizer.winrate(diff_data.rating_diff.winrate),
+            'rating': self.value_add_plus(diff_data.rating_diff.rating) + self.val_normalizer.other(diff_data.rating_diff.rating),
+            'battles': self.value_add_plus(diff_data.rating_diff.battles) + self.val_normalizer.other(diff_data.rating_diff.battles)
         }
         
-    def tank_values(self, tank_index = 0):
+    def tank_values(self, tank_id: int | str):
+        tank_id = str(tank_id)
         return {
-            'winrate': self.vlue_add_plus(self.diff_data.tank_stats[tank_index].d_winrate) + self.val_normalizer.winrate(self.diff_data.tank_stats[tank_index].d_winrate),
-            'avg_damage': self.vlue_add_plus(self.diff_data.tank_stats[tank_index].d_avg_damage) + self.val_normalizer.other(self.diff_data.tank_stats[tank_index].d_avg_damage),
-            'battles': self.vlue_add_plus(self.diff_data.tank_stats[tank_index].d_battles) + self.val_normalizer.other(self.diff_data.tank_stats[tank_index].d_battles)
+            'winrate': self.value_add_plus(self.diff_data.tank_stats[tank_id].d_winrate) + self.val_normalizer.winrate(self.diff_data.tank_stats[tank_id].d_winrate),
+            'avg_damage': self.value_add_plus(self.diff_data.tank_stats[tank_id].d_avg_damage) + self.val_normalizer.other(self.diff_data.tank_stats[tank_id].d_avg_damage),
+            'battles': self.value_add_plus(self.diff_data.tank_stats[tank_id].d_battles) + self.val_normalizer.other(self.diff_data.tank_stats[tank_id].d_battles)
         }
 
-    def vlue_add_plus(self, value: int | float) -> str:
+    def value_add_plus(self, value: int | float) -> str:
         """
         Determines if the given value is positive or negative and returns the corresponding symbol.
 
@@ -268,16 +258,17 @@ class SessionValues():
             'battles': self.val_normalizer.other(session_data.rating_session.battles, True)
         }
 
-    def tank_values(self, tank_index = 0):
+    def tank_values(self, tank_id: int | str):
+        tank_id = str(tank_id)
         return {
-            'winrate': self.val_normalizer.winrate(self.session_data.tank_stats[tank_index].s_winrate, True),
-            'avg_damage': self.val_normalizer.other(self.session_data.tank_stats[tank_index].s_avg_damage, True),
-            'battles': self.val_normalizer.other(self.session_data.tank_stats[tank_index].s_battles, True)
+            'winrate': self.val_normalizer.winrate(self.session_data.tank_stats[tank_id].s_winrate, True),
+            'avg_damage': self.val_normalizer.other(self.session_data.tank_stats[tank_id].s_avg_damage, True),
+            'battles': self.val_normalizer.other(self.session_data.tank_stats[tank_id].s_battles, True)
         }
 
 
 class Values():
-    def __init__(self, data: PlayerGlobalData, session_diff: SessionDiffData, tank_ids: list) -> None:
+    def __init__(self, data: PlayerGlobalData, session_diff: SessionDiffData) -> None:
         """
         Initializes a Values object.
 
@@ -309,8 +300,7 @@ class Values():
             'battles': self.val_normalizer.other(stats_data.rating.battles)
         }
 
-    def get_tank_stats(self, tank_index: int):
-        tank_id = self.session_diff.tank_stats[tank_index].tank_id
+    def get_tank_stats(self, tank_id: int | str):
         return {
             'winrate': self.val_normalizer.winrate(self.tank_data[str(tank_id)].all.winrate),
             'avg_damage': self.val_normalizer.other(self.tank_data[str(tank_id)].all.avg_damage),
@@ -438,14 +428,6 @@ class LayoutDefiner:
                 
         return self.layout_map
 
-
-class Flags():
-    eu = Image.open('res/image/flags/eu.png', formats=['png'])
-    usa = Image.open('res/image/flags/usa.png', formats=['png'])
-    china = Image.open('res/image/flags/china.png', formats=['png'])
-    ru = Image.open('res/image/flags/ru.png', formats=['png'])
-
-
 @singleton
 class ImageGen():
     leagues = Leagues()
@@ -479,14 +461,14 @@ class ImageGen():
             image_settings: ImageSettings,
             server_settings: ServerSettings,
             test = False, 
-            debug_label = True
+            debug_label = False
             ):
         """
         Generate the image for the given player's session stats.
 
         Args:
             data (PlayerGlobalData): The global data of the player.
-            diff_data (SesionDiffData): The diff data of the session.
+            diff_data (SessionDiffData): The diff data of the session.
             test (bool): If True, the image will be displayed for testing purposes. 
 
         Returns:
@@ -501,32 +483,14 @@ class ImageGen():
         self.data = data
         self.diff_values = DiffValues(diff_data)
         self.session_values = SessionValues(diff_data)
-        self.values = Values(data, diff_data ,self.diff_data.tank_ids)
+        self.values = Values(data, diff_data)
         self.current_offset = 0
-        self.tank_names = []
-        self.tank_stats_blocks_count = 0
-        
-        for i in self.diff_data.tank_stats:
-            try:
-                tank_type = TanksDB().get_tank_by_id(self.diff_data.tank_ids[0])['type']
-                tank_tier = TanksDB().get_tank_by_id(self.diff_data.tank_ids[0])['tier']
-            except TankNotFoundInTankopedia:
-                _log.debug(f'Tank with id {i} not found')
-                tank_tier = None
-                tank_type = None
-            try:
-                self.tank_names.append(
-                    self.tank_type_handler(tank_type) +
-                    TanksDB().get_tank_by_id(str(i.tank_id))['name'] +
-                    self.tank_tier_handler(tank_tier)
-                )
-            except TankNotFoundInTankopedia:
-                self.tank_names.append('Unknown')
-                
+        self.tank_iterator = iter(diff_data.tank_stats)
+
         user_bg = self.pdb.get_member_image(ctx.author.id) is not None
         server_bg = self.sdb.get_server_image(ctx.guild.id) is not None
         allow_custom_background = server_settings.allow_custom_backgrounds
-    
+
         if image_settings.use_custom_bg or server_bg:
             if user_bg and allow_custom_background and image_settings.use_custom_bg:
                 image_bytes = base64.b64decode(self.pdb.get_member_image(ctx.author.id))
@@ -553,9 +517,9 @@ class ImageGen():
                 self.image.convert('RGBA').save(_config.image.default_bg_path)
                 self.load_image()
 
-        strt_time = time()
+        start_time = time()
         self.image = self.image.convert('RGBA')
-        self.draw_backround(self.layout_map)
+        self.draw_background(self.layout_map)
         self.img_size = self.image.size
         img_draw = ImageDraw.Draw(self.image)
 
@@ -573,33 +537,34 @@ class ImageGen():
             self.blocks -= 1
             self.current_offset += StatsBlockSize.rating_stats + BlockOffsets.block_indent
 
-        for i in range(self.blocks):
-            self.draw_tank_stats_block(img_draw)
+        for _ in range(self.blocks):
+            curr_tank = self.diff_data.tank_stats[next(self.tank_iterator)]
+            self.draw_tank_stats_block(img_draw, curr_tank)
             self.current_offset += StatsBlockSize.full_tank_stats + BlockOffsets.block_indent
             self.blocks -= 1
-            self.tank_stats_blocks_count += 1
         
-        for i in range(self.small_blocks):
-            self.draw_short_tank_stats_block(img_draw)
+        for _ in range(self.small_blocks):
+            curr_tank = self.diff_data.tank_stats[next(self.tank_iterator)]
+            self.draw_short_tank_stats_block(img_draw, curr_tank)
             self.small_blocks -= 1
             self.current_offset += StatsBlockSize.short_tank_stats + BlockOffsets.block_indent
-            self.tank_stats_blocks_count += 1
         
         if not self.image_settings.disable_flag:
             self.draw_flag()
-
-        if test:
-            self.image.show()
+            
+        self.draw_watermark()
             
         if debug_label:
             self.draw_debug_label(img_draw)
-        
 
+        if test:
+            self.image.show()
+            return
+        
         bin_image = BytesIO()
         self.image.save(bin_image, 'PNG')
         bin_image.seek(0)
-        _log.debug('Image was sent in %s sec.', round(time() - strt_time, 4))
-
+        _log.debug('Image was sent in %s sec.', round(time() - start_time, 4))
         return bin_image
     
     def draw_main_stats_block(self, image_draw: ImageDraw.ImageDraw) -> None:
@@ -613,28 +578,27 @@ class ImageGen():
     def draw_rating_stats_block(self, image_draw: ImageDraw.ImageDraw) -> None:
         self.draw_block_label(image_draw, self.text.for_image.rating)
         self.draw_rating_icons()
-        self.draw_rating_icon()
+        self.draw_rating_league()
         self.draw_rating_labels(image_draw)
         self.draw_rating_stats(image_draw)
         self.draw_rating_session_stats(image_draw)
         self.draw_rating_diff_stats(image_draw)
         
-    def draw_tank_stats_block(self, image_draw: ImageDraw.ImageDraw) -> None:
-        self.draw_tank_block_label(image_draw, self.tank_names[self.tank_stats_blocks_count])
+    def draw_tank_stats_block(self, image_draw: ImageDraw.ImageDraw, curr_tank: TankSessionData) -> None:
+        self.draw_tank_block_label(image_draw, curr_tank)
         self.draw_tank_stats_icons()
         self.draw_tank_labels(image_draw)
-        self.draw_tank_stats(image_draw)
-        self.draw_tank_session_stats(image_draw)
-        self.draw_tank_diff_stats(image_draw)
+        self.draw_tank_stats(image_draw, curr_tank)
+        self.draw_tank_session_stats(image_draw, curr_tank)
+        self.draw_tank_diff_stats(image_draw, curr_tank)
         
-    def draw_short_tank_stats_block(self, image_draw: ImageDraw.ImageDraw) -> None:
-        self.draw_tank_block_label(image_draw, self.tank_names[self.tank_stats_blocks_count])
+    def draw_short_tank_stats_block(self, image_draw: ImageDraw.ImageDraw, curr_tank: TankSessionData) -> None:
+        self.draw_tank_block_label(image_draw, curr_tank)
         self.draw_tank_stats_icons()
         self.draw_short_tank_labels(image_draw)
-        self.draw_short_tank_stats(image_draw)
-        self.draw_short_tank_session_stats(image_draw)
+        self.draw_short_tank_stats(image_draw, curr_tank)
+        self.draw_short_tank_session_stats(image_draw, curr_tank)
 
-        
     def draw_main_stats_icons(self) -> None:
         for i in self.coord.main_stats_icons(self.current_offset, (0, 0)).keys():
             icon: Image.Image = getattr(StatsIcons, i)
@@ -643,7 +607,7 @@ class ImageGen():
                 self.coord.main_stats_icons(self.current_offset, icon.size)[i],
                 icon
             )
-            
+        
     def draw_rating_icons(self) -> None:
         for i in self.coord.rating_stats_icons(self.current_offset, (0, 0)).keys():
             icon: Image.Image = getattr(StatsIcons, i)
@@ -660,8 +624,8 @@ class ImageGen():
                 icon,
                 self.coord.tank_stats_icons(self.current_offset, icon.size)[i],
                 icon
-            )
-            
+        )
+        
     def draw_block_label(self, img_draw: ImageDraw.ImageDraw, text: str) -> None:
         img_draw.text(
             self.coord.blocks_labels(self.current_offset),
@@ -671,16 +635,16 @@ class ImageGen():
             fill=self.image_settings.main_text_color
         )
         
-    def draw_tank_block_label(self, img_draw: ImageDraw.ImageDraw, text: str) -> None:
+    def draw_tank_block_label(self, img_draw: ImageDraw.ImageDraw, curr_tank: TankSessionData) -> None:
         img_draw.text(
             self.coord.blocks_labels(self.current_offset),
-            text,
+            f'{self.tank_type_handler(curr_tank.tank_type)} {curr_tank.tank_name} {self.tank_tier_handler(curr_tank.tank_tier)}',
             font=self.fonts.roboto_icons,
             anchor='mm',
             fill=self.image_settings.main_text_color
         )
     
-    def draw_backround(self, rectangle_map: Image.Image) -> None:
+    def draw_background(self, rectangle_map: Image.Image) -> None:
         self.image = self.image.crop((0, 0, rectangle_map.size[0], rectangle_map.size[1]))
         if self.image_settings.disable_stats_blocks:
             return
@@ -688,10 +652,10 @@ class ImageGen():
         bg = self.image.copy()
         gaussian_filter = ImageFilter.GaussianBlur(radius=5)
 
-        if not self.image_settings.glass_effect == 0:
+        if self.image_settings.glass_effect > 0:
             bg = bg.filter(gaussian_filter)
-        if not self.image_settings.blocks_bg_brightness == 0:
-            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_brightness)
+        if self.image_settings.blocks_bg_opacity > 0:
+            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_opacity)
 
         self.image.paste(bg, (0, 0), rectangle_map)
 
@@ -709,6 +673,13 @@ class ImageGen():
             fill=Colors.red
         )
         
+    def draw_watermark(self):
+        self.image.paste(Watermark.v1, (
+            self.img_size[0] - 40, 
+            self.img_size[1] // 2 - Watermark.v1.size[1] // 2
+            ), 
+        Watermark.v1)
+        
     def tank_type_handler(self, tank_type: str):
         match tank_type:
             case 'heavyTank':
@@ -720,7 +691,7 @@ class ImageGen():
             case 'AT-SPG':
                 return 'ﬁ • '
             case _:
-                _log.error(f'Ignoring Exception: Invalid tank type: {tank_type}')
+                _log.warning(f'Ignoring Exception: Invalid tank type: {tank_type}')
                 return '� • ' 
             
     def tank_tier_handler(self, tier: int):
@@ -746,7 +717,7 @@ class ImageGen():
             case 10:
                 return ' • X'
             case _:
-                _log.error(f'Ignoring Exception: Invalid tank tier: {tier}')
+                _log.warning(f'Ignoring Exception: Invalid tank tier: {tier}')
                 return ' • ?'
 
     def draw_nickname(self, img: ImageDraw.ImageDraw):
@@ -790,13 +761,14 @@ class ImageGen():
                 anchor='ma',
                 fill=self.image_settings.nickname_color
             )
-        
-        img.text(
-            (self.img_size[0]//2, 55),
-            text=f'ID: {str(self.data.id)}',
-            font=self.fonts.roboto_small2,
-            anchor='ma',
-            fill=Colors.l_grey)
+            
+        if not self.image_settings.hide_nickname:
+            img.text(
+                (self.img_size[0]//2, 55),
+                text=f'ID: {str(self.data.id)}',
+                font=self.fonts.roboto_small2,
+                anchor='ma',
+                fill=Colors.l_grey)
 
     def draw_main_labels(self, img: ImageDraw.ImageDraw):
         coords = self.coord.main_stast_labels(self.current_offset)
@@ -881,7 +853,7 @@ class ImageGen():
                 align='center',
                 fill=Colors.l_grey)
 
-    def draw_rating_icon(self) -> None:
+    def draw_rating_league(self) -> None:
         coords = self.coord.rating_league_icon(self.current_offset)
         rt_img = self.leagues.empty
         rating = self.data.data.statistics.rating.rating
@@ -936,60 +908,60 @@ class ImageGen():
             )
         self._rating_label_handler(img)
 
-    def draw_tank_stats(self, img: ImageDraw.ImageDraw):
+    def draw_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.tank_stats(self.current_offset)
         for i in coords.keys():
             img.text(
                 coords[i],
-                text=self.values.get_tank_stats(self.tank_stats_blocks_count)[i],
+                text=self.values.get_tank_stats(curr_tank.tank_id)[i],
                 font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_color
             )
     
-    def draw_short_tank_stats(self, img: ImageDraw.ImageDraw):
+    def draw_short_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.short_tank_stats(self.current_offset)
-        for i, key in enumerate(coords.keys()):
+        for key in coords.keys():
             img.text(
                 coords[key],
-                text=self.values.get_tank_stats(self.tank_stats_blocks_count)[key],
+                text=self.values.get_tank_stats(curr_tank.tank_id)[key],
                 font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_color
             )
 
-    def draw_short_tank_session_stats(self, img: ImageDraw.ImageDraw):
+    def draw_short_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.short_tank_session_stats(self.current_offset)
-        for i in coords.keys():
+        for key in coords.keys():
             img.text(
-                coords[i],
-                text=self.session_values.tank_values(self.tank_stats_blocks_count)[i],
+                coords[key],
+                text=self.session_values.tank_values(curr_tank.tank_id)[key],
                 font=self.fonts.roboto_25,
                 anchor='ma',
                 align='center',
-                fill=self.value_colors(getattr(self.diff_data.tank_stats[self.tank_stats_blocks_count], f'd_{i}'))
-                )
-
-    def draw_tank_diff_stats(self, img: ImageDraw.ImageDraw):
+                fill=self.value_colors(getattr(curr_tank, f'd_{key}'))
+            )
+                
+    def draw_tank_diff_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.tank_diff_stats(self.current_offset)
-        for i in coords.keys():
+        for key in coords.keys():
             img.text(
-                coords[i],
-                text=self.diff_values.tank_values(self.tank_stats_blocks_count)[i],
+                coords[key],
+                text=self.diff_values.tank_values(curr_tank.tank_id)[key],
                 font=self.fonts.roboto_medium,
                 anchor='ma',
                 align='center',
-                fill=self.value_colors(getattr(self.diff_data.tank_stats[self.tank_stats_blocks_count], f'd_{i}'))
+                fill=self.value_colors(getattr(curr_tank, f'd_{key}'))
             )
 
-    def draw_tank_session_stats(self, img: ImageDraw.ImageDraw):
+    def draw_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.tank_session_stats(self.current_offset)
         for i in coords.keys():
             img.text(
                 coords[i],
-                text=self.session_values.tank_values(self.tank_stats_blocks_count)[i],
+                text=self.session_values.tank_values(curr_tank.tank_id)[i],
                 font=self.fonts.roboto_25,
                 anchor='ma',
                 align='center',
@@ -1020,7 +992,6 @@ class ImageGen():
             )
     
     def draw_flag(self) -> None:
-        # self.data.region = 'asia' - Only for test
         match self.data.region:
             case 'ru':
                 self.image.paste(self.flags.ru, (10, 10), self.flags.ru)
@@ -1036,18 +1007,8 @@ class ImageGen():
             return Colors.grey
         value = round(value, 2)
         if value > 0:
-            return Colors.green
+            return self.image_settings.positive_stats_color
         if value < 0:
-            return Colors.red
+            return self.image_settings.negative_stats_color
         if value == 0:
             return Colors.grey
-
-# if __name__ == '__main__':
-
-#     from lib.api.async_wotb_api import test
-#     from lib.data_parser import parse_data
-
-#     data = test('VegaS_202', region='eu')
-#     player_stats = PlayerGlobalData(PlayersDB().get_member_last_stats(683407510820225098))
-#     session_stats = parse_data.get_session_stats(player_stats, data)
-#     ImageGen().generate(data=data, diff_data=session_stats, test=True)

@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel
 
 class TankSessionData(BaseModel):
@@ -57,5 +55,4 @@ class SessionDiffData(BaseModel):
     main_session: MainSession
     rating_diff: RatingDiff
     rating_session: RatingSession
-    tank_stats: List[TankSessionData]
-    tank_ids: List[int]
+    tank_stats: dict[str, TankSessionData]

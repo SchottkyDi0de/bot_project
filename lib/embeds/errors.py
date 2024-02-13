@@ -78,7 +78,7 @@ class ErrorMSG:
             colour=Colour.red()
         )
     
-    def set_lang_unregistred(self) -> Embed:
+    def set_lang_unregistered(self) -> Embed:
         return Embed(
             title=Text().get().frequent.errors.error,
             description=Text().get().cmds.set_lang.errors.player_not_registred,

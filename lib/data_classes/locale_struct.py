@@ -46,6 +46,7 @@ class ForImage(BaseModel):
 
 
 class MapNames(BaseModel):
+    rockfield: str
     desert_sands: str
     middleburg: str
     copperfield: str
@@ -55,7 +56,7 @@ class MapNames(BaseModel):
     fort_despair: str
     himmelsdorf: str
     black_goldville: str
-    basis_palm: str
+    oasis_palm: str
     ghost_factory: str
     molendijk: str
     port_bay: str
@@ -72,6 +73,7 @@ class MapNames(BaseModel):
     normandy: str
     yamato_harbor: str
     wasteland: str
+    lagoon: str
     unknown: str
 
 
@@ -107,6 +109,7 @@ class Info(BaseModel):
 
 
 class TimeUnits(BaseModel):
+    d: str
     h: str
     m: str
     s: str
@@ -264,8 +267,8 @@ class StartSession(BaseModel):
 
 
 class SubDescr3(BaseModel):
-    image: str
-    server: str
+    timezone: str
+    restart_time: str
 
 
 class Descr7(BaseModel):
@@ -274,6 +277,28 @@ class Descr7(BaseModel):
 
 
 class Errors7(BaseModel):
+    uncorrect_r_time: str
+
+
+class StartAutosession(BaseModel):
+    descr: Descr7
+    errors: Errors7
+    info: Info6
+    items: str
+
+
+class SubDescr4(BaseModel):
+    image: str
+    server: str
+    resize_mode: str
+
+
+class Descr8(BaseModel):
+    this: str
+    sub_descr: SubDescr4
+
+
+class Errors8(BaseModel):
     player_not_registred: str
     permission_denied: str
     file_error: str
@@ -282,18 +307,18 @@ class Errors7(BaseModel):
     small_resolution: str
 
 
-class Info7(BaseModel):
+class Info8(BaseModel):
     set_background_ok: str
 
 
 class SetBackground(BaseModel):
-    descr: Descr7
-    errors: Errors7
-    info: Info7
+    descr: Descr8
+    errors: Errors8
+    info: Info8
     items: str
 
 
-class SubDescr4(BaseModel):
+class SubDescr5(BaseModel):
     use_custom_bg: str
     glass_effect: str
     blocks_bg_brightness: str
@@ -307,26 +332,7 @@ class SubDescr4(BaseModel):
     hide_clan_tag: str
     disable_stats_blocks: str
     disable_rating_stats: str
-
-
-class Descr8(BaseModel):
-    this: str
-    sub_descr: SubDescr4
-
-
-class Info8(BaseModel):
-    set_ok: str
-
-
-class ImageSettings(BaseModel):
-    descr: Descr8
-    errors: str
-    info: Info8
-    items: str
-
-
-class SubDescr5(BaseModel):
-    allow_custom_backgrounds: str
+    disable_cache_label: str
 
 
 class Descr9(BaseModel):
@@ -334,84 +340,119 @@ class Descr9(BaseModel):
     sub_descr: SubDescr5
 
 
-class Errors8(BaseModel):
-    permission_denied: str
+class Errors9(BaseModel):
+    color_error: str
+    changes_not_found: str
 
 
-class ServerSettings(BaseModel):
+class Info9(BaseModel):
+    set_ok: str
+    preview: str
+
+
+class Items1(BaseModel):
+    color_error_note: str
+    color_error_footer: str
+
+
+class ImageSettings(BaseModel):
     descr: Descr9
-    errors: Errors8
-    info: Info8
-    items: str
+    errors: Errors9
+    info: Info9
+    items: Items1
+
+
+class SubDescr6(BaseModel):
+    allow_custom_backgrounds: str
 
 
 class Descr10(BaseModel):
     this: str
-    sub_descr: str
+    sub_descr: SubDescr6
+
+
+class Errors10(BaseModel):
+    permission_denied: str
 
 
 class Info10(BaseModel):
+    set_ok: str
+
+
+class ServerSettings(BaseModel):
+    descr: Descr10
+    errors: Errors10
+    info: Info10
+    items: str
+
+
+class Descr11(BaseModel):
+    this: str
+    sub_descr: str
+
+
+class Info11(BaseModel):
     get_ok: str
 
 
-class Items1(BaseModel):
-    settings_list: str
+class Items2(BaseModel):
+    use_custom_bg: str
+    glass_effect: str
+    blocks_bg_opacity: str
+    nickname_color: str
+    clan_tag_color: str
+    stats_color: str
+    main_text_color: str
+    stats_text_color: str
+    negative_stats_color: str
+    positive_stats_color: str
+    disable_flag: str
+    hide_nickname: str
+    hide_clan_tag: str
+    disable_stats_blocks: str
+    disable_rating_stats: str
+    disable_cache_label: str
+    stats_blocks_disabled: str
 
 
 class ImageSettingsGet(BaseModel):
-    descr: Descr10
+    descr: Descr11
     errors: str
-    info: Info10
-    items: Items1
+    info: Info11
+    items: Items2
+
+
+class Items3(BaseModel):
+    settings_list: str
 
 
 class ServerSettingsGet(BaseModel):
-    descr: Descr10
+    descr: Descr11
     errors: str
-    info: Info10
-    items: Items1
+    info: Info11
+    items: Items3
 
 
-class Info12(BaseModel):
+class Info13(BaseModel):
     reset_ok: str
 
 
 class ServerSettingsReset(BaseModel):
-    descr: Descr10
+    descr: Descr11
     errors: str
-    info: Info12
+    info: Info13
     items: str
 
 
 class ImageSettingsReset(BaseModel):
-    descr: Descr10
+    descr: Descr11
     errors: str
-    info: Info12
-    items: str
-
-
-class SubDescr6(BaseModel):
-    server: str
-
-
-class Descr14(BaseModel):
-    this: str
-    sub_descr: SubDescr6
-
-
-class Info14(BaseModel):
-    unset_background_ok: str
-
-
-class ResetBackground(BaseModel):
-    descr: Descr14
-    errors: Errors8
-    info: Info14
+    info: Info13
     items: str
 
 
 class SubDescr7(BaseModel):
-    help_types: str
+    server: str
 
 
 class Descr15(BaseModel):
@@ -420,10 +461,30 @@ class Descr15(BaseModel):
 
 
 class Info15(BaseModel):
+    unset_background_ok: str
+
+
+class ResetBackground(BaseModel):
+    descr: Descr15
+    errors: Errors10
+    info: Info15
+    items: str
+
+
+class SubDescr8(BaseModel):
+    help_types: str
+
+
+class Descr16(BaseModel):
+    this: str
+    sub_descr: SubDescr8
+
+
+class Info16(BaseModel):
     send_ok: str
 
 
-class Items3(BaseModel):
+class Items4(BaseModel):
     help_types: List[str]
     help: str
     syntax: str
@@ -434,22 +495,22 @@ class Items3(BaseModel):
 
 
 class Help(BaseModel):
-    descr: Descr15
+    descr: Descr16
     errors: str
-    info: Info15
-    items: Items3
+    info: Info16
+    items: Items4
 
 
-class SubDescr8(BaseModel):
+class SubDescr9(BaseModel):
     file: str
 
 
-class Descr16(BaseModel):
+class Descr17(BaseModel):
     this: str
-    sub_descr: SubDescr8
+    sub_descr: SubDescr9
 
 
-class Errors10(BaseModel):
+class Errors12(BaseModel):
     parsing_error: str
     uncorrect_file_format: str
 
@@ -457,9 +518,10 @@ class Errors10(BaseModel):
 class Common1(BaseModel):
     win: str
     lose: str
+    draw: str
 
 
-class Items4(BaseModel):
+class Items5(BaseModel):
     avg_stats: str
     empty_player: str
     title: str
@@ -468,23 +530,23 @@ class Items4(BaseModel):
 
 
 class ParseReplay(BaseModel):
-    descr: Descr16
-    errors: Errors10
+    descr: Descr17
+    errors: Errors12
     info: str
-    items: Items4
+    items: Items5
 
 
-class Descr17(BaseModel):
+class Descr18(BaseModel):
     this: str
 
 
-class Info16(BaseModel):
+class Info17(BaseModel):
     cooldown_not_expired: str
 
 
 class Cooldown(BaseModel):
-    descr: Descr17
-    info: Info16
+    descr: Descr18
+    info: Info17
 
 
 class Cmds(BaseModel):
@@ -495,6 +557,7 @@ class Cmds(BaseModel):
     session_state: SessionState
     get_session: GetSession
     start_session: StartSession
+    start_autosession: StartAutosession
     set_background: SetBackground
     image_settings: ImageSettings
     server_settings: ServerSettings

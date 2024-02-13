@@ -7,7 +7,6 @@
 #   srv_id: "server_id: <id>"
 #
 # _Zener
-
 bot_name:
   'Blitz Statistics'
 
@@ -15,14 +14,18 @@ server:
   host: '127.0.0.1'
   port: 8000
 
-session_ttl: 86400 # in seconds
+session:
+  ttl: 172_800 # in seconds
+
+autosession:
+  ttl: 2_592_000 # in seconds
 
 default:
   prefix : '!'  # deprecated
   lang: 'en'
   available_locales: ['ru', 'en', 'pl', 'ua', 'auto']
   available_regions: ['ru', 'eu', 'na', 'asia']
-  locale_alliases: {ru: 'ru', en: 'en', pl: 'pl', uk: 'ua'}
+  locale_aliases: {ru: 'ru', en: 'en', pl: 'pl', uk: 'ua'}
 
 image:
   default_bg_path: 'res/image/default_image/default_bg.png'
@@ -31,8 +34,10 @@ internal:
   ignore_tankopedia_failures: true
 
 help_urls:
-  ru: https://github.com/SchottkyDi0de/Blitz_Statistics-docs/blob/main/docs/RU.md
-  en: https://github.com/SchottkyDi0de/Blitz_Statistics-docs/blob/main/docs/EN.md
+  ru: https://blitzhub.gitbook.io/blitz-statistics-bot/ru_docs
+  en: https://blitzhub.gitbook.io/blitz-statistics-bot/en_docs
+  ua: https://blitzhub.gitbook.io/blitz-statistics-bot/ua_docs
+  pl: https://blitzhub.gitbook.io/blitz-statistics-bot/pl_docs
 
 auth:
   wg_redirect_uri: 'http://<host>:<port>/auth/game'
@@ -58,6 +63,7 @@ game_api:
       "https://<reg_url>/wotb/account/info/\
       ?application_id=<app_id>\
       &account_id=<player_id>\
+      &extra=statistics.rating\
       &fields=-statistics.clan"
 
     get_achievements:

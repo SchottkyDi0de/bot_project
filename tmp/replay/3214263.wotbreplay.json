@@ -1,0 +1,423 @@
+{
+  "mode_map_id": 65563,
+  "timestamp_secs": 1658682936,
+  "winner_team_number": 1,
+  "author": {
+    "hitpoints_left": 585,
+    "total_credits": 10086,
+    "total_xp": 1224,
+    "n_shots": 18,
+    "n_hits": 8,
+    "n_splashes": 0,
+    "n_penetrations": 8,
+    "damage_dealt": 1729,
+    "account_id": 1005,
+    "team_number": 1
+  },
+  "room_type": 27,
+  "free_xp": 60,
+  "players": [
+    {
+      "account_id": 1685,
+      "info": {
+        "nickname": "levand_194",
+        "platoon_id": null,
+        "team": 1,
+        "clan_tag": "XYI",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://wotblitz-gc.gcdn.co/icons/avatars/Gfx/gold_eagle.png",
+            "gfx2_url": "https://wotblitz-gc.gcdn.co/icons/avatars/Gfx2/gold_eagle.png",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 1224,
+      "info": {
+        "nickname": "farming_4",
+        "platoon_id": null,
+        "team": 1,
+        "clan_tag": null,
+        "avatar": {
+          "info": {
+            "gfx_url": "https://wotblitz-gc.gcdn.co/icons/avatars/Gfx/diamond_league.png",
+            "gfx2_url": "https://wotblitz-gc.gcdn.co/icons/avatars/Gfx2/diamond_league.png",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 2478,
+      "info": {
+        "nickname": "KomuNisT1917LENINJIV",
+        "platoon_id": null,
+        "team": 2,
+        "clan_tag": null,
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_progressive_midnight_predator_10/200530_010358_331354.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_progressive_midnight_predator_10/200530_010400_843462.png",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 3194,
+      "info": {
+        "nickname": "9l_He_6eCCMepTeH",
+        "platoon_id": null,
+        "team": 1,
+        "clan_tag": "7STAR",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_owl_unique/190725_102656_012599.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_owl_unique/190725_102659_481267.png",
+            "kind": "unique"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 1005,
+      "info": {
+        "nickname": "__________vam_hana",
+        "platoon_id": null,
+        "team": 1,
+        "clan_tag": null,
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_lunar_rare/200217_074748_073494.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_lunar_rare/200217_074751_670399.png",
+            "kind": "rare"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 1732,
+      "info": {
+        "nickname": "Vanya1torasov",
+        "platoon_id": null,
+        "team": 2,
+        "clan_tag": null,
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_krisdev_legendary/191213_085929_352407.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_krisdev_legendary/191213_085931_989634.png",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 1315,
+      "info": {
+        "nickname": "Fast2009",
+        "platoon_id": null,
+        "team": 2,
+        "clan_tag": "L_D-M",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_7years_legendary/210528_151620_358184.webp",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_7years_legendary/210528_151623_763037.webp",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 777,
+      "info": {
+        "nickname": "_Ha_TTo3uTuB4uke_",
+        "platoon_id": null,
+        "team": 2,
+        "clan_tag": "MAMA",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_supremacy_legendary/201014_084131_499222.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_supremacy_legendary/201014_084134_536199.png",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 3254,
+      "info": {
+        "nickname": "Vitaliimaksimenko21",
+        "platoon_id": null,
+        "team": 2,
+        "clan_tag": null,
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_resource_removing_legendary/210224_075930_851468.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_resource_removing_legendary/210224_075934_822082.png",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 1803,
+      "info": {
+        "nickname": "Strannik19821",
+        "platoon_id": null,
+        "team": 1,
+        "clan_tag": null,
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avarar_Blitz_on_unique/200822_111019_938997.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avarar_Blitz_on_unique/200822_111023_416023.png",
+            "kind": "unique"
+          }
+        }
+      }
+    }
+  ],
+  "player_results": [
+    {
+      "result_id": 236874,
+      "info": {
+        "credits_earned": 25712,
+        "base_xp": 934,
+        "n_shots": 40,
+        "n_hits_dealt": 29,
+        "n_penetrations_dealt": 29,
+        "damage_dealt": 6381,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 0,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 0,
+        "n_enemies_damaged": 4,
+        "n_enemies_destroyed": 2,
+        "victory_points_earned": 6,
+        "victory_points_seized": 0,
+        "account_id": 1685,
+        "tank_id": 18961,
+        "mm_rating": 25.20111,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 236875,
+      "info": {
+        "credits_earned": 16353,
+        "base_xp": 379,
+        "n_shots": 14,
+        "n_hits_dealt": 14,
+        "n_penetrations_dealt": 14,
+        "damage_dealt": 4279,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 19,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 19,
+        "n_enemies_damaged": 5,
+        "n_enemies_destroyed": 1,
+        "victory_points_earned": 1,
+        "victory_points_seized": 0,
+        "account_id": 3254,
+        "tank_id": 18961,
+        "mm_rating": null,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 236876,
+      "info": {
+        "credits_earned": 16507,
+        "base_xp": 815,
+        "n_shots": 31,
+        "n_hits_dealt": 14,
+        "n_penetrations_dealt": 14,
+        "damage_dealt": 2865,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 1327,
+        "n_hits_received": 7,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 7,
+        "n_enemies_damaged": 3,
+        "n_enemies_destroyed": 3,
+        "victory_points_earned": 7,
+        "victory_points_seized": 0,
+        "account_id": 3194,
+        "tank_id": 18961,
+        "mm_rating": null,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 236867,
+      "info": {
+        "credits_earned": 18373,
+        "base_xp": 495,
+        "n_shots": 25,
+        "n_hits_dealt": 21,
+        "n_penetrations_dealt": 21,
+        "damage_dealt": 4665,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 0,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 0,
+        "n_enemies_damaged": 4,
+        "n_enemies_destroyed": 5,
+        "victory_points_earned": 5,
+        "victory_points_seized": 0,
+        "account_id": 1315,
+        "tank_id": 18961,
+        "mm_rating": 12.620779,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 236868,
+      "info": {
+        "credits_earned": 5285,
+        "base_xp": 218,
+        "n_shots": 10,
+        "n_hits_dealt": 3,
+        "n_penetrations_dealt": 3,
+        "damage_dealt": 1131,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 36,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 36,
+        "n_enemies_damaged": 3,
+        "n_enemies_destroyed": 1,
+        "victory_points_earned": 1,
+        "victory_points_seized": 0,
+        "account_id": 1732,
+        "tank_id": 18961,
+        "mm_rating": null,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 236869,
+      "info": {
+        "credits_earned": 4072,
+        "base_xp": 379,
+        "n_shots": 4,
+        "n_hits_dealt": 0,
+        "n_penetrations_dealt": 0,
+        "damage_dealt": 7,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 13,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 13,
+        "n_enemies_damaged": 1,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 0,
+        "victory_points_seized": 0,
+        "account_id": 1224,
+        "tank_id": 18961,
+        "mm_rating": 180.21619,
+        "damage_blocked": 517
+      }
+    },
+    {
+      "result_id": 236870,
+      "info": {
+        "credits_earned": 15335,
+        "base_xp": 342,
+        "n_shots": 9,
+        "n_hits_dealt": 9,
+        "n_penetrations_dealt": 9,
+        "damage_dealt": 3938,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 7,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 7,
+        "n_enemies_damaged": 5,
+        "n_enemies_destroyed": 1,
+        "victory_points_earned": 1,
+        "victory_points_seized": 0,
+        "account_id": 777,
+        "tank_id": 18961,
+        "mm_rating": null,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 236871,
+      "info": {
+        "credits_earned": 15538,
+        "base_xp": 628,
+        "n_shots": 13,
+        "n_hits_dealt": 11,
+        "n_penetrations_dealt": 11,
+        "damage_dealt": 3695,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 22,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 22,
+        "n_enemies_damaged": 3,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 0,
+        "victory_points_seized": 0,
+        "account_id": 1803,
+        "tank_id": 18961,
+        "mm_rating": null,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 236872,
+      "info": {
+        "credits_earned": 10086,
+        "base_xp": 612,
+        "n_shots": 18,
+        "n_hits_dealt": 8,
+        "n_penetrations_dealt": 8,
+        "damage_dealt": 1729,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 5,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 5,
+        "n_enemies_damaged": 3,
+        "n_enemies_destroyed": 3,
+        "victory_points_earned": 3,
+        "victory_points_seized": 0,
+        "account_id": 1005,
+        "tank_id": 18961,
+        "mm_rating": null,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 236873,
+      "info": {
+        "credits_earned": 3165,
+        "base_xp": 146,
+        "n_shots": 8,
+        "n_hits_dealt": 0,
+        "n_penetrations_dealt": 0,
+        "damage_dealt": 0,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 0,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 0,
+        "n_enemies_damaged": 0,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 0,
+        "victory_points_seized": 0,
+        "account_id": 2478,
+        "tank_id": 5233,
+        "mm_rating": null,
+        "damage_blocked": 0
+      }
+    }
+  ]
+}

@@ -9,7 +9,7 @@ from lib.logger.logger import get_logger
 from lib.database.tankopedia import TanksDB
 from lib.exceptions.database import TankNotFoundInTankopedia
 
-_log = get_logger(__name__, 'EmbedReplayBuilder', 'logs/embed_replay.log')
+_log = get_logger(__file__, 'EmbedReplayBuilder', 'logs/embed_replay.log')
 
 class EmbedReplayBuilder():
     def __init__(self):
@@ -48,7 +48,7 @@ class EmbedReplayBuilder():
         else:
             return str(value)
 
-    def nickname_cutter(self, nickname: str, max_len: int = 11) -> str:
+    def nickname_cutter(self, nickname: str, max_len: int = 15) -> str:
         return (nickname[:max_len] + '..') if len(nickname) > max_len else nickname
     
     def avg_stats_counter(self, data: ParsedReplayData, enemies: bool) -> str:
@@ -77,13 +77,13 @@ class EmbedReplayBuilder():
                 self.nickname_cutter(
                     self.text.cmds.parse_replay.items.avg_stats,
                 ),
-                length=15
+                length=19
             )+\
             self.string_len_handler(
                 str(avg_winrate),
                 length=5
             )+\
-            self.num_cutter(avg_battles)+'\n'+('.'*25)+'\n'
+            self.num_cutter(avg_battles)+'\n'+('.'*29)+'\n'
         )
         return avg_stats
     
@@ -93,7 +93,7 @@ class EmbedReplayBuilder():
         except AttributeError:
             return self.text.map_names.unknown
         
-    def get_room_name(self, room: str):
+    def get_room_type(self, room: str):
         try:
             return getattr(self.text.gamemodes, room)
         except AttributeError:
@@ -119,7 +119,7 @@ class EmbedReplayBuilder():
                     self.nickname_cutter(
                         enemy.player_info.nickname,
                     ),
-                    15
+                    19
                 )
                 winrate = self.string_len_handler(
                     str(round(enemy.statistics.all.winrate, 1)),
@@ -150,9 +150,10 @@ class EmbedReplayBuilder():
             description=insert_data(
                 self.text.cmds.parse_replay.items.description,
                 {
-                    'battle_result'     :   self.text.cmds.parse_replay.items.common.win if data.author.winner \
-                                                else self.text.cmds.parse_replay.items.common.lose,
-                    'battle_type'       :   self.get_map_name(data.room_name),
+                    'battle_result'     :   self.text.cmds.parse_replay.items.common.win if data.author.winner is True
+                                                else self.text.cmds.parse_replay.items.common.lose if data.author.winner is False else \
+                                                    self.text.cmds.parse_replay.items.common.draw,
+                    'battle_type'       :   self.get_room_type(data.room_name),
                     'tank_name'         :   self.get_tank_name(data.author.tank_id),
                     'tier'              :   self.get_tank_tier(data.author.tank_id),
                     'map'               :   self.get_map_name(data.map_name),

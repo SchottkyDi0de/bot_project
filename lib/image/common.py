@@ -1,31 +1,33 @@
 '''
 Модуль для генерирования изображения
-со статистикой.
+со статистикой
 '''
 from enum import Enum
-from datetime import datetime
 from io import BytesIO
 import base64
 from time import time
 
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 from discord.ext.commands import Context
 
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.data_classes.db_player import ImageSettings
 import lib.api.async_wotb_api as async_wotb_api
-from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.data_classes.db_server import ServerSettings
 from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
-from lib.image.for_iamge.icons import StatsIcons
-from lib.image.for_iamge.medals import Medals
+from lib.image.for_image.icons import StatsIcons
+from lib.image.for_image.medals import Medals
 from lib.settings.settings import Config
+from lib.image.for_image.colors import Colors
+from lib.image.for_image.fonts import Fonts
+from lib.image.for_image.watermark import Watermark
 
-_log = get_logger(__name__, 'ImageCommonLogger', 'logs/image_common.log')
+_log = get_logger(__file__, 'ImageCommonLogger', 'logs/image_common.log')
 _config = Config().get()
 
 
@@ -73,26 +75,6 @@ class BackgroundRectangleMap():
     medals = (55, 245, 645, 410)
     rating = (55, 425, 645, 575)
     total = (55, 590, 645, 1210)
-
-
-class Fonts():
-    """Class that defines different fonts used in the application."""
-    roboto_40 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=40)
-    """The Roboto font with a size of 40."""
-
-    roboto = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=28)
-    """The Roboto font with a size of 28."""
-
-    roboto_small = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=18)
-    """The Roboto font with a smaller size of 18."""
-
-    roboto_small2 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=15)
-    """The Roboto font with an even smaller size of 15."""
-
-    point = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=100)
-    """The Roboto font with a large size of 100."""
-
-    roboro_icon = ImageFont.truetype('res/fonts/Roboto-icons.ttf', size=28)
 
 
 class Leagues():
@@ -338,22 +320,6 @@ class Values():
         }
 
 
-class Colors():
-    """
-    A class that represents different colors.
-    """
-    blue = (0, 136, 252)     # Represents the color blue
-    yellow = (255, 252, 0)   # Represents the color yellow
-    red = (192, 21, 21)      # Represents the color red
-    purple = (116, 30, 169)  # Represents the color purple
-    orange = (205, 106, 29)  # Represents the color orange
-    green = (30, 255, 38)    # Represents the color green
-    cyan = (30, 187, 169)    # Represents the color cyan
-    grey = (121, 121, 121)   # Represents the color grey
-    l_grey = (200, 200, 200)  # Represents the color light grey
-    white = (240, 240, 240)  # Represents the color white
-
-
 @singleton
 class ImageGen():
     text = None
@@ -385,9 +351,8 @@ class ImageGen():
                  data: PlayerGlobalData,
                  image_settings: ImageSettings,
                  server_settings: ServerSettings,
-                 speed_test: bool = False,
                  debug_label: bool = False,
-                 ) -> BytesIO | float:
+                 ) -> BytesIO:
 
         self.text = Text().get()
         start_time = time()
@@ -437,11 +402,14 @@ class ImageGen():
         self.coord = Coordinates(self.img_size)
         img_draw = ImageDraw.Draw(self.image)
 
-        _log.debug(f'Generate modele debug: image size: {self.image.size}')
+        _log.debug(f'Generate model debug: image size: {self.image.size}')
 
-        self.darw_backround()
+        self.draw_background()
         self.draw_stats_icons()
         self.draw_medals()
+        
+        if data.from_cache and not image_settings.disable_cache_label:
+            self.draw_cache_label(self.image)
 
         if not image_settings.disable_flag:
             self.draw_flag()
@@ -457,22 +425,24 @@ class ImageGen():
 
         self.draw_main_stats(img_draw)
         self.draw_rating_stats(img_draw)
-        self.darw_common_stats(img_draw)
-        self.darw_medal_count(img_draw)
+        self.draw_common_stats(img_draw)
+        self.draw_medal_count(img_draw)
+        
+        self.draw_watermark()
 
         if debug_label:
             self.draw_debug_label(img_draw)
 
         # self.draw_main_points(img_draw)
         # self.draw_rating_points(img_draw)
-        # self.darw_common_points(img_draw)
+        # self.draw_common_points(img_draw)
 
         bin_image = BytesIO()
         self.image.save(bin_image, 'PNG')
         bin_image.seek(0)
         _log.debug('Image was sent in %s sec.', round(time() - start_time, 4))
 
-        return bin_image if not speed_test else time() - start_time
+        return bin_image
 
     def draw_stats_icons(self) -> None:
         for coord_item in IconsCoords:
@@ -496,17 +466,17 @@ class ImageGen():
             fill=Colors.red
         )
 
-    def darw_backround(self) -> None:
+    def draw_background(self) -> None:
         gaussian_filter = ImageFilter.GaussianBlur(radius=self.image_settings.glass_effect)
         background_map = Image.new('RGBA', (700, 1250), (0, 0, 0, 0))
         img_draw = ImageDraw.Draw(background_map)
         print(f'Image {self.image.mode} size: {self.image.size}')
 
-        # draw nickanme rectangle
+        # draw nickname rectangle
         text_box = img_draw.textbbox(
             (self.img_size[0]//2, 20),
             text=self.data.data.name_and_tag,
-            font=self.fonts.roboro_icon,
+            font=self.fonts.roboto_icons,
             anchor='ma'
         )
 
@@ -532,8 +502,8 @@ class ImageGen():
         bg = self.image.copy()
         if not self.image_settings.glass_effect == 0:
             bg = bg.filter(gaussian_filter)
-        if not self.image_settings.blocks_bg_brightness == 100:
-            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_brightness)
+        if not self.image_settings.blocks_bg_opacity == 100:
+            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_opacity)
 
         self.image.paste(bg, (0, 0), background_map)
 
@@ -675,7 +645,7 @@ class ImageGen():
             text = self.text.for_image.leagues.gold
         elif rating >= 4000 and rating < 5000:
             text = self.text.for_image.leagues.platinum
-        elif rating > 5000:
+        elif rating >= 5000:
             text = self.text.for_image.leagues.brilliant
         else:
             text = self.text.for_image.leagues.no_league
@@ -709,7 +679,7 @@ class ImageGen():
                 fill=self.image_settings.stats_color
             )
 
-    def darw_common_stats(self, img: Image.Image):
+    def draw_common_stats(self, img: Image.Image):
         for i in self.coord.common_stats.keys():
             img.text(
                 self.coord.common_stats[i],
@@ -719,7 +689,7 @@ class ImageGen():
                 fill=self.image_settings.stats_color
             )
 
-    def darw_medal_count(self, img: Image.Image):
+    def draw_medal_count(self, img: Image.Image):
         for i in self.coord.medals_count.keys():
             img.text(
                 self.coord.medals_count[i],
@@ -749,7 +719,7 @@ class ImageGen():
                 fill=self.point_coloring(i, getattr(self.data.data.statistics.all, i))
             )
 
-    def darw_common_points(self, img: Image.Image):
+    def draw_common_points(self, img: Image.Image):
         for i in self.coord.common_stats_point.keys():
             img.text(
                 self.coord.common_stats_point[i],
@@ -759,6 +729,13 @@ class ImageGen():
                 fill=self.point_coloring(
                     i, getattr(self.data.data.statistics.all, i), rating=True)
             )
+            
+    def draw_watermark(self):
+        self.image.paste(Watermark.v1, (
+            self.img_size[0] - 40, 
+            self.img_size[1] // 2 - Watermark.v1.size[1] // 2
+            ), 
+        Watermark.v1)
 
     def draw_flag(self):
         # self.data.region = 'asia' - Only for test

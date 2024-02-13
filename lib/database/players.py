@@ -1,33 +1,39 @@
 import traceback
-from pprint import pprint, PrettyPrinter
-import time
+import pytz
+from datetime import datetime, timedelta
 
 from pymongo import MongoClient
 from pymongo.results import DeleteResult
+from bson.codec_options import CodecOptions
+
+from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.logger.logger import get_logger
-from lib.data_classes.db_player import DBPlayer, ImageSettings
-from datetime import datetime
+from lib.data_classes.db_player import DBPlayer, ImageSettings, SessionSettings
 from lib.exceptions import database
 from lib.settings.settings import Config
 
 
 _config = Config().get()
-_log = get_logger(__name__, 'PlayersDBLogger', 'logs/playersdb.log')
+_log = get_logger(__file__, 'PlayersDBLogger', 'logs/players.log')
 
 
 class PlayersDB:
     def __init__(self) -> None:
         self.client = MongoClient('mongodb://localhost:27017/')
-        self.db = self.client['PlayersDB']
+        self.db = self.client['PlayersDB'].with_options(
+            codec_options=CodecOptions(tz_aware=True)
+        )
         self.collection = self.db['players']
+        
+        # self.database_update() # TODO: remove this
 
     def set_member(self, data: DBPlayer, override: bool = False) -> bool:
-        data = DBPlayer.model_dump(data)
-        if self.check_member(data['id']) and override:
-            self.collection.update_one({'id': data['id']}, {'$set': {**data}})
+        ds_id = data.id
+        if self.check_member(ds_id) and override:
+            self.collection.update_one({'id': ds_id}, {'$set': {**(data.model_dump())}})
             return True
-        elif self.collection.find_one({'id': data['id']}) is None:
-            self.collection.insert_one({'id': data['id'], **data})
+        elif self.collection.find_one({'id': ds_id}) is None:
+            self.collection.insert_one(data.model_dump())
             return True
         else:
             return False
@@ -85,7 +91,7 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
-    def check_member_is_verefied(self, member_id: int | str) -> bool:
+    def check_member_is_verified(self, member_id: int | str) -> bool:
         member_id = int(member_id)
         try:
             member_exist = self.check_member(member_id)
@@ -298,13 +304,14 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
     
-    def get_member(self, member_id: int) -> DBPlayer | None:
+    def get_member(self, member_id: int | str) -> DBPlayer:
+        member_id = int(member_id)
         data = self.collection.find_one({'id': member_id})
         if data is not None:
             del data['_id']
             return DBPlayer.model_validate(data)
         else:
-            return None
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def del_member(self, member_id: int) -> DeleteResult:
         member_id = int(member_id)
@@ -340,7 +347,7 @@ class PlayersDB:
                     {'id': member_id}, 
                     {'$set': 
                             {
-                            'last_stats': last_stats
+                            'last_stats': last_stats,
                             }
                         }
                     )
@@ -351,19 +358,43 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
+    def get_member_session_settings(self, member_id: int | str) -> SessionSettings:
+        member_id = int(member_id)
+        if self.check_member(member_id):
+            data = self.collection.find_one({'id': member_id})
+            return SessionSettings.model_validate(data['session_settings'])
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+        
+    def set_member_session_settings(self, member_id: int | str, session_settings: SessionSettings):
+        member_id = int(member_id)
+        if self.check_member(member_id):
+            self.collection.update_one(
+                {'id' : member_id}, {'$set' : {'session_settings' : session_settings.model_dump()}}
+            )
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+        
+    def check_member_session(self, member_id: int | str):
+        member_id = int(member_id)
+        try:
+            if self.check_member(member_id):
+                member = self.collection.find_one({'id': member_id})
+                if member['last_stats'] is None:
+                    raise database.LastStatsNotFound(f'Member last stats not found, member id: {member_id}')
+                session_settings = self.get_member_session_settings(member_id)
+                update_time = ...
+        except Exception:
+            _log.error(f'Database error: {traceback.format_exc()}')
+            raise database.DatabaseError()
+
     def check_member_last_stats(self, member_id: int | str) -> bool:
         member_id = int(member_id)
         try:
             if self.check_member(member_id):
                 member = self.collection.find_one({'id': member_id})
                 if member['last_stats'] is not None:
-                    if member['last_stats']['end_timestamp'] is not None:
-                        curr_time = int(datetime.now().timestamp())
-                        end_time = int(member['last_stats']['end_timestamp'])
-                        if end_time > curr_time:
-                            return True
-                        else:
-                            self.del_member_last_stats(member_id)
+                    return True  
                 else:
                     return False
             else:
@@ -372,7 +403,41 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return False
         
-    def del_member_last_stats(self, member_id: int | str):
+    def start_autosession(self, member_id: int | str, last_stats: PlayerGlobalData, session_settings: SessionSettings):
+        member_id = int(member_id)
+        
+        self.set_member_last_stats(member_id, last_stats.model_dump())
+        self.set_member_session_settings(member_id, session_settings)
+        
+    def validate_session(self, member_id: int | str):
+        member_id = int(member_id)
+        try:
+            if self.check_member_last_stats(member_id):
+                member_id = str(member_id)
+                session_settings = self.get_member_session_settings(member_id)
+                curr_time = datetime.now(pytz.utc)
+                end_time = session_settings.last_get
+                
+                if end_time is None:
+                    return False
+                    
+                if session_settings.is_autosession:
+                    end_time += timedelta(seconds=_config.autosession.ttl)
+                else:
+                    end_time += timedelta(seconds=_config.session.ttl)
+                    
+                if curr_time > end_time:
+                    self.reset_member_session(member_id)
+                    return False
+                
+                return True
+            else:
+                raise database.LastStatsNotFound(f'Last stats not found, id: {member_id}')
+        except Exception:
+            _log.error(f'Database error: {traceback.format_exc()}')
+            return False
+        
+    def reset_member_session(self, member_id: int | str):
         member_id = int(member_id)
         try:
             if self.check_member(member_id):
@@ -384,6 +449,7 @@ class PlayersDB:
                             }
                         }
                     )
+                self.set_member_session_settings(member_id, SessionSettings.model_validate({}))
                 return True
             else:
                 return False
@@ -392,25 +458,34 @@ class PlayersDB:
             return False
         
         
-    def get_session_end_time(self, member_id: int | str) -> int | None:
+    def get_session_end_time(self, member_id: int | str) -> datetime:
         member_id = int(member_id)
         try:
             if self.check_member(member_id):
                 if self.check_member_last_stats(member_id):
-                    return self.collection.find_one({'id': member_id})['last_stats']['end_timestamp']
+                    session_settings = self.get_member_session_settings(member_id)
+                    if session_settings.is_autosession:
+                        return session_settings.last_get + timedelta(seconds=_config.autosession.ttl)
+                    return session_settings.last_get + timedelta(seconds=_config.session.ttl)
             else:
-                return None
+                raise database.MemberNotFound
         except Exception:
             _log.error(f'Database error: {traceback.format_exc()}')
             return None
         
-    def get_member_last_stats(self, member_id: int | str) -> dict | None:
+    def get_member_last_stats(self, member_id: int | str) -> PlayerGlobalData:
         member_id = int(member_id)
         try:
             if self.check_member(member_id):
-                return self.collection.find_one({'id': member_id})['last_stats']
+                last_stats = self.collection.find_one({'id': member_id})['last_stats']
+                if last_stats is not None:
+                    member = DBPlayer.model_validate(self.collection.find_one({'id': member_id}))
+                    member.session_settings.last_get = int(datetime.now(pytz.utc).timestamp())
+                    return PlayerGlobalData.model_validate(last_stats)
+                else:
+                    raise database.LastStatsNotFound()
             else:
-                return None
+                raise database.MemberNotFound()
         except Exception:
             _log.error(f'Database error: {traceback.format_exc()}')
             return None
@@ -426,107 +501,15 @@ class PlayersDB:
             _log.error(f'Database error: {traceback.format_exc()}')
             return None
         
-    def extend_session(self, member_id: int | str) -> bool:
-        member_id = int(member_id)
-        try:
-            if self.check_member(member_id):
-                if self.check_member_last_stats(member_id):
-                    user = self.collection.find_one({'id': member_id})
-                    user['last_stats']['end_timestamp'] = int(datetime.now().timestamp()) + _config.session_ttl
-                    self.collection.update_one(
-                        {'id': member_id},
-                        {'$set': user}
-                        )
-                else:
-                    raise database.LastStatsNotFound(f'Last stats for user: {member_id} not found')
-                return True
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
-
-def test_db():
-    _log.debug("Testing PDB methodss...")
-
-    data = {
-            "id": 924242252014972959, "game_id": 0, "nickname": "test", "region": "eu", 
-            "premium": False, "premium_time": None, "lang": "ru", "last_stats": None, 
-            "image": None, "locked": False, "verified": False
-            }
-    
-    _log.debug(f"Testing on data: {data}")
-    try:
-        pdb = PlayersDB()
-        
-        _log.debug(f'Testing `set_member`...')
-        assert pdb.set_member(DBPlayer.model_validate(data), True), "`set_member` failed set data"
-        _log.debug('Test complete')
-        
-        _log.debug('Testing `check_member_is_verefied`\t`verefied` is False...')
-        assert not pdb.check_member_is_verefied(data['id']), "`check_member_is_verefied` failed test1"
-        _log.debug("`check_member_is_verefied` complete test1, next test 'verefied is True'...")
-        data['verified'] = True
-        pdb.set_member(DBPlayer.model_validate(data), True)
-        assert pdb.check_member_is_verefied(data['id']), "`check_member_is_verefied` failed test2"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `set_member_lock`...")
-        assert pdb.set_member_lock(data['id']), "`set_member_lock` failed"
-        assert pdb.check_member_is_verefied(data['id']), "`set_member_lock` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `unset_member_lock`...")
-        assert pdb.unset_member_lock(data['id']), "`set_member_lock` failed"
-        assert not pdb.check_member_lock(data['id']), "`unset_member_lock` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `set_member_verefied`...")
-        assert pdb.set_member_verified(data['id']), "`set_member_verefied` failed"
-        assert pdb.check_member_is_verefied(data['id']), "`set_member_verefied` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `unset_member_verefied`...")
-        assert pdb.unset_member_verified(data['id']), "`unset_member_verefied` failed"
-        assert not pdb.check_member_is_verefied(data['id']), "`unset_member_verefied` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `set_member_last_stats`...")
-        assert not pdb.check_member_last_stats(data['id']), "`check_member_last_stats` failed"
-        _log.debug('test1 complete')
-        data['last_stats'] = {}
-        pdb.set_member(DBPlayer.model_validate(data), True)
-        assert pdb.check_member_last_stats(data['id']), "`check_member_last_stats` failed"
-        _log.debug('Test complete')
-        
-        _log.debug("Testing `get_member_last_stats`...")
-        assert pdb.get_member_last_stats(data['id']) == data['last_stats'], "`get_member_last_stats` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `set_member_last_stats`...")
-        assert pdb.set_member_last_stats(data['id'], {}), "`set_member_last_stats` failed"
-        assert pdb.check_member_last_stats(data['id']), "`set_member_last_stats` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `delete_member_last_stats`...")
-        assert pdb.del_member_last_stats(data['id']), "`delete_member_last_stats` failed"
-        assert not pdb.check_member_last_stats(data['id']), "`delete_member_last_stats` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `get_member_lang`...")
-        assert pdb.get_member_lang(data['id']) == data['lang'], "`set_member_lang` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `set_member_lang`...")
-        assert pdb.set_member_lang(data['id'], 'en'), "`set_member_lang` failed"
-        assert pdb.get_member_lang(data['id']) == 'en', "`set_member_lang` failed"
-        _log.debug('Test complete')
-
-        _log.debug("Testing `del_member`...")
-        assert pdb.del_member(data['id']), "`del_member` failed"
-        assert not pdb.check_member(data['id']), "`del_member` failed"
-        _log.debug('Test complete')
-
-        _log.debug("All tests completed")
-    except AssertionError:
-        _log.error(f"Database error during testing: {traceback.format_exc()}")
+    # Run 1 time for update database structure...
+    # def database_update(self):
+    #     self.collection.update_many({}, {'$set' : {'image_settings' : ImageSettings().model_dump(), 'session_settings' : SessionSettings().model_dump()}})
+    #     # self.collection.update_many({}, { '$set' :{ "last_stats" : None, "session_settings" : SessionSettings().model_dump()}})
+    #     # self.collection.update_many(
+    #     #     {}, { '$set' :{
+    #     #             "image_settings.negative_stats_color" : '#c01515',
+    #     #             "image_settings.positive_stats_color" : '#1eff26',
+    #     #             }
+    #     #         }
+    #     #     )
+    #     # self.collection.update_many({}, {'$set' : {'session_settings' : SessionSettings().model_dump()}})

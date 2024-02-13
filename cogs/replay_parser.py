@@ -18,7 +18,7 @@ from lib.embeds.info import InfoMSG
 from lib.embeds.replay import EmbedReplayBuilder
 from lib.settings.settings import Config
 
-_log = get_logger(__name__, 'CogReplayParserLogger', 'logs/cog_replay_parser.log')
+_log = get_logger(__file__, 'CogReplayParserLogger', 'logs/cog_replay_parser.log')
 _config = Config().get()
 
 class CogReplayParser(commands.Cog):
@@ -26,10 +26,12 @@ class CogReplayParser(commands.Cog):
         self.bot = bot
         self.sdb = ServersDB()
         self.parser = ReplayParser()
+        self.err_msg = ErrorMSG()
+        self.inf_msg = InfoMSG()
 
     @commands.slash_command(
             guild_only=True, 
-            description=Text().get().cmds.parse_replay.descr.this,
+            description=Text().get('en').cmds.parse_replay.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.parse_replay.descr.this,
                 'pl': Text().get('pl').cmds.parse_replay.descr.this,
@@ -41,7 +43,7 @@ class CogReplayParser(commands.Cog):
                     ctx: commands.Context,
                     replay: Option(
                         Attachment,
-                        description=Text().get().cmds.parse_replay.descr.sub_descr.file,
+                        description=Text().get('en').cmds.parse_replay.descr.sub_descr.file,
                         description_localizations={
                             'ru': Text().get('ru').cmds.parse_replay.descr.sub_descr.file,
                             'pl': Text().get('pl').cmds.parse_replay.descr.sub_descr.file,
@@ -52,7 +54,7 @@ class CogReplayParser(commands.Cog):
                     ),
                     region: Option(
                         str,
-                        description=Text().get().frequent.common.region,
+                        description=Text().get('en').frequent.common.region,
                         description_localizations={
                             'ru': Text().get('ru').frequent.common.region,
                             'pl': Text().get('pl').frequent.common.region,
@@ -69,48 +71,36 @@ class CogReplayParser(commands.Cog):
                     ),
                 ):
         Text().load_from_context(ctx)
-        try:
-            check_user(ctx)
-        except UserBanned:
-            return
+        check_user(ctx)
+        await ctx.defer()
         
-        try:
-            await ctx.defer()
-            
-            filename = randint(1000000, 9999999)
-            await replay.save(f'tmp/replay/{filename}.wotbreplay')
+        filename = randint(1000000, 9999999)
+        await replay.save(f'tmp/replay/{filename}.wotbreplay')
 
-            match output_type:
-                case 'raw (json)':
-                    with StringIO(self.parser.parse(f'tmp/replay/{filename}.wotbreplay')) as f:
-                        await ctx.respond(file=File(f, 'replay_data.json'))
-                case 'embed':
-                    replay_data = await ParseReplayData().parse(
-                                self.parser.parse(f'tmp/replay/{filename}.wotbreplay'),
-                                region
-                            )
-                    await ctx.respond(
-                        embed=EmbedReplayBuilder().build_embed(
-                            ctx,
-                            replay_data
-                            )
-                        )             
-
-        except Exception:
-            _log.error(traceback.format_exc())
-            await ctx.respond(
-                embed=ErrorMSG().custom(
-                    Text().get(),
-                    text=Text().get().cmds.parse_replay.errors.parsing_error
+        match output_type:
+            case 'raw (json)':
+                with StringIO(self.parser.parse(f'tmp/replay/{filename}.wotbreplay')) as f:
+                    await ctx.respond(file=File(f, 'replay_data.json'))
+            case 'embed':
+                replay_data = await ParseReplayData().parse(
+                            self.parser.parse(f'tmp/replay/{filename}.wotbreplay', save_json=True),
+                            region
+                        )
+                await ctx.respond(
+                    embed=EmbedReplayBuilder().build_embed(
+                        ctx,
+                        replay_data
+                        )
                     )
-                )
-    
-    @parse_replay.error
-    async def on_error(self, ctx: commands.Context, _):
-        _log.error(traceback.format_exc())
-        await ctx.respond(
-            embed=InfoMSG().cooldown_not_expired()
-            )
+        
+    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
+        elif isinstance(error, UserBanned):
+            await ctx.respond(embed=self.err_msg.user_banned())
+        else:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
 
 def setup(bot):
     bot.add_cog(CogReplayParser(bot))

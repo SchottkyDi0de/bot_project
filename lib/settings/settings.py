@@ -1,7 +1,6 @@
 import os
 import traceback
 from itertools import cycle
-from pprint import pprint
 
 import yaml
 from dotenv import load_dotenv, find_dotenv
@@ -10,12 +9,12 @@ from lib.data_classes.settings import ConfigStruct
 from lib.utils.singleton_factory import singleton
 from lib.logger.logger import get_logger
 
-_log = get_logger(__name__, 'ConfigLoaderLogger', 'logs/config_loader.log')
+_log = get_logger(__file__, 'ConfigLoaderLogger', 'logs/config_loader.log')
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 
 if not os.path.exists(find_dotenv()):
-    _log.critical(f'Failed atempt to load enviroment variable in {dotenv_path}')
-    raise FileNotFoundError(f'Failed atempt to load enviroment variable in {dotenv_path}')
+    _log.critical(f'Failed attempt to load environment variable in {dotenv_path}')
+    raise FileNotFoundError(f'Failed attempt to load environment variable in {dotenv_path}')
 
 load_dotenv(dotenv_path)
 

@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Dict, List
 
 from pydantic import BaseModel
 
@@ -8,12 +8,19 @@ class Server(BaseModel):
     port: int
 
 
+class Session(BaseModel):
+    ttl: int
+
+
+class Autosession(BaseModel):
+    ttl: int
+
 class Default(BaseModel):
     prefix: str
     lang: str
     available_locales: List[str]
     available_regions: List[str]
-    locale_alliases: Dict[str, str]
+    locale_aliases: Dict[str, str]
 
 
 class Image(BaseModel):
@@ -27,6 +34,8 @@ class Internal(BaseModel):
 class HelpUrls(BaseModel):
     ru: str
     en: str
+    ua: str
+    pl: str
 
 
 class Auth(BaseModel):
@@ -66,7 +75,8 @@ class DsApi(BaseModel):
 class ConfigStruct(BaseModel):
     bot_name: str
     server: Server
-    session_ttl: int
+    session: Session
+    autosession: Autosession
     default: Default
     image: Image
     internal: Internal

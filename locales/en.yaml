@@ -80,6 +80,7 @@ for_image:
   no_data: NO DATA
 
 map_names:
+  rockfield: Rockfield
   desert_sands: Desert Sands
   middleburg: Middleburg
   copperfield: Copperfield
@@ -89,7 +90,7 @@ map_names:
   fort_despair: Fort
   himmelsdorf: Himmelsdorf
   black_goldville: Black Goldville
-  basis_palm: Basis Palm
+  oasis_palm: Basis Palm
   ghost_factory: Ghost Factory
   molendijk: Molendijk
   port_bay: Port
@@ -106,6 +107,7 @@ map_names:
   normandy: Normandy
   yamato_harbor: Yamato Harbor
   wasteland: Wasteland
+  lagoon: Lagoon
   unknown: Unknown
 
 gamemodes:
@@ -144,6 +146,7 @@ frequent:
     nickname: Nickname
     region: Region
     time_units:
+      d: 'd'
       h: 'h'
       m: 'm'
       s: 's'
@@ -219,13 +222,22 @@ cmds:
     items:
       started: |- 
         ```py
-        The session is running.
-        +----------------------------+
-        Session time: <time>
-        Before reset: <time_left>
-        Battles played: <battles>
-        +----------------------------+
-        >>> Reset session: /start_session
+        Session started.
+        +----------------------------------+
+        Autosession:              <is_autosession>
+        +__________________________________+
+        Autosession restart time:
+        <update_time> | UTC + <timezone>
+        Restart in:               <restart_in>
+        +..................................+
+        Session time:             <time>
+        Battles played:           <battles>
+        Time remaining:           <time_left>
+        +----------------------------------+
+        >>> Reset session: 
+        /start_session
+        >>> Reset autosession:
+        /start_autosession
         ```
       not_started: "Session not started."
 
@@ -257,13 +269,35 @@ cmds:
     items:
       ''
 
+# start autosession command
+  start_autosession:
+    descr:
+      this: Start autosession
+      sub_descr:
+        timezone: Time zone (0 - 12)
+        restart_time: 'Restart time in the format HH:MM'
+    errors:
+      uncorrect_r_time: |-
+        Incorrect restart time.
+        Expected time format: "HH:MM"
+        Received: <time>
+        Examples of correct time:
+        00:20, 03:15, 22:40, 13:20
+        The set value will be ignored.
+    info:
+      player_not_registred: To start a session, first save your data using `/set_player`
+      started: Autosession started. Now you can play several battles and get session statistics using `/get_session`
+    items:
+      ''
+
 # Set background command
   set_background: 
     descr:
       this: Change background
       sub_descr:
-        image: Upload background in PNG or JPEG format (max. 2 MB) (700 X 1250px)
+        image: Upload background in PNG or JPEG format (max. 2 MB) (700 X 1350px)
         server: Set default background for this server (admin privileges required).
+        resize_mode: Type of image resizing (if required)
     errors:
       player_not_registred: To change the background, save your data using the `/astats` command
       permission_denied: You must have administrator rights to set the background for the server.
@@ -294,12 +328,16 @@ cmds:
         hide_clan_tag: 'Hide clan tag, will be removed'
         disable_stats_blocks: 'Disable statistics blocks rendering'
         disable_rating_stats: 'Disable rating statistics'
+        disable_cache_label: 'Disable cache label'
     errors:
-      ''
+      color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
+      changes_not_found: No parameter change detected, change at least one parameter.
     info:
       set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
+      preview: 'Statistics preview:'
     items:
-      ''
+      color_error_note: 'All invalid values will be ignored.'
+      color_error_footer: 'Color code format: #rrggbb or #rgb. Example of valid color: #FF9900 - Orange.'
 
   server_settings:
     descr:
@@ -323,21 +361,24 @@ cmds:
     info:
       get_ok: 'Current image settings:'
     items:
-      settings_list: |-
-        ```python
-        - Use custom background:              <use_custom_bg>
-        - Glass effect:                       <glass_effect>
-        - Block background brightness:        <blocks_bg_brightness>
-        - Nickname color:                     <nickname_color>
-        - Clan tag color:                     <clan_tag_color>
-        - Main statistics color:              <stats_color>
-        - Main text color:                    <main_text_color>
-        - Statistics text color:              <stats_text_color>
-        - Disable region flag rendering:      <disable_flag>
-        - Hide nickname:                      <hide_nickname>
-        - Hide clan tag:                      <hide_clan_tag>
-        - Disable statistics blocks:          <disable_stats_blocks>
-        - Disable rating statistics:          <disable_rating_stats>```
+      use_custom_bg: Custom background
+      glass_effect: Glass effect
+      blocks_bg_opacity: Statistics blocks opacity
+      nickname_color: Nickname color
+      clan_tag_color: Clan tag color
+      stats_color: Main statistics color
+      main_text_color: Main text color
+      stats_text_color: Statistics text color
+      negative_stats_color: Negative statistics color
+      positive_stats_color: Positive statistics color
+      disable_flag: Hide region flag
+      hide_nickname: Hide nickname
+      hide_clan_tag: Hide clan tag
+      disable_stats_blocks: Hide statistics blocks
+      disable_rating_stats: Hide rating statistics
+      disable_cache_label: Hide cache icon
+
+      stats_blocks_disabled: Drawing of blocks with statistics is disabled
 
   server_settings_get:
     descr:
@@ -489,58 +530,60 @@ cmds:
       empty_player: '[no data]'
       title: |-
         Replay data from <member_id>
-        Account: <nickname>
+        Account: `<nickname>`
       common:
         win: Win
         lose: Lose
+        draw: Draw
         # When localizing, use an editor with a monospaced font 
         # and align placeholders relative to each other
         # I recomended VS Code or Sublime Text with monospaced font
       description: |-
         ```py
         Main battle info:
-        +-----------------------+
+        +---------------------------+
         Outcome:       <battle_result>
         Battle type:   <battle_type>
         Tier:          <tier>
         Map:           <map>
-        Battle played: <time> UTC
-        +-----------------------+
+        Battle played: 
+        <time>
+        +---------------------------+
 
         Damage:
-        +-----------------------+
+        +---------------------------+
         Dealt:         <damage_dealt>
         Assisted:      <damage_assisted>
         Blocked:       <damage_blocked>
-        +-----------------------+
+        +---------------------------+
 
         Capture points:
-        +-----------------------+
+        +---------------------------+
         Earned:      <point_captured>
         Seized:      <point_defended>
-        +-----------------------+
+        +---------------------------+
 
         Shots:
-        +-----------------------+
+        +---------------------------+
         Fired:         <shots_fired>
         Hits:          <shots_hit>
         Penetrations:  <shots_penetrated>
-        +-----------------------+
+        +---------------------------+
 
         Efficiency:
-        +-----------------------+
+        +---------------------------+
         Accuracy:      <accuracy>
         Penetrations:  <penetration>
 
         Allies:
-        +-----------------------+
-        Nick:          WR:  Btls:
-        ==============+====+=====
+        +---------------------------+
+        Nick:              WR:  Btls:
+        ==================+====+=====
         <allies>
         Enemies:
-        +-----------------------+
-        Nick:          WR:  Btls:
-        ==============+====+=====
+        +---------------------------+
+        Nick:              WR:  Btls:
+        ==================+====+=====
         <enemies>
         ```
 #Cooldown for command

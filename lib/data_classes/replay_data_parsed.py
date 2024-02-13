@@ -127,7 +127,7 @@ class ParsedReplayData(BaseModel):
     map_name: Optional[str] = 'Undefined'
     timestamp_secs: int
     time_string: Optional[str] = '--/--'
-    winner_team_number: int
+    winner_team_number: int | None
     author: Author
     room_type: int
     room_name: Optional[str] = 'Undefined'
