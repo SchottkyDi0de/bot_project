@@ -203,7 +203,7 @@ class Session(commands.Cog):
             try:
                 last_stats = self.db.get_member_last_stats(member.id)
             except database.LastStatsNotFound:
-                ctx.respond(self.err_msg.session_not_found())
+                await ctx.respond(embed=self.err_msg.session_not_found())
                 return
             
             session_settings.last_get = datetime.now(pytz.utc)

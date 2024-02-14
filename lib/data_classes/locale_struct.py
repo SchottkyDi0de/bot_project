@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel
 
 
@@ -471,27 +469,18 @@ class ResetBackground(BaseModel):
     items: str
 
 
-class SubDescr8(BaseModel):
-    help_types: str
-
-
 class Descr16(BaseModel):
     this: str
-    sub_descr: SubDescr8
+    sub_descr: str
 
 
 class Info16(BaseModel):
     send_ok: str
+    send_ok_dm: str
 
 
 class Items4(BaseModel):
-    help_types: List[str]
     help: str
-    syntax: str
-    setup: str
-    statistics: str
-    session: str
-    other: str
 
 
 class Help(BaseModel):
@@ -501,13 +490,13 @@ class Help(BaseModel):
     items: Items4
 
 
-class SubDescr9(BaseModel):
+class SubDescr8(BaseModel):
     file: str
 
 
 class Descr17(BaseModel):
     this: str
-    sub_descr: SubDescr9
+    sub_descr: SubDescr8
 
 
 class Errors12(BaseModel):
