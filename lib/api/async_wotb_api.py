@@ -14,19 +14,19 @@ from asynciolimiter import Limiter
 from cacheout import FIFOCache
 
 from lib.utils.string_parser import insert_data
-<<<<<<< HEAD
+
 from lib.data_classes.api_data import PlayerGlobalData
 from lib.data_classes.player_clan_stats import ClanStats
 from lib.data_classes.player_achievements import Achievements
 from lib.data_classes.player_stats import PlayerStats, PlayerData
 from lib.data_classes.tanks_stats import TankStats
-=======
-from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.data_classes.api.player_clan_stats import ClanStats
-from lib.data_classes.api.player_achievements import Achievements
-from lib.data_classes.api.player_stats import PlayerStats, PlayerData
-from lib.data_classes.api.tanks_stats import TankStats
->>>>>>> 7f65afc71f82964e863f246dfc22cb3361711267
+
+from lib.data_classes.api_data import PlayerGlobalData
+from lib.data_classes.player_clan_stats import ClanStats
+from lib.data_classes.player_achievements import Achievements
+from lib.data_classes.player_stats import PlayerStats, PlayerData
+from lib.data_classes.tanks_stats import TankStats
+
 from lib.utils.singleton_factory import singleton
 from lib.data_parser.parse_data import get_normalized_data
 from lib.exceptions import api as api_exceptions
@@ -55,15 +55,10 @@ class API:
         reg = reg.lower()
         if reg == 'ru':
             return next(EnvConfig.LT_APP_IDS)
-<<<<<<< HEAD
-        elif reg in ['eu', 'com', 'asia', 'na', 'as']:
-            return next(EnvConfig.WG_APP_IDS)
-=======
         elif reg in {'eu', 'com', 'asia', 'na', 'as'}:
             tok = next(EnvConfig.WG_APP_IDS)
             _log.debug(f'Used app ID: {tok}')
             return tok
->>>>>>> 7f65afc71f82964e863f246dfc22cb3361711267
         raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
 
     def _reg_normalizer(self, reg: str) -> str:
@@ -331,16 +326,13 @@ class API:
                     _log.debug(f'Error check player\n{traceback.format_exc()}')
                     raise e
                 else:
-<<<<<<< HEAD
+
                     try:
                         data = data[[*data['data'].keys()][0]]
                     except KeyError:
                         ...
-                    db_palyer = {
-=======
                     data = data[list(data['data'].keys())[0]]
                     db_player = {
->>>>>>> 7f65afc71f82964e863f246dfc22cb3361711267
                             'nickname': data['nickname'],
                             'game_id': int(data['account_id']),
                             'region': region,

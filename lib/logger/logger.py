@@ -1,3 +1,5 @@
+from os import mkdir, path
+
 import logging
 
 def get_logger(python_name: str, logger_name: str, file_name: str):
@@ -12,6 +14,9 @@ def get_logger(python_name: str, logger_name: str, file_name: str):
     Returns:
         logging.Logger: The configured logger object.
     """
+    if not path.exists('logs'):
+        mkdir('logs')
+
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.DEBUG)
     _console_handler = logging.StreamHandler()

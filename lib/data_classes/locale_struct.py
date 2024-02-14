@@ -348,6 +348,7 @@ class Errors9(BaseModel):
 class Info9(BaseModel):
     set_ok: str
     preview: str
+    not_owner: str
 
 
 class Items1(BaseModel):

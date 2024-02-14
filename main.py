@@ -68,7 +68,7 @@ class App():
 
     @staticmethod
     async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:
-        tankopedia_server_list = ['ru', 'eu']
+        tankopedia_server_list = ['eu', 'ru']
         for i in tankopedia_server_list:
             try:
                 return await api.get_tankopedia(i)

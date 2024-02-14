@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from lib.data_classes.palyer_clan_stats import Clan
+from lib.data_classes.player_clan_stats import Clan
 from lib.data_classes.player_achievements import Achievements
 from lib.data_classes.player_stats import Statistics
 from lib.data_classes.tanks_stats import TankStats
