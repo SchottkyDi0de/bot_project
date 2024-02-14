@@ -25,7 +25,7 @@ class PlayersDB:
         )
         self.collection = self.db['players']
         
-        # self.database_update() # TODO: remove this
+        # self.database_update() # TODO: remove this after first use
 
     def set_member(self, data: DBPlayer, override: bool = False) -> bool:
         ds_id = data.id
