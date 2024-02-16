@@ -4,7 +4,6 @@ from os.path import exists
 
 from pymongo import MongoClient
 
-
 from lib.logger.logger import get_logger
 
 _log = get_logger(__file__, 'DumpHandlerLogger', 'logs/dump_handler.log')

@@ -3,8 +3,9 @@ import base64
 import traceback
 
 from PIL import Image
-from discord import Option, Attachment, File
+from discord import Option, Attachment, File, ButtonStyle, Interaction
 from discord.ext import commands
+from discord.ui import View, button
 
 from lib.image.utils.resizer import resize_image, ResizeMode
 from lib.settings.settings import Config
@@ -41,6 +42,42 @@ class Set(commands.Cog):
         self.db = PlayersDB()
         self.api = API()
         self.bot = bot
+        
+    def _get_view(self, user_id: int, currecnt_settings: ImageSettings) -> View:
+        class MyView(View):
+            @button(label='✔', style=ButtonStyle.green, row=0)
+            async def save_callback(view_self, _, interaction: Interaction):
+                if user_id != interaction.user.id:
+                    await interaction.response.send_message(
+                        embed=self.inf_msg.custom(
+                            Text().get(),
+                            text=Text().get().cmds.image_settings.info.not_owner,
+                        ), ephemeral=True
+                    )
+                    return
+                self.db.set_image_settings(interaction.user.id, currecnt_settings)
+                await interaction.message.edit(view=None)
+                await interaction.response.send_message(embed=self.inf_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.image_settings.info.set_ok,
+                    colour='green'
+                ))
+                await interaction.message.delete()
+            
+            @button(label='❌', style=ButtonStyle.red, row=0)
+            async def cancel_callback(view_self, _, interaction):
+                if user_id != interaction.user.id:
+                    await interaction.response.send_message(
+                        embed=self.inf_msg.custom(
+                            Text().get(),
+                            text=Text().get().cmds.image_settings.info.not_owner,
+                        ), ephemeral=True
+                    )
+                    return
+                await interaction.response.send_message("👍")
+                await interaction.message.delete()
+        
+        return MyView()
         
     @commands.slash_command(
             guild_only=True,
@@ -594,6 +631,11 @@ class Set(commands.Cog):
             self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(current_settings))
             return
             
+
+        currecnt_image_settings = ImageSettings.model_validate(current_settings)
+        sptext, spimage = StatsPreview().preview(ctx, currecnt_image_settings)
+        await ctx.respond(sptext, file=spimage, view=self._get_view(ctx.author.id, currecnt_image_settings))
+
         self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(current_settings))
         await ctx.respond(
             embed=self.inf_msg.custom(
