@@ -127,6 +127,10 @@ class Frequent(BaseModel):
     common: Common
 
 
+class Views(BaseModel):
+    not_owner: str
+
+
 class Descr(BaseModel):
     this: str
     sub_descr: str
@@ -240,16 +244,30 @@ class SessionState(BaseModel):
     items: Items
 
 
+class SubDescr3(BaseModel):
+    button_update: str
+
+
+class Descr5(BaseModel):
+    this: str
+    sub_descr: SubDescr3
+
+
 class Errors6(BaseModel):
     session_not_found: str
     session_not_updated: str
 
 
 class GetSession(BaseModel):
-    descr: Descr4
+    descr: Descr5
     errors: Errors6
     info: Info4
     items: str
+
+
+class Descr6(BaseModel):
+    this: str
+    sub_descr: str
 
 
 class Info6(BaseModel):
@@ -258,20 +276,20 @@ class Info6(BaseModel):
 
 
 class StartSession(BaseModel):
-    descr: Descr4
+    descr: Descr6
     errors: str
     info: Info6
     items: str
 
 
-class SubDescr3(BaseModel):
+class SubDescr4(BaseModel):
     timezone: str
     restart_time: str
 
 
 class Descr7(BaseModel):
     this: str
-    sub_descr: SubDescr3
+    sub_descr: SubDescr4
 
 
 class Errors7(BaseModel):
@@ -285,7 +303,7 @@ class StartAutosession(BaseModel):
     items: str
 
 
-class SubDescr4(BaseModel):
+class SubDescr5(BaseModel):
     image: str
     server: str
     resize_mode: str
@@ -293,7 +311,7 @@ class SubDescr4(BaseModel):
 
 class Descr8(BaseModel):
     this: str
-    sub_descr: SubDescr4
+    sub_descr: SubDescr5
 
 
 class Errors8(BaseModel):
@@ -316,7 +334,7 @@ class SetBackground(BaseModel):
     items: str
 
 
-class SubDescr5(BaseModel):
+class SubDescr6(BaseModel):
     use_custom_bg: str
     glass_effect: str
     blocks_bg_brightness: str
@@ -335,7 +353,7 @@ class SubDescr5(BaseModel):
 
 class Descr9(BaseModel):
     this: str
-    sub_descr: SubDescr5
+    sub_descr: SubDescr6
 
 
 class Errors9(BaseModel):
@@ -345,6 +363,7 @@ class Errors9(BaseModel):
 
 class Info9(BaseModel):
     set_ok: str
+    canceled_settings_change: str
     preview: str
 
 
@@ -360,13 +379,13 @@ class ImageSettings(BaseModel):
     items: Items1
 
 
-class SubDescr6(BaseModel):
+class SubDescr7(BaseModel):
     allow_custom_backgrounds: str
 
 
 class Descr10(BaseModel):
     this: str
-    sub_descr: SubDescr6
+    sub_descr: SubDescr7
 
 
 class Errors10(BaseModel):
@@ -449,13 +468,13 @@ class ImageSettingsReset(BaseModel):
     items: str
 
 
-class SubDescr7(BaseModel):
+class SubDescr8(BaseModel):
     server: str
 
 
 class Descr15(BaseModel):
     this: str
-    sub_descr: SubDescr7
+    sub_descr: SubDescr8
 
 
 class Info15(BaseModel):
@@ -490,13 +509,13 @@ class Help(BaseModel):
     items: Items4
 
 
-class SubDescr8(BaseModel):
+class SubDescr9(BaseModel):
     file: str
 
 
 class Descr17(BaseModel):
     this: str
-    sub_descr: SubDescr8
+    sub_descr: SubDescr9
 
 
 class Errors12(BaseModel):
@@ -565,4 +584,5 @@ class Localization(BaseModel):
     map_names: MapNames
     gamemodes: Gamemodes
     frequent: Frequent
+    views: Views
     cmds: Cmds

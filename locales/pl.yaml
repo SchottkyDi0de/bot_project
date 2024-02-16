@@ -151,6 +151,8 @@ frequent:
       m: 'm'
       s: 's'
       
+views:
+  not_owner: You can't use this button.
 
 cmds:
 # astats command
@@ -246,7 +248,7 @@ cmds:
     descr:
       this: Pobierz sesję
       sub_descr:
-        ''
+        button_update: Update session
     errors:
       session_not_found: Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęły ponad 24 godziny od ostatniego uruchomienia sesji..
       session_not_updated: Nie wykryto żadnych zmian w statystykach, być może nie stoczyłeś żadnej bitwy lub API nie zaktualizowało danych, spróbuj ponownie później..
@@ -334,7 +336,8 @@ cmds:
       color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
     info:
       set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
-      preview: 'Statistics preview:'
+      canceled_settings_change: 'Image settings change canceled.'
+      preview: 'Do you want to apply the changes? Statistics preview:'
     items:
       color_error_note: 'All invalid values will be ignored.'
       color_error_footer: 'Color code format: #rrggbb or #rgb. Example of valid color: #FF9900 - Orange.'

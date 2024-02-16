@@ -2,13 +2,11 @@ from datetime import datetime, timedelta
 import traceback
 import pytz
 
-from discord import File, Option
+from discord import File, Option, Embed
 from discord.ext import commands
 
 from lib.api.async_wotb_api import API
 from lib.blacklist.blacklist import check_user
-from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.data_classes.db_player import SessionSettings
 from lib.data_parser.parse_data import get_session_stats
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
@@ -17,7 +15,6 @@ from lib.embeds.info import InfoMSG
 from lib.exceptions import api, data_parser, database
 from lib.exceptions.blacklist import UserBanned
 from lib.image.session import ImageGen
-from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.utils.string_parser import insert_data
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
@@ -25,6 +22,7 @@ from lib.utils.time_converter import TimeConverter
 from lib.exceptions.api import APIError
 from lib.utils.time_validator import validate
 from lib.utils.bool_to_text import bool_handler
+from lib.utils.views import Views
 
 
 _log = get_logger(__file__, 'CogSessionLogger', 'logs/cog_session.log')
@@ -38,6 +36,33 @@ class Session(commands.Cog):
         self.api = API()
         self.err_msg = ErrorMSG()
         self.inf_msg = InfoMSG()
+    
+    async def _generate_image(self, ctx: commands.Context) -> File | Embed:
+        member = self.db.get_member(ctx.author.id)
+        image_settings = self.db.get_image_settings(ctx.author.id)
+        server_settings = self.sdb.get_server_settings(ctx)
+        session_settings = self.db.get_member_session_settings(ctx.author.id)
+
+        try:
+            stats = await self.api.get_stats(game_id=member.game_id, region=member.region)
+        except api.APIError:
+            _log.error(traceback.format_exc())
+            return self.err_msg.api_error()
+
+        try:
+            last_stats = self.db.get_member_last_stats(member.id)
+        except database.LastStatsNotFound:
+            return self.err_msg.session_not_found()
+            
+        session_settings.last_get = datetime.now(pytz.utc)
+        self.db.set_member_session_settings(ctx.author.id, session_settings)
+
+        try:
+            diff_stats = get_session_stats(last_stats, stats)
+        except data_parser.NoDiffData:
+            return self.err_msg.session_not_updated()
+            
+        return File(ImageGen().generate(stats, diff_stats, ctx, image_settings, server_settings), 'session.png')
         
     @commands.slash_command(
         guild_only=True,
@@ -188,44 +213,19 @@ class Session(commands.Cog):
         await ctx.defer()
 
         if self.db.check_member(ctx.author.id):
-            member = self.db.get_member(ctx.author.id)
-            image_settings = self.db.get_image_settings(ctx.author.id)
-            server_settings = self.sdb.get_server_settings(ctx)
-            session_settings = self.db.get_member_session_settings(ctx.author.id)
-
-            try:
-                stats = await self.api.get_stats(game_id=member.game_id, region=member.region)
-            except api.APIError:
-                await ctx.respond(embed=self.err_msg.api_error())
-                _log.error(traceback.format_exc())
-                return
-
-            try:
-                last_stats = self.db.get_member_last_stats(member.id)
-            except database.LastStatsNotFound:
-                await ctx.respond(embed=self.err_msg.session_not_found())
-                return
-            
-            session_settings.last_get = datetime.now(pytz.utc)
-            self.db.set_member_session_settings(ctx.author.id, session_settings)
-
-            try:
-                diff_stats = get_session_stats(last_stats, stats)
-            except data_parser.NoDiffData:
-                await ctx.respond(embed=self.err_msg.session_not_updated())
-                return
-            
-            image = ImageGen().generate(stats, diff_stats, ctx, image_settings, server_settings)
-            await ctx.respond(file=File(image, 'session.png'))
-            return
-
-        await ctx.respond(
-            embed=self.inf_msg.custom(
-                Text().get(),
-                Text().get().cmds.get_session.info.player_not_registred,
-                colour='orange'
+            generate_res = await self._generate_image(ctx)
+            if isinstance(generate_res, File):
+                await ctx.respond(file=generate_res, view=Views().get_session_update_view(self, ctx, ctx.author.id))
+            else:
+                await ctx.respond(embed=generate_res)
+        else:
+            await ctx.respond(
+                embed=self.inf_msg.custom(
+                    Text().get(),
+                    Text().get().cmds.get_session.info.player_not_registred,
+                    colour='orange'
+                    )
                 )
-            )
 
     @commands.slash_command(
             guild_only=True, 

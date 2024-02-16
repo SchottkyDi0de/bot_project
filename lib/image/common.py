@@ -3,6 +3,7 @@
 со статистикой
 '''
 from enum import Enum
+from enum import Enum
 from io import BytesIO
 import base64
 from time import time

@@ -14,6 +14,19 @@ from asynciolimiter import Limiter
 from cacheout import FIFOCache
 
 from lib.utils.string_parser import insert_data
+
+from lib.data_classes.api.api_data import PlayerGlobalData
+from lib.data_classes.api.player_clan_stats import ClanStats
+from lib.data_classes.api.player_achievements import Achievements
+from lib.data_classes.api.player_stats import PlayerStats, PlayerData
+from lib.data_classes.api.tanks_stats import TankStats
+
+from lib.data_classes.api.api_data import PlayerGlobalData
+from lib.data_classes.api.player_clan_stats import ClanStats
+from lib.data_classes.api.player_achievements import Achievements
+from lib.data_classes.api.player_stats import PlayerStats, PlayerData
+from lib.data_classes.api.tanks_stats import TankStats
+
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.api.player_clan_stats import ClanStats
 from lib.data_classes.api.player_achievements import Achievements
@@ -326,8 +339,7 @@ class API:
                         data = data[[*data['data'].keys()][0]]
                     except KeyError:
                         ...
-                    
-                    pprint(data)
+                    data = data[list(data['data'].keys())[0]]
                     db_player = {
                             'nickname': data['nickname'],
                             'game_id': int(data['account_id']),

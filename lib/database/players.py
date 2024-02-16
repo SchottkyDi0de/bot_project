@@ -11,6 +11,7 @@ from lib.logger.logger import get_logger
 from lib.data_classes.db_player import DBPlayer, ImageSettings, SessionSettings
 from lib.exceptions import database
 from lib.settings.settings import Config
+from lib.data_classes.db_player import DBPlayer
 
 
 _config = Config().get()

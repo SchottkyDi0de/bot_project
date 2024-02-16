@@ -19,11 +19,11 @@ from lib.image.common import ValueNormalizer
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
+from lib.image.for_image.flags import Flags
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
-from lib.image.for_image.flags import Flags
 
 _log = get_logger(__file__, 'ImageSessionLogger', 'logs/image_session.log')
 _config = Config().get()

@@ -5,6 +5,7 @@ from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
 from lib.data_classes.locale_struct import Localization
 
+
 @singleton
 class InfoMSG:
 
@@ -101,6 +102,13 @@ class InfoMSG:
         return Embed(
             title=Text().get().frequent.info.warning,
             description=Text().get().cmds.cooldown.info.cooldown_not_expired,
+            color=Colour.orange()
+        )
+
+    def not_button_owner(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.warning,
+            description=Text().get().views.not_owner,
             color=Colour.orange()
         )
     
