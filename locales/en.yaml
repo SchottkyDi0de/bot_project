@@ -151,6 +151,9 @@ frequent:
       m: 'm'
       s: 's'
       
+views:
+  not_owner: You can't use this button.
+  timeout: You can't use this button anymore. Use command.
 
 cmds:
 # astats command
@@ -246,7 +249,7 @@ cmds:
     descr:
       this: Get session
       sub_descr:
-        ''
+        button_update: Update session
     errors:
       session_not_found: No session data found, you may not have started a session or it may have been more than 24 hours since the last session started.
       session_not_updated: No change in stats detected, maybe you haven't done any fights or the API hasn't updated the data, try again later.
@@ -334,8 +337,8 @@ cmds:
       changes_not_found: No parameter change detected, change at least one parameter.
     info:
       set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
+      canceled_settings_change: 'Image settings change canceled.'
       preview: 'Do you want to apply the changes? Statistics preview:'
-      not_owner: You can't use this button.
     items:
       color_error_note: 'All invalid values will be ignored.'
       color_error_footer: 'Color code format: #rrggbb or #rgb. Example of valid color: #FF9900 - Orange.'
