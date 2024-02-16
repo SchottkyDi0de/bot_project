@@ -7,6 +7,7 @@ from lib.database.players import PlayersDB
 from lib.embeds.info import InfoMSG
 from lib.locale.locale import Text
 from lib.utils.singleton_factory import singleton
+from cogs import session
 
 
 class ViewBase(View):
@@ -27,7 +28,7 @@ class Views:
         self.db = PlayersDB()
         self.inf_msg = InfoMSG()
     
-    def get_image_settings_view(self, ctx: commands.Context, user_id: int, currecnt_settings: ImageSettings) -> View:
+    def get_image_settings_view(self, ctx: commands.Context, user_id: int, current_settings: ImageSettings) -> View:
         class MyView(ViewBase):
             @button(label='✔', style=ButtonStyle.green, row=0)
             async def save_callback(view_self, _, interaction: Interaction):
@@ -39,7 +40,7 @@ class Views:
                         )
                     return
 
-                self.db.set_image_settings(interaction.user.id, currecnt_settings)
+                self.db.set_image_settings(interaction.user.id, current_settings)
                 await interaction.response.send_message(embed=self.inf_msg.custom(
                     Text().get(),
                     text=Text().get().cmds.image_settings.info.set_ok,
@@ -68,7 +69,7 @@ class Views:
         
         return MyView(user_id)
 
-    def get_session_update_view(self, session_self, ctx: commands.Context, user_id: int) -> View:
+    def get_session_update_view(self, session_self: session.Session, ctx: commands.Context, user_id: int) -> View:
         Text().load_from_context(ctx)
 
         class MyView(ViewBase):
