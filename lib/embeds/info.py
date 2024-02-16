@@ -1,8 +1,10 @@
 from discord import Colour
-from discord import Embed
+from discord import Embed, File
 
 from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
+from lib.data_classes.locale_struct import Localization
+
 
 @singleton
 class InfoMSG:
@@ -98,22 +100,39 @@ class InfoMSG:
     
     def cooldown_not_expired(self) -> Embed:
         return Embed(
-            title=self.text_obj.get().frequent.info.warning,
-            description=self.text_obj.get().cmds.cooldown.info.cooldown_not_expired,
-            color=Colour.red()
+            title=Text().get().frequent.info.warning,
+            description=Text().get().cmds.cooldown.info.cooldown_not_expired,
+            color=Colour.orange()
+        )
+
+    def not_button_owner(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.warning,
+            description=Text().get().views.not_owner,
+            color=Colour.orange()
         )
     
     def custom(
             self,
+            locale: Localization,
             text: str,
-            title: str = Text().get().frequent.info.info,
+            title: str = None,
+            footer: str = None,
+            image: File = None,
             colour: str = 'blurple'
         ) -> Embed:
     
         colour = getattr(Colour, colour)
-        return Embed(
-            title=title,
+        embed = Embed(
+            title=title if title is not None else locale.frequent.info.info,
             description=text,
-            colour=colour()
+            colour=colour(),
         )
+        
+        if footer is not None:
+            embed.set_footer(text=footer)
+        if image is not None:
+            embed.set_image(url=image)
+        return embed
+    
         

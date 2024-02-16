@@ -1,15 +1,21 @@
+import pytz
 from asyncio import sleep
+from datetime import datetime, time, timedelta
+
+from lib.api.async_wotb_api import API
 
 from lib.database.players import PlayersDB
 from lib.logger.logger import get_logger
+from lib.utils.time_converter import TimeConverter
 
-_log = get_logger(__name__, 'WorkerPDBLogger', 'logs/worker_pdb.log')
+_log = get_logger(__file__, 'WorkerPDBLogger', 'logs/worker_pdb.log')
 
 
 class PDBWorker:
     def __init__(self):
         self.db = PlayersDB()
-        self.STOP_WORKER_FLAG = False
+        self.STOP_FLAG = False
+        self.api = API()
 
     def stop_worker(self):
         """
@@ -24,9 +30,9 @@ class PDBWorker:
             None
         """
         _log.debug('WORKERS: setting STOP_WORKER_FLAG to True')
-        self.STOP_WORKER_FLAG = True
+        self.STOP_FLAG = True
 
-    async def run_worker(self):
+    async def run_worker(self, *args):
         """
         Asynchronously runs the worker in a loop.
 
@@ -41,13 +47,12 @@ class PDBWorker:
             None
         """
         _log.info('WORKERS: PDB worker started')
-        while True:
-            if not self.STOP_WORKER_FLAG:
-                await self.check_database()
-                await sleep(60 * 5)
-            else:
-                _log.info('WORKERS: PDB worker stopped')
-                break
+        
+        while not self.STOP_FLAG:
+            await self.check_database()
+            await sleep(60 * 5)
+            
+        _log.info('WORKERS: PDB worker stopped')
 
     async def check_database(self) -> None:
         """
@@ -62,7 +67,24 @@ class PDBWorker:
         Returns:
             None: This function does not return anything.
         """
-
-        for member_id in self.db.db['members'].keys():
-            self.db._check_data_timestamp(member_id)
+        member_ids = self.db.get_players_ids()
+        for member_id in member_ids:
+            player = self.db.get_member(member_id)
+            
+            if self.db.check_member_last_stats(member_id):
+                self.db.validate_session(member_id)
+            else:
+                continue
+            
+            session_settings = self.db.get_member_session_settings(member_id)
             self.db.check_member_premium(member_id)
+            
+            if session_settings.is_autosession:
+                now_time = datetime.now(pytz.utc)
+                
+                if now_time > (session_settings.time_to_restart - timedelta(hours=session_settings.timezone)):
+                    session_settings.time_to_restart += timedelta(days=1)
+                    last_stats = await self.api.get_stats(region=player.region, game_id=player.game_id)
+                    self.db.start_autosession(member_id, last_stats, session_settings)
+                
+            await sleep(0.05)

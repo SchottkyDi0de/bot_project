@@ -12,3 +12,12 @@ class TankNotFoundInTankopedia(DatabaseError):
 
 class ServerNotFound(DatabaseError):
     pass
+
+class MemberNotVerified(DatabaseError):
+    pass
+
+class OperationAccessDenied(DatabaseError):
+    pass
+
+class AutosessionNotFound(DatabaseError):
+    pass

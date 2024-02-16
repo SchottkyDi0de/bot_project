@@ -1,8 +1,7 @@
-'''Данный модуль создаёт объект, который хранит в себе локазизированныйе строки а так же метод смены локализации'''
+from typing import Dict
+
 import yaml
 from discord.ext.commands import Context
-
-from typing import Dict
 
 from lib.data_classes.locale_struct import Localization
 from lib.utils.singleton_factory import singleton
@@ -10,47 +9,85 @@ from lib.settings.settings import Config
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 
+_config = Config().get()
+
 
 @singleton
 class Text():
     def __init__(self) -> None:
+        """
+        Initializes the Text object.
+
+        Returns:
+            None
+        """
         self.sdb = ServersDB()
         self.pdb = PlayersDB()
-        self.default_lang = Config().get().default.lang
+        self.default_lang = _config.default.lang
         self.current_lang = self.default_lang
         self.datas: Dict[str, Localization] = {}
-
-        for i in ['pl', 'en', 'ru', 'ua']:
+        for i in _config.default.available_locales:
+            if i == 'auto':
+                continue
             with open(f'locales/{i}.yaml', encoding='utf-8') as f:
                 self.datas |= {i: Localization.model_validate(yaml.safe_load(f))}
-        
+    
     def load_from_context(self, ctx: Context) -> None:
-        if self.pdb.get_member_lang(ctx.author.id) is not None:
-            self.load(self.pdb.get_member_lang(ctx.author.id))
+        """
+        Loads the language based on the given context.
+
+        Args:
+            ctx (Context): The context object containing information about the user.
+
+        Returns:
+            None
+        """
+        member_lang = self.pdb.get_member_lang(ctx.author.id)
+        if member_lang is not None:
+            self.load(member_lang)
         else:
-            if ctx.interaction.locale in list(Config().get().default.locale_alliases.keys()):
-                self.load(Config().get().default.locale_alliases[ctx.interaction.locale])
+            if ctx.interaction.locale in list(_config.default.locale_aliases.keys()):
+                self.load(_config.default.locale_aliases[ctx.interaction.locale])
             else:
                 self.load(self.default_lang)
+    
+    def load(self, lang: str | None) -> Localization:
+        """
+        Loads the specified language.
 
-    def load(self, lang: str) -> Localization | None:
-        if self.current_lang == lang:
-            return
+        Args:
+            lang (str | None): The language to load.
 
-        if lang not in Config().get().default.available_locales:
-            lang = Config().get().default.lang
-        
-        self.current_lang = lang
-
-        return self.datas[lang]
-        
-    def get_current_lang(self) -> str:
-        return self.current_lang
-
-    def get(self, lang: str | None = None) -> Localization:
+        Returns:
+            Localization: The loaded language data.
+        """
+        if lang not in _config.default.available_locales:
+            lang = _config.default.lang
         if lang is None:
-            return self.datas[self.current_lang]
-        
-        else:
-            return self.load(lang)
+            lang = self.default_lang
+            
+        self.current_lang = lang
+        return self.datas[lang]
+    
+    def get_current_lang(self) -> str:
+        """
+        Gets the currently loaded language.
 
+        Returns:
+            str: The currently loaded language.
+        """
+        return self.current_lang
+    
+    def get(self, lang: str | None = None) -> Localization:
+        """
+        Gets the language data for the specified language.
+
+        Args:
+            lang (str | None): The language to get the data for. If None, uses the currently loaded language.
+
+        Returns:
+            Localization: The language data.
+        """
+        if lang is None:
+            return self.load(self.current_lang)
+        return self.load(lang)

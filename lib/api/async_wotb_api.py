@@ -1,37 +1,57 @@
+import pytz
 import json
 import asyncio
 import traceback
 from time import time
-from random import choice
+from pprint import pprint
 from datetime import datetime
+from typing import Dict, Union
 
 import aiohttp
+from aiohttp import client_exceptions
 from the_retry import retry
-from cacheout import FIFOCache
 from asynciolimiter import Limiter
+from cacheout import FIFOCache
 
-from lib.data_classes.api_data import PlayerGlobalData
-from lib.data_classes.palyer_clan_stats import ClanStats
-from lib.data_classes.player_achievements import Achievements
-from lib.data_classes.player_stats import PlayerStats
-from lib.data_classes.tanks_stats import TankStats
+from lib.utils.string_parser import insert_data
+
+from lib.data_classes.api.api_data import PlayerGlobalData
+from lib.data_classes.api.player_clan_stats import ClanStats
+from lib.data_classes.api.player_achievements import Achievements
+from lib.data_classes.api.player_stats import PlayerStats, PlayerData
+from lib.data_classes.api.tanks_stats import TankStats
+
+from lib.data_classes.api.api_data import PlayerGlobalData
+from lib.data_classes.api.player_clan_stats import ClanStats
+from lib.data_classes.api.player_achievements import Achievements
+from lib.data_classes.api.player_stats import PlayerStats, PlayerData
+from lib.data_classes.api.tanks_stats import TankStats
+
+from lib.data_classes.api.api_data import PlayerGlobalData
+from lib.data_classes.api.player_clan_stats import ClanStats
+from lib.data_classes.api.player_achievements import Achievements
+from lib.data_classes.api.player_stats import PlayerStats, PlayerData
+from lib.data_classes.api.tanks_stats import TankStats
+from lib.utils.singleton_factory import singleton
 from lib.data_parser.parse_data import get_normalized_data
-from lib.database.players import PlayersDB
 from lib.exceptions import api as api_exceptions
 from lib.logger.logger import get_logger
-from lib.settings import settings
+from lib.settings.settings import Config, EnvConfig
+from lib.data_classes.db_player import DBPlayer, ImageSettings
 
-_log = get_logger(__name__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
-st = settings.Config()
+_log = get_logger(__file__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
+_config = Config().get()
 
+
+@singleton
 class API:
     def __init__(self) -> None:
-        self.cache = FIFOCache(maxsize=100, ttl=60)
         self.exact = True
         self.raw_dict = False
-        self._palyers_stats = []
+        self._players_stats = []
         self.start_time = 0
-        self.rate_limiter = Limiter(9.8)
+        self.rate_limiter = Limiter(19)
+        self.cache = FIFOCache(maxsize=100, ttl=60)
 
         self.player_stats = {}
         self.player = {}
@@ -39,23 +59,15 @@ class API:
     def _get_id_by_reg(self, reg: str) -> str:
         reg = reg.lower()
         if reg == 'ru':
-            return choice(
-                [
-                    st.LT_APP_ID_CL0,
-                    st.LT_APP_ID_CL1,
-                ]
-                )
-        elif reg in ['eu', 'com', 'asia', 'na', 'as']:
-            return choice(
-                [
-                    st.WG_APP_ID_CL0,
-                    st.WG_APP_ID_CL1,
-                ]
-                )
+            return next(EnvConfig.LT_APP_IDS)
+        elif reg in {'eu', 'com', 'asia', 'na', 'as'}:
+            tok = next(EnvConfig.WG_APP_IDS)
+            _log.debug(f'Used app ID: {tok}')
+            return tok
         raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
 
     def _reg_normalizer(self, reg: str) -> str:
-        if reg in ['ru', 'eu', 'asia']:
+        if reg in {'ru', 'eu', 'asia'}:
             return reg
         if reg == 'na':
             return 'com'
@@ -69,7 +81,7 @@ class API:
             check_battles: bool = False,
             check_data: bool = False,
             check_meta: bool = False
-            ) -> dict:
+            ) -> dict: 
         """
         Asynchronously handles the response from the API and returns the data as a dictionary.
 
@@ -86,69 +98,80 @@ class API:
         Returns:
             dict: The data returned from the API as a dictionary.
         """
-        if response.status != 200:
-            _log.error(f'Error get data, bad response code: {response.status}')
-            raise api_exceptions.APIError()
         
         data = await response.text()
         data = json.loads(data)
         if response.status == 504:
             raise api_exceptions.APISourceNotAvailable()
+        if response.status == 407:
+            raise api_exceptions.UncorrectName('Uncorrect nickname')
+        
+        if response.status != 200:
+            _log.error(f'Error get data, bad response code: {response.status}')
+            raise api_exceptions.APIError()
 
         if check_data_status:
             if data['status'] != 'ok':
                 if data['error']['message'] == 'REQUEST_LIMIT_EXCEEDED':
-                    _log.warning(f'Ingnoring Exception caused by API: Request Limit Exceeded')
+                    _log.warning(f'Ignoring Exception caused by API: Request Limit Exceeded')
                     raise api_exceptions.RequestsLimitExceeded('Rate Limit Exceeded')
+                
+                elif data['error']['message'] == 'INVALID_SEARCH':
+                    _log.error(f'Exception caused by API: Invalid Search')
+                    raise api_exceptions.UncorrectName('Uncorrect nickname')
                     
                 _log.error(f'Error get data, bad response status: {data}')
                 raise api_exceptions.APIError(f'Error get data, bad response status: {data}')
-            
-        if data['meta']['count'] == 0:
-            _log.error(
-                f'API Returned `count 0`'
-                f'Data: {data["meta"]}'
-            )
-            raise api_exceptions.NoPlayersFound()
 
-        if check_data:
-            if data['data'] == None:
-                _log.error(
-                    f'API Returned empty `data` section'
-                    f'Data: {data}'
-                )
-                raise api_exceptions.EmptyDataError(f'API Returned empty `data` section')
-                
-            elif data['data'][list(data['data'].keys())[0]] == None:
+        if check_data or check_meta:
+            if data['meta']['count'] == 0:
+                raise api_exceptions.NoPlayersFound('No players found')
+            
+            if data['data'] == None or data['data'] == []:
                 _log.error(
                     f'API Returned empty `data` section'
                     f'Data: {data}'
                 )
                 raise api_exceptions.EmptyDataError(f'API Returned empty `data` section')
             
-        if check_battles:
-            if data['data'][list(data['data'].keys())[0]]['statistics']['all']['battles'] < 100:
-                _log.error(f'Need more battles')
-                raise api_exceptions.NeedMoreBattlesError()
-      
+            if isinstance(data['data'], list):
+                if len(data['data']) == 0:
+                    raise api_exceptions.NoPlayersFound('No players found')
+                
+            elif isinstance(data['data'], dict):
+                if len(data['data'].keys()) == 0:
+                    raise api_exceptions.NoPlayersFound('No players found')
+                
+                elif data['data'][list(data['data'].keys())[0]] is None:
+                    raise api_exceptions.NoPlayersFound('No players found')
+            
+        if check_battles and check_data:
+            if isinstance(data['data'], list):
+                if data['data'][0]['statistics']['all']['battles'] < 100:
+                    raise api_exceptions.NeedMoreBattlesError('Need more battles')
+                
+            elif isinstance(data['data'], dict):
+                if data['data'][list(data['data'].keys())[0]]['statistics']['all']['battles'] < 100:
+                    raise api_exceptions.NeedMoreBattlesError('Need more battles')
+            
         return data
 
     def _get_url_by_reg(self, reg: str):
         reg = self._reg_normalizer(reg)
         match reg:
             case 'ru':
-                return 'papi.tanksblitz.ru'
+                return _config.game_api.reg_urls.ru
             case 'eu':
-                return 'api.wotblitz.eu'
+                return _config.game_api.reg_urls.eu
             case 'asia':
-                return 'api.wotblitz.asia'
+                return _config.game_api.reg_urls.asia
             case 'com':
-                return 'api.wotblitz.com'
+                return _config.game_api.reg_urls.na
             case _:
                 raise api_exceptions.UncorrectRegion(f'Uncorrect region: {reg}')
     
     def get_players_callback(self, task: asyncio.Task) -> PlayerStats:
-        self._palyers_stats.append(task.result())
+        self._players_stats.append(task.result())
         
             
     async def get_players_stats(self, players_id: list[int], region: str) -> list[PlayerStats | bool]:
@@ -162,13 +185,13 @@ class API:
         Returns:
             list[PlayerStats | bool]: A list of PlayerStats objects representing the statistics of each player. If an error occurs during the retrieval, a boolean value indicating the success of the operation is returned.
         """
-        self._palyers_stats = []
+        self._players_stats = []
         async with aiohttp.ClientSession() as session:
             async with asyncio.TaskGroup() as tg:
                 for i in players_id:
                     tg.create_task(self._get_players_stats(i, region, session))
         
-        return self._palyers_stats
+        return self._players_stats
                 
     async def _get_players_stats(self, player_id: int, region: str, session: aiohttp.ClientSession) -> None:
         """
@@ -183,29 +206,40 @@ class API:
             None
         """
         await self.rate_limiter.wait()
-        url_get_stats = (
-            f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
-            f'?application_id={self._get_id_by_reg(region)}'
-            f'&account_id={player_id}'
-            f'&fields=-statistics.clan'
+        
+        url_get_stats = insert_data(
+            _config.game_api.urls.get_stats,
+            {
+                'reg_url' : self._get_url_by_reg(region),
+                'app_id': self._get_id_by_reg(region),
+                'player_id': player_id
+            }
         )
         async with session.get(url_get_stats, verify_ssl=False) as response:
             try:
                 data = await self.response_handler(response, check_battles=False, check_data=True)
             except api_exceptions.EmptyDataError:
                 _log.debug(f'Error get player stats\n{traceback.format_exc()}')
-                self._palyers_stats.append(False)
+                self._players_stats.append(False)
             except api_exceptions.APIError:
                 _log.debug(f'Error get player stats\n{traceback.format_exc()}')
-                self._palyers_stats.append(False)
+                self._players_stats.append(False)
             else:
                 account_id = list(data['data'].keys())[0]
                 data['data'] = data['data'][account_id]
-                self._palyers_stats.append(PlayerStats.model_validate(data))
+                self._players_stats.append(PlayerStats.model_validate(data))
 
     async def retry_callback(self):
         _log.debug('Task failed, retrying...')
 
+    @retry(
+        expected_exception=(
+            api_exceptions.RequestsLimitExceeded,
+            api_exceptions.APISourceNotAvailable
+        ),
+        attempts=3,
+        on_exception=retry_callback
+    )
     async def get_tankopedia(self, region: str = 'ru') -> dict:
         """
         Get tankopedia data.
@@ -220,16 +254,18 @@ class API:
         _log.debug('Get tankopedia data')
         url_get_tankopedia = (
             f'https://{self._get_url_by_reg(region)}/wotb/encyclopedia/vehicles/'
-            f'?application_id={self._get_id_by_reg(region)}&fields='
+            f'?application_id={self._get_id_by_reg(region)}&language=en&fields='
             f'-description%2C+-engines%2C+-guns%2C-next_tanks%2C+-prices_xp%2C+'
             f'-suspensions%2C+-turrets%2C+-cost%2C+-default_profile%2C+-modules_tree%2C+-images'
         )
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url_get_tankopedia, verify_ssl=False) as response:
-                data = await self.response_handler(response, False)
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url_get_tankopedia, verify_ssl=False) as response:
+                    return await self.response_handler(response, False)
 
-                return data
+        except client_exceptions.ClientConnectionError as e:
+            raise api_exceptions.APIError('Client Exception Occurred') from e
                 
     @retry(
             expected_exception=(
@@ -239,7 +275,13 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def check_player(self, nickname: str, region: str) -> None:
+    async def check_and_get_player(
+            self, 
+            region: str, 
+            discord_id: int, 
+            nickname: str | None = None, 
+            game_id: int | None = None
+        ) -> DBPlayer | None:
         """
         Check a player's information.
 
@@ -252,7 +294,7 @@ class API:
             SourceNotAvailable: If the source is not available.
 
         Returns:
-            None
+            dict | None: The player's information or None if the player is not found.
         """
         url_get_id = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/list/'
@@ -264,109 +306,147 @@ class API:
         region = self._reg_normalizer(region)
         async with aiohttp.ClientSession() as session:
             await self.rate_limiter.wait()
-            async with session.get(url_get_id, verify_ssl=False) as response:
-                try:
-                    data = await self.response_handler(response, check_meta=True)
-                except Exception as e:
-                    _log.debug(f'Error check player\n{traceback.format_exc()}')
-                    raise e
-                
+            data = None
+            if game_id is None:
+                async with session.get(url_get_id, verify_ssl=False) as response:
+                    try:
+                        data = await self.response_handler(response, check_data=True)
+                        data = data['data'][0]
+                        game_id = int(data['account_id'])
+                    except Exception as e:
+                        _log.debug(f'Error check player\n{traceback.format_exc()}')
+                        raise e
+                    
             url_get_stats = (
                 f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
                 f'?application_id={self._get_id_by_reg(region)}'
-                f'&account_id={data["data"][0]["account_id"]}'
+                f'&account_id={game_id}'
                 f'&fields=-statistics.clan'
             )
             await self.rate_limiter.wait()
+                
             async with session.get(url_get_stats, verify_ssl=False) as response:
                 try:
-                    await self.response_handler(response, check_battles=True, check_data=True)
+                    if data is None:
+                        data = await self.response_handler(response, check_battles=True, check_data=True)
+                    else:
+                        await self.response_handler(response, check_battles=True, check_data=True)
                 except Exception as e:
                     _log.debug(f'Error check player\n{traceback.format_exc()}')
                     raise e
+                else:
+                    try:
+                        data = data[[*data['data'].keys()][0]]
+                    except KeyError:
+                        ...
+                    data = data[list(data['data'].keys())[0]]
+                    db_player = {
+                            'nickname': data['nickname'],
+                            'game_id': int(data['account_id']),
+                            'region': region,
+                            'id': discord_id,
+                        }
+                    return DBPlayer.model_validate(db_player)
             
     def done_callback(self, task: asyncio.Task):
         pass
 
-    async def get_stats(self, search: str, region: str, exact: bool = True, raw_dict: bool = False) -> PlayerGlobalData:
+    async def get_stats(
+        self, 
+        region: str = None,
+        game_id: int | None = None, 
+        search: str | None = None, 
+        exact: bool = True, 
+        raw_dict: bool = False) -> PlayerGlobalData:
         """
-        Asynchronously retrieves the statistics for a player based on their search parameters.
+        Asynchronously retrieves player statistics for a game. Optionally filters by game ID, player search string, and region.
 
-        Args:
-            search (str): The search parameter, such as the player's nickname.
-            region (str): The region in which the player's statistics will be retrieved.
-            exact (bool, optional): Whether to perform an exact search. Defaults to True.
-            raw_dict (bool, optional): Whether to return the data as a raw dictionary. Defaults to False.
+        Parameters:
+        - region (str): The region to which the player belongs.
+        - game_id (int | None): Optional game identifier to filter the player stats.
+        - search (str | None): Optional search string for a player's nickname.
+        - exact (bool): Whether to perform an exact match on the player's nickname. Defaults to True.
+        - raw_dict (bool): Whether to return the player's stats as a raw dictionary. Defaults to False.
 
         Returns:
-            PlayerGlobalData: The statistics for the player.
-
-        Raises:
-            api_exceptions.APIError: If the search parameter or region is empty.
-
-        """
-        if search is None or region is None:
-            self.exact = True
-            self.raw_dict = False
-            raise api_exceptions.APIError('Empty parameter search or region')
+        - PlayerGlobalData: An object containing normalized player statistics data or a raw dictionary if raw_dict is True.
         
-        self.cache.delete_expired()
-
+        The function performs the following steps:
+        - Validates the 'search' and 'region' parameters.
+        - Initiates an asynchronous session and collects various player stats.
+        - Normalizes and formats the collected data.
+        - Returns the player statistics in the desired format.
+        """
+        need_caching: bool = False
+        cached_data = self.cache.get(((str(game_id), region)))
+        if cached_data is not None:
+            data = PlayerGlobalData.model_validate(cached_data)
+            data.from_cache = True
+            return get_normalized_data(data)
+        else:
+            need_caching = True
+        
         self.exact = exact
         self.raw_dict = raw_dict
 
         self.start_time = time()
-        need_cached = False
 
-        cached_data: PlayerGlobalData = self.cache.get((search.lower(), region))
-
-        if cached_data is None:
-            need_cached = True
-        else:
-            _log.debug('Returned cached player data')
-            cached_data['from_cache'] = True
-            return PlayerGlobalData.model_validate(cached_data)
-
-        account_id = await self.get_account_id(region=region, nickname=search)
+        player = await self.get_player(region=region, nickname=search, game_id=game_id)
+        self.player['id'] = player['account_id']
 
         tasks = [
             self.get_player_stats,
-            self.get_player_tanks_stats,
             self.get_player_clan_stats,
-            self.get_player_achievements
+            self.get_player_achievements,
+            self.get_player_tanks_stats
         ]
         task_names = [
             'get_player_stats',
-            'get_player_tanks_stats',
             'get_player_clan_stats',
-            'get_player_achievements'
+            'get_player_achievements',
+            'get_player_tanks_stats'
         ]
+
+        default_params = {"account_id": player['account_id'], "region": region}
         self.player, self.player_stats = {}, {}
         async with aiohttp.ClientSession() as self.session:
             async with asyncio.TaskGroup() as tg:
                 for i, task in enumerate(tasks):
-                    task = tg.create_task(task(account_id=account_id, region=region, nickname=search))
-                    task.set_name(task_names[i])
-                    task.add_done_callback(self.done_callback)
+                    self.create_task(tg, task_names[i], task, default_params)
             
         self.player['timestamp'] = int(datetime.now().timestamp())
         self.player['end_timestamp'] = int(
-            self.player['timestamp'] +
-            settings.Config().get().session_ttl
+            datetime.now().timestamp() +
+            _config.session.ttl
         )
+        self.player['id'] = player['account_id']
+        self.player['region'] = self._reg_normalizer(region)
+        self.player['lower_nickname'] = player['nickname'].lower()
+        self.player['timestamp'] = datetime.now(pytz.utc)
+        self.player['nickname'] = player['nickname']
         self.player['data'] = self.player_stats
 
         player_stats = PlayerGlobalData.model_validate(self.player)
 
-        if need_cached:
-            self.cache.set((search.lower(), region), get_normalized_data(player_stats).model_dump())
-            _log.debug('Data add to cache')
-
         if self.raw_dict:
             return player_stats.model_dump()
+        
+        if need_caching:
+            player_stats.from_cache = False
+            self.cache.add((str(game_id), region), player_stats.model_dump())
 
-        # _log.debug(f'All requests time: {time() - self.start_time}')
         return get_normalized_data(player_stats)
+
+    def create_task(
+            self, 
+            tg: asyncio.TaskGroup, 
+            task_name: str, 
+            task, 
+            params: Dict[str, Union[str, int]]
+            ) -> None:
+        task = tg.create_task(task(**params))
+        task.set_name(task_name)
+        task.add_done_callback(self.done_callback)
 
     @retry(
             expected_exception=(
@@ -376,7 +456,11 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def get_account_id(self, region: str, nickname: str) -> None:
+    async def get_player(
+        self, 
+        region: str, 
+        nickname: str | None = None, 
+        game_id: int | None = None) -> dict:
         """
         Retrieves the account ID of a player by their nickname and region.
 
@@ -394,30 +478,37 @@ class API:
             api_exceptions.UncorrectName: If the player name is incorrect.
             api_exceptions.MoreThanOnePlayerFound: If more than one player is found with the given nickname.
             api_exceptions.NoPlayersFound: If no players are found with the given nickname."""
-        url_get_id = (
-            f'https://{self._get_url_by_reg(region)}/wotb/account/list/'
-            f'?application_id={self._get_id_by_reg(region)}'
-            f'&search={nickname}'
-            f'&type={"exact" if self.exact else "startswith"}'
+            
+        url_get_id = insert_data(
+            _config.game_api.urls.get_id,
+            {   
+                'app_id'  : self._get_id_by_reg(region),
+                'reg_url' : self._get_url_by_reg(region),
+                'nickname': nickname,
+                'search_type' : 'exact' if self.exact else 'startswith',
+            }
         )
 
         await self.rate_limiter.wait()
         async with aiohttp.ClientSession() as self.session:
-            async with self.session.get(url_get_id, verify_ssl=False) as response:
-                data = await self.response_handler(response, False)
+            if game_id is None:
+                async with self.session.get(url_get_id, verify_ssl=False) as response:
 
-                if data['status'] == 'error':
-                    match data['error']['code']:
-                        case 407 | 402:
-                            raise api_exceptions.UncorrectName()
-                        
-                if data['meta']['count'] > 1:
-                    raise api_exceptions.MoreThanOnePlayerFound()
-                elif data['meta']['count'] == 0:
-                    raise api_exceptions.NoPlayersFound()
-
-                account_id: int = data['data'][0]['account_id']
-                return account_id
+                    data = await self.response_handler(response, check_meta=True)
+                    game_id: int = data['data'][0]['account_id']
+                    
+            url_get_stats = insert_data(
+            _config.game_api.urls.get_stats,
+                {
+                    'app_id'  : self._get_id_by_reg(region),
+                    'reg_url' : self._get_url_by_reg(region),
+                    'player_id' : game_id
+                }
+            )
+            
+            async with self.session.get(url_get_stats, verify_ssl=False) as response:
+                data = await self.response_handler(response, check_data=True, check_battles=True)
+                return data['data'][str(game_id)]
             
     @retry(
             expected_exception=(
@@ -446,11 +537,12 @@ class API:
             f'&fields=-statistics.clan'
         )
         await self.rate_limiter.wait()
-        async with aiohttp.ClientSession() as sesison:
-            async with sesison.get(url_get_battles, verify_ssl=False) as response:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_get_battles, verify_ssl=False) as response:
                 data = await self.response_handler(response)
 
         return data['data'][str(account_id)]['statistics']['all']['battles']
+    
 
     @retry(
             expected_exception=(
@@ -460,7 +552,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def get_player_stats(self, region: str, account_id: str, **kwargs) -> PlayerStats:
+    async def get_player_stats(self, region: str, account_id: str) -> PlayerStats:
         """
         Retrieves the player statistics for a given region and account ID.
         
@@ -479,37 +571,24 @@ class API:
             NeedMoreBattlesError: If the player has less than 100 battles.
         """
         _log.debug('Get main stats started')
-        url_get_stats = (
-            f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
-            f'?application_id={self._get_id_by_reg(region)}'
-            f'&account_id={account_id}'
-            f'&extra=statistics.rating'
-            f'&fields=-statistics.clan'
+        url_get_stats = insert_data(
+            _config.game_api.urls.get_stats,
+            {
+                'app_id'  : self._get_id_by_reg(region),
+                'reg_url' : self._get_url_by_reg(region),
+                'player_id' : account_id
+            }
         )
 
         await self.rate_limiter.wait()
         async with self.session.get(url_get_stats, verify_ssl=False) as response:
-            data = await self.response_handler(response)
-
-        try:
-            battles = data['data'][str(account_id)]['statistics']['all']['battles']
-        except KeyError:
-            raise api_exceptions.EmptyDataError('Cannot acces to field "battles" in the output data')
-        else:
-            if battles < 100:
-                raise api_exceptions.NeedMoreBattlesError('Need more battles for generate statistics')
+            data = await self.response_handler(response, check_battles=True)
 
         data['data'] = data['data'][str(account_id)]
 
         data = PlayerStats.model_validate(data)
 
-        self.player['id'] = account_id
-        self.player['nickname'] = data.data.nickname
         self.player_stats['statistics'] = data.data.statistics
-
-        # self.player.id = account_id
-        # self.player.data.statistics = data.data.statistics
-        # self.player.nickname = data.data.nickname
 
     @retry(
             expected_exception=(
@@ -552,7 +631,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def get_player_clan_stats(self, region: str, account_id: str | int):
+    async def get_player_clan_stats(self, region: str, account_id: str | int) -> None:
         """
         Retrieves clan statistics for a player.
 
@@ -591,7 +670,6 @@ class API:
 
         self.player_stats['clan_tag'] = data.data.clan.tag
         self.player_stats['clan_stats'] = data.data.clan
-        # self.player.data.clan_stats = data.data.clan
 
     @retry(
             expected_exception=(
@@ -601,7 +679,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def get_player_tanks_stats(self, region: str, account_id: str, nickname: str,  **kwargs):
+    async def get_player_tanks_stats(self, region: str, account_id: str,  **kwargs):
         """
         Retrieves the statistics of the tanks owned by a player.
 
@@ -633,25 +711,5 @@ class API:
 
         for tank in data['data'][str(account_id)]:
             tanks_stats[str(tank['tank_id'])] = TankStats.model_validate(tank)
-
-        self.player['region'] = self._reg_normalizer(region)
-        self.player['lower_nickname'] = nickname.lower()
+            
         self.player_stats['tank_stats'] = tanks_stats
-
-async def test(
-        nickname='cnJIuHTeP_KPbIca', 
-        region='ru', 
-        save_to_database: bool = False, 
-        speed_test: bool = False
-    ) -> PlayerGlobalData | tuple[PlayerGlobalData, float | None]:
-    if speed_test:
-        start_time = time()
-    db = PlayersDB()
-    api = API()
-    data = await api.get_stats(nickname, region)
-    if speed_test:
-        end_time = time()
-    if save_to_database:
-        db.set_member_last_stats(766019191836639273, data.to_dict())
-
-    return (data, (end_time - start_time) if speed_test else None)

@@ -69,7 +69,7 @@ class PlayerResult(BaseModel):
 class ReplayData(BaseModel):
     mode_map_id: int
     timestamp_secs: int
-    winner_team_number: int
+    winner_team_number: int | None
     author: Author
     room_type: int
     free_xp: int

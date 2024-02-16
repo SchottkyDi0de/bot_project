@@ -11,10 +11,11 @@ from lib.exceptions.data_parser import DataParserError
 from lib.logger.logger import get_logger
 from lib.replay_parser.parser import ReplayParser
 
-_log = get_logger(__name__, 'ReplayParserLogger', 'logs/replay_parser.log')
+_log = get_logger(__file__, 'ReplayParserLogger', 'logs/replay_parser.log')
 
 
 class Maps(Enum):
+    rockfield = 1
     desert_sands = 2
     middleburg = 3
     copperfield = 4
@@ -33,6 +34,7 @@ class Maps(Enum):
     canal = 21
     vineyards = 23
     yamato_harbor = 25
+    lagoon = 26
     canyon = 27
     mayan_ruins = 30
     dynasty_pearl = 31
@@ -65,7 +67,8 @@ class ParseReplayData:
     async def parse(self, data: ReplayData, region: str) -> ParsedReplayData:
         try:
             parsed_data = ParsedReplayData.model_validate(data.model_dump())
-
+            
+            # _log.debug(f'Replay - MAP_ID: {parsed_data.room_type}')
             # get all players ids
             players_ids = []
             for player in data.players:
@@ -113,7 +116,9 @@ class ParseReplayData:
             except ValueError:
                 _log.debug(f'Room type is not defined, room_type {data.room_type}')
 
-            if parsed_data.author.team_number == parsed_data.winner_team_number:
+            if parsed_data.winner_team_number == None:
+                parsed_data.author.winner = None
+            elif parsed_data.author.team_number == parsed_data.winner_team_number:
                 parsed_data.author.winner = True
             else:
                 parsed_data.author.winner = False

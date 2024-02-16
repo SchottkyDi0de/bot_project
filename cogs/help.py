@@ -3,6 +3,7 @@ from asyncio import sleep
 
 from discord import Option, errors
 from discord.ext import commands
+
 from lib.blacklist.blacklist import check_user
 from lib.exceptions.blacklist import UserBanned
 from lib.database.servers import ServersDB
@@ -11,8 +12,10 @@ from lib.locale.locale import Text
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.logger.logger import get_logger
+from lib.settings.settings import Config
 
-_log = get_logger(__name__, 'CogHelpLogger', 'logs/cog_help.log')
+_log = get_logger(__file__, 'CogHelpLogger', 'logs/cog_help.log')
+_config = Config().get()
 
 
 class Help(commands.Cog):
@@ -20,16 +23,18 @@ class Help(commands.Cog):
         self.bot = bot
         self.sdb = ServersDB()
         self.pdb = PlayersDB()
+        self.err_msg = ErrorMSG()
+        self.inf_msg = InfoMSG()
 
     @commands.slash_command(
             guild_only=True,
-            name=Text().get().cmds.help.items.help.lower(),
+            name=Text().get('en').cmds.help.items.help.lower(),
             name_localizations={
                 'ru': Text().get('ru').cmds.help.items.help.lower(),
                 'pl': Text().get('pl').cmds.help.items.help.lower(),
                 'uk': Text().get('ua').cmds.help.items.help.lower()
             },
-            description=Text().get().cmds.help.descr.this,
+            description=Text().get('en').cmds.help.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.help.descr.this,
                 'pl': Text().get('pl').cmds.help.descr.this,
@@ -39,78 +44,93 @@ class Help(commands.Cog):
     async def help(
         self, 
         ctx: commands.Context,
-        h_type: Option(
-            str,
-            description=Text().get().cmds.help.descr.sub_descr.help_types,
-            description_localizations={
-                'ru': Text().get('ru').cmds.help.descr.sub_descr.help_types,
-                'pl': Text().get('pl').cmds.help.descr.sub_descr.help_types,
-                'uk': Text().get('ua').cmds.help.descr.sub_descr.help_types
-                },
-            choices=Text().get().cmds.help.items.help_types,
-            default='all'
-            )
         ):
+        Text().load_from_context(ctx)
+        check_user(ctx)
+
+        await ctx.defer()
         try:
-            check_user(ctx)
-        except UserBanned:
+            match Text().current_lang:
+                case 'ru':
+                    await ctx.author.send(
+                        embed=InfoMSG().custom(
+                            Text().get('ru'),
+                            title=Text().get('ru').cmds.help.items.help,
+                            text=_config.help_urls.ru
+                            )
+                        )
+                case 'ua':
+                    await ctx.author.send(
+                        embed=InfoMSG().custom(
+                            Text().get('ua'),
+                            title=Text().get('ua').cmds.help.items.help,
+                            text=_config.help_urls.ua
+                        )
+                    )
+                case 'pl':
+                    await ctx.author.send(
+                        embed=InfoMSG().custom(
+                            Text().get('pl'),
+                            title=Text().get('pl').cmds.help.items.help,
+                            text=_config.help_urls.pl
+                            )
+                        )
+                case _:
+                    await ctx.author.send(
+                        embed=InfoMSG().custom(
+                            Text().get('en'),
+                            title=Text().get('en').cmds.help.items.help,
+                            text=_config.help_urls.en
+                            )
+                        )
+                    
+            await ctx.respond(embed=InfoMSG().help_send_ok())
             return
-        
-        try:
-            Text().load_from_context(ctx)
-            await ctx.defer()
-            try:
-                match h_type:
-                    case 'syntax':
-                        await ctx.user.send(embed=InfoMSG().help_syntax())
-                    case 'setup':
-                        await ctx.user.send(embed=InfoMSG().help_setup())
-                    case 'statistics':
-                        await ctx.user.send(embed=InfoMSG().help_statistics())
-                    case 'session':
-                        await ctx.user.send(embed=InfoMSG().help_session())
-                    case 'other':
-                        await ctx.user.send(embed=InfoMSG().help_other())
-                    case 'all':
-                        for i in Text().get().cmds.help.items.help_types:
-                            if i == 'all':
-                                continue
-                            await ctx.user.send(embed=getattr(InfoMSG(), f'help_{i}')())
-                            await sleep(0.5)
-                    case _:
-                        await ctx.respond(embed=ErrorMSG().unknown_error())
-                await ctx.respond(embed=InfoMSG().help_send_ok())
-                return
-            except errors.Forbidden:
-                try:
-                    match h_type:
-                        case 'syntax':
-                            await ctx.channel.send(embed=InfoMSG().help_syntax())
-                        case 'setup':
-                            await ctx.channel.send(embed=InfoMSG().help_setup())
-                        case 'statistics':
-                            await ctx.channel.send(embed=InfoMSG().help_statistics())
-                        case 'session':
-                            await ctx.channel.send(embed=InfoMSG().help_session())
-                        case 'other':
-                            await ctx.channel.send(embed=InfoMSG().help_other())
-                        case 'all':
-                            for i in Text().get('en').cmds.help.items.help_types:
-                                if i == 'all':
-                                    continue
-                                await ctx.channel.send(embed=getattr(InfoMSG(), f'help_{i}')())
-                                await sleep(0.5)
-                        case _:
-                            await ctx.respond(embed=ErrorMSG().unknown_error())
-                            return
-                except Exception:
-                    await ctx.respond(embed=ErrorMSG().unknown_error())
-                    _log.error(traceback.format_exc())
-                    return
-                await ctx.respond(embed=InfoMSG().help_send_ok())
-        except:
+            
+        except errors.Forbidden:
+            match Text().current_lang:
+                case 'ru':
+                    await ctx.respond(
+                        embed=InfoMSG().custom(
+                            Text().get('ru'),
+                            title=Text().get('ru').cmds.help.items.help,
+                            text=_config.help_urls.ru
+                            )
+                        )
+                case 'ua':
+                    await ctx.respond(
+                        embed=InfoMSG().custom(
+                            Text().get('ua'),
+                            title=Text().get('ua').cmds.help.items.help,
+                            text=_config.help_urls.ua
+                        )
+                    )
+                case 'pl':
+                    await ctx.respond(
+                        embed=InfoMSG().custom(
+                            Text().get('pl'),
+                            title=Text().get('pl').cmds.help.items.help,
+                            text=_config.help_urls.pl
+                        )
+                    )
+                case _:
+                    await ctx.respond(
+                        embed=InfoMSG().custom(
+                            Text().get('en'),
+                            title=Text().get('en').cmds.help.items.help,
+                            text=_config.help_urls.en
+                            )
+                        )
+            await ctx.respond(embed=InfoMSG().help_send_ok())
+            
+    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
+        elif isinstance(error, UserBanned):
+            await ctx.respond(embed=self.err_msg.user_banned())
+        else:
             _log.error(traceback.format_exc())
-            await ctx.respond(embed=ErrorMSG().unknown_error())
+            await ctx.respond(embed=self.err_msg.unknown_error())
 
 
 def setup(bot):
