@@ -18,14 +18,7 @@ class ViewBase(View):
         return self.user_id != interaction.user.id
 
     async def on_timeout(self):
-        db = PlayersDB()
-        lang = db.get_member_lang(self.user_id)
         await self.message.edit(view=None)
-        await self.message.reply(embed=InfoMSG().custom(
-            Text().get(lang),
-            title=Text().get(lang).frequent.info.warning,
-            text=Text().get(lang).views.timeout,
-        ))
 
 
 @singleton

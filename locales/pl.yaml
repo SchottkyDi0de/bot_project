@@ -153,7 +153,6 @@ frequent:
       
 views:
   not_owner: You can't use this button.
-  timeout: You can't use this button anymore. Use command.
 
 cmds:
 # astats command

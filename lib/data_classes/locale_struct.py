@@ -129,7 +129,6 @@ class Frequent(BaseModel):
 
 class Views(BaseModel):
     not_owner: str
-    timeout: str
 
 
 class Descr(BaseModel):
