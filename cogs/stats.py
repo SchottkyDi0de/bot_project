@@ -1,6 +1,6 @@
 import traceback
 
-from discord import File, Option, Embed
+from discord import File, Option
 from discord.ext import commands
 
 from lib.settings.settings import Config
@@ -17,8 +17,7 @@ from lib.blacklist.blacklist import check_user
 from lib.exceptions.blacklist import UserBanned
 from lib.data_classes.db_server import ServerSettings
 from lib.logger.logger import get_logger
-from lib.utils.nickname_handler import handle_nickname, validate_nickname, \
-                                        CompositeNickname, NickTypes
+from lib.utils.nickname_handler import handle_nickname, validate_nickname
 from lib.exceptions.nickname_validator import NicknameValidationError
 
 _log = get_logger(__file__, 'CogStatsLogger', 'logs/cog_stats.log')

@@ -22,7 +22,7 @@ from lib.utils.time_converter import TimeConverter
 from lib.exceptions.api import APIError
 from lib.utils.time_validator import validate
 from lib.utils.bool_to_text import bool_handler
-from lib.utils.views import Views
+from lib.utils.views import ViewMeta
 
 
 _log = get_logger(__file__, 'CogSessionLogger', 'logs/cog_session.log')
@@ -215,7 +215,7 @@ class Session(commands.Cog):
         if self.db.check_member(ctx.author.id):
             generate_res = await self._generate_image(ctx)
             if isinstance(generate_res, File):
-                await ctx.respond(file=generate_res, view=Views().get_session_update_view(self, ctx, ctx.author.id))
+                await ctx.respond(file=generate_res, view=ViewMeta(ctx, 'session', self))
             else:
                 await ctx.respond(embed=generate_res)
         else:

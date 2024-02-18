@@ -1,3 +1,5 @@
+import traceback
+
 from discord import Option, File, Cog
 from discord.ext import commands
 
@@ -8,15 +10,18 @@ from lib.database.servers import ServersDB
 from lib.data_classes.db_player import ImageSettings
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
+from lib.exceptions.blacklist import UserBanned
 from lib.locale.locale import Text
+from lib.logger.logger import get_logger
 from lib.blacklist.blacklist import check_user
 from lib.image.utils.hex_color_validator import hex_color_validate
 from lib.image.settings_represent import SettingsRepresent
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
-from lib.utils.views import Views
+from lib.utils.views import ViewMeta
 from lib.utils.stats_preview import StatsPreview
 
+_log = get_logger(__file__, 'CogCustomizationLogger', 'logs/cog_customization.log')
 
 
 class Customization(Cog):
@@ -223,6 +228,10 @@ class Customization(Cog):
         Text().load_from_context(ctx)
         check_user(ctx)
 
+        if not self.db.check_member(ctx.author.id):
+            await ctx.respond(embed=self.inf_msg.player_not_registred())
+            return
+
         image_settings = self.db.get_image_settings(ctx.author.id)
         color_error_data = []
         color_error = False
@@ -301,7 +310,7 @@ class Customization(Cog):
         currecnt_image_settings = ImageSettings.model_validate(current_settings)
         sptext, spimage = StatsPreview().preview(ctx, currecnt_image_settings)
         await ctx.respond(sptext, file=spimage, 
-                          view=Views().get_image_settings_view(ctx, ctx.author.id, currecnt_image_settings))
+                          view=ViewMeta(ctx, 'image_settings', None, currecnt_image_settings))
 
     @commands.slash_command(
         guild_only=True, 
@@ -317,6 +326,10 @@ class Customization(Cog):
         Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
+
+        if not self.db.check_member(ctx.author.id):
+            await ctx.respond(embed=self.inf_msg.player_not_registred())
+            return
         
         image_settings = self.db.get_image_settings(ctx.author.id)
         embed = self.inf_msg.custom(
@@ -340,6 +353,10 @@ class Customization(Cog):
         Text().load_from_context(ctx)
         check_user(ctx)
 
+        if not self.db.check_member(ctx.author.id):
+            await ctx.respond(embed=self.inf_msg.player_not_registred())
+            return
+        
         self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate({}))
         await ctx.respond(
             embed=self.inf_msg.custom(
@@ -359,7 +376,7 @@ class Customization(Cog):
     )
     async def server_settings_get(self, ctx: commands.Context):
         check_user(ctx)
-        
+
         Text().load_from_context(ctx)
         server_settings = self.sdb.get_server_settings(ctx)
         embed = self.inf_msg.custom(
@@ -434,6 +451,15 @@ class Customization(Cog):
                     text=Text().get().cmds.set_background.errors.player_not_registred
                 )
             )
+    
+    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
+        elif isinstance(error, UserBanned):
+            await ctx.respond(embed=self.err_msg.user_banned())
+        else:
+            _log.error(traceback.format_exc())
+            await ctx.respond(embed=self.err_msg.unknown_error())
 
 def setup(bot):
     bot.add_cog(Customization(bot))
