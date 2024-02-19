@@ -86,3 +86,7 @@ game_api:
 ds_api:
   urls:
     get_user: 'https://discord.com/api/v9/users/@me'
+
+report:
+  suggestion_channel_id: 1209275221287379034
+  bug_channel_id: 1209275221287379034

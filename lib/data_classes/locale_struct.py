@@ -488,12 +488,37 @@ class ResetBackground(BaseModel):
     items: str
 
 
+class SubDescr9(BaseModel):
+    label: str
+    title: str
+    placeholder: str
+    type_placeholder: str
+    type_label: str
+    bug_report: str
+    suggestion: str
+
+
 class Descr16(BaseModel):
+    this: str
+    sub_descr: SubDescr9
+
+
+class Info16(BaseModel):
+    suggestion_send_ok: str
+    bug_report_send_ok: str
+
+
+class Report(BaseModel):
+    descr: Descr16
+    info: Info16
+
+
+class Descr17(BaseModel):
     this: str
     sub_descr: str
 
 
-class Info16(BaseModel):
+class Info17(BaseModel):
     send_ok: str
     send_ok_dm: str
 
@@ -503,19 +528,19 @@ class Items4(BaseModel):
 
 
 class Help(BaseModel):
-    descr: Descr16
+    descr: Descr17
     errors: str
-    info: Info16
+    info: Info17
     items: Items4
 
 
-class SubDescr9(BaseModel):
+class SubDescr10(BaseModel):
     file: str
 
 
-class Descr17(BaseModel):
+class Descr18(BaseModel):
     this: str
-    sub_descr: SubDescr9
+    sub_descr: SubDescr10
 
 
 class Errors12(BaseModel):
@@ -538,23 +563,23 @@ class Items5(BaseModel):
 
 
 class ParseReplay(BaseModel):
-    descr: Descr17
+    descr: Descr18
     errors: Errors12
     info: str
     items: Items5
 
 
-class Descr18(BaseModel):
+class Descr19(BaseModel):
     this: str
 
 
-class Info17(BaseModel):
+class Info18(BaseModel):
     cooldown_not_expired: str
 
 
 class Cooldown(BaseModel):
-    descr: Descr18
-    info: Info17
+    descr: Descr19
+    info: Info18
 
 
 class Cmds(BaseModel):
@@ -574,6 +599,7 @@ class Cmds(BaseModel):
     server_settings_reset: ServerSettingsReset
     image_settings_reset: ImageSettingsReset
     reset_background: ResetBackground
+    report: Report
     help: Help
     parse_replay: ParseReplay
     cooldown: Cooldown

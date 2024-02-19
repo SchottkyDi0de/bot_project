@@ -434,6 +434,21 @@ cmds:
     items:
       ''
 
+  report:
+    descr:
+      this: Bug report or suggestion
+      sub_descr:
+        label: ' '
+        title: 'Report'
+        placeholder: 10 sym minimum, 500 sym maximum, express your thoughts correctly
+        type_placeholder: Type 'b' for bug report, 's' for suggestion
+        type_label: Write the message type
+        bug_report: Bug report
+        suggestion: Suggestion
+    info:
+      suggestion_send_ok: Suggestion has been sent to developers.
+      bug_report_send_ok: Bug report has been sent to developers.
+
   help: 
     descr:
       this: Pomoc

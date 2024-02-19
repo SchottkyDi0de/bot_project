@@ -1,16 +1,51 @@
 from typing import Literal
 
-from discord import ButtonStyle, Interaction, File
+from discord import ButtonStyle, Interaction, File, InputTextStyle, SelectOption
 from discord.ext import commands
-from discord.ui import View, button
+from discord.ui import View, InputText, Modal, select, button
 
 from lib.data_classes.db_player import ImageSettings
 from lib.database.players import PlayersDB
 from lib.embeds.info import InfoMSG
 from lib.locale.locale import Text
+from lib.settings.settings import Config
 
 class Session:
     ...
+
+
+class Modals:
+    class ReportModal(Modal):
+        def __init__(self, bot: commands.Bot, ctx: commands.Context, *args, **kwargs):
+            super().__init__(title=Text().get().cmds.report.descr.sub_descr.title, *args, **kwargs)
+            
+            self.bot = bot
+            self.ctx = ctx
+            self.add_item(InputText(label=Text().get().cmds.report.descr.sub_descr.type_label, 
+                                    placeholder=Text().get().cmds.report.descr.sub_descr.type_placeholder, max_length=1, required=False))
+            self.add_item(InputText(label=Text().get().cmds.report.descr.sub_descr.label, 
+                                    style=InputTextStyle.multiline, min_length=10, max_length=500,  
+                                    placeholder=Text().get().cmds.report.descr.sub_descr.placeholder, 
+                                    required=True))
+
+        async def callback(self, interaction: Interaction):
+            Text().load_from_context(self.ctx)
+
+            rep_type = self.children[0].value
+            rep_type = 'b' if not rep_type else rep_type.lower()
+            if rep_type not in ['b', 's']:
+                await interaction.response.send_message('👎', ephemeral=True)   #TODO не нравится - меняй
+                return
+            rep_data = self.children[1].value
+            send_channel = self.bot.get_channel(getattr(Config().cfg.report, 
+                                                        'bug_channel_id' if rep_type == 'b' else 'suggestion_channel_id'))
+            await send_channel.send(f'```JSON\nfrom: {interaction.user.name}\ntype: {rep_type}\nid: {interaction.user.id}```\n' + rep_data.strip())
+            await interaction.response.send_message(embed=self.inf_msg.custom(
+                Text().get(),
+                text=getattr(Text().get().cmds.report.info, "bug_report_send_ok" if rep_type == 'b' else 'suggestion_send_ok'),
+                title=Text().get().frequent.info.info,
+                colour='green'
+            ))
 
 
 class Buttons:
@@ -49,30 +84,31 @@ class Buttons:
         )
         await interaction.message.delete()
     
-    async def update_callback(view_self, _, interaction: Interaction):
-        Text().load_from_context(view_self.ctx)
+    async def update_callback(self, _, interaction: Interaction):
+        Text().load_from_context(self.ctx)
 
-        if view_self.cooldown.get_bucket(interaction.message).update_rate_limit():
+        if self.cooldown.get_bucket(interaction.message).update_rate_limit():
             await interaction.response.send_message(
-                embed=view_self.inf_msg.cooldown_not_expired()
+                embed=self.inf_msg.cooldown_not_expired()
             )
             return
 
-        if view_self.check_user(interaction):
+        if self.check_user(interaction):
             await interaction.response.send_message(
-                embed=view_self.inf_msg.not_button_owner(), ephemeral=True
+                embed=self.inf_msg.not_button_owner(), ephemeral=True
                 )
             return
                 
-        generate_res = await view_self.session_self._generate_image(view_self.ctx)
+        generate_res = await self.session_self._generate_image(self.ctx)
         if isinstance(generate_res, File):
-            await interaction.response.send_message(file=generate_res, view=view_self)
+            await interaction.response.send_message(file=generate_res, view=self)
         else:
             await interaction.response.send_message(embed=generate_res)
 
 
-class ViewBase(View):
-    def __init__(self, ctx: commands.Context, *args, **kwargs):
+class ButtonBase(View):
+    def __init__(self, bot: commands.Bot, ctx: commands.Context, *args, **kwargs):
+        self.bot = bot
         self.ctx = ctx
         self.user_id = ctx.author.id
         super().__init__(*args, **kwargs)
@@ -85,28 +121,33 @@ class ViewBase(View):
 
 
 class ViewMeta(type):
-    timeout = {'session': 3600 * 24, 'image_settings': 3600 * 24}
-    buttons = {'session': [Buttons.update_callback], 
-               'image_settings': [Buttons.save_callback, Buttons.cancel_callback]}
+    timeout = {'session': 3600 * 24, 'image_settings': 3600 * 24, 'report': 3600 * 24}
+    views = {'session': [Buttons.update_callback], 
+             'image_settings': [Buttons.save_callback, Buttons.cancel_callback],
+             'report': Modals.ReportModal}
     kwargs = {'session': {'update_callback': {'style': ButtonStyle.primary, 'row': 0}}, 
               'image_settings': {'save_callback': {'style': ButtonStyle.green, 'row': 0}, 
                                  'cancel_callback': {'style': ButtonStyle.red, 'row': 0}}}
 
-    def __new__(cls, ctx: commands.Context, _type: Literal['image_settings', 'session'], 
+    def __new__(cls, bot: commands, ctx: commands.Context, type: Literal['image_settings', 'session', 'report'], 
                 sesion_self: Session=None, current_settings: ImageSettings=None):
         Text().load_from_context(ctx)
 
-        attrs = {}
-        for button_func in cls.buttons[_type]:
-            func_name = button_func.__name__
-            attrs[func_name] = button(label=cls._get_label(_type)[func_name],
-                                       **cls.kwargs[_type][func_name])(button_func)
-        new_cls = type(f'View', (ViewBase,), attrs)
-        cls_self = new_cls(ctx, timeout=cls.timeout[_type])
+        if type in ['image_settings', 'session']:
+            attrs = {}
+            for view in cls.views[type]:
+                view_name = view.__name__
+                attrs[view_name] = button(label=cls._get_label(type)[view_name],
+                                          **cls.kwargs[type][view_name])(view)
+            new_cls = super().__new__(cls, f'View', (ButtonBase,), attrs)
+        else:
+            new_cls = cls.views[type]
+        
+        cls_self = new_cls(bot, ctx, timeout=cls.timeout[type])
         cls_self.db = PlayersDB()
         cls_self.inf_msg = InfoMSG()
 
-        match _type:
+        match type:
             case 'session':
                 cls_self.session_self = sesion_self
                 cls_self.cooldown = commands.CooldownMapping.from_cooldown(1, 10, commands.BucketType.user)
@@ -115,7 +156,7 @@ class ViewMeta(type):
 
         return cls_self
 
-    def __init__(self, ctx: commands.Context, _type: Literal['image_settings', 'session'], 
+    def __init__(self, bot: commands.Bot, ctx: commands.Context, type: Literal['image_settings', 'session', 'suggestion'], 
                  sesion_self: Session=None, current_settings: ImageSettings=None):
         pass
     

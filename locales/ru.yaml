@@ -437,6 +437,21 @@ cmds:
     items:
       ''
 
+  report:
+    descr:
+      this: Баг репорты или предложения
+      sub_descr:
+        label: ' '
+        title: 'Репорт'
+        placeholder: 10 символов минимум, 500 символов максимум, излагайте свои мысли грамотно
+        type_placeholder: Напишите 'b' для баг репорта, 's' для предложения
+        type_label: 'Тип сообщения: '
+        bug_report: баг репорт
+        suggestion: предложение
+    info:
+      suggestion_send_ok: Предложение успешно отправлено разработчикам.
+      bug_report_send_ok: Баг репорт успешно отправлен разработчикам.
+
 # Help command
   help: 
     descr:
