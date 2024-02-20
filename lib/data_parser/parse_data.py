@@ -1,6 +1,3 @@
-from pprint import pprint
-
-from lib.data_classes.api.tanks_stats import TankStats
 from lib.database.tankopedia import TanksDB
 from lib.data_classes.session import TankSessionData
 from lib.data_classes.api.api_data import PlayerGlobalData

@@ -1,8 +1,8 @@
 from typing import Literal
 
-from discord import ButtonStyle, Interaction, File, InputTextStyle, SelectOption
+from discord import ButtonStyle, Interaction, File, InputTextStyle
 from discord.ext import commands
-from discord.ui import View, InputText, Modal, select, button
+from discord.ui import View, InputText, Modal, button
 
 from lib.data_classes.db_player import ImageSettings
 from lib.database.players import PlayersDB
@@ -39,7 +39,7 @@ class Modals:
             rep_data = self.children[1].value
             send_channel = self.bot.get_channel(getattr(Config().cfg.report, 
                                                         'bug_channel_id' if rep_type == 'b' else 'suggestion_channel_id'))
-            await send_channel.send(f'```JSON\nfrom: {interaction.user.name}\ntype: {rep_type}\nid: {interaction.user.id}```\n' + rep_data.strip())
+            await send_channel.send(f'```py\nfrom: {interaction.user.name}\ntype: {rep_type}\nid: {interaction.user.id}```\n' + rep_data.strip())
             await interaction.response.send_message(embed=self.inf_msg.custom(
                 Text().get(),
                 text=getattr(Text().get().cmds.report.info, "bug_report_send_ok" if rep_type == 'b' else 'suggestion_send_ok'),

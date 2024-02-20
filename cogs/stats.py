@@ -1,10 +1,7 @@
-import traceback
-
 from discord import File, Option
 from discord.ext import commands
 
 from lib.settings.settings import Config
-from lib.exceptions import api, data_parser
 from lib.image.common import ImageGen
 from lib.locale.locale import Text
 from lib.api.async_wotb_api import API
@@ -14,16 +11,17 @@ from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.data_classes.db_player import ImageSettings
 from lib.blacklist.blacklist import check_user
-from lib.exceptions.blacklist import UserBanned
+from lib.exceptions.error_handler.error_handler import error_handler
 from lib.data_classes.db_server import ServerSettings
 from lib.logger.logger import get_logger
 from lib.utils.nickname_handler import handle_nickname, validate_nickname
-from lib.exceptions.nickname_validator import NicknameValidationError
 
 _log = get_logger(__file__, 'CogStatsLogger', 'logs/cog_stats.log')
 
 
 class Stats(commands.Cog):
+    cog_command_error = error_handler(_log)
+
     def __init__(self, bot) -> None:
         self.bot = bot
         self.img_gen = ImageGen()
@@ -80,11 +78,7 @@ class Stats(commands.Cog):
         
         server_settings = self.sdb.get_server_settings(ctx)
         
-        try:
-            nickname_type = validate_nickname(nick_or_id)
-        except NicknameValidationError:
-            await ctx.respond(embed=self.err_msg.uncorrect_name())
-            return
+        nickname_type = validate_nickname(nick_or_id)
         
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
@@ -147,40 +141,14 @@ class Stats(commands.Cog):
             game_id: int | None = None,
             nickname: str | None = None, 
         ):
-        exception = None
         try:
             data = await self.api.get_stats(
                 game_id=game_id, search=nickname, region=region
                 )
-        except* api.EmptyDataError:
-            exception = 'unknown_error'
-        except* api.NeedMoreBattlesError:
-            exception = 'need_more_battles'
-        except* api.UncorrectName:
-            exception = 'uncorrect_name'
-        except* api.UncorrectRegion:
-            exception = 'uncorrect_region'
-        except* api.NoPlayersFound:
-            exception = 'player_not_found'
-        except* api.APIError:
-            exception = 'api_error'
-        except* data_parser.DataParserError:
-            exception = 'parser_error'
-        if exception is not None:
-            await ctx.respond(embed=getattr(self.err_msg, exception)())
-            return None
-        else:
-            img_data = self.img_gen.generate(ctx, data, image_settings, server_settings)
-            return img_data
-        
-    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        if isinstance(error, commands.CommandOnCooldown):
-            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
-        elif isinstance(error, UserBanned):
-            await ctx.respond(embed=self.err_msg.user_banned())
-        else:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+        except ExceptionGroup as exc:
+            raise exc.exceptions[0]
+        img_data = self.img_gen.generate(ctx, data, image_settings, server_settings)
+        return img_data
 
 
 def setup(bot):

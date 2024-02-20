@@ -1,13 +1,10 @@
-import traceback
 from random import randint
 from io import StringIO
-import os
 
 from discord import File, Option, Attachment
 from discord.ext import commands
 
 from lib.blacklist.blacklist import check_user
-from lib.exceptions.blacklist import UserBanned
 from lib.database.servers import ServersDB
 from lib.locale.locale import Text
 from lib.replay_parser.parser import ReplayParser
@@ -16,12 +13,15 @@ from lib.logger.logger import get_logger
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.embeds.replay import EmbedReplayBuilder
+from lib.exceptions.error_handler.error_handler import error_handler
 from lib.settings.settings import Config
 
 _log = get_logger(__file__, 'CogReplayParserLogger', 'logs/cog_replay_parser.log')
 _config = Config().get()
 
 class CogReplayParser(commands.Cog):
+    cog_command_error = error_handler(_log)
+
     def __init__(self, bot):
         self.bot = bot
         self.sdb = ServersDB()
@@ -92,15 +92,7 @@ class CogReplayParser(commands.Cog):
                         replay_data
                         )
                     )
-        
-    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        if isinstance(error, commands.CommandOnCooldown):
-            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
-        elif isinstance(error, UserBanned):
-            await ctx.respond(embed=self.err_msg.user_banned())
-        else:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+
 
 def setup(bot):
     bot.add_cog(CogReplayParser(bot))

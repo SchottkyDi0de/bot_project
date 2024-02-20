@@ -1,25 +1,23 @@
 import io
 import base64
-import traceback
 
 from PIL import Image
 from discord import Option, Attachment
 from discord.ext import commands
 
+from lib.auth.discord import DiscordOAuth
+from lib.api.async_wotb_api import API
+from lib.blacklist.blacklist import check_user
 from lib.image.utils.resizer import resize_image, ResizeMode
 from lib.settings.settings import Config
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.locale.locale import Text
+from lib.data_classes.db_server import set_server_settings
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
-from lib.blacklist.blacklist import check_user
-from lib.exceptions.blacklist import UserBanned
+from lib.exceptions.error_handler.error_handler import error_handler
 from lib.logger.logger import get_logger
-from lib.api.async_wotb_api import API
-from lib.exceptions import api
-from lib.auth.discord import DiscordOAuth
-from lib.data_classes.db_server import set_server_settings
+from lib.locale.locale import Text
 from lib.utils.nickname_handler import handle_nickname, validate_nickname, NicknameValidationError
 
 _log = get_logger(__file__, 'CogSetLogger', 'logs/cog_set.log')
@@ -27,6 +25,8 @@ _config = Config().get()
 
 
 class Set(commands.Cog):
+    cog_command_error = error_handler(_log)
+
     def __init__(self, bot) -> None:
         self.discord_oauth = DiscordOAuth()
         self.err_msg = ErrorMSG()
@@ -62,6 +62,7 @@ class Set(commands.Cog):
         check_user(ctx)
         
         Text().load_from_context(ctx)
+
         lang = None if lang == 'auto' else lang
         if self.db.set_member_lang(ctx.author.id, lang):
             Text().load_from_context(ctx)
@@ -115,23 +116,15 @@ class Set(commands.Cog):
         
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
-        try:
-            player = await self.api.check_and_get_player(
-                nickname=composite_nickname.nickname,
-                region=region,
-                game_id=composite_nickname.player_id,
-                discord_id=ctx.author.id
-                )
-        except api.NoPlayersFound:
-            await ctx.respond(embed=ErrorMSG().player_not_found())
-        except api.NeedMoreBattlesError:
-            await ctx.respond(embed=ErrorMSG().need_more_battles())
-        except api.APIError:
-            await ctx.respond(embed=ErrorMSG().api_error())
-        else:
-            self.db.set_member(player, override=True)
-            _log.debug(f'Set player: {ctx.author.id} {nick_or_id} {region}')
-            await ctx.respond(embed=self.inf_msg.set_player_ok())
+        player = await self.api.check_and_get_player(
+            nickname=composite_nickname.nickname,
+            region=region,
+            game_id=composite_nickname.player_id,
+            discord_id=ctx.author.id
+            )
+        self.db.set_member(player, override=True)
+        _log.debug(f'Set player: {ctx.author.id} {nick_or_id} {region}')
+        await ctx.respond(embed=self.inf_msg.set_player_ok())
 
     @commands.slash_command(
         guild_only=True,
@@ -214,7 +207,7 @@ class Set(commands.Cog):
                 required=False
                 ),
             resize_mode: Option(
-                str, #TODO
+                str, 
                 description='Test resize mode',
                 required=False,
                 default='AUTO',
@@ -330,15 +323,6 @@ class Set(commands.Cog):
         
     #     await ctx.user.send(self.discord_oauth.auth_url)
     #     # TODO: Authorization added in next update
-    
-    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        if isinstance(error, commands.CommandOnCooldown):
-            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
-        elif isinstance(error, UserBanned):
-            await ctx.respond(embed=self.err_msg.user_banned())
-        else:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
     
 
 def setup(bot):

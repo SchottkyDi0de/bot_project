@@ -1,5 +1,3 @@
-import json
-import asyncio
 import traceback
 from enum import Enum
 from datetime import datetime
@@ -9,7 +7,6 @@ from lib.data_classes.replay_data import ReplayData
 from lib.data_classes.replay_data_parsed import ParsedReplayData
 from lib.exceptions.data_parser import DataParserError
 from lib.logger.logger import get_logger
-from lib.replay_parser.parser import ReplayParser
 
 _log = get_logger(__file__, 'ReplayParserLogger', 'logs/replay_parser.log')
 

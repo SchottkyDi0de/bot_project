@@ -1,5 +1,3 @@
-import traceback
-
 from discord import Option, File, Cog
 from discord.ext import commands
 
@@ -10,7 +8,6 @@ from lib.database.servers import ServersDB
 from lib.data_classes.db_player import ImageSettings
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
-from lib.exceptions.blacklist import UserBanned
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.blacklist.blacklist import check_user
@@ -451,15 +448,7 @@ class Customization(Cog):
                     text=Text().get().cmds.set_background.errors.player_not_registred
                 )
             )
-    
-    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        if isinstance(error, commands.CommandOnCooldown):
-            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
-        elif isinstance(error, UserBanned):
-            await ctx.respond(embed=self.err_msg.user_banned())
-        else:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+
 
 def setup(bot):
     bot.add_cog(Customization(bot))
