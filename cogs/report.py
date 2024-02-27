@@ -1,5 +1,6 @@
 from discord import Cog
 from discord.ext import commands
+from discord.commands import ApplicationContext
 
 from lib.blacklist.blacklist import check_user
 from lib.locale.locale import Text
@@ -25,7 +26,7 @@ class Report(Cog):
             }
     )
     @commands.cooldown(1, 1800, commands.BucketType.user)
-    async def report(self, ctx: commands.Context):
+    async def report(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
 

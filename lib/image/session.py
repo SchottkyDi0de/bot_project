@@ -1,6 +1,7 @@
 import base64
 from enum import Enum
 from io import BytesIO
+from random import randint
 from time import time
 from typing import Dict
 
@@ -516,6 +517,10 @@ class ImageGen():
             if self.image.mode != 'RGBA':
                 self.image.convert('RGBA').save(_config.image.default_bg_path)
                 self.load_image()
+        
+        # TODO Удалить в следующем обновлении
+        if randint(0, 500) == 322:
+            self.load_image('res/image/default_image/event_winner.png')
 
         start_time = time()
         self.image = self.image.convert('RGBA')

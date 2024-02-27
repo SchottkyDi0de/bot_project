@@ -130,7 +130,7 @@ class ViewMeta(type):
                                  'cancel_callback': {'style': ButtonStyle.red, 'row': 0}}}
 
     def __new__(cls, bot: commands, ctx: commands.Context, type: Literal['image_settings', 'session', 'report'], 
-                sesion_self: Session=None, current_settings: ImageSettings=None):
+                session_self: Session=None, current_settings: ImageSettings=None):
         Text().load_from_context(ctx)
 
         if type in ['image_settings', 'session']:
@@ -149,7 +149,7 @@ class ViewMeta(type):
 
         match type:
             case 'session':
-                cls_self.session_self = sesion_self
+                cls_self.session_self = session_self
                 cls_self.cooldown = commands.CooldownMapping.from_cooldown(1, 10, commands.BucketType.user)
             case 'image_settings':
                 cls_self.current_settings = current_settings
@@ -157,7 +157,7 @@ class ViewMeta(type):
         return cls_self
 
     def __init__(self, bot: commands.Bot, ctx: commands.Context, type: Literal['image_settings', 'session', 'suggestion'], 
-                 sesion_self: Session=None, current_settings: ImageSettings=None):
+                 session_self: Session=None, current_settings: ImageSettings=None):
         pass
     
     def _get_label(type: Literal['image_settings', 'session']) -> dict:

@@ -1,15 +1,18 @@
 from typing import Dict
+import discord
 
 import yaml
-from discord.ext.commands import Context
+from discord.commands import ApplicationContext
 
 from lib.data_classes.locale_struct import Localization
+from lib.logger.logger import get_logger
 from lib.utils.singleton_factory import singleton
 from lib.settings.settings import Config
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 
 _config = Config().get()
+_log = get_logger(__file__, 'LocaleLogger', 'logs/locale.log')
 
 
 @singleton
@@ -32,7 +35,7 @@ class Text():
             with open(f'locales/{i}.yaml', encoding='utf-8') as f:
                 self.datas |= {i: Localization.model_validate(yaml.safe_load(f))}
     
-    def load_from_context(self, ctx: Context) -> None:
+    def load_from_context(self, ctx: ApplicationContext) -> None:
         """
         Loads the language based on the given context.
 
@@ -42,6 +45,10 @@ class Text():
         Returns:
             None
         """
+        if not isinstance(ctx, discord.commands.ApplicationContext):
+            _log.error(f'ctx must be an instance of discord.commands.ApplicationContext, not {ctx.__class__.__name__}')
+            raise TypeError(f'ctx must be an instance of discord.commands.ApplicationContext, not {ctx.__class__.__name__}')
+        
         member_lang = self.pdb.get_member_lang(ctx.author.id)
         if member_lang is not None:
             self.load(member_lang)

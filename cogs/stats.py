@@ -1,5 +1,6 @@
 from discord import File, Option
 from discord.ext import commands
+from discord.commands import ApplicationContext
 
 from lib.settings.settings import Config
 from lib.image.common import ImageGen
@@ -43,7 +44,7 @@ class Stats(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def stats(
             self, 
-            ctx: commands.Context,
+            ctx: ApplicationContext,
             nick_or_id: Option(
                 str,
                 description=Text().get('en').frequent.common.nickname,
@@ -105,7 +106,7 @@ class Stats(commands.Cog):
                 }
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def astats(self, ctx: commands.Context):
+    async def astats(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
@@ -135,7 +136,7 @@ class Stats(commands.Cog):
     
     async def get_stats(
             self, 
-            ctx: commands.Context, 
+            ctx: ApplicationContext, 
             image_settings: ImageSettings, 
             server_settings: ServerSettings,
             region: str,

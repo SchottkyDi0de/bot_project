@@ -4,6 +4,7 @@ import pytz
 
 from discord import File, Option, Embed
 from discord.ext import commands
+from discord.commands import ApplicationContext
 
 from lib.api.async_wotb_api import API
 from lib.blacklist.blacklist import check_user
@@ -37,7 +38,7 @@ class Session(commands.Cog):
         self.err_msg = ErrorMSG()
         self.inf_msg = InfoMSG()
     
-    async def _generate_image(self, ctx: commands.Context) -> File | Embed:
+    async def _generate_image(self, ctx: ApplicationContext) -> File | Embed:
         member = self.db.get_member(ctx.author.id)
         image_settings = self.db.get_image_settings(ctx.author.id)
         server_settings = self.sdb.get_server_settings(ctx)
@@ -65,7 +66,7 @@ class Session(commands.Cog):
     )
     async def start_autosession(
         self, 
-        ctx: commands.Context,
+        ctx: ApplicationContext,
         timezone: Option(
             int,
             description=Text().get('en').cmds.start_autosession.descr.sub_descr.timezone,
@@ -159,7 +160,7 @@ class Session(commands.Cog):
             'uk': Text().get('ua').cmds.start_session.descr.this
             }
         )
-    async def start_session(self, ctx: commands.Context):
+    async def start_session(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
@@ -192,7 +193,7 @@ class Session(commands.Cog):
                 }
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def get_session(self, ctx: commands.Context):
+    async def get_session(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
@@ -200,7 +201,7 @@ class Session(commands.Cog):
         if self.db.check_member(ctx.author.id):
             generate_res = await self._generate_image(ctx)
             if isinstance(generate_res, File):
-                await ctx.respond(file=generate_res, view=ViewMeta(ctx, 'session', self))
+                await ctx.respond(file=generate_res, view=ViewMeta(bot=self.bot, ctx=ctx, type='session', session_self=self))
             else:
                 await ctx.respond(embed=generate_res)
         else:
@@ -222,7 +223,7 @@ class Session(commands.Cog):
                 }
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def session_state(self, ctx: commands.Context):
+    async def session_state(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()

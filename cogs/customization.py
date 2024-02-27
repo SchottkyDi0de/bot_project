@@ -1,5 +1,8 @@
 from discord import Option, File, Cog
+import discord
 from discord.ext import commands
+from discord.commands import ApplicationContext
+from requests import session
 
 from lib.api.async_wotb_api import API
 from lib.auth.discord import DiscordOAuth
@@ -42,7 +45,7 @@ class Customization(Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def image_settings(
         self,
-        ctx: commands.Context,
+        ctx: ApplicationContext,
         use_custom_bg: Option(
             bool,
             required=False,
@@ -304,10 +307,17 @@ class Customization(Cog):
             return
             
 
-        currecnt_image_settings = ImageSettings.model_validate(current_settings)
-        sptext, spimage = StatsPreview().preview(ctx, currecnt_image_settings)
+        current_image_settings = ImageSettings.model_validate(current_settings)
+        sptext, spimage = StatsPreview().preview(ctx, current_image_settings)
         await ctx.respond(sptext, file=spimage, 
-                          view=ViewMeta(ctx, 'image_settings', None, currecnt_image_settings))
+                          view=ViewMeta(
+                              bot=self.bot, 
+                              ctx=ctx, 
+                              type='image_settings', 
+                              session_self=None, 
+                              current_settings=current_image_settings
+                              )
+                          )
 
     @commands.slash_command(
         guild_only=True, 
@@ -319,7 +329,7 @@ class Customization(Cog):
             }
         )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def image_settings_get(self, ctx: commands.Context):
+    async def image_settings_get(self, ctx: discord.commands.ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
@@ -346,7 +356,7 @@ class Customization(Cog):
             'uk': Text().get('ua').cmds.image_settings_reset.descr.this
             }
         )
-    async def image_settings_reset(self, ctx: commands.Context):
+    async def image_settings_reset(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
 
@@ -371,7 +381,7 @@ class Customization(Cog):
             'uk': Text().get('ua').cmds.server_settings_get.descr.this
         }
     )
-    async def server_settings_get(self, ctx: commands.Context):
+    async def server_settings_get(self, ctx: ApplicationContext):
         check_user(ctx)
 
         Text().load_from_context(ctx)
@@ -399,7 +409,7 @@ class Customization(Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def unset_background(
         self,
-        ctx: commands.Context,
+        ctx: ApplicationContext,
         server: Option(
             bool,
             description=Text().get('en').cmds.reset_background.descr.sub_descr.server,
