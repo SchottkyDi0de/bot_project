@@ -3,6 +3,7 @@ from io import StringIO
 
 from discord import File, Option, Attachment
 from discord.ext import commands
+from discord.commands import ApplicationContext
 
 from lib.blacklist.blacklist import check_user
 from lib.database.servers import ServersDB
@@ -40,7 +41,7 @@ class CogReplayParser(commands.Cog):
         )
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def parse_replay(self,
-                    ctx: commands.Context,
+                    ctx: ApplicationContext,
                     replay: Option(
                         Attachment,
                         description=Text().get('en').cmds.parse_replay.descr.sub_descr.file,

@@ -1,3 +1,4 @@
+import traceback
 import pytz
 from asyncio import sleep
 from datetime import datetime, time, timedelta
@@ -84,7 +85,14 @@ class PDBWorker:
                 
                 if now_time > (session_settings.time_to_restart - timedelta(hours=session_settings.timezone)):
                     session_settings.time_to_restart += timedelta(days=1)
-                    last_stats = await self.api.get_stats(region=player.region, game_id=player.game_id)
-                    self.db.start_autosession(member_id, last_stats, session_settings)
+                    try:
+                        last_stats = await self.api.get_stats(region=player.region, game_id=player.game_id)
+                    except Exception:
+                        _log.error(f'WORKERS: PDB worker failed to update session for {player.nickname}, id: {player.id}')
+                        _log.error(traceback.format_exc())
+                        continue
+                    else:
+                        self.db.start_autosession(member_id, last_stats, session_settings)
+                        _log.info(f'WORKERS: PDB worker updated session for {player.nickname}, id: {player.id}')
                 
             await sleep(0.05)

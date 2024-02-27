@@ -4,6 +4,7 @@ import base64
 from PIL import Image
 from discord import Option, Attachment
 from discord.ext import commands
+from discord.commands import ApplicationContext
 
 from lib.auth.discord import DiscordOAuth
 from lib.api.async_wotb_api import API
@@ -46,7 +47,7 @@ class Set(commands.Cog):
                 'uk': Text().get('ua').cmds.set_lang.descr.this
                 }
             )
-    async def set_lang(self, ctx: commands.Context,
+    async def set_lang(self, ctx: ApplicationContext,
             lang: Option(
                 str,
                 description=Text().get('en').cmds.set_lang.descr.sub_descr.lang_list,
@@ -81,7 +82,7 @@ class Set(commands.Cog):
             'uk': Text().get('ua').cmds.set_player.descr.this
             }
         )
-    async def set_player(self, ctx: commands.Context, 
+    async def set_player(self, ctx: ApplicationContext, 
             nick_or_id: Option(
                 str,
                 description=Text().get('en').cmds.set_player.descr.sub_descr.nickname,
@@ -137,7 +138,7 @@ class Set(commands.Cog):
         )
     async def server_settings (
             self,
-            ctx: commands.Context,
+            ctx: ApplicationContext,
             allow_custom_backgrounds: Option(
                 bool,
                 description=Text().get('en').cmds.server_settings.descr.sub_descr.allow_custom_backgrounds,
@@ -185,7 +186,7 @@ class Set(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def set_background(
             self,
-            ctx: commands.Context,
+            ctx: ApplicationContext,
             image: Option(
                 Attachment,
                 description=Text().get('en').cmds.set_background.descr.sub_descr.image,
@@ -315,7 +316,7 @@ class Set(commands.Cog):
                 )
 
     # @commands.slash_command(description='Test authorization')
-    # async def auth(self, ctx: commands.Context):
+    # async def auth(self, ctx: ApplicationContext):
     #     try:
     #         check_user(ctx)
     #     except UserBanned:

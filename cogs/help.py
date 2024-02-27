@@ -1,5 +1,6 @@
 from discord import errors
 from discord.ext import commands
+from discord.commands import ApplicationContext
 
 from lib.blacklist.blacklist import check_user
 from lib.database.servers import ServersDB
@@ -42,7 +43,7 @@ class Help(commands.Cog):
             )
     async def help(
         self, 
-        ctx: commands.Context,
+        ctx: ApplicationContext,
         ):
         Text().load_from_context(ctx)
         check_user(ctx)

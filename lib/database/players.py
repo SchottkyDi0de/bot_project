@@ -1,4 +1,3 @@
-import traceback
 import pytz
 from datetime import datetime, timedelta
 
@@ -11,7 +10,6 @@ from lib.logger.logger import get_logger
 from lib.data_classes.db_player import DBPlayer, ImageSettings, SessionSettings
 from lib.exceptions import database
 from lib.settings.settings import Config
-from lib.data_classes.db_player import DBPlayer
 
 
 _config = Config().get()
@@ -317,19 +315,6 @@ class PlayersDB:
             )
         else:
             raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    # def check_member_session(self, member_id: int | str):
-    #     member_id = int(member_id)
-    #     try:
-    #         if self.check_member(member_id):
-    #             member = self.collection.find_one({'id': member_id})
-    #             if member['last_stats'] is None:
-    #                 raise database.LastStatsNotFound(f'Member last stats not found, member id: {member_id}')
-    #             session_settings = self.get_member_session_settings(member_id)
-    #             update_time = ...
-    #     except Exception:
-    #         _log.error(f'Database error: {traceback.format_exc()}')
-    #         raise database.DatabaseError()
 
     def check_member_last_stats(self, member_id: int | str) -> bool:
         member_id = int(member_id)
@@ -418,16 +403,3 @@ class PlayersDB:
             return self.collection.find_one({'id': member_id})['lang']
         else:
             return None
-        
-    # Run 1 time for update database structure...
-    # def database_update(self):
-    #     self.collection.update_many({}, {'$set' : {'image_settings' : ImageSettings().model_dump(), 'session_settings' : SessionSettings().model_dump()}})
-    #     # self.collection.update_many({}, { '$set' :{ "last_stats" : None, "session_settings" : SessionSettings().model_dump()}})
-    #     # self.collection.update_many(
-    #     #     {}, { '$set' :{
-    #     #             "image_settings.negative_stats_color" : '#c01515',
-    #     #             "image_settings.positive_stats_color" : '#1eff26',
-    #     #             }
-    #     #         }
-    #     #     )
-    #     # self.collection.update_many({}, {'$set' : {'session_settings' : SessionSettings().model_dump()}})

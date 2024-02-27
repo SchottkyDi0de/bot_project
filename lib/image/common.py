@@ -6,6 +6,7 @@ from enum import Enum
 from enum import Enum
 from io import BytesIO
 import base64
+from random import randint
 from time import time
 
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
@@ -396,6 +397,10 @@ class ImageGen():
             if self.image.mode != 'RGBA':
                 self.image.convert('RGBA').save('res/image/default_image/default_bg.png')
                 self.load_image(_config.image.default_bg_path)
+        
+        # TODO Удалить в следующем обновлении
+        if randint(0, 500) == 322:
+            self.load_image('res/image/default_image/event_winner.png')
 
         self.image = self.image.crop((0, 50, 700, 1300))
 
