@@ -1,4 +1,6 @@
-class APIError(Exception):
+from discord.ext.commands import CommandError
+
+class APIError(CommandError, Exception):
     pass
 
 class UncorrectName(APIError):

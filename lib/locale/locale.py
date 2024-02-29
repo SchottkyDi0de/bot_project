@@ -1,7 +1,7 @@
 from typing import Dict
-import discord
 
 import yaml
+import discord
 from discord.commands import ApplicationContext
 
 from lib.data_classes.locale_struct import Localization

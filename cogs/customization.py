@@ -2,7 +2,6 @@ from discord import Option, File, Cog
 import discord
 from discord.ext import commands
 from discord.commands import ApplicationContext
-from requests import session
 
 from lib.api.async_wotb_api import API
 from lib.auth.discord import DiscordOAuth

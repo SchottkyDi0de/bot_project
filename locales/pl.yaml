@@ -93,6 +93,7 @@ map_names:
   black_goldville: Czarne Złoto
   oasis_palm: Basis Palm
   ghost_factory: Fabryka Duchów
+  yukon: Yukon
   molendijk: Molendijk
   port_bay: Przystań
   winter_malinovka: Malinówka Zimą
@@ -176,9 +177,9 @@ cmds:
         nickname: Pseudonim gracza.
         region: Wybieranie regionu z listy.
     errors:
-      player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
+      player_not_found: No player with this nickname/id has been found.
       uncorrect_nickname: Nieprawidłowy pseudonim gracza. Pseudonim może składać się z łacińskich liter A-Z, cyfr 0-9 i symbolu '_'.
-      no_battles: Za mało walk, by wygenerować statystyki!
+      no_battles: Need more than 100 battles on account.
     info:
       ''
     items:

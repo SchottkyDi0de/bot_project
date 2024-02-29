@@ -1,4 +1,7 @@
-class DatabaseError(Exception):
+from discord.ext.commands import CommandError
+
+
+class DatabaseError(CommandError, Exception):
     pass
 
 class MemberNotFound(DatabaseError):

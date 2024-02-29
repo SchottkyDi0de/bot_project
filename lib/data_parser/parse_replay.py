@@ -24,6 +24,7 @@ class Maps(Enum):
     black_goldville = 10
     oasis_palms = 11
     ghost_factory = 12
+    yukon = 13
     molendijk = 14
     port_bay = 15
     winter_malinovka = 19
