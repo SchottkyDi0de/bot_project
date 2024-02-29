@@ -92,6 +92,7 @@ map_names:
   black_goldville: Black Goldville
   oasis_palm: Basis Palm
   ghost_factory: Ghost Factory
+  yukon: Yukon
   molendijk: Molendijk
   port_bay: Port
   winter_malinovka: Winter Malinovka
@@ -176,9 +177,9 @@ cmds:
         nickname: Player's nickname.
         region: Selecting a region from the list.
     errors:
-      player_not_found: No player with this nickname has been found.
+      player_not_found: No player with this nickname/id has been found.
       uncorrect_nickname: Incorrect player nickname. The nickname can consist of Latin letters A-Z, numbers 0-9 and the symbol '_'.
-      no_battles: Not enough fights to generate stats!
+      no_battles: Need more than 100 battles on account
     info:
       ''
     items:

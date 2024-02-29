@@ -94,6 +94,7 @@ map_names:
   black_goldville: Золота долина
   oasis_palm: Гарячі піски
   ghost_factory: Промзона
+  yukon: Юкон
   molendijk: Молендейк
   port_bay: Порт
   winter_malinovka: Зимова малиновка
@@ -177,8 +178,8 @@ cmds:
         nickname: Ігровий нікнейм.
         region: Вибір регіону зі списку.
     errors:
-      player_not_found: Гравець з даним нікнеймом не знайдений.
-      no_battles: Недостатньо боїв для того, щоб згенерувати статистику!
+      player_not_found: Гравець з даним нікнеймом/id не знайдений.
+      no_battles: Необхідно більше 100 боів на аккаунті.
       uncorrect_nickname: Некоректний нікнейм гравця. Нікнейм може складатися з латинських букв A-Z, цифр 0-9 і символа '_'.
     info:
       ''

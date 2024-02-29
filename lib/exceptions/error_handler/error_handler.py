@@ -7,7 +7,7 @@ from logging import Logger
 from lib.embeds.info import InfoMSG
 from lib.embeds.errors import ErrorMSG
 
-from lib.exceptions import api, data_parser, database
+from lib.exceptions import api, data_parser, database, replay_parser
 from lib.exceptions.blacklist import UserBanned
 from lib.exceptions.nickname_validator import NicknameValidationError
 
@@ -17,6 +17,7 @@ def error_handler(_log: Logger) -> Coroutine:
     async def inner(_, ctx: commands.Context, error: commands.CommandError):
         inf_msg = InfoMSG()
         err_msg = ErrorMSG()
+        
 
         if isinstance(error, commands.CommandOnCooldown):
             embed = inf_msg.cooldown_not_expired()
@@ -42,6 +43,9 @@ def error_handler(_log: Logger) -> Coroutine:
                 embed = err_msg.session_not_updated()
             else:
                 embed = err_msg.parser_error()
+        elif isinstance(error, replay_parser.ReplayParserError):
+            if isinstance(error, replay_parser.WrongFileType):
+                embed = err_msg.wrong_file_type()
         else:
             _log.error(traceback.format_exc())
             embed = err_msg.unknown_error()

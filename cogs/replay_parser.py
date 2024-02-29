@@ -14,6 +14,7 @@ from lib.logger.logger import get_logger
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.embeds.replay import EmbedReplayBuilder
+from lib.exceptions.replay_parser import WrongFileType
 from lib.exceptions.error_handler.error_handler import error_handler
 from lib.settings.settings import Config
 
@@ -75,6 +76,9 @@ class CogReplayParser(commands.Cog):
         check_user(ctx)
         await ctx.defer()
         
+        if not replay.filename.endswith('.wotbreplay'):
+            raise WrongFileType
+
         filename = randint(1000000, 9999999)
         await replay.save(f'tmp/replay/{filename}.wotbreplay')
 

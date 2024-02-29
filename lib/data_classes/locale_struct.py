@@ -56,6 +56,7 @@ class MapNames(BaseModel):
     black_goldville: str
     oasis_palm: str
     ghost_factory: str
+    yukon: str
     molendijk: str
     port_bay: str
     winter_malinovka: str
