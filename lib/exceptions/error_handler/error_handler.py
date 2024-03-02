@@ -1,6 +1,7 @@
 import traceback
 from typing import Coroutine
 
+from discord.commands import ApplicationContext
 from discord.ext import commands
 from logging import Logger
 
@@ -14,13 +15,15 @@ from lib.exceptions.nickname_validator import NicknameValidationError
 
 def error_handler(_log: Logger) -> Coroutine:
 
-    async def inner(_, ctx: commands.Context, error: commands.CommandError):
+    async def inner(_, ctx: ApplicationContext, error: commands.CommandError):
         inf_msg = InfoMSG()
         err_msg = ErrorMSG()
+        kwargs = {}
         
 
         if isinstance(error, commands.CommandOnCooldown):
             embed = inf_msg.cooldown_not_expired()
+            kwargs |= {"ephemeral": True}
         elif isinstance(error, UserBanned):
             embed = err_msg.user_banned()
         elif isinstance(error, NicknameValidationError):
@@ -50,6 +53,6 @@ def error_handler(_log: Logger) -> Coroutine:
             _log.error(traceback.format_exc())
             embed = err_msg.unknown_error()
         
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed, **kwargs)
 
     return inner

@@ -1,6 +1,7 @@
 from typing import Literal
 
 from discord import ButtonStyle, Interaction, File, InputTextStyle
+from discord.commands import ApplicationContext
 from discord.ext import commands
 from discord.ui import View, InputText, Modal, button
 
@@ -46,6 +47,9 @@ class Modals:
                 title=Text().get().frequent.info.info,
                 colour='green'
             ))
+        
+        async def on_timeout(self):
+            await self.ctx.message.delete()
 
 
 class Buttons:
@@ -86,10 +90,10 @@ class Buttons:
     
     async def update_callback(self, _, interaction: Interaction):
         Text().load_from_context(self.ctx)
-
+        
         if self.cooldown.get_bucket(interaction.message).update_rate_limit():
             await interaction.response.send_message(
-                embed=self.inf_msg.cooldown_not_expired()
+                embed=self.inf_msg.cooldown_not_expired(), ephemeral=True
             )
             return
 
@@ -102,12 +106,13 @@ class Buttons:
         generate_res = await self.session_self._generate_image(self.ctx)
         if isinstance(generate_res, File):
             await interaction.response.send_message(file=generate_res, view=self)
+            await interaction.message.delete()
         else:
             await interaction.response.send_message(embed=generate_res)
 
 
 class ButtonBase(View):
-    def __init__(self, bot: commands.Bot, ctx: commands.Context, *args, **kwargs):
+    def __init__(self, bot: commands.Bot, ctx: ApplicationContext, *args, **kwargs):
         self.bot = bot
         self.ctx = ctx
         self.user_id = ctx.author.id
@@ -125,11 +130,11 @@ class ViewMeta(type):
     views = {'session': [Buttons.update_callback], 
              'image_settings': [Buttons.save_callback, Buttons.cancel_callback],
              'report': Modals.ReportModal}
-    kwargs = {'session': {'update_callback': {'style': ButtonStyle.primary, 'row': 0}}, 
+    kwargs = {'session': {'update_callback': {'style': ButtonStyle.gray, 'row': 0, "emoji": "🔄"}}, 
               'image_settings': {'save_callback': {'style': ButtonStyle.green, 'row': 0}, 
                                  'cancel_callback': {'style': ButtonStyle.red, 'row': 0}}}
 
-    def __new__(cls, bot: commands, ctx: commands.Context, type: Literal['image_settings', 'session', 'report'], 
+    def __new__(cls, bot: commands, ctx: ApplicationContext, type: Literal['image_settings', 'session', 'report'], 
                 session_self: Session=None, current_settings: ImageSettings=None):
         Text().load_from_context(ctx)
 
@@ -156,7 +161,7 @@ class ViewMeta(type):
 
         return cls_self
 
-    def __init__(self, bot: commands.Bot, ctx: commands.Context, type: Literal['image_settings', 'session', 'suggestion'], 
+    def __init__(self, bot: commands.Bot, ctx: ApplicationContext, type: Literal['image_settings', 'session', 'suggestion'], 
                  session_self: Session=None, current_settings: ImageSettings=None):
         pass
     
