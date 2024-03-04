@@ -17,13 +17,12 @@ class Session:
 
 class Modals:
     class ReportModal(Modal):
+        report_type2text = {"b": "bug_report", "s": "suggestion"}
         def __init__(self, bot: commands.Bot, ctx: commands.Context, *args, **kwargs):
             super().__init__(title=Text().get().cmds.report.descr.sub_descr.title, *args, **kwargs)
             
             self.bot = bot
             self.ctx = ctx
-            self.add_item(InputText(label=Text().get().cmds.report.descr.sub_descr.type_label, 
-                                    placeholder=Text().get().cmds.report.descr.sub_descr.type_placeholder, max_length=1, required=False))
             self.add_item(InputText(label=Text().get().cmds.report.descr.sub_descr.label, 
                                     style=InputTextStyle.multiline, min_length=10, max_length=500,  
                                     placeholder=Text().get().cmds.report.descr.sub_descr.placeholder, 
@@ -32,15 +31,11 @@ class Modals:
         async def callback(self, interaction: Interaction):
             Text().load_from_context(self.ctx)
 
-            rep_type = self.children[0].value
-            rep_type = 'b' if not rep_type else rep_type.lower()
-            if rep_type not in ['b', 's']:
-                await interaction.response.send_message('👎', ephemeral=True)   #TODO не нравится - меняй
-                return
-            rep_data = self.children[1].value
+            rep_type = self.report_type
+            rep_data = self.children[0].value
             send_channel = self.bot.get_channel(getattr(Config().cfg.report, 
                                                         'bug_channel_id' if rep_type == 'b' else 'suggestion_channel_id'))
-            await send_channel.send(f'```py\nfrom: {interaction.user.name}\ntype: {rep_type}\nid: {interaction.user.id}```\n' + rep_data.strip())
+            await send_channel.send(f'```py\nfrom: {interaction.user.name}\ntype: {self.report_type2text[rep_type]}\nid: {interaction.user.id}```\n' + rep_data.strip())
             await interaction.response.send_message(embed=self.inf_msg.custom(
                 Text().get(),
                 text=getattr(Text().get().cmds.report.info, "bug_report_send_ok" if rep_type == 'b' else 'suggestion_send_ok'),
@@ -135,7 +130,7 @@ class ViewMeta(type):
                                  'cancel_callback': {'style': ButtonStyle.red, 'row': 0}}}
 
     def __new__(cls, bot: commands, ctx: ApplicationContext, type: Literal['image_settings', 'session', 'report'], 
-                session_self: Session=None, current_settings: ImageSettings=None):
+                session_self: Session=None, current_settings: ImageSettings=None, report_type: Literal['b', 's'] = None):
         Text().load_from_context(ctx)
 
         if type in ['image_settings', 'session']:
@@ -158,11 +153,13 @@ class ViewMeta(type):
                 cls_self.cooldown = commands.CooldownMapping.from_cooldown(1, 10, commands.BucketType.user)
             case 'image_settings':
                 cls_self.current_settings = current_settings
+            case 'report':
+                cls_self.report_type = report_type
 
         return cls_self
 
     def __init__(self, bot: commands.Bot, ctx: ApplicationContext, type: Literal['image_settings', 'session', 'suggestion'], 
-                 session_self: Session=None, current_settings: ImageSettings=None):
+                 session_self: Session=None, current_settings: ImageSettings=None, report_type: Literal['b', 's'] = None):
         pass
     
     def _get_label(type: Literal['image_settings', 'session']) -> dict:

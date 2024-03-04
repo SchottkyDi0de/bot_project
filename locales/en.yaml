@@ -446,6 +446,7 @@ cmds:
         type_label: Write the message type
         bug_report: Bug report
         suggestion: Suggestion
+        type: Choose report type
     info:
       suggestion_send_ok: Suggestion has been sent to developers.
       bug_report_send_ok: Bug report has been sent to developers.

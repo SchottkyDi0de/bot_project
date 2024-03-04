@@ -497,6 +497,7 @@ class SubDescr9(BaseModel):
     type_label: str
     bug_report: str
     suggestion: str
+    type: str
 
 
 class Descr16(BaseModel):

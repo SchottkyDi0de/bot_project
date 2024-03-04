@@ -1,4 +1,4 @@
-from discord import Cog
+from discord import Cog, Option
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
@@ -26,11 +26,21 @@ class Report(Cog):
             }
     )
     @commands.cooldown(1, 1800, commands.BucketType.user)
-    async def report(self, ctx: ApplicationContext):
+    async def report(self, ctx: ApplicationContext, 
+                     report_type: Option(str,
+                                          description=Text().get('en').cmds.report.descr.sub_descr.type,
+                                          description_localizations={
+                                              'ru': Text().get('ru').cmds.report.descr.sub_descr.type,
+                                              'pl': Text().get('pl').cmds.report.descr.sub_descr.type,
+                                              'uk': Text().get('ua').cmds.report.descr.sub_descr.type 
+                                          },
+                                          required=True,
+                                          choices=["bug_report", "suggestion"]
+                                          )):
         Text().load_from_context(ctx)
         check_user(ctx)
 
-        await ctx.send_modal(ViewMeta(self.bot, ctx, 'report'))
+        await ctx.send_modal(ViewMeta(self.bot, ctx, 'report', report_type={"bug_report": "b", "suggestion": "s"}[report_type]))
         await ctx.respond("👍", ephemeral=True)
         
 
