@@ -519,8 +519,15 @@ class ImageGen():
                 self.load_image()
         
         # TODO Удалить в следующем обновлении
-        if randint(0, 500) == 322:
+        if randint(0, 1000) == 322:
             self.load_image('res/image/default_image/event_winner.png')
+            _log.info(
+                f'EVENT: WINNER INFO:'
+                f'ID: {ctx.author.id}'
+                f'NICKNAME: {ctx.author.display_name}'
+                f'GAME ID: {data.id}'
+                f'GAME NICKNAME: {data.nickname}'
+            )
 
         start_time = time()
         self.image = self.image.convert('RGBA')
