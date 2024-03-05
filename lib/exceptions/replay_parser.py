@@ -1,5 +1,10 @@
-class ReplayParserError(Exception):
+from discord.ext.commands import CommandError
+
+class ReplayParserError(CommandError, BaseException):
     pass
 
-class PathNotExists(RecursionError):
+class PathNotExists(ReplayParserError):
+    pass
+
+class WrongFileType(ReplayParserError):
     pass

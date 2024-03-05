@@ -145,7 +145,7 @@ class StatsPreview:
         self.pdb = PlayersDB()
         self.sdb = ServersDB()
     
-    async def preview(self, ctx: commands.Context, image_settings: ImageSettings) -> None:
+    def preview(self, ctx: commands.Context, image_settings: ImageSettings) -> (str, File):
         server_settings = self.sdb.get_server_settings(ctx)
         try:
             player_data = self.pdb.get_member(ctx.author.id)
@@ -154,4 +154,4 @@ class StatsPreview:
             nickname, region, lang = 'Nickname', 'ru', 'eu'
         player_global_data = _PreviewData.player_global_data(nickname, region)
         image = ImageGen().generate(ctx, player_global_data, image_settings, server_settings)
-        await ctx.respond(Text().get(lang).cmds.image_settings.info.preview, file=File(image, 'preview.png'), ephemeral=True)
+        return (Text().get(lang).cmds.image_settings.info.preview, File(image, filename='stats.png'))

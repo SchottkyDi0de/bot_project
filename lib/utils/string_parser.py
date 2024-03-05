@@ -1,5 +1,3 @@
-from typing import Any
-
 def insert_data(string: str, key_values: dict[str, str]) -> str:
     """
     Replaces placeholders in a string with corresponding values.

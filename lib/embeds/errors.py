@@ -84,6 +84,13 @@ class ErrorMSG:
             description=Text().get().cmds.set_lang.errors.player_not_registred,
             colour=Colour.red()
         )
+    
+    def wrong_file_type(self):
+        return Embed(
+            title=Text().get().frequent.errors.error,
+            description=Text().get().cmds.parse_replay.errors.uncorrect_file_format,
+            colour=Colour.red()
+        )
 
     def custom(
             self,

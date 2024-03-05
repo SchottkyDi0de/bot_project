@@ -1,10 +1,8 @@
-import traceback
-
-from discord import File, Option, Embed
+from discord import File, Option
 from discord.ext import commands
+from discord.commands import ApplicationContext
 
 from lib.settings.settings import Config
-from lib.exceptions import api, data_parser
 from lib.image.common import ImageGen
 from lib.locale.locale import Text
 from lib.api.async_wotb_api import API
@@ -14,17 +12,18 @@ from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.data_classes.db_player import ImageSettings
 from lib.blacklist.blacklist import check_user
-from lib.exceptions.blacklist import UserBanned
+from lib.exceptions import api, data_parser
+from lib.exceptions.error_handler.error_handler import error_handler
 from lib.data_classes.db_server import ServerSettings
 from lib.logger.logger import get_logger
-from lib.utils.nickname_handler import handle_nickname, validate_nickname, \
-                                        CompositeNickname, NickTypes
-from lib.exceptions.nickname_validator import NicknameValidationError
+from lib.utils.nickname_handler import handle_nickname, validate_nickname
 
 _log = get_logger(__file__, 'CogStatsLogger', 'logs/cog_stats.log')
 
 
 class Stats(commands.Cog):
+    cog_command_error = error_handler(_log)
+
     def __init__(self, bot) -> None:
         self.bot = bot
         self.img_gen = ImageGen()
@@ -45,7 +44,7 @@ class Stats(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def stats(
             self, 
-            ctx: commands.Context,
+            ctx: ApplicationContext,
             nick_or_id: Option(
                 str,
                 description=Text().get('en').frequent.common.nickname,
@@ -81,11 +80,7 @@ class Stats(commands.Cog):
         
         server_settings = self.sdb.get_server_settings(ctx)
         
-        try:
-            nickname_type = validate_nickname(nick_or_id)
-        except NicknameValidationError:
-            await ctx.respond(embed=self.err_msg.uncorrect_name())
-            return
+        nickname_type = validate_nickname(nick_or_id)
         
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
@@ -111,7 +106,7 @@ class Stats(commands.Cog):
                 }
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def astats(self, ctx: commands.Context):
+    async def astats(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
@@ -141,7 +136,7 @@ class Stats(commands.Cog):
     
     async def get_stats(
             self, 
-            ctx: commands.Context, 
+            ctx: ApplicationContext, 
             image_settings: ImageSettings, 
             server_settings: ServerSettings,
             region: str,
@@ -173,15 +168,6 @@ class Stats(commands.Cog):
         else:
             img_data = self.img_gen.generate(ctx, data, image_settings, server_settings)
             return img_data
-        
-    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        if isinstance(error, commands.CommandOnCooldown):
-            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
-        elif isinstance(error, UserBanned):
-            await ctx.respond(embed=self.err_msg.user_banned())
-        else:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
 
 
 def setup(bot):

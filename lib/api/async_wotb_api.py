@@ -3,7 +3,6 @@ import json
 import asyncio
 import traceback
 from time import time
-from pprint import pprint
 from datetime import datetime
 from typing import Dict, Union
 
@@ -13,18 +12,18 @@ from the_retry import retry
 from asynciolimiter import Limiter
 from cacheout import FIFOCache
 
-from lib.utils.string_parser import insert_data
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.api.player_clan_stats import ClanStats
 from lib.data_classes.api.player_achievements import Achievements
-from lib.data_classes.api.player_stats import PlayerStats, PlayerData
+from lib.data_classes.api.player_stats import PlayerStats
 from lib.data_classes.api.tanks_stats import TankStats
-from lib.utils.singleton_factory import singleton
+from lib.data_classes.db_player import DBPlayer
 from lib.data_parser.parse_data import get_normalized_data
+from lib.utils.singleton_factory import singleton
+from lib.utils.string_parser import insert_data
 from lib.exceptions import api as api_exceptions
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config, EnvConfig
-from lib.data_classes.db_player import DBPlayer, ImageSettings
 
 _log = get_logger(__file__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
 _config = Config().get()
@@ -323,11 +322,9 @@ class API:
                     raise e
                 else:
                     try:
-                        data = data[[*data['data'].keys()][0]]
+                        data = data['data'][[*data['data'].keys()][0]]
                     except KeyError:
                         ...
-                    
-                    pprint(data)
                     db_player = {
                             'nickname': data['nickname'],
                             'game_id': int(data['account_id']),

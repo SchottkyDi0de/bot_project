@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import List, Dict
 
 from pydantic import BaseModel
 
@@ -14,6 +14,14 @@ class Session(BaseModel):
 
 class Autosession(BaseModel):
     ttl: int
+
+
+class LocaleAliases(BaseModel):
+    ru: str
+    en: str
+    pl: str
+    uk: str
+
 
 class Default(BaseModel):
     prefix: str
@@ -72,6 +80,11 @@ class DsApi(BaseModel):
     urls: Urls1
 
 
+class Report(BaseModel):
+    bug_channel_id: int
+    suggestion_channel_id: int
+
+
 class ConfigStruct(BaseModel):
     bot_name: str
     server: Server
@@ -84,3 +97,4 @@ class ConfigStruct(BaseModel):
     auth: Auth
     game_api: GameApi
     ds_api: DsApi
+    report: Report

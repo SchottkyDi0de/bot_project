@@ -2,35 +2,34 @@ from datetime import datetime, timedelta
 import traceback
 import pytz
 
-from discord import File, Option
+from discord import File, Option, Embed
 from discord.ext import commands
+from discord.commands import ApplicationContext
 
 from lib.api.async_wotb_api import API
 from lib.blacklist.blacklist import check_user
-from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.data_classes.db_player import SessionSettings
 from lib.data_parser.parse_data import get_session_stats
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
-from lib.exceptions import api, data_parser, database
-from lib.exceptions.blacklist import UserBanned
+from lib.exceptions.error_handler.error_handler import error_handler
 from lib.image.session import ImageGen
-from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.utils.string_parser import insert_data
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
-from lib.utils.time_converter import TimeConverter
-from lib.exceptions.api import APIError
 from lib.utils.time_validator import validate
 from lib.utils.bool_to_text import bool_handler
+from lib.utils.views import ViewMeta
+from lib.utils.time_converter import TimeConverter
+from lib.utils.string_parser import insert_data
 
 
 _log = get_logger(__file__, 'CogSessionLogger', 'logs/cog_session.log')
 
 
 class Session(commands.Cog):
+    cog_command_error = error_handler(_log)
+
     def __init__(self, bot) -> None:
         self.bot = bot
         self.db = PlayersDB()
@@ -38,6 +37,23 @@ class Session(commands.Cog):
         self.api = API()
         self.err_msg = ErrorMSG()
         self.inf_msg = InfoMSG()
+    
+    async def _generate_image(self, ctx: ApplicationContext) -> File | Embed:
+        member = self.db.get_member(ctx.author.id)
+        image_settings = self.db.get_image_settings(ctx.author.id)
+        server_settings = self.sdb.get_server_settings(ctx)
+        session_settings = self.db.get_member_session_settings(ctx.author.id)
+
+        stats = await self.api.get_stats(game_id=member.game_id, region=member.region)
+
+        last_stats = self.db.get_member_last_stats(member.id)
+            
+        session_settings.last_get = datetime.now(pytz.utc)
+        self.db.set_member_session_settings(ctx.author.id, session_settings)
+
+        diff_stats = get_session_stats(last_stats, stats)
+            
+        return File(ImageGen().generate(stats, diff_stats, ctx, image_settings, server_settings), 'session.png')
         
     @commands.slash_command(
         guild_only=True,
@@ -50,7 +66,7 @@ class Session(commands.Cog):
     )
     async def start_autosession(
         self, 
-        ctx: commands.Context,
+        ctx: ApplicationContext,
         timezone: Option(
             int,
             description=Text().get('en').cmds.start_autosession.descr.sub_descr.timezone,
@@ -100,12 +116,7 @@ class Session(commands.Cog):
                         )
                 )
                 
-            try:
-                last_stats = await self.api.get_stats(region=member.region, game_id=member.game_id)
-            except APIError:
-                await ctx.respond(embed=self.err_msg.api_error())
-                _log.error(traceback.format_exc())
-                return
+            last_stats = await self.api.get_stats(region=member.region, game_id=member.game_id)
             
             self.db.start_autosession(ctx.author.id, last_stats, session_settings)
             if valid_time or restart_time is None:
@@ -149,7 +160,7 @@ class Session(commands.Cog):
             'uk': Text().get('ua').cmds.start_session.descr.this
             }
         )
-    async def start_session(self, ctx: commands.Context):
+    async def start_session(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
@@ -182,50 +193,25 @@ class Session(commands.Cog):
                 }
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def get_session(self, ctx: commands.Context):
+    async def get_session(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
 
         if self.db.check_member(ctx.author.id):
-            member = self.db.get_member(ctx.author.id)
-            image_settings = self.db.get_image_settings(ctx.author.id)
-            server_settings = self.sdb.get_server_settings(ctx)
-            session_settings = self.db.get_member_session_settings(ctx.author.id)
-
-            try:
-                stats = await self.api.get_stats(game_id=member.game_id, region=member.region)
-            except api.APIError:
-                await ctx.respond(embed=self.err_msg.api_error())
-                _log.error(traceback.format_exc())
-                return
-
-            try:
-                last_stats = self.db.get_member_last_stats(member.id)
-            except database.LastStatsNotFound:
-                ctx.respond(self.err_msg.session_not_found())
-                return
-            
-            session_settings.last_get = datetime.now(pytz.utc)
-            self.db.set_member_session_settings(ctx.author.id, session_settings)
-
-            try:
-                diff_stats = get_session_stats(last_stats, stats)
-            except data_parser.NoDiffData:
-                await ctx.respond(embed=self.err_msg.session_not_updated())
-                return
-            
-            image = ImageGen().generate(stats, diff_stats, ctx, image_settings, server_settings)
-            await ctx.respond(file=File(image, 'session.png'))
-            return
-
-        await ctx.respond(
-            embed=self.inf_msg.custom(
-                Text().get(),
-                Text().get().cmds.get_session.info.player_not_registred,
-                colour='orange'
+            generate_res = await self._generate_image(ctx)
+            if isinstance(generate_res, File):
+                await ctx.respond(file=generate_res, view=ViewMeta(bot=self.bot, ctx=ctx, type='session', session_self=self))
+            else:
+                await ctx.respond(embed=generate_res)
+        else:
+            await ctx.respond(
+                embed=self.inf_msg.custom(
+                    Text().get(),
+                    Text().get().cmds.get_session.info.player_not_registred,
+                    colour='orange'
+                    )
                 )
-            )
 
     @commands.slash_command(
             guild_only=True, 
@@ -237,7 +223,7 @@ class Session(commands.Cog):
                 }
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def session_state(self, ctx: commands.Context):
+    async def session_state(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
@@ -247,13 +233,8 @@ class Session(commands.Cog):
                 self.db.validate_session(ctx.author.id)
                 now_time = datetime.now(pytz.utc)
                 
-                try:
-                    last_stats = self.db.get_member_last_stats(ctx.author.id)
-                    session_settings = self.db.get_member_session_settings(ctx.author.id)
-                except api.APIError:
-                    _log.error(traceback.format_exc())
-                    await ctx.respond(embed=self.err_msg.api_error())
-                    return
+                last_stats = self.db.get_member_last_stats(ctx.author.id)
+                session_settings = self.db.get_member_session_settings(ctx.author.id)
                 
                 
                 time_format = f'%H:' \
@@ -265,19 +246,14 @@ class Session(commands.Cog):
                 if session_settings.last_get is None or session_settings.time_to_restart is None:
                     _log.error('last_get or time_to_restart is None')
                     _log.error(traceback.format_exc())
-                    raise ValueError()
+                    return
                 
                 restart_in = session_settings.time_to_restart - (now_time + timedelta(hours=session_settings.timezone))
                 time_left = self.db.get_session_end_time(ctx.author.id) - now_time
                 session_time = now_time - last_stats.timestamp
                 
-                try:
-                    battles_before = last_stats.data.statistics.all.battles
-                    battles_after = await self.api.get_player_battles(last_stats.region, str(last_stats.id))
-                except APIError:
-                    _log.error(traceback.format_exc())
-                    await ctx.respond(embed=self.err_msg.api_error())
-                    return
+                battles_before = last_stats.data.statistics.all.battles
+                battles_after = await self.api.get_player_battles(last_stats.region, str(last_stats.id))
 
                 text = insert_data(
                     Text().get().cmds.session_state.items.started,
@@ -320,15 +296,7 @@ class Session(commands.Cog):
                     colour='blue'
                     )
                 )
-            
-    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        if isinstance(error, commands.CommandOnCooldown):
-            await ctx.respond(embed=self.inf_msg.cooldown_not_expired())
-        elif isinstance(error, UserBanned):
-            await ctx.respond(embed=self.err_msg.user_banned())
-        else:
-            _log.error(traceback.format_exc())
-            await ctx.respond(embed=self.err_msg.unknown_error())
+
 
 def setup(bot):
     bot.add_cog(Session(bot))

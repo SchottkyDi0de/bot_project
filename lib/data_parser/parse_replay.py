@@ -1,5 +1,3 @@
-import json
-import asyncio
 import traceback
 from enum import Enum
 from datetime import datetime
@@ -9,7 +7,6 @@ from lib.data_classes.replay_data import ReplayData
 from lib.data_classes.replay_data_parsed import ParsedReplayData
 from lib.exceptions.data_parser import DataParserError
 from lib.logger.logger import get_logger
-from lib.replay_parser.parser import ReplayParser
 
 _log = get_logger(__file__, 'ReplayParserLogger', 'logs/replay_parser.log')
 
@@ -27,6 +24,7 @@ class Maps(Enum):
     black_goldville = 10
     oasis_palms = 11
     ghost_factory = 12
+    yukon = 13
     molendijk = 14
     port_bay = 15
     winter_malinovka = 19

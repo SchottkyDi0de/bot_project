@@ -93,6 +93,7 @@ map_names:
   black_goldville: Czarne Złoto
   oasis_palm: Basis Palm
   ghost_factory: Fabryka Duchów
+  yukon: Yukon
   molendijk: Molendijk
   port_bay: Przystań
   winter_malinovka: Malinówka Zimą
@@ -151,6 +152,8 @@ frequent:
       m: 'm'
       s: 's'
       
+views:
+  not_owner: You can't use this button.
 
 cmds:
 # astats command
@@ -174,9 +177,9 @@ cmds:
         nickname: Pseudonim gracza.
         region: Wybieranie regionu z listy.
     errors:
-      player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
+      player_not_found: No player with this nickname/id has been found.
       uncorrect_nickname: Nieprawidłowy pseudonim gracza. Pseudonim może składać się z łacińskich liter A-Z, cyfr 0-9 i symbolu '_'.
-      no_battles: Za mało walk, by wygenerować statystyki!
+      no_battles: Need more than 100 battles on account.
     info:
       ''
     items:
@@ -246,7 +249,7 @@ cmds:
     descr:
       this: Pobierz sesję
       sub_descr:
-        ''
+        button_update: Update session
     errors:
       session_not_found: Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęły ponad 24 godziny od ostatniego uruchomienia sesji..
       session_not_updated: Nie wykryto żadnych zmian w statystykach, być może nie stoczyłeś żadnej bitwy lub API nie zaktualizowało danych, spróbuj ponownie później..
@@ -334,7 +337,8 @@ cmds:
       color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
     info:
       set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
-      preview: 'Statistics preview:'
+      canceled_settings_change: 'Image settings change canceled.'
+      preview: 'Do you want to apply the changes? Statistics preview:'
     items:
       color_error_note: 'All invalid values will be ignored.'
       color_error_footer: 'Color code format: #rrggbb or #rgb. Example of valid color: #FF9900 - Orange.'
@@ -431,89 +435,34 @@ cmds:
     items:
       ''
 
+  report:
+    descr:
+      this: Bug report or suggestion
+      sub_descr:
+        label: ' '
+        title: 'Report'
+        placeholder: 10 sym minimum, 500 sym maximum, express your thoughts correctly
+        type_placeholder: Type 'b' for bug report, 's' for suggestion
+        type_label: Write the message type
+        bug_report: Bug report
+        suggestion: Suggestion
+        type: Choose report type
+    info:
+      suggestion_send_ok: Suggestion has been sent to developers.
+      bug_report_send_ok: Bug report has been sent to developers.
+
   help: 
     descr:
       this: Pomoc
       sub_descr:
-        help_types: Wybierz kategorię
+        ''
     errors:
       ''
     info:
       send_ok: Wiadomość pomocy została wysłana.
+      send_ok_dm: Help message sent to your DM.
     items:
-      help_types: [składnia, konfiguracja, statystyki, sesja, inne, wszystkie]
       help: Pomoc
-      syntax: |-
-        > ***Command syntax***:
-        >
-        > `/command [arg_1] <arg_2> <arg_3>`
-        > - Some commands have arguments that can be mandatory or optional.        
-        > - If an argument is specified in square brackets `[]`, it is mandatory
-        > - If an argument is specified in triangle brackets `<>`, it is optional.
-        > `[arg_name] <arg_name>``
-        > 
-        > ***Example:***
-        > ` `/parse_replay [replay] [region] <output_type>``
-        > - The `nickname` argument is mandatory.
-        > - The `output_type` argument is optional, so it can be left out.
-      setup: |-
-        **Setup commands:**
-        >
-        > 1: `/set_lang [lang]`
-        > ***Arguments:***
-        > - `lang` List of available languages (string)
-        > - Language `default` enables automatic language selection.
-        > ***What does:***
-        > - Sets the localization language of the bot for you.
-        > 
-        > 2: `/set_player [nickname] [region]`.
-        > ***Arguments:***
-        > - `nickname` Nickname of the player to save (string)
-        > - `region` Region to search (string)
-        > 3: ***What it does:***
-        > - Records the player in the database for later use, e.g. for a command 
-        > `/astats`
-      statistics: |-
-        > **Commands to call statistics:**
-        >
-        > 1: `/stats [nickname] [region]`
-        > ***Arguments:***
-        > - `nickname` The nickname of the player to search for (string)
-        > - `region` Region to search (string)
-        > ***What it does:***
-        > - Searches for a player with the given nickname in the given region. 
-        > If the player is found, a picture with detailed statistics is returned.
-        > Otherwise, an error is returned.
-        > 
-        > 2: `/astats`
-        > ***What it does:***
-        > - Same as `/stats` but you don't need to enter the data, it is taken from the database after registering it with the command `/set_player`.
-      session: |-
-        > **Game session management commands:**
-        >
-        > 1: `/start_session`.
-        > ***What it does:***
-        > - Starts a session, after starting a session you need to play a few fights to generate a session.
-        > To use, you need to save your data with `/set_player`
-        > 
-        > 2: `/get_session`
-        > ***What it does:***
-        > - Generates a player session and sends a picture with session stats in response.
-        > To use it, save your data with `/set_player` and start the session with `/start_session`.
-        > 
-        > 3: `/session_state`
-        > ***What it does:***
-        > - Displays whether the session is active and the time the session has been active.
-      other: |-
-        > **Other commands:**
-        > 
-        > 1: `/parse_replay [replay] [region] <output_type>`.
-        > ***What it does:***
-        > - Shows basic information about the replay, the list of combatants from the replay and their stats.
-        > 
-        > 2: `/ping`
-        > ***What does:***
-        > - Displays the response time of the bot.
 
   parse_replay:
     descr:

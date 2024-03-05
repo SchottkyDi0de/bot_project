@@ -1,13 +1,8 @@
-import os
-import sys
-
 from pymongo import MongoClient
 from discord.ext.commands import Context
 
-from lib.exceptions.database import ServerNotFound
-from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
-from lib.data_classes.db_server import DBServer, ServerSettings
+from lib.data_classes.db_server import ServerSettings
 
 
 @singleton

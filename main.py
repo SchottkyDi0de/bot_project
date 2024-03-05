@@ -1,18 +1,15 @@
 import os
 from asyncio import sleep, TaskGroup
-from multiprocessing import Process
 
-from discord import Intents
+from discord import Intents, Activity, Status, ActivityType
 from discord.ext import commands
 
 from lib.api import async_wotb_api
 from lib.database import tankopedia
 from lib.logger.logger import get_logger
-from api_server import Server
 from lib.exceptions.api import APIError
 from lib.settings.settings import Config, EnvConfig
 from workers.pdb_checker import PDBWorker
-from workers.presence_update import PresenceUpdater
 from workers.db_backup_worker import DBBackupWorker
 
 _log = get_logger(__file__, 'MainLogger', 'logs/main.log')
@@ -21,7 +18,6 @@ _config = Config().get()
 
 class App():
     def __init__(self):
-        self.presence_updater = PresenceUpdater()
         self.backup = DBBackupWorker()
         self.intents = Intents.default()
         self.pbd_worker = PDBWorker()
@@ -29,7 +25,6 @@ class App():
         self.bot.remove_command('help')
         self.workers = [
                 self.pbd_worker.run_worker,
-                self.presence_updater.run_worker,
                 # self.backup.run_worker
             ]
 
@@ -61,6 +56,14 @@ class App():
 
             tp.set_tankopedia(await self.retrieve_tankopedia(api))
             _log.debug('Tankopedia set successful\nBot started: %s', self.bot.user)
+            
+            await self.bot.change_presence(
+                activity=Activity(
+                    name=f'Servers: {len(self.bot.guilds)}',
+                    type=ActivityType.watching,
+                ),
+                status=Status.online
+            )
             await self.run_workers()
 
         self.load_extension(self.extension_names)
@@ -68,7 +71,7 @@ class App():
 
     @staticmethod
     async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:
-        tankopedia_server_list = ['ru', 'eu']
+        tankopedia_server_list = ['eu', 'ru']
         for i in tankopedia_server_list:
             try:
                 return await api.get_tankopedia(i)

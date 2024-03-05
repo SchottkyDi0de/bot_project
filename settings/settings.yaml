@@ -34,10 +34,10 @@ internal:
   ignore_tankopedia_failures: true
 
 help_urls:
-  ru: https://blitzhub.gitbook.io/blitz-statistics-bot/ru_docs
-  en: https://blitzhub.gitbook.io/blitz-statistics-bot/en_docs
-  ua: https://blitzhub.gitbook.io/blitz-statistics-bot/ua_docs
-  pl: https://blitzhub.gitbook.io/blitz-statistics-bot/pl_docs
+  ru: https://blitzhub.gitbook.io/blitz-statistics-bot/ru-docs
+  en: https://blitzhub.gitbook.io/blitz-statistics-bot/en-docs
+  ua: https://blitzhub.gitbook.io/blitz-statistics-bot/ua-docs
+  pl: https://blitzhub.gitbook.io/blitz-statistics-bot/pl-docs
 
 auth:
   wg_redirect_uri: 'http://<host>:<port>/auth/game'
@@ -86,3 +86,7 @@ game_api:
 ds_api:
   urls:
     get_user: 'https://discord.com/api/v9/users/@me'
+
+report:
+  suggestion_channel_id: 1209275221287379034
+  bug_channel_id: 1209275221287379034

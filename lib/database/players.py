@@ -1,4 +1,3 @@
-import traceback
 import pytz
 from datetime import datetime, timedelta
 
@@ -25,7 +24,7 @@ class PlayersDB:
         )
         self.collection = self.db['players']
         
-        # self.database_update() # TODO: remove this
+        # self.database_update() # TODO: remove this after first use
 
     def set_member(self, data: DBPlayer, override: bool = False) -> bool:
         ds_id = data.id
@@ -51,258 +50,208 @@ class PlayersDB:
     
     def set_member_premium(self, member_id: int | str, time_secs: int = 2592000) -> bool:
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set':
-                            {
-                            'premium': True,
-                            'premium_time': int(datetime.now().timestamp()) + time_secs
-                            }
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set':
+                        {
+                        'premium': True,
+                        'premium_time': int(datetime.now().timestamp()) + time_secs
                         }
-                    )
-                return True
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                    }
+                )
+            return True
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+
         
     def unset_member_premium(self, member_id: int | str) -> bool:
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set': 
-                            {
-                            'premium': False, 
-                            'premium_time': None
-                            }
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set': 
+                        {
+                        'premium': False, 
+                        'premium_time': None
                         }
-                    )
-                return True
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                    }
+                )
+            return True
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+
         
     def check_member_is_verified(self, member_id: int | str) -> bool:
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                return self.collection.find_one({'id': member_id})['verified']
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            return self.collection.find_one({'id': member_id})['verified']
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+
         
     def check_member_premium(self, member_id: int | str) -> bool:
         member_id = int(member_id)
-        try:
-            if self.check_member(member_id):
-                player = self.collection.find_one({'id': member_id})
-                premium = player['premium']
-                premium_time = player['premium_time']
-                if premium and premium_time is not None:
-                    if int(datetime.now().timestamp()) < self.collection.find_one({'id': member_id})['premium_time']:
-                        return True
-                    else:
-                        self.unset_member_premium(member_id)
+        if self.check_member(member_id):
+            player = self.collection.find_one({'id': member_id})
+            premium = player['premium']
+            premium_time = player['premium_time']
+            if premium or premium_time is not None:
+                if int(datetime.now().timestamp()) < self.collection.find_one({'id': member_id})['premium_time']:
+                    return True
                 else:
-                    return False
+                    self.unset_member_premium(member_id)
             else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                return False
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+
         
     def set_member_lock(self, member_id: int | str) -> bool:
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set': 
-                            {
-                            'locked': True
-                            }
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set': 
+                        {
+                        'locked': True
                         }
-                    )
-                return True
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                    }
+                )
+            return True
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+
         
     def unset_member_lock(self, member_id: int | str) -> bool:
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set': 
-                            {
-                            'locked': False
-                            }
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set': 
+                        {
+                        'locked': False
                         }
-                    )
-                return True
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                    }
+                )
+            return True
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def check_member_lock(self, member_id: int | str) -> bool:
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                return self.collection.find_one({'id': member_id})['locked']
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            return self.collection.find_one({'id': member_id})['locked']
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def set_image_settings(self, member_id: int | str, settings: ImageSettings):
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set': 
-                            {
-                            'image_settings': settings.model_dump()
-                            }
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set': 
+                        {
+                        'image_settings': settings.model_dump()
                         }
-                    )
-                return True
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                    }
+                )
+            return True
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def get_image_settings(self, member_id: int | str) -> ImageSettings:
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                field_exist = self.collection.find_one({'id': member_id, 'image_settings': {'$exists': True}}) is not None
-                if field_exist:
-                    if self.collection.find_one({'id': member_id})['image_settings'] is not None:
-                        return ImageSettings.model_validate(self.collection.find_one({'id': member_id})['image_settings'])
-                else:
-                    self.set_image_settings(member_id, ImageSettings.model_validate({}))
-                    return ImageSettings.model_validate({})
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            field_exist = self.collection.find_one({'id': member_id, 'image_settings': {'$exists': True}}) is not None
+            if field_exist:
+                if self.collection.find_one({'id': member_id})['image_settings'] is not None:
+                    return ImageSettings.model_validate(self.collection.find_one({'id': member_id})['image_settings'])
             else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
+                self.set_image_settings(member_id, ImageSettings.model_validate({}))
+                return ImageSettings.model_validate({})
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
     
     def set_member_image(self, member_id: int | str, image: str):
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set': 
-                            {
-                            'image': image
-                            }
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set': 
+                        {
+                        'image': image
                         }
-                    )
-                return True
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                    }
+                )
+            return True
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def get_member_image(self, member_id: int | str) -> str | None:
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                return self.collection.find_one({'id': member_id})['image']
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return None
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            return self.collection.find_one({'id': member_id})['image']
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def del_member_image(self, member_id: int | str):
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set': 
-                            {
-                            'image': None
-                            }
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set': 
+                        {
+                        'image': None
                         }
-                    )
-                return True
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                    }
+                )
+            return True
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def set_member_verified(self, member_id: int | str):
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                self.collection.update_one(
-                    {'id': member_id},
-                    {'$set': 
-                            {
-                            'verified': True
-                            }
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            self.collection.update_one(
+                {'id': member_id},
+                {'$set': 
+                        {
+                        'verified': True
                         }
-                    )
-                return True
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                    }
+                )
+            return True
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def unset_member_verified(self, member_id: int | str):
         member_id = int(member_id)
-        try:
-            member_exist = self.check_member(member_id)
-            if member_exist:
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set': 
-                            {
-                            'verified': False
-                            }
+        member_exist = self.check_member(member_id)
+        if member_exist:
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set': 
+                        {
+                        'verified': False
                         }
-                    )
-                return True
-            else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                    }
+                )
+            return True
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
     
     def get_member(self, member_id: int | str) -> DBPlayer:
         member_id = int(member_id)
@@ -322,40 +271,32 @@ class PlayersDB:
         
     def set_member_lang(self, member_id: int | str, lang: str | None) -> bool:
         member_id = int(member_id)
-        try:
-            if self.check_member(member_id):
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set': 
-                            {
-                            'lang': lang
-                            }
+        if self.check_member(member_id):
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set': 
+                        {
+                        'lang': lang
                         }
-                    )
-                return True
-            else:
-                return False
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
+                    }
+                )
+            return True
+        else:
             return False
         
     def set_member_last_stats(self, member_id: int | str, last_stats: dict):
         member_id = int(member_id)
-        try:
-            if self.check_member(member_id):
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set': 
-                            {
-                            'last_stats': last_stats,
-                            }
+        if self.check_member(member_id):
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set': 
+                        {
+                        'last_stats': last_stats,
                         }
-                    )
-                return True
-            else:
-                return False
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
+                    }
+                )
+            return True
+        else:
             return False
         
     def get_member_session_settings(self, member_id: int | str) -> SessionSettings:
@@ -374,34 +315,17 @@ class PlayersDB:
             )
         else:
             raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def check_member_session(self, member_id: int | str):
-        member_id = int(member_id)
-        try:
-            if self.check_member(member_id):
-                member = self.collection.find_one({'id': member_id})
-                if member['last_stats'] is None:
-                    raise database.LastStatsNotFound(f'Member last stats not found, member id: {member_id}')
-                session_settings = self.get_member_session_settings(member_id)
-                update_time = ...
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            raise database.DatabaseError()
 
     def check_member_last_stats(self, member_id: int | str) -> bool:
         member_id = int(member_id)
-        try:
-            if self.check_member(member_id):
-                member = self.collection.find_one({'id': member_id})
-                if member['last_stats'] is not None:
-                    return True  
-                else:
-                    return False
+        if self.check_member(member_id):
+            member = self.collection.find_one({'id': member_id})
+            if member['last_stats'] is not None:
+                return True  
             else:
-                raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                return False
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def start_autosession(self, member_id: int | str, last_stats: PlayerGlobalData, session_settings: SessionSettings):
         member_id = int(member_id)
@@ -411,105 +335,71 @@ class PlayersDB:
         
     def validate_session(self, member_id: int | str):
         member_id = int(member_id)
-        try:
-            if self.check_member_last_stats(member_id):
-                member_id = str(member_id)
-                session_settings = self.get_member_session_settings(member_id)
-                curr_time = datetime.now(pytz.utc)
-                end_time = session_settings.last_get
+        if self.check_member_last_stats(member_id):
+            member_id = str(member_id)
+            session_settings = self.get_member_session_settings(member_id)
+            curr_time = datetime.now(pytz.utc)
+            end_time = session_settings.last_get
+            
+            if end_time is None:
+                return False
                 
-                if end_time is None:
-                    return False
-                    
-                if session_settings.is_autosession:
-                    end_time += timedelta(seconds=_config.autosession.ttl)
-                else:
-                    end_time += timedelta(seconds=_config.session.ttl)
-                    
-                if curr_time > end_time:
-                    self.reset_member_session(member_id)
-                    return False
-                
-                return True
+            if session_settings.is_autosession:
+                end_time += timedelta(seconds=_config.autosession.ttl)
             else:
-                raise database.LastStatsNotFound(f'Last stats not found, id: {member_id}')
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return False
+                end_time += timedelta(seconds=_config.session.ttl)
+                
+            if curr_time > end_time:
+                self.reset_member_session(member_id)
+                return False
+            
+            return True
+        else:
+            raise database.LastStatsNotFound(f'Last stats not found, id: {member_id}')
         
     def reset_member_session(self, member_id: int | str):
         member_id = int(member_id)
-        try:
-            if self.check_member(member_id):
-                self.collection.update_one(
-                    {'id': member_id}, 
-                    {'$set': 
-                            {
-                            'last_stats': None
-                            }
+        if self.check_member(member_id):
+            self.collection.update_one(
+                {'id': member_id}, 
+                {'$set': 
+                        {
+                        'last_stats': None
                         }
-                    )
-                self.set_member_session_settings(member_id, SessionSettings.model_validate({}))
-                return True
-            else:
-                return False
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
+                    }
+                )
+            self.set_member_session_settings(member_id, SessionSettings.model_validate({}))
+            return True
+        else:
             return False
-        
         
     def get_session_end_time(self, member_id: int | str) -> datetime:
         member_id = int(member_id)
-        try:
-            if self.check_member(member_id):
-                if self.check_member_last_stats(member_id):
-                    session_settings = self.get_member_session_settings(member_id)
-                    if session_settings.is_autosession:
-                        return session_settings.last_get + timedelta(seconds=_config.autosession.ttl)
-                    return session_settings.last_get + timedelta(seconds=_config.session.ttl)
-            else:
-                raise database.MemberNotFound
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return None
+        if self.check_member(member_id):
+            if self.check_member_last_stats(member_id):
+                session_settings = self.get_member_session_settings(member_id)
+                if session_settings.is_autosession:
+                    return session_settings.last_get + timedelta(seconds=_config.autosession.ttl)
+                return session_settings.last_get + timedelta(seconds=_config.session.ttl)
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+
         
     def get_member_last_stats(self, member_id: int | str) -> PlayerGlobalData:
         member_id = int(member_id)
-        try:
-            if self.check_member(member_id):
-                last_stats = self.collection.find_one({'id': member_id})['last_stats']
-                if last_stats is not None:
-                    member = DBPlayer.model_validate(self.collection.find_one({'id': member_id}))
-                    member.session_settings.last_get = int(datetime.now(pytz.utc).timestamp())
-                    return PlayerGlobalData.model_validate(last_stats)
-                else:
-                    raise database.LastStatsNotFound()
+        if self.check_member(member_id):
+            last_stats = self.collection.find_one({'id': member_id})['last_stats']
+            if last_stats is not None:
+                member = DBPlayer.model_validate(self.collection.find_one({'id': member_id}))
+                member.session_settings.last_get = int(datetime.now(pytz.utc).timestamp())
+                return PlayerGlobalData.model_validate(last_stats)
             else:
-                raise database.MemberNotFound()
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
-            return None
+                raise database.LastStatsNotFound(f'Last stats not found, id: {member_id}')
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
     def get_member_lang(self, member_id: int | str) -> str | None:
-        member_id = int(member_id)
-        try:
-            if self.check_member(member_id):
-                return self.collection.find_one({'id': member_id})['lang']
-            else:
-                return None
-        except Exception:
-            _log.error(f'Database error: {traceback.format_exc()}')
+        if self.check_member(member_id):
+            return self.collection.find_one({'id': member_id})['lang']
+        else:
             return None
-        
-    # Run 1 time for update database structure...
-    # def database_update(self):
-    #     self.collection.update_many({}, {'$set' : {'image_settings' : ImageSettings().model_dump(), 'session_settings' : SessionSettings().model_dump()}})
-    #     # self.collection.update_many({}, { '$set' :{ "last_stats" : None, "session_settings" : SessionSettings().model_dump()}})
-    #     # self.collection.update_many(
-    #     #     {}, { '$set' :{
-    #     #             "image_settings.negative_stats_color" : '#c01515',
-    #     #             "image_settings.positive_stats_color" : '#1eff26',
-    #     #             }
-    #     #         }
-    #     #     )
-    #     # self.collection.update_many({}, {'$set' : {'session_settings' : SessionSettings().model_dump()}})

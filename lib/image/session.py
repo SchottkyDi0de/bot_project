@@ -1,6 +1,7 @@
 import base64
 from enum import Enum
 from io import BytesIO
+from random import randint
 from time import time
 from typing import Dict
 
@@ -19,11 +20,11 @@ from lib.image.common import ValueNormalizer
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
+from lib.image.for_image.flags import Flags
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
-from lib.image.for_image.flags import Flags
 
 _log = get_logger(__file__, 'ImageSessionLogger', 'logs/image_session.log')
 _config = Config().get()
@@ -516,6 +517,17 @@ class ImageGen():
             if self.image.mode != 'RGBA':
                 self.image.convert('RGBA').save(_config.image.default_bg_path)
                 self.load_image()
+        
+        # TODO Удалить в следующем обновлении
+        if randint(0, 1000) == 322:
+            self.load_image('res/image/default_image/event_winner.png')
+            _log.info(
+                f'EVENT: WINNER INFO:'
+                f'ID: {ctx.author.id}'
+                f'NICKNAME: {ctx.author.display_name}'
+                f'GAME ID: {data.id}'
+                f'GAME NICKNAME: {data.nickname}'
+            )
 
         start_time = time()
         self.image = self.image.convert('RGBA')

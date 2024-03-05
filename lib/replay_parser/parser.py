@@ -1,4 +1,4 @@
-import os, sys
+import os
 import pathlib
 import subprocess
 import traceback
