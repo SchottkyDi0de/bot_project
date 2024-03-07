@@ -105,6 +105,10 @@ class API:
                 elif data['error']['message'] == 'INVALID_SEARCH':
                     _log.error(f'Exception caused by API: Invalid Search')
                     raise api_exceptions.UncorrectName('Uncorrect nickname')
+                
+                elif data['error']['message'] == 'SOURCE_NOT_AVAILABLE':
+                    _log.error(f'Exception caused by API: Source Not Available')
+                    raise api_exceptions.APISourceNotAvailable()
                     
                 _log.error(f'Error get data, bad response status: {data}')
                 raise api_exceptions.APIError(f'Error get data, bad response status: {data}')
@@ -133,11 +137,11 @@ class API:
             
         if check_battles and check_data:
             if isinstance(data['data'], list):
-                if data['data'][0]['statistics']['all']['battles'] < 100:
+                if data['data'][0]['statistics']['all']['battles'] < 1:
                     raise api_exceptions.NeedMoreBattlesError('Need more battles')
                 
             elif isinstance(data['data'], dict):
-                if data['data'][list(data['data'].keys())[0]]['statistics']['all']['battles'] < 100:
+                if data['data'][list(data['data'].keys())[0]]['statistics']['all']['battles'] < 1:
                     raise api_exceptions.NeedMoreBattlesError('Need more battles')
             
         return data
@@ -215,7 +219,7 @@ class API:
                 data['data'] = data['data'][account_id]
                 self._players_stats.append(PlayerStats.model_validate(data))
 
-    async def retry_callback(self):
+    async def retry_callback(self=None):
         _log.debug('Task failed, retrying...')
 
     @retry(

@@ -17,7 +17,7 @@ from lib.exceptions.error_handler.error_handler import error_handler
 from lib.image.session import ImageGen
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
-from lib.utils.time_validator import validate
+from lib.utils.validators import validate
 from lib.utils.bool_to_text import bool_handler
 from lib.utils.views import ViewMeta
 from lib.utils.time_converter import TimeConverter
@@ -98,7 +98,7 @@ class Session(commands.Cog):
         await ctx.defer()
         
         if self.db.check_member(ctx.author.id):
-            valid_time = validate(restart_time)
+            valid_time = validate(restart_time, 'time')
             now_time = datetime.now(tz=pytz.utc).replace(hour=0, minute=0, second=0)
             member = self.db.get_member(ctx.author.id)
             

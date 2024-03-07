@@ -16,7 +16,8 @@ from lib.exceptions import api, data_parser
 from lib.exceptions.error_handler.error_handler import error_handler
 from lib.data_classes.db_server import ServerSettings
 from lib.logger.logger import get_logger
-from lib.utils.nickname_handler import handle_nickname, validate_nickname
+from lib.utils.nickname_handler import handle_nickname
+from lib.utils.validators import validate
 
 _log = get_logger(__file__, 'CogStatsLogger', 'logs/cog_stats.log')
 
@@ -80,7 +81,7 @@ class Stats(commands.Cog):
         
         server_settings = self.sdb.get_server_settings(ctx)
         
-        nickname_type = validate_nickname(nick_or_id)
+        nickname_type = validate(nick_or_id, 'nickname')
         
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
         

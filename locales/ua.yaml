@@ -323,11 +323,11 @@ cmds:
         use_custom_bg: Використовувати кастомний фон
         glass_effect: Ефект скла 0 - Виключено (0-30)
         blocks_bg_brightness: Прозорість блоків зі статистикою (0-100)
-        nickname_color: 'Кольор нікнейму (HEX Color)'
-        clan_tag_color: 'Кольор клан-тегу (HEX Color)'
-        stats_color: 'Колір основних ститистик (HEX Color)'
-        main_text_color: 'Колір основного тексту (HEX Color)'
-        stats_text_color: 'Колір тексту статистик (HEX Color)'
+        nickname_color: 'Кольор нікнейму (HEX або RGB Color)'
+        clan_tag_color: 'Кольор клан-тегу (HEX або RGB Color)'
+        stats_color: 'Колір основних ститистик (HEX або RGB Color)'
+        main_text_color: 'Колір основного тексту (HEX або RGB Color)'
+        stats_text_color: 'Колір тексту статистик (HEX або RGB Color)'
         disable_flag: 'Вимкнути відображення прапору'
         hide_nickname: 'Сховати нікнейм, буде заміно на Player'
         hide_clan_tag: 'Сховати клан-тег, буде видалено'
@@ -343,7 +343,7 @@ cmds:
       preview: 'Ви хочете застосувати зміни? Предперегляд статистики:'
     items:
       color_error_note: 'Усі неприпустимі значення будуть проігноровані.'
-      color_error_footer: 'Формат кольорового коду: #rrggbb або #rgb. Приклад правильного кольору: #FF9900 - Оранжевий.'
+      color_error_footer: 'Формат кольорового коду(HEX): #rrggbb або #rgb. Приклад правильного кольору: #FF9900 - Оранжевий. Формат кольорового коду(RGB): 255;165;0 - Оранжевий.'
 
   server_settings:
     descr:

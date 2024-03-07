@@ -1,9 +1,9 @@
 from typing import Literal
 
-from discord import ButtonStyle, Interaction, File, InputTextStyle
+from discord import ButtonStyle, Interaction, File, InputTextStyle, SelectOption
 from discord.commands import ApplicationContext
 from discord.ext import commands
-from discord.ui import View, InputText, Modal, button
+from discord.ui import View, InputText, Modal, button, select
 
 from lib.data_classes.db_player import ImageSettings
 from lib.database.players import PlayersDB
@@ -45,6 +45,12 @@ class Modals:
         
         async def on_timeout(self):
             await self.ctx.message.delete()
+
+
+class SelectMenus:
+    async def replay_select_callback(self, select, interaction: Interaction):
+        Text().load_from_context(self.ctx)
+        
 
 
 class Buttons:
@@ -129,8 +135,8 @@ class ViewMeta(type):
               'image_settings': {'save_callback': {'style': ButtonStyle.green, 'row': 0}, 
                                  'cancel_callback': {'style': ButtonStyle.red, 'row': 0}}}
 
-    def __new__(cls, bot: commands, ctx: ApplicationContext, type: Literal['image_settings', 'session', 'report'], 
-                session_self: Session=None, current_settings: ImageSettings=None, report_type: Literal['b', 's'] = None):
+    def __new__(cls, bot: commands.Bot, ctx: ApplicationContext, type: Literal['image_settings', 'session', 'report'], 
+                session_self: Session=None, current_settings: ImageSettings=None, report_type: Literal['b', 's']=None):
         Text().load_from_context(ctx)
 
         if type in ['image_settings', 'session']:

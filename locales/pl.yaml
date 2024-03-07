@@ -321,11 +321,11 @@ cmds:
         use_custom_bg: Use custom background
         glass_effect: Glass effect 0 - Disable (0-30)
         blocks_bg_brightness: Block background brightness (0-100)
-        nickname_color: 'Nickname color (HEX Color)'
-        clan_tag_color: 'Clan tag color (HEX Color)'
-        stats_color: 'Main statistics color (HEX Color)'
-        main_text_color: 'Main text color (HEX Color)'
-        stats_text_color: 'Statistics text color (HEX Color)'
+        nickname_color: 'Nickname color (HEX or RGB Color)'
+        clan_tag_color: 'Clan tag color (HEX or RGB Color)'
+        stats_color: 'Main statistics color (HEX or RGB Color)'
+        main_text_color: 'Main text color (HEX or RGB Color)'
+        stats_text_color: 'Statistics text color (HEX or RGB Color)'
         disable_flag: 'Disable region flag rendering'
         hide_nickname: 'Hide nickname, will be replaced with Player'
         hide_clan_tag: 'Hide clan tag, will be removed'
@@ -341,7 +341,7 @@ cmds:
       preview: 'Do you want to apply the changes? Statistics preview:'
     items:
       color_error_note: 'All invalid values will be ignored.'
-      color_error_footer: 'Color code format: #rrggbb or #rgb. Example of valid color: #FF9900 - Orange.'
+      color_error_footer: 'Color code format(HEX): #rrggbb or #rgb. Example of valid color: #FF9900 - Orange. Color code format(RGB): r;g;b. Example of valid color: 255;165;0 - Orange.'
 
   server_settings:
     descr:
