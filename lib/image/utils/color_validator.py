@@ -4,7 +4,7 @@ from typing import Literal
 
 class CompiledRegex:
     hex = _compile(r'^#(?:[0-9a-fA-F]{3}){1,2}$')
-    rgb = _compile(r'^.*(\d{,3})\W+(\d{,3})\W+(\d{,3}).*$')
+    rgb = _compile(r'^[(]?(\d{,3})\W+(\d{,3})\W+(\d{,3})[)]?$')
 
 
 class ColorValidators:

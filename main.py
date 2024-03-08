@@ -1,5 +1,5 @@
 import os
-from asyncio import sleep, TaskGroup
+from asyncio import TaskGroup
 
 from discord import Intents, Activity, Status, ActivityType
 from discord.ext import commands

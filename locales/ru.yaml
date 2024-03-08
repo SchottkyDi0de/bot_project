@@ -492,6 +492,18 @@ cmds:
         # and align placeholders relative to each other
         # I recomended VS Code or Sublime Text with monospaced font
         # _Zener
+      formenu: |-
+        Аккаунт: `<nickname>`
+        ```py
+        Урона нанесено: <damage>
+        Урон с помощью игрока: <spotted>
+        Чистый опыт: <xp>
+        Уничтожено танков: <frags>
+        Заблокировано урона: <blocked>
+        Сделано выстрелов: <shots>
+        Точность: <accuracy>
+        Коэффициент пробитий: <penetration_ratio>
+        ```
       description: |-
         ```py
         Основная информация:

@@ -587,7 +587,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def get_player_achievements(self, region: str, account_id: str) -> None:
+    async def get_player_achievements(self, region: str, account_id: str) -> Achievements:
         """
         Retrieves the achievements of a player.
 
@@ -606,10 +606,18 @@ class API:
         )
 
         await self.rate_limiter.wait()
-        async with self.session.get(url_get_achievements, verify_ssl=False) as response:
-            data = await self.response_handler(response)
+        try:
+            self.session
+        except AttributeError:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url_get_achievements, verify_ssl=False) as response:
+                    data = await self.response_handler(response)
+        else:
+            async with self.session.get(url_get_achievements, verify_ssl=False) as response:
+                data = await self.response_handler(response)
 
         self.player_stats['achievements'] = Achievements.model_validate(data['data'][str(account_id)]['achievements'])
+        return self.player_stats['achievements']
 
 
     @retry(

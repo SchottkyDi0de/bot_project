@@ -487,6 +487,18 @@ cmds:
         # When localizing, use an editor with a monospaced font 
         # and align placeholders relative to each other
         # I recommended VS Code or Sublime Text with monospaced font
+      formenu: |-
+        Account: `<nickname>`
+        ```py
+        Damage: <damage>
+        Spotted: <spotted>
+        XP: <xp>
+        Frags: <frags>
+        Blocked: <blocked>
+        Shots: <shots>
+        Accuracy: <accuracy>
+        Penetration ratio: <penetration_ratio>
+        ```
       description: |-
         ```py
         Main battle info:

@@ -17,6 +17,7 @@ from lib.embeds.replay import EmbedReplayBuilder
 from lib.exceptions.replay_parser import WrongFileType
 from lib.exceptions.error_handler.error_handler import error_handler
 from lib.settings.settings import Config
+from lib.views import ViewMeta
 
 _log = get_logger(__file__, 'CogReplayParserLogger', 'logs/cog_replay_parser.log')
 _config = Config().get()
@@ -95,7 +96,8 @@ class CogReplayParser(commands.Cog):
                     embed=EmbedReplayBuilder().build_embed(
                         ctx,
                         replay_data
-                        )
+                        ),
+                    view=ViewMeta(self.bot, ctx, 'replay', replay_data=replay_data)
                     )
 
 

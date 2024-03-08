@@ -6,7 +6,7 @@ from lib.blacklist.blacklist import check_user
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.exceptions.error_handler.error_handler import error_handler
-from lib.utils.views import ViewMeta
+from lib.views import ViewMeta
 
 _log = get_logger(__file__, 'CogReportLogger', 'logs/cog_report.log')
 

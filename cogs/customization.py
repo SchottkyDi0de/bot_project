@@ -17,7 +17,7 @@ from lib.image.utils.color_validator import color_validate
 from lib.image.settings_represent import SettingsRepresent
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
-from lib.utils.views import ViewMeta
+from lib.views import ViewMeta
 from lib.utils.stats_preview import StatsPreview
 from lib.utils.rgb_convert import rgb_convert
 

@@ -19,9 +19,9 @@ from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.utils.validators import validate
 from lib.utils.bool_to_text import bool_handler
-from lib.utils.views import ViewMeta
 from lib.utils.time_converter import TimeConverter
 from lib.utils.string_parser import insert_data
+from lib.views import ViewMeta
 
 
 _log = get_logger(__file__, 'CogSessionLogger', 'logs/cog_session.log')
