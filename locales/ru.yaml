@@ -322,11 +322,11 @@ cmds:
         use_custom_bg: Использовать нестандартный фон
         glass_effect: Эффект стекла 0 - Выключить (0-30)
         blocks_bg_brightness: Прозрачность блоков со статистикой (0-100)
-        nickname_color: 'Цвет никнейма (HEX Color)'
-        clan_tag_color: 'Цвет тега клана (HEX Color)'
-        stats_color: 'Цвет основыных статистик (HEX Color)'
-        main_text_color: 'Цвет основного текста (HEX Color)'
-        stats_text_color: 'Цвет текста статистик (HEX Color)'
+        nickname_color: 'Цвет никнейма (HEX или RGB Color)'
+        clan_tag_color: 'Цвет тега клана (HEX или RGB Color)'
+        stats_color: 'Цвет основыных статистик (HEX или RGB Color)'
+        main_text_color: 'Цвет основного текста (HEX или RGB Color)'
+        stats_text_color: 'Цвет текста статистик (HEX или RGB Color)'
         disable_flag: 'Отключить отрисовку флага региона'
         hide_nickname: 'Скрыть никнейм, будет заменён на Player'
         hide_clan_tag: 'Скрыть тег клана, будет удалён'
@@ -342,7 +342,7 @@ cmds:
       preview: 'Вы хотите применить изменения? Предпросмотр статистики:'
     items:
       color_error_note: 'Все недопустимые значения будут проигнорированы.'
-      color_error_footer: 'Формат цветового кода: #rrggbb или #rgb. Пример правильного цвета: #FF9900 - Оранжевый.'
+      color_error_footer: 'Формат цветового кода(HEX): #rrggbb или #rgb. Пример правильного цвета: #FF9900 - Оранжевый. Формат цветового кода(RGB): r;g;b. Пример правильного цвета: 255;165;0 - Оранжевый.'
 
   server_settings:
     descr:
@@ -492,6 +492,18 @@ cmds:
         # and align placeholders relative to each other
         # I recomended VS Code or Sublime Text with monospaced font
         # _Zener
+      formenu: |-
+        Аккаунт: `<nickname>`
+        ```py
+        Урона нанесено: <damage>
+        Урон с помощью игрока: <spotted>
+        Чистый опыт: <xp>
+        Уничтожено танков: <frags>
+        Заблокировано урона: <blocked>
+        Сделано выстрелов: <shots>
+        Точность: <accuracy>
+        Коэффициент пробитий: <penetration_ratio>
+        ```
       description: |-
         ```py
         Основная информация:

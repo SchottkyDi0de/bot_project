@@ -228,21 +228,21 @@ cmds:
       # In your editor, select monospaced font and try to align everything.
       started: |- 
         ```py
-        Session started.
+        Сесію розпочато.
         +----------------------------------+
-        Autosession:              <is_autosession>
+        Автосесія:              <is_autosession>
         +__________________________________+
-        Autosession restart time:
+        Час рестарту автосесії:
         <update_time> | UTC + <timezone>
-        Restart in:               <restart_in>
+        Рестарт через:               <restart_in>
         +..................................+
-        Session time:             <time>
-        Battles played:           <battles>
-        Time remaining:           <time_left>
+        Час сесії:             <time>
+        Боїв зіграно:           <battles>
+        Часу залишилось:           <time_left>
         +----------------------------------+
-        >>> Reset session: 
+        >>> Перезапустити сесію: 
         /start_session
-        >>> Reset autosession:
+        >>> Перезапустити аутосесію:
         /start_autosession
         ```
       not_started: '`Сесія не запущена.`'
@@ -278,21 +278,21 @@ cmds:
 # start autosession command
   start_autosession:
     descr:
-      this: Start autosession
+      this: Запуск автосесії
       sub_descr:
-        timezone: Time zone (0 - 12)
-        restart_time: 'Restart time in the format HH:MM'
+        timezone: Часова зона (0 - 12)
+        restart_time: 'Час рестарту в форматі HH:MM'
     errors:
       uncorrect_r_time: |-
-        Incorrect restart time.
-        Expected time format: "HH:MM"
-        Received: <time>
-        Examples of correct time:
+        Неправильний час рестарту.
+        Неправильний формат часу: "HH:MM"
+        Отримано: <time>
+        Приклад часу в правильному фораті:
         00:20, 03:15, 22:40, 13:20
-        The set value will be ignored.
+        Встановлене значення буде проігноровано.
     info:
-      player_not_registred: To start a session, first save your data using `/set_player`
-      started: Autosession started. Now you can play several battles and get session statistics using `/get_session`
+      player_not_registred: Щоб розпочати сесії, спочатку збережіть свої дані за допомогою `/set_player`
+      started: Автосесію розпочато. Тепер ви можете зіграти кілька битв і отримати статистику сесії `/get_session`
     items:
       ''
 
@@ -323,11 +323,11 @@ cmds:
         use_custom_bg: Використовувати кастомний фон
         glass_effect: Ефект скла 0 - Виключено (0-30)
         blocks_bg_brightness: Прозорість блоків зі статистикою (0-100)
-        nickname_color: 'Кольор нікнейму (HEX Color)'
-        clan_tag_color: 'Кольор клан-тегу (HEX Color)'
-        stats_color: 'Колір основних ститистик (HEX Color)'
-        main_text_color: 'Колір основного тексту (HEX Color)'
-        stats_text_color: 'Колір тексту статистик (HEX Color)'
+        nickname_color: 'Кольор нікнейму (HEX або RGB Color)'
+        clan_tag_color: 'Кольор клан-тегу (HEX або RGB Color)'
+        stats_color: 'Колір основних ститистик (HEX або RGB Color)'
+        main_text_color: 'Колір основного тексту (HEX або RGB Color)'
+        stats_text_color: 'Колір тексту статистик (HEX або RGB Color)'
         disable_flag: 'Вимкнути відображення прапору'
         hide_nickname: 'Сховати нікнейм, буде заміно на Player'
         hide_clan_tag: 'Сховати клан-тег, буде видалено'
@@ -343,7 +343,7 @@ cmds:
       preview: 'Ви хочете застосувати зміни? Предперегляд статистики:'
     items:
       color_error_note: 'Усі неприпустимі значення будуть проігноровані.'
-      color_error_footer: 'Формат кольорового коду: #rrggbb або #rgb. Приклад правильного кольору: #FF9900 - Оранжевий.'
+      color_error_footer: 'Формат кольорового коду(HEX): #rrggbb або #rgb. Приклад правильного кольору: #FF9900 - Оранжевий. Формат кольорового коду(RGB): 255;165;0 - Оранжевий.'
 
   server_settings:
     descr:
@@ -492,6 +492,18 @@ cmds:
         # and align placeholders relative to each other
         # I recomended VS Code or Sublime Text with monospaced font
         # _Zener
+      formenu: |-
+        Акаунт: `<nickname>`
+        ```py
+        Шкоди завдано: <damage>
+        Втрати за допомогою гравця: <spotted>
+        Чистий досвід: <xp>
+        Знищено танків: <frags>
+        Заблоковано шкоди: <blocked>
+        Зроблено пострілів: <shots>
+        Точність: <accuracy>
+        Коефіцієнт пробитів: <penetration_ratio>
+        ```
       description: |-
         ```py
         Основна інформація:

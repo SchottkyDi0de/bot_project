@@ -17,9 +17,11 @@ from lib.data_classes.db_server import set_server_settings
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.exceptions.error_handler.error_handler import error_handler
+from lib.exceptions.api import NeedMoreBattlesError
 from lib.logger.logger import get_logger
 from lib.locale.locale import Text
-from lib.utils.nickname_handler import handle_nickname, validate_nickname, NicknameValidationError
+from lib.utils.nickname_handler import handle_nickname
+from lib.utils.validators import validate
 
 _log = get_logger(__file__, 'CogSetLogger', 'logs/cog_set.log')
 _config = Config().get()
@@ -109,11 +111,7 @@ class Set(commands.Cog):
         check_user(ctx)
         await ctx.defer()
         
-        try:
-            nickname_type = validate_nickname(nick_or_id)
-        except NicknameValidationError:
-            await ctx.respond(embed=self.err_msg.uncorrect_name())
-            return
+        nickname_type = validate(nick_or_id, 'nickname')
         
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
