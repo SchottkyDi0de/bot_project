@@ -11,7 +11,11 @@ from lib.data_classes.api.tanks_stats import All as AllTank
 from lib.data_classes.replay_data_parsed import ParsedReplayData, PlayerResult, Player as PlayerFR, Rating
 from lib.data_parser.parse_data import get_normalized_data
 from lib.locale.locale import Text
+from lib.logger.logger import get_logger
 from lib.utils.string_parser import insert_data
+
+
+_log = get_logger(__file__, 'SelectMenuLogger', 'logs/select_menu.log')
 
 
 class SelectMenu:
@@ -84,24 +88,28 @@ class SelectMenu:
     async def replay_select_callback(self, select, interaction: Interaction):
         Text().load_from_context(self.ctx)
         self.data: ParsedReplayData
+        _log.debug(f"buildng data for {select.values[0]}")
 
         nickname = select.values[0]
         need_cache = True
 
+        for playerres in self.data.player_results:
+                if playerres.player_info.nickname == nickname:
+                    break
+
         if nickname in self.cache:
+            _log.debug('get image from cache')
             need_cache = False
             bin_image = BytesIO(base64.b64decode(self.cache.get(nickname)))
         else:
             image_settings = self.db.get_image_settings(interaction.user.id)
-            server_settings = self.sdb.get_server_settings(interaction)
+            server_settings = self.sdb.get_server_settings(self.ctx)
 
             for player in self.data.players:
                 if player.info.nickname == nickname:
                     break
-            for playerres in self.data.player_results:
-                if playerres.player_info.nickname == nickname:
-                    break
-            
+            _log.debug(f"get achievements for {player.info.nickname}, generate image")
+
             achievements = await self.api.get_player_achievements(player.info.region, player.account_id)
             bin_image = ImageGen().generate(self.ctx, SelectMenu._build_global_data(player, playerres, achievements), 
                                             image_settings, server_settings)
