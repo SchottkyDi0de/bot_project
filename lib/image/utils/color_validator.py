@@ -29,6 +29,9 @@ class ColorValidators:
 
 
 def color_validate(color: str | None) -> tuple[bool, Literal['hex', 'rgb']]:
+    if color is None:
+        return False, 'hex'
+    
     if ColorValidators.hex_color_validate(color):
         return True, 'hex'
 

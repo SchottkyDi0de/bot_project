@@ -1,6 +1,9 @@
 from discord import Interaction, File
 
 from lib.locale.locale import Text
+from lib.logger.logger import get_logger
+
+_log = get_logger(__file__, 'ButtonsLogger', 'logs/buttons.log')
 
 
 class Buttons:
@@ -13,6 +16,7 @@ class Buttons:
                 )
             return
 
+        _log.debug(f"set image settings for {interaction.user.id}")
         self.db.set_image_settings(interaction.user.id, self.current_settings)
         await interaction.response.send_message(embed=self.inf_msg.custom(
             Text().get(),
@@ -53,7 +57,8 @@ class Buttons:
                 embed=self.inf_msg.not_button_owner(), ephemeral=True
                 )
             return
-                
+        
+        _log.debug(f"update session for {interaction.user.id}")
         generate_res = await self.session_self._generate_image(self.ctx)
         if isinstance(generate_res, File):
             await interaction.response.send_message(file=generate_res, view=self)
