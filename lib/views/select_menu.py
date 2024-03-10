@@ -8,8 +8,10 @@ from lib.image.common import ImageGen
 from lib.data_classes.api.api_data import PlayerGlobalData, Player as PlayerFAPI, Achievements, TankStats, Statistics
 from lib.data_classes.api.player_stats import All as AllPlayer
 from lib.data_classes.api.tanks_stats import All as AllTank
+from lib.data_classes.api.player_clan_stats import Clan
 from lib.data_classes.replay_data_parsed import ParsedReplayData, PlayerResult, Player as PlayerFR, Rating
 from lib.data_parser.parse_data import get_normalized_data
+from lib.database.tankopedia import TanksDB
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.utils.string_parser import insert_data
@@ -77,13 +79,26 @@ class SelectMenu:
                     shots=playerres.statistics.all.shots
                 ),
                 rating=Rating({}) if not playerres.statistics.rating else playerres.statistics.rating),
-                clan_tag=None
+                clan_tag=player.info.clan_tag,
+                clan_stats=Clan(members_count=0,
+                                name="",
+                                tag=player.info.clan_tag,
+                                clan_id=0,
+                                emblem_set_id=0,
+                                created_at=0) if player.info.clan_tag else None
             ),
             region=player.info.region,
             lower_nickname=player.info.nickname.lower(),
             timestamp=datetime.now(),
             nickname=player.info.nickname
         ))
+
+    def _get_normalized_ratio(ratio: float) -> int | float:
+        ratio = round(ratio, 2)
+        temp = str(ratio)
+        if int(temp[temp.find('.') + 1:]):
+            return ratio
+        return int(temp[:-2])
 
     async def replay_select_callback(self, select, interaction: Interaction):
         Text().load_from_context(self.ctx)
@@ -117,8 +132,12 @@ class SelectMenu:
         if need_cache:
             self.cache.set(nickname, base64.b64encode(bin_image.read()))
             bin_image.seek(0)
+        
+        tank_dct = TanksDB().safe_get_tank_by_id(playerres.info.tank_id)
+        tank_name = tank_dct['name'] if tank_dct else "Unknown"
 
         text = insert_data(Text().get().cmds.parse_replay.items.formenu, {
+            'tank_name': tank_name,
             'nickname': nickname,
             'damage': playerres.info.damage_dealt,
             'spotted': playerres.info.damage_assisted_1,
@@ -126,8 +145,10 @@ class SelectMenu:
             'frags': playerres.info.n_enemies_destroyed,
             'blocked': playerres.info.damage_blocked,
             'shots': playerres.info.n_shots,
-            'accuracy': str(round(playerres.info.n_hits_dealt / playerres.info.n_shots * 100, 2)) + '%',
-            'penetration_ratio': str(round(playerres.info.n_penetrations_dealt / playerres.info.n_hits_dealt * 100, 2)) + '%',
+            "shots_hit": playerres.info.n_hits_dealt,
+            'shots_penetrated': playerres.info.n_penetrations_dealt,
+            'accuracy': str(SelectMenu._get_normalized_ratio(playerres.info.n_hits_dealt / playerres.info.n_shots * 100)) + '%',
+            'penetration_ratio': str(SelectMenu._get_normalized_ratio(playerres.info.n_penetrations_dealt / playerres.info.n_hits_dealt * 100)) + '%',
         })
 
         await interaction.response.send_message(text, file=File(bin_image, 'stats.png'), ephemeral=True)

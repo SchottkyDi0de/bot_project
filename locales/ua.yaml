@@ -493,14 +493,17 @@ cmds:
         # I recomended VS Code or Sublime Text with monospaced font
         # _Zener
       formenu: |-
-        Акаунт: `<nickname>`
+        Нікнейм: `<nickname>`
         ```py
+        Назва танку: <tank_name>
         Шкоди завдано: <damage>
         Втрати за допомогою гравця: <spotted>
         Чистий досвід: <xp>
         Знищено танків: <frags>
         Заблоковано шкоди: <blocked>
         Зроблено пострілів: <shots>
+        Пострілів попало: <shots_hit>
+        Пробиттів: <shots_penetrated>
         Точність: <accuracy>
         Коефіцієнт пробитів: <penetration_ratio>
         ```

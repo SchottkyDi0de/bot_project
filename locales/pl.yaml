@@ -488,14 +488,17 @@ cmds:
         # and align placeholders relative to each other
         # I recomended VS Code or Sublime Text with monospaced font
       formenu: |-
-        Account: `<nickname>`
+        Nickname: `<nickname>`
         ```py
+        Tank name: <tank_name>
         Damage: <damage>
         Spotted: <spotted>
         XP: <xp>
         Frags: <frags>
         Blocked: <blocked>
         Shots: <shots>
+        Shots hit: <shots_hit>
+        Penetrations: <shots_penetrated>
         Accuracy: <accuracy>
         Penetration ratio: <penetration_ratio>
         ```
