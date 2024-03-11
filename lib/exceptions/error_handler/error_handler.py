@@ -19,6 +19,7 @@ def error_handler(_log: Logger) -> Coroutine:
         inf_msg = InfoMSG()
         err_msg = ErrorMSG()
         kwargs = {}
+        embed = err_msg.unknown_error()
         
 
         if isinstance(error, commands.CommandOnCooldown):
@@ -51,7 +52,6 @@ def error_handler(_log: Logger) -> Coroutine:
                 embed = err_msg.wrong_file_type()
         else:
             _log.error(traceback.format_exc())
-            embed = err_msg.unknown_error()
         
         await ctx.respond(embed=embed, **kwargs)
 

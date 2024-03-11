@@ -29,8 +29,7 @@ class BackUp:
             _log.error('Failed to create zip')
             return
         
-        _log.info('Dump created')
-        _log.info('Exporting to Google Drive')
+        _log.info('Dump created. Exporting to Google Drive')
         self._export_to_google_drive()
         
     
