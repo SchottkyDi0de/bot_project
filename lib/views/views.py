@@ -37,10 +37,7 @@ class ViewBase(View):
         return self.user_id != interaction.user.id
 
     async def on_timeout(self):
-        try:
-            await self.ctx.message.edit(view=None)
-        except AttributeError:
-            ...
+        ...
 
 
 class BaseClass:
@@ -49,9 +46,9 @@ class BaseClass:
 
 
 class TimeLimits(BaseClass):
-    session = 3600 * 24
-    image_settings = 3600 * 24
-    report = 3600 * 24
+    session = 3600
+    image_settings = 3600
+    report = 3600
     replay = 3600
     cooldowns = {"session": 10, "image_settings": 10, "report": 1800, "replay": 10}
 
@@ -74,7 +71,7 @@ class InitObject:
         'session': ["session_self", "cooldown"],
         "image_settings": ["current_settings"],
         "report": ["report_type"],
-        "replay": ["data", "api", "cache", "_build_global_data"]
+        "replay": ["data", "api", "cache"]
         }
 
     def __class_getitem__(cls, item):
@@ -98,7 +95,6 @@ class InitObject:
             }
         if type == "replay":
             dct |= {"data": item['replay_data'],
-                    "_build_global_data": SelectMenu._build_global_data,
                     "cache": Cache(ttl=3600)}
         item |= dct
 

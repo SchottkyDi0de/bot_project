@@ -80,6 +80,12 @@ class DsApi(BaseModel):
     urls: Urls1
 
 
+class Dump(BaseModel):
+    export_to_id: int
+    chunk_size: int     #in bytes
+    directory: str
+
+
 class Report(BaseModel):
     bug_channel_id: int
     suggestion_channel_id: int
@@ -98,3 +104,4 @@ class ConfigStruct(BaseModel):
     game_api: GameApi
     ds_api: DsApi
     report: Report
+    dump: Dump

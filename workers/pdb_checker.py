@@ -1,13 +1,12 @@
 import traceback
 import pytz
 from asyncio import sleep
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 
 from lib.api.async_wotb_api import API
 
 from lib.database.players import PlayersDB
 from lib.logger.logger import get_logger
-from lib.utils.time_converter import TimeConverter
 
 _log = get_logger(__file__, 'WorkerPDBLogger', 'logs/worker_pdb.log')
 

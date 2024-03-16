@@ -1,6 +1,8 @@
 from asyncio import sleep
 
-from lib.database.utils.dump_handler import BackUp
+from discord.ext.commands import Bot
+
+from lib.dump_handler.dump_handler import BackUp
 from lib.logger.logger import get_logger
 
 _log = get_logger(__file__, 'DBBackupWorkerLogger', 'logs/db_backup_worker.log')
@@ -9,9 +11,13 @@ _log = get_logger(__file__, 'DBBackupWorkerLogger', 'logs/db_backup_worker.log')
 class DBBackupWorker:
     def __init__(self):
         self.STOP_FLAG = False
+
+    def stop_worker(self):
+        _log.debug('WORKERS: setting STOP_WORKER_FLAG to True')
+        self.STOP_FLAG = True
     
-    async def run_worker(self, *args):
+    async def run_worker(self, bot: Bot, *args):
         _log.info('WORKERS: DB backup worker started')
         while not self.STOP_FLAG:
-            BackUp().dump()
+            await BackUp().dump(bot)
             await sleep(3600 * 24)

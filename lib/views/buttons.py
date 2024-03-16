@@ -18,12 +18,14 @@ class Buttons:
 
         _log.debug(f"set image settings for {interaction.user.id}")
         self.db.set_image_settings(interaction.user.id, self.current_settings)
-        await interaction.response.send_message(embed=self.inf_msg.custom(
+
+        await interaction.message.delete()
+
+        await self.ctx.channel.send(embed=self.inf_msg.custom(
             Text().get(),
             text=Text().get().cmds.image_settings.info.set_ok,
             colour='green'
         ))
-        await interaction.message.delete()
             
     async def cancel_callback(self, _, interaction: Interaction):
         Text().load_from_context(self.ctx)
@@ -33,15 +35,17 @@ class Buttons:
                 embed=self.inf_msg.not_button_owner(), ephemeral=True
                 )
             return
-                
-        await interaction.response.send_message(
+        
+        
+        await interaction.message.delete()
+
+        await self.ctx.channel.send(
             embed=self.inf_msg.custom(
                 Text().get(),
                 Text().get().cmds.image_settings.info.canceled_settings_change,
                 colour='green'
             )
         )
-        await interaction.message.delete()
     
     async def update_callback(self, _, interaction: Interaction):
         Text().load_from_context(self.ctx)
@@ -61,7 +65,7 @@ class Buttons:
         _log.debug(f"update session for {interaction.user.id}")
         generate_res = await self.session_self._generate_image(self.ctx)
         if isinstance(generate_res, File):
-            await interaction.response.send_message(file=generate_res, view=self)
             await interaction.message.delete()
+            await self.ctx.channel.send(file=generate_res, view=self)
         else:
             await interaction.response.send_message(embed=generate_res)
