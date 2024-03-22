@@ -1,6 +1,7 @@
 import os
 from asyncio import TaskGroup
 
+import nest_asyncio
 from discord import Intents, Activity, Status, ActivityType
 from discord.ext import commands
 
@@ -85,5 +86,6 @@ class App():
         _log.info('Failed to get tankopedia data, ignoring...')
 
 if __name__ == '__main__':
+    nest_asyncio.apply()
     app = App()
     app.main()

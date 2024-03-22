@@ -15,7 +15,7 @@ from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.embeds.replay import EmbedReplayBuilder
 from lib.exceptions.replay_parser import WrongFileType
-from lib.exceptions.error_handler.error_handler import error_handler
+from lib.error_handler.common import hook_exceptions
 from lib.settings.settings import Config
 from lib.views import ViewMeta
 
@@ -23,7 +23,7 @@ _log = get_logger(__file__, 'CogReplayParserLogger', 'logs/cog_replay_parser.log
 _config = Config().get()
 
 class CogReplayParser(commands.Cog):
-    cog_command_error = error_handler(_log)
+    cog_command_error = hook_exceptions(_log)
 
     def __init__(self, bot):
         self.bot = bot

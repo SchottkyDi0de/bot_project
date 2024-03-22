@@ -16,13 +16,6 @@ class Autosession(BaseModel):
     ttl: int
 
 
-class LocaleAliases(BaseModel):
-    ru: str
-    en: str
-    pl: str
-    uk: str
-
-
 class Default(BaseModel):
     prefix: str
     lang: str
@@ -33,6 +26,7 @@ class Default(BaseModel):
 
 class Image(BaseModel):
     default_bg_path: str
+    available_stats: List[str]
 
 
 class Internal(BaseModel):
@@ -46,10 +40,15 @@ class HelpUrls(BaseModel):
     pl: str
 
 
+class SessionWidget(BaseModel):
+    url: str
+
+
 class Auth(BaseModel):
     wg_redirect_uri: str
     wg_uri: str
     ds_auth_redirect_url: str
+    ds_auth_primary_uri: str
 
 
 class RegUrls(BaseModel):
@@ -87,8 +86,8 @@ class Dump(BaseModel):
 
 
 class Report(BaseModel):
-    bug_channel_id: int
     suggestion_channel_id: int
+    bug_channel_id: int
 
 
 class ConfigStruct(BaseModel):
@@ -100,6 +99,7 @@ class ConfigStruct(BaseModel):
     image: Image
     internal: Internal
     help_urls: HelpUrls
+    session_widget: SessionWidget
     auth: Auth
     game_api: GameApi
     ds_api: DsApi

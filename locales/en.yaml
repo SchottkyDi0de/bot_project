@@ -44,7 +44,7 @@ for_image:
       LEAGUE
     calibration: CALIBRATION
   total: TOTAL
-  kills_per_battle: |-
+  frags_per_battle: |-
     KILLS PER 
     BATTLE
   max_frags: |-
@@ -55,19 +55,19 @@ for_image:
   destruction_ratio: |-
     DESTRUCTION
     RATIO
-  damage_caused: |-
+  damage_dealt: |-
     DAMAGE
     CAUSED
   damage_ratio: |-
     DAMAGE
     RATIO
-  average_spotted: |-
+  avg_spotted: |-
     AVG
     SPOTTED
-  battles_survived: |-
+  survived_battles: |-
     BATTLES
     SURVIVED
-  all_xp: |-
+  xp: |-
     TOTAL
     EXP
   max_xp: |-
@@ -78,6 +78,21 @@ for_image:
     ACCURACY
   no_clan: WITHOUT CLAN
   no_data: NO DATA
+  survival_ratio: |-
+    SURVIVABILITY
+  dropped_capture_points: |-
+    DROPPED 
+    CAPTURE POINTS
+  capture_points: |-
+    CAPTURE
+    POINTS
+  damage_received: |-
+    DAMAGE
+    RECEIVED
+  hits: HITS
+  frags: FRAGS
+  losses: DEFEATS
+  wins: VICTORIES
 
 map_names:
   rockfield: Rockfield
@@ -133,7 +148,8 @@ frequent:
     user_banned: You are blocked and cannot use this bot's commands.
     api_error: Error when working with API.
     parser_error: Error when parsing data.
-
+    verify_error: Account not verified. First, you need to go through verification to use this command.
+    locked_player: This player has blocked viewing their statistics.
 
   info:
     info: Information
@@ -550,10 +566,106 @@ cmds:
         ==================+====+=====
         <enemies>
         ```
-#Cooldown for command
+# Cooldown for command
   cooldown:
     descr:
       this: Prevents commands from being used too often.
 
     info:
       cooldown_not_expired: Wait a little before next use.
+
+# Verify command
+  verify: 
+    descr:
+      this: Account verification
+    items:
+      verify: Verify
+      message:
+        title: 'Verify your account'
+        description: |- 
+          To get access to special bot commands (for example `/lock`) 
+          you need to verify or register a verified account.
+        additional_info: |-
+          If you already have an unverified account, verification will rewrite it! Active sessions will be reset.
+        button_lt: Lesta
+        button_wg: WG
+      check_dm: Check your private messages, verification link has been sent.
+
+# Lock command
+  set_lock:
+    descr:
+      this: Prevent viewing your account statistics for others.
+      sub_descr:
+        lock: Disable / Enable viewing your account statistics.
+    info:
+      set_true: Your account statistics is now available only to you.
+      set_false: Your account statistics is now available to everyone.
+    items:
+      ''
+
+# session_view_settings command
+  session_view_settings:
+    descr:
+      this: Settings for session statistics display
+    info:
+      success: Session statistics display settings have been applied.
+    errors: 
+      empty_slots: It is forbidden to set all empty slots, at least one slot must be configured.
+    items:
+      ''
+
+# session_view_settings_reset command
+  session_view_settings_reset:
+    descr:
+      this: Reset session statistics display settings
+    info:
+      success: Session statistics display settings have been reset.
+    items:
+      ''
+
+# session_widget command
+  session_widget:
+    descr:
+      this: Start session Web widget.
+    info:
+      success: |- 
+        Your session statistics widget has been launched.
+        Link: <link>
+        CSS settings for correct display: 
+        ```css
+        body { background-color: rgba(0,0,0,0)!important; overflow: hidden }
+        ```
+        setup widget: `/session_widget_settings`
+    errors: 
+      ''
+    items:
+      btn: Open
+
+# session_widget_settings command
+  session_widget_settings:
+    descr:
+      this: Settings for session statistics widget
+    info:
+      success: Session statistics widget settings have been applied.
+    errors:
+      nothing_changed: Change at least one parameter.
+    items:
+      disable_bg: Disable background
+      disable_nickname: Disable nickname
+      max_stats_blocks: Maximum number of statistics blocks
+      max_stats_small_blocks: Maximum number of small statistics blocks
+      update_per_seconds: Statistics update time in seconds
+      stats_blocks_transparency: Statistics blocks transparency
+      disable_main_stats_block: Disable main statistics block
+      use_bg_for_stats_blocks: Use background for statistics blocks
+      adaptive_width: Adaptive width [TEST MODE]
+      stats_block_color: Statistics blocks color
+
+# session_widget_settings_reset command
+  session_widget_settings_reset:
+    descr:
+      this: Reset settings for session statistics widget
+    info:
+      success: Settings for session statistics widget have been reset.
+    items:
+      ''

@@ -8,7 +8,7 @@ from lib.database.players import PlayersDB
 from lib.locale.locale import Text
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
-from lib.exceptions.error_handler.error_handler import error_handler
+from lib.error_handler.common import hook_exceptions
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 
@@ -17,7 +17,7 @@ _config = Config().get()
 
 
 class Help(commands.Cog):
-    cog_command_error = error_handler(_log)
+    cog_command_error = hook_exceptions(_log)
     
     def __init__(self, bot) -> None:
         self.bot = bot

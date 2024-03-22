@@ -3,18 +3,20 @@ from datetime import datetime
 from discord.ext import commands
 from discord.file import File
 
-from lib.image.common import ImageGen
+from lib.data_classes.api.api_data import Player, PlayerGlobalData
+from lib.data_classes.api.player_achievements import Achievements
+from lib.data_classes.api.player_clan_stats import Clan
+from lib.data_classes.api.player_stats import All as all_player
+from lib.data_classes.api.player_stats import Rating, Statistics
+from lib.data_classes.api.tanks_stats import All as all_tank
+from lib.data_classes.api.tanks_stats import TankStats
+from lib.data_classes.db_player import ImageSettings
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.locale.locale import Text
 from lib.exceptions.database import MemberNotFound
+from lib.image.common import ImageGen
+from lib.locale.locale import Text
 
-from lib.data_classes.api.api_data import PlayerGlobalData, Player
-from lib.data_classes.api.player_achievements import Achievements
-from lib.data_classes.api.player_stats import Statistics, All as all_player, Rating
-from lib.data_classes.api.tanks_stats import TankStats, All as all_tank
-from lib.data_classes.api.player_clan_stats import Clan
-from lib.data_classes.db_player import ImageSettings
 
 class _PreviewData:
     achievements = Achievements.model_validate({"mainGun": 100, "medalRadleyWalters": 100, 
@@ -92,7 +94,7 @@ class _PreviewData:
         "max_frags": 7,
         "frags": 1000,
         "wins": 1000,
-        "losses": 1000,
+        "defeats": 1000,
         "capture_points": 1000,
         "battles": 2000,
         "damage_dealt": 1000,

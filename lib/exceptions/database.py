@@ -24,3 +24,6 @@ class OperationAccessDenied(DatabaseError):
 
 class AutosessionNotFound(DatabaseError):
     pass
+
+class VerificationNotFound(DatabaseError):
+    pass

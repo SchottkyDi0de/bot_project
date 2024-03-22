@@ -44,7 +44,7 @@ for_image:
       ЛІГИ
     calibration: КАЛІБРУВАННЯ
   total: ЗАГАЛЬНІ
-  kills_per_battle: |-
+  frags_per_battle: |-
     ЗНИЩЕНО
     ЗА БІЙ
   max_frags: |-
@@ -56,19 +56,19 @@ for_image:
   destruction_ratio: |-
     КОЕФІЦІЄНТ
     ЗНИЩЕННЯ
-  damage_caused: |-
+  damage_dealt: |-
     НАНЕСЕНО
     УРОНУ
   damage_ratio: |-
     КОЕФІЦІЄНТ
     УРОНУ
-  average_spotted: |-
+  avg_spotted: |-
     ВИЯВЛЕНО
     ЗА БІЙ
-  battles_survived: |-
+  survived_battles: |-
     ВИЖИВ У
     БОЯХ
-  all_xp: |-
+  xp: |-
     ВСЬОГО
     ДОСВІДУ
   max_xp: |-
@@ -80,6 +80,22 @@ for_image:
     СТРІЛЬБИ
   no_clan: НЕМАЄ КЛАНУ
   no_data: НЕМАЄ ДАНИХ
+  survival_ratio: |- # TODO: Auto translate, need check
+    КОЕФІЦІЄНТ
+    ВИЖИВЛЕННЯ
+  dropped_capture_points: |- # TODO: Need translate
+    СБИТЫЕ ОЧКИ
+    ЗАХВАТА
+  capture_points: |- # TODO: Need translate
+    ОЧКИ 
+    ЗАХВАТА
+  damage_received: |- # TODO: Auto translate, need check
+    ОТРИМАНО
+    УРОНУ
+  hits: ПОПАДАНЬ # TODO: Auto translate, need check
+  frags: ЗНИЩЕНО # TODO: Auto translate, need check
+  losses: DEFEATS # TODO: Need translate
+  wins: VICTORIES # TODO: Need translate
 
 map_names:
   rockfield: Балтійський щит
@@ -135,6 +151,8 @@ frequent:
     user_banned: Ви заблоковані і не можете використовувати команди цього бота.
     api_error: Помилка при роботі з API.
     parser_error: Помилка обробки даних.
+    verify_error: Аккаунт не верифіковано. Сперша проведіть верифікацію для того щоби використовувати цю команду.
+    locked_player: Цей гравець заборонив перегляд своєї статистики. # <<< Auto translated need to check  TODO
 
   info:
     info: Інформація
@@ -565,4 +583,99 @@ cmds:
     info:
       cooldown_not_expired: Зачекайте трішки перед наступним використанням.
       
+# All commands below are subject to translation validation
+# Verify command
+  verify: 
+    descr:
+      this: Верификація аккаунта
+    items:
+      verify: Верификація
+      message:
+        title: 'Підтвердити свій аккаунт'
+        description: |- 
+          Щоб отримати доступ до спеціальних команд бота (наприклад `/lock`) 
+          Ви маєте верифікувати або зареєструвати верифікований аккаунт.
+        additional_info: |-
+          Якщо Ви вже маєте неподтверджений аккаунт, то при верифікації аккаунт буде перезаписаний! Запущені сесії будуть скинуті.
+        button_lt: Lesta
+        button_wg: WG
+      check_dm: Перевірте свої листи, посилання для верифікації була надіслана.
+
+# Lock command
+  set_lock:
+    descr:
+      this: Заборонити перегляд статистики свого аккаунта для інших.
+      sub_descr:
+        lock: Заборонити / дозволити перегляд статистики свого аккаунта.
+    info:
+      set_true: Статистика вашого аккаунта тепер доступна лише вам.
+      set_false: Статистика вашого аккаунта тепер доступна всім.
+    items:
+      ''
+
+# session_view_settings command
+  session_view_settings:
+    descr:
+      this: Налаштування відображення сесійної статистики
+    info:
+      success: Налаштування відображення статистики були применені.
+    errors: 
+      empty_slots: Недопустиме встановлення всіх порожніх слотів, повинен бути налаштовано хоча б один слот.
+    items:
+      ''
+
+# session_view_settings_reset command
+  session_view_settings_reset:
+    descr:
+      this: Скидання налаштувань відображення сесійної статистики
+    info:
+      success: Налаштування відображення статистики були скидані.
+    items:
+      ''
+
+# session_widget command
+  session_widget:
+    descr:
+      this: Запуск сесійного WEB віджета.
+    info:
+      success: |- 
+        Ваш віджет сесійної статистики був запущений.
+        Посилання: <link>
+        Налаштування CSS для коректного відображення: 
+        ```css
+        body { background-color: rgba(0,0,0,0)!important; overflow: hidden }
+        ```
+        Налаштування віджета: `/session_widget_settings`
+    errors: 
+      ''
+    items:
+      btn: Open
+
+# session_widget_settings command
+  session_widget_settings:
+    descr:
+      this: Налаштування віджету сесійної статистики
+    info:
+      success: Налаштування віджету сесійної статистики було примкнені.
+    errors:
+      nothing_changed: Змініть хоча б один параметр.
+    items:
+      disable_bg: Вимкніть фон
+      disable_nickname: Вимкніть нікнейм
+      max_stats_blocks: Максимальне кількість блоків статистики
+      max_stats_small_blocks: Максимальне кількість маленьких блоків статистики
+      update_per_seconds: Час оновлення в секундах
+      stats_blocks_transparency: Прозорість блоків статистики
+      disable_main_stats_block: Вимкніть основний блок статистики
+      use_bg_for_stats_blocks: Використовувати фон для блоків статистики
+      adaptive_width: Адаптивна ширина [ТЕСТОВИЙ Режим]
+      stats_block_color: Колір блоків статистики
       
+# session_widget_settings_reset command
+  session_widget_settings_reset:
+    descr:
+      this: Скидання налаштувань віджету сесійної статистики
+    info:
+      success: Налаштування віджету сесійної статистики були скидані.
+    items:
+      ''

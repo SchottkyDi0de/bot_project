@@ -3,11 +3,11 @@ import traceback
 from itertools import cycle
 
 import yaml
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 from lib.data_classes.settings import ConfigStruct
-from lib.utils.singleton_factory import singleton
 from lib.logger.logger import get_logger
+from lib.utils.singleton_factory import singleton
 
 _log = get_logger(__file__, 'ConfigLoaderLogger', 'logs/config_loader.log')
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')

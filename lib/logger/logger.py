@@ -1,6 +1,5 @@
-from os import mkdir, path
-
 import logging
+from os import mkdir, path
 
 import yaml
 
@@ -28,7 +27,7 @@ def get_logger(module_path: str, logger_name: str, file_name: str):
     _file_handler = logging.FileHandler(file_name)
     _console_handler.setLevel(getattr(logging, _config['log_levels']['console']))
     _file_handler.setLevel(getattr(logging, _config['log_levels']['file']))
-    _log_format = f'~ [LINE:%(lineno)d]# |%(levelname)-8s| [%(asctime)s] in {module_path}:\n>>> %(message)s '
+    _log_format = f'~ |%(levelname)-8s| [%(asctime)s] in {module_path}:%(lineno)d\n>>> %(message)s '
     _formatter = logging.Formatter(_log_format)
     _console_handler.setFormatter(_formatter)
     _file_handler.setFormatter(_formatter)
