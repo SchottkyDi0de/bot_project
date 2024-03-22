@@ -2,13 +2,14 @@ import io
 import base64
 
 from PIL import Image
-from discord import Option, Attachment
+from discord import Embed, Option, Attachment
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
 from lib.auth.discord import DiscordOAuth
 from lib.api.async_wotb_api import API
 from lib.blacklist.blacklist import check_user
+from lib.exceptions.database import VerificationNotFound
 from lib.image.utils.resizer import resize_image, ResizeMode
 from lib.settings.settings import Config
 from lib.database.players import PlayersDB
@@ -16,17 +17,19 @@ from lib.database.servers import ServersDB
 from lib.data_classes.db_server import set_server_settings
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
-from lib.exceptions.error_handler.error_handler import error_handler
+from lib.error_handler.common import hook_exceptions
 from lib.logger.logger import get_logger
 from lib.locale.locale import Text
 from lib.utils.nickname_handler import handle_nickname, validate_nickname, NicknameValidationError
+from lib.data_classes.db_player import StatsViewSettings
+from lib.utils.string_parser import insert_data
 
 _log = get_logger(__file__, 'CogSetLogger', 'logs/cog_set.log')
 _config = Config().get()
 
 
 class Set(commands.Cog):
-    cog_command_error = error_handler(_log)
+    cog_command_error = hook_exceptions(_log)
 
     def __init__(self, bot) -> None:
         self.discord_oauth = DiscordOAuth()
@@ -314,17 +317,137 @@ class Set(commands.Cog):
                     colour='green'
                     )
                 )
-
-    # @commands.slash_command(description='Test authorization')
-    # async def auth(self, ctx: ApplicationContext):
-    #     try:
-    #         check_user(ctx)
-    #     except UserBanned:
-    #         return
-        
-    #     await ctx.user.send(self.discord_oauth.auth_url)
-    #     # TODO: Authorization added in next update
     
+    @commands.slash_command(
+        description=Text().get('en').cmds.session_view_settings.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.session_view_settings.descr.this,
+            'pl': Text().get('pl').cmds.session_view_settings.descr.this,
+            'uk': Text().get('ua').cmds.session_view_settings.descr.this
+        }
+    )
+    async def session_view_settings(
+        self, 
+        ctx: ApplicationContext,
+        slot_1: Option(
+            str,
+            choices=_config.image.available_stats,
+            required=True,
+            ),
+        slot_2: Option(
+            str,
+            choices=_config.image.available_stats,
+            required=True,
+            ),
+        slot_3: Option(
+            str,
+            choices=_config.image.available_stats,
+            required=True,
+            ),
+        slot_4: Option(
+            str,
+            choices=_config.image.available_stats,
+            required=True,
+            ),
+        ):
+        check_user(ctx)
+        Text().load_from_context(ctx)
+        stats_settings = {
+            'slot_1': slot_1,
+            'slot_2': slot_2,
+            'slot_3': slot_3,
+            'slot_4': slot_4
+        }
+        for slot, value in stats_settings.copy().items():
+            if value == 'empty':
+                del stats_settings[slot]
+                continue
+            
+        parsed_stats_settings = {}
+        for index, key in enumerate(stats_settings.keys()):
+            parsed_stats_settings[f'slot_{index + 1}'] = stats_settings[key]
+        
+        if len(parsed_stats_settings) == 0:
+            await ctx.respond(
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    title=Text().get().frequent.info.warning,
+                    text=Text().get().cmds.session_view_settings.errors.empty_slots,
+                    colour='orange'
+                )
+            )
+            return
+                
+        self.db.set_stats_settings(ctx.author.id, StatsViewSettings.model_validate({'slots': parsed_stats_settings}))
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=Text().get().cmds.session_view_settings.info.success,
+                colour='green'
+            )
+        )
+        
+    @commands.slash_command(
+        description=Text().get('en').cmds.session_view_settings_reset.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.session_view_settings_reset.descr.this,
+            'pl': Text().get('pl').cmds.session_view_settings_reset.descr.this,
+            'uk': Text().get('ua').cmds.session_view_settings_reset.descr.this
+        }
+    )
+    async def session_view_settings_reset(self, ctx: ApplicationContext):
+        Text().load_from_context(ctx)
+        check_user(ctx)
+        
+        self.db.set_stats_settings(ctx.author.id, StatsViewSettings())
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=Text().get().cmds.session_view_settings_reset.info.success,
+                colour='green'
+            )
+        )
 
-def setup(bot):
+    @commands.slash_command(
+        description=Text().get('en').cmds.set_lock.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.set_lock.descr.this,
+            'pl': Text().get('pl').cmds.set_lock.descr.this,
+            'uk': Text().get('ua').cmds.set_lock.descr.this
+            }
+        )
+    async def set_lock(
+        self, 
+        ctx: ApplicationContext,
+        lock: Option(
+            bool,
+            description=Text().get('en').cmds.set_lock.descr.sub_descr.lock,
+            description_localizations = {
+                'ru': Text().get('ru').cmds.set_lock.descr.sub_descr.lock,
+                'pl': Text().get('pl').cmds.set_lock.descr.sub_descr.lock,
+                'uk': Text().get('ua').cmds.set_lock.descr.sub_descr.lock
+            },
+            required=True
+            )
+        ):
+        Text().load_from_context(ctx)
+        check_user(ctx)
+        
+        verify_member = self.db.check_member_is_verified(ctx.author.id)
+        
+        if verify_member:
+            self.db.set_member_lock(ctx.author.id, lock)
+        else:
+            raise VerificationNotFound()
+        
+        text = Text().get().cmds.set_lock.info
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=text.set_true if lock else text.set_false,
+                colour='green'
+            )
+        )
+
+def setup(bot: commands.Bot):
     bot.add_cog(Set(bot))

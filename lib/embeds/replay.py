@@ -1,13 +1,13 @@
 from discord import Embed
 from discord.ext.commands import Context
 
-from lib.locale.locale import Text
-from lib.data_classes.replay_data_parsed import \
-    ParsedReplayData, PlayerResult, Statistics
-from lib.utils.string_parser import insert_data
-from lib.logger.logger import get_logger
+from lib.data_classes.replay_data_parsed import (ParsedReplayData,
+                                                 PlayerResult, Statistics)
 from lib.database.tankopedia import TanksDB
 from lib.exceptions.database import TankNotFoundInTankopedia
+from lib.locale.locale import Text
+from lib.logger.logger import get_logger
+from lib.utils.string_parser import insert_data
 
 _log = get_logger(__file__, 'EmbedReplayBuilder', 'logs/embed_replay.log')
 

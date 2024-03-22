@@ -1,9 +1,8 @@
-from discord import Colour
-from discord import Embed, File
+from discord import Colour, Embed, File
 
-from lib.utils.singleton_factory import singleton
-from lib.locale.locale import Text
 from lib.data_classes.locale_struct import Localization
+from lib.locale.locale import Text
+from lib.utils.singleton_factory import singleton
 
 
 @singleton
@@ -102,6 +101,13 @@ class InfoMSG:
         return Embed(
             title=Text().get().frequent.info.warning,
             description=Text().get().cmds.cooldown.info.cooldown_not_expired,
+            color=Colour.orange()
+        )
+        
+    def member_not_verified(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.warning,
+            description=Text().get().frequent.errors.verify_error,
             color=Colour.orange()
         )
 

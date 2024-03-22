@@ -1,5 +1,7 @@
 from discord.ext.commands import Context
+
 from lib.exceptions.blacklist import UserBanned
+
 
 def check_user(ctx: Context):
     """

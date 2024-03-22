@@ -1,16 +1,36 @@
-import pytz
-from typing import Any
 from datetime import datetime
+from typing import Any
 
+import pytz
 from pydantic import BaseModel
 
+
+class StatsViewSettings(BaseModel):
+    slots: dict = {
+        'slot_1' : 'winrate',
+        'slot_2' : 'avg_damage',
+        'slot_3' : 'battles',
+        'slot_4' : 'accuracy'
+    }
+
+class WidgetSettings(BaseModel):
+    disable_bg: bool = True
+    disable_nickname: bool = False
+    max_stats_blocks: int = 4
+    max_stats_small_blocks: int = 2
+    update_per_seconds: int = 60  # Seconds
+    stats_blocks_transparency: float = 0.7
+    disable_main_stats_block: bool = False
+    use_bg_for_stats_blocks: bool = False
+    adaptive_width: bool = True
+    stats_block_color: str = '(0, 0, 0)'
 
 class SessionSettings(BaseModel):
     is_autosession: bool = False
     last_get: datetime = datetime.now(pytz.utc)  # UTC Time of last session get (Date object)
     timezone: int = 0  # Hours add to UTC (Simple timezone represent)
     time_to_restart: datetime = datetime.now(pytz.utc).replace(hour=0, minute=0, second=0) # Date object
-
+    stats_view: StatsViewSettings = StatsViewSettings()
 
 class ImageSettings(BaseModel):
     use_custom_bg: bool = True
@@ -40,7 +60,7 @@ def set_image_settings(**kwargs) -> ImageSettings:
 
 
 class DBPlayer(BaseModel):
-    _id: object | None = None
+    _id: Any | None = None
     id: int
     game_id: int
     nickname: str
@@ -54,3 +74,4 @@ class DBPlayer(BaseModel):
     verified: bool = False
     image_settings: ImageSettings = ImageSettings()
     session_settings: SessionSettings = SessionSettings()
+    widget_settings: WidgetSettings = WidgetSettings()

@@ -1,29 +1,30 @@
-import pytz
-import json
 import asyncio
+import json
 import traceback
-from time import time
 from datetime import datetime
+from time import time
 from typing import Dict, Union
 
 import aiohttp
+import pytz
 from aiohttp import client_exceptions
-from the_retry import retry
 from asynciolimiter import Limiter
 from cacheout import FIFOCache
+from the_retry import retry
 
 from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.data_classes.api.player_clan_stats import ClanStats
 from lib.data_classes.api.player_achievements import Achievements
+from lib.data_classes.api.player_clan_stats import ClanStats
 from lib.data_classes.api.player_stats import PlayerStats
 from lib.data_classes.api.tanks_stats import TankStats
 from lib.data_classes.db_player import DBPlayer
+from lib.database.players import PlayersDB
 from lib.data_parser.parse_data import get_normalized_data
-from lib.utils.singleton_factory import singleton
-from lib.utils.string_parser import insert_data
 from lib.exceptions import api as api_exceptions
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config, EnvConfig
+from lib.utils.singleton_factory import singleton
+from lib.utils.string_parser import insert_data
 
 _log = get_logger(__file__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
 _config = Config().get()
@@ -38,6 +39,7 @@ class API:
         self.start_time = 0
         self.rate_limiter = Limiter(19)
         self.cache = FIFOCache(maxsize=100, ttl=60)
+        self.pdb = PlayersDB()
 
         self.player_stats = {}
         self.player = {}
@@ -266,7 +268,8 @@ class API:
             region: str, 
             discord_id: int, 
             nickname: str | None = None, 
-            game_id: int | None = None
+            game_id: int | None = None,
+            requested_by: DBPlayer | None = None
         ) -> DBPlayer | None:
         """
         Check a player's information.
@@ -342,7 +345,10 @@ class API:
         game_id: int | None = None, 
         search: str | None = None, 
         exact: bool = True, 
-        raw_dict: bool = False) -> PlayerGlobalData:
+        raw_dict: bool = False,
+        requested_by: DBPlayer | None = None,
+        ignore_lock: bool = False
+        ) -> PlayerGlobalData:
         """
         Asynchronously retrieves player statistics for a game. Optionally filters by game ID, player search string, and region.
 
@@ -363,20 +369,31 @@ class API:
         - Returns the player statistics in the desired format.
         """
         need_caching: bool = False
-        cached_data = self.cache.get(((str(game_id), region)))
-        if cached_data is not None:
-            data = PlayerGlobalData.model_validate(cached_data)
-            data.from_cache = True
-            return get_normalized_data(data)
-        else:
-            need_caching = True
-        
+
         self.exact = exact
         self.raw_dict = raw_dict
 
         self.start_time = time()
 
-        player = await self.get_player(region=region, nickname=search, game_id=game_id)
+        player = await self.get_player(
+            region=region, 
+            nickname=search, 
+            game_id=game_id,
+            requested_by=requested_by,
+            ignore_lock=ignore_lock
+            )
+        
+        cached_data = self.cache.get((str(player['account_id']), region))
+        if cached_data is not None:
+            data = PlayerGlobalData.model_validate(cached_data)
+            if not ignore_lock:
+                if self.pdb.find_lock(player['account_id'], requested_by):
+                    raise api_exceptions.LockedPlayer()
+            data.from_cache = True
+            return get_normalized_data(data)
+        else:
+            need_caching = True
+        
         self.player['id'] = player['account_id']
 
         tasks = [
@@ -445,7 +462,10 @@ class API:
         self, 
         region: str, 
         nickname: str | None = None, 
-        game_id: int | None = None) -> dict:
+        game_id: int | None = None,
+        requested_by: DBPlayer | None = None,
+        ignore_lock: bool = False
+        ) -> dict:
         """
         Retrieves the account ID of a player by their nickname and region.
 
@@ -490,6 +510,10 @@ class API:
                     'player_id' : game_id
                 }
             )
+            
+            if not ignore_lock:
+                if self.pdb.find_lock(game_id, requested_by):
+                    raise api_exceptions.LockedPlayer()
             
             async with self.session.get(url_get_stats, verify_ssl=False) as response:
                 data = await self.response_handler(response, check_data=True, check_battles=True)

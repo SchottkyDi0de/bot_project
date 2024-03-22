@@ -1,5 +1,6 @@
 import re
 
+
 def hex_color_validate(color: str | None) -> bool:
     if color is None:
         return False

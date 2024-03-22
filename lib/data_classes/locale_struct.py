@@ -27,20 +27,28 @@ class ForImage(BaseModel):
     tank: str
     leagues: Leagues
     total: str
-    kills_per_battle: str
+    frags_per_battle: str
     max_frags: str
     enemies_destroyed: str
     destruction_ratio: str
-    damage_caused: str
+    damage_dealt: str
     damage_ratio: str
-    average_spotted: str
-    battles_survived: str
-    all_xp: str
+    avg_spotted: str
+    survived_battles: str
+    xp: str
     max_xp: str
     shots: str
     accuracy: str
     no_clan: str
     no_data: str
+    survival_ratio: str
+    dropped_capture_points: str
+    capture_points: str
+    damage_received: str
+    hits: str
+    frags: str
+    losses: str
+    wins: str
 
 
 class MapNames(BaseModel):
@@ -98,6 +106,8 @@ class Errors(BaseModel):
     user_banned: str
     api_error: str
     parser_error: str
+    verify_error: str
+    locked_player: str
 
 
 class Info(BaseModel):
@@ -584,6 +594,111 @@ class Cooldown(BaseModel):
     info: Info18
 
 
+class Message(BaseModel):
+    title: str
+    description: str
+    additional_info: str
+    button_lt: str
+    button_wg: str
+
+
+class Items6(BaseModel):
+    verify: str
+    message: Message
+    check_dm: str
+
+
+class Verify(BaseModel):
+    descr: Descr19
+    items: Items6
+
+
+class SubDescr11(BaseModel):
+    lock: str
+
+
+class Descr21(BaseModel):
+    this: str
+    sub_descr: SubDescr11
+
+
+class Info19(BaseModel):
+    set_true: str
+    set_false: str
+
+
+class SetLock(BaseModel):
+    descr: Descr21
+    info: Info19
+    items: str
+
+
+class Descr22(BaseModel):
+    this: str
+
+
+class Info20(BaseModel):
+    success: str
+
+
+class Errors13(BaseModel):
+    empty_slots: str
+
+
+class SessionViewSettings(BaseModel):
+    descr: Descr22
+    info: Info20
+    errors: Errors13
+    items: str
+
+
+class SessionViewSettingsReset(BaseModel):
+    descr: Descr22
+    info: Info20
+    items: str
+
+
+class Items7(BaseModel):
+    btn: str
+
+
+class SessionWidget(BaseModel):
+    descr: Descr22
+    info: Info20
+    errors: str
+    items: Items7
+
+
+class Errors14(BaseModel):
+    nothing_changed: str
+
+
+class Items8(BaseModel):
+    disable_bg: str
+    disable_nickname: str
+    max_stats_blocks: str
+    max_stats_small_blocks: str
+    update_per_seconds: str
+    stats_blocks_transparency: str
+    disable_main_stats_block: str
+    use_bg_for_stats_blocks: str
+    adaptive_width: str
+    stats_block_color: str
+
+
+class SessionWidgetSettings(BaseModel):
+    descr: Descr22
+    info: Info20
+    errors: Errors14
+    items: Items8
+
+
+class SessionWidgetSettingsReset(BaseModel):
+    descr: Descr22
+    info: Info20
+    items: str
+
+
 class Cmds(BaseModel):
     astats: Astats
     stats: Stats
@@ -605,6 +720,13 @@ class Cmds(BaseModel):
     help: Help
     parse_replay: ParseReplay
     cooldown: Cooldown
+    verify: Verify
+    set_lock: SetLock
+    session_view_settings: SessionViewSettings
+    session_view_settings_reset: SessionViewSettingsReset
+    session_widget: SessionWidget
+    session_widget_settings: SessionWidgetSettings
+    session_widget_settings_reset: SessionWidgetSettingsReset
 
 
 class Localization(BaseModel):

@@ -86,7 +86,11 @@ class PDBWorker:
                 if now_time > (session_settings.time_to_restart - timedelta(hours=session_settings.timezone)):
                     session_settings.time_to_restart += timedelta(days=1)
                     try:
-                        last_stats = await self.api.get_stats(region=player.region, game_id=player.game_id)
+                        last_stats = await self.api.get_stats(
+                            region=player.region, 
+                            game_id=player.game_id,
+                            ignore_lock=True
+                            )
                     except Exception:
                         _log.error(f'WORKERS: PDB worker failed to update session for {player.nickname}, id: {player.id}')
                         _log.error(traceback.format_exc())

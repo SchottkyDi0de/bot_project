@@ -1,10 +1,10 @@
-from typing import Dict, Optional
 from datetime import datetime
+from typing import Dict, Optional
 
 from pydantic import BaseModel
 
-from lib.data_classes.api.player_clan_stats import Clan
 from lib.data_classes.api.player_achievements import Achievements
+from lib.data_classes.api.player_clan_stats import Clan
 from lib.data_classes.api.player_stats import Statistics
 from lib.data_classes.api.tanks_stats import TankStats
 

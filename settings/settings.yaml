@@ -29,6 +29,15 @@ default:
 
 image:
   default_bg_path: 'res/image/default_image/default_bg.png'
+  available_stats: [
+    winrate, avg_damage, battles,
+    accuracy, hits, frags,
+    wins, losses, capture_points,
+    damage_dealt, damage_received, shots,
+    xp, survived_battles, dropped_capture_points,
+    damage_ratio, destruction_ratio, frags_per_battle,
+    avg_spotted, survival_ratio, empty
+    ]
 
 internal:
   ignore_tankopedia_failures: true
@@ -39,11 +48,15 @@ help_urls:
   ua: https://blitzhub.gitbook.io/blitz-statistics-bot/ua-docs
   pl: https://blitzhub.gitbook.io/blitz-statistics-bot/pl-docs
 
-auth:
-  wg_redirect_uri: 'http://<host>:<port>/auth/game'
-  wg_uri: 'https://api.worldoftanks.<region>/wot/auth/login/?application_id=<app_id>?redirect_uri=<redirect_uri>'
+session_widget:
+  url: 'http://<host>:<port>/bot/session_widget_app?player_id=<user_id>'
 
-  ds_auth_redirect_url: 'http://<host>:<port>/auth/discord'
+auth:
+  wg_redirect_uri: 'http://<host>:<port>/bot/auth/game'
+  wg_uri: 'https://api.worldoftanks.<region>/wot/auth/login/?application_id=<app_id>&redirect_uri=<redirect_uri>'
+
+  ds_auth_redirect_url: 'http://<host>:<port>/bot/auth/discord'
+  ds_auth_primary_uri: 'https://discord.com/oauth2/authorize?client_id=<client_id>&response_type=code&redirect_uri=<redirect_uri>&scope=identify'
 
 game_api:
   reg_urls:
@@ -88,5 +101,5 @@ ds_api:
     get_user: 'https://discord.com/api/v9/users/@me'
 
 report:
-  suggestion_channel_id: 1209275221287379034
-  bug_channel_id: 1209275221287379034
+  suggestion_channel_id: 1214204057477054464
+  bug_channel_id: 1214204057477054464

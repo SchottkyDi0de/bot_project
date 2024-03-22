@@ -1,5 +1,5 @@
-from re import compile as _compile
 from enum import Enum
+from re import compile as _compile
 
 from lib.exceptions.nickname_validator import NicknameValidationError
 

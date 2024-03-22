@@ -1,5 +1,6 @@
-from lib.data_classes.internal_api.inf_response import InfoResponse
 from lib.data_classes.internal_api.err_response import ErrorResponse
+from lib.data_classes.internal_api.inf_response import InfoResponse
+
 
 class InfoResponses:
     player_updated = InfoResponse.model_validate(
@@ -11,8 +12,8 @@ class InfoResponses:
     )
     data_was_sent = InfoResponse.model_validate(
         {
-            'info' : 'Data sent successfully',
-            'message' : '...',
+            'info' : 'Success',
+            'message' : 'Data sent successfully',
             'code': 200
         }
     )
@@ -46,10 +47,10 @@ class ErrorResponses():
             'code': 405
         }
     )
-    acces_denied =  ErrorResponse.model_validate(
+    access_denied =  ErrorResponse.model_validate(
         {
             'error': 'A`m a teapot', 
-            'message': 'Invalid API key, acces denied',
+            'message': 'Invalid API key, access denied',
             'code': 418
         }
     )
@@ -76,7 +77,7 @@ class ErrorResponses():
     )
     set_not_allowed = ErrorResponse.model_validate(
         {
-            'error': 'SetNotAlowed', 
+            'error': 'SetNotAllowed', 
             'message': 'Set player not allowed, some fields is read only',
             'code': 405
         }

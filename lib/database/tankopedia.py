@@ -1,7 +1,7 @@
 import elara
 
-from lib.logger import logger
 from lib.exceptions.database import TankNotFoundInTankopedia
+from lib.logger import logger
 from lib.utils.singleton_factory import singleton
 
 _log = logger.get_logger(__file__, 'TankopediaLogger', 'logs/tankopedia.log')

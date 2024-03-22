@@ -1,19 +1,19 @@
-import pytz
 from datetime import datetime, timedelta
+import re
+from sqlite3 import Cursor
 
+import pytz
+from bson.codec_options import CodecOptions
 from pymongo import MongoClient
 from pymongo.results import DeleteResult
-from bson.codec_options import CodecOptions
 
 from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.logger.logger import get_logger
-from lib.data_classes.db_player import DBPlayer, ImageSettings, SessionSettings
+from lib.data_classes.db_player import (DBPlayer, ImageSettings,
+                                        SessionSettings, StatsViewSettings, WidgetSettings)
 from lib.exceptions import database
 from lib.settings.settings import Config
 
-
 _config = Config().get()
-_log = get_logger(__file__, 'PlayersDBLogger', 'logs/players.log')
 
 
 class PlayersDB:
@@ -23,13 +23,26 @@ class PlayersDB:
             codec_options=CodecOptions(tz_aware=True)
         )
         self.collection = self.db['players']
-        
-        # self.database_update() # TODO: remove this after first use
+        self.update_database() # TODO: remove this after first use
 
     def set_member(self, data: DBPlayer, override: bool = False) -> bool:
         ds_id = data.id
         if self.check_member(ds_id) and override:
-            self.collection.update_one({'id': ds_id}, {'$set': {**(data.model_dump())}})
+            self.collection.update_one(
+                {'id': ds_id}, 
+                {'$set': 
+                    {
+                        'id': ds_id,
+                        'game_id': data.game_id,
+                        'nickname': data.nickname,
+                        'region': data.region,
+                        'last_stats': None,
+                        'session_settings': data.session_settings.model_dump(),
+                        'locked': data.locked,
+                        'verified': False
+                    }
+                }
+            )
             return True
         elif self.collection.find_one({'id': ds_id}) is None:
             self.collection.insert_one(data.model_dump())
@@ -88,7 +101,8 @@ class PlayersDB:
         member_id = int(member_id)
         member_exist = self.check_member(member_id)
         if member_exist:
-            return self.collection.find_one({'id': member_id})['verified']
+            data = self.collection.find_one({'id': member_id})
+            return data['verified']
         else:
             raise database.MemberNotFound(f'Member not found, id: {member_id}')
 
@@ -110,7 +124,7 @@ class PlayersDB:
             raise database.MemberNotFound(f'Member not found, id: {member_id}')
 
         
-    def set_member_lock(self, member_id: int | str) -> bool:
+    def set_member_lock(self, member_id: int | str, lock: bool = True) -> bool:
         member_id = int(member_id)
         member_exist = self.check_member(member_id)
         if member_exist:
@@ -118,7 +132,7 @@ class PlayersDB:
                 {'id': member_id}, 
                 {'$set': 
                         {
-                        'locked': True
+                        'locked': lock
                         }
                     }
                 )
@@ -268,6 +282,9 @@ class PlayersDB:
     
     def count_members(self) -> int:
         return self.collection.count_documents({})
+    
+    def count_sessions(self) -> int:
+        return self.collection.count_documents({'last_stats': {'$ne': None}})
         
     def set_member_lang(self, member_id: int | str, lang: str | None) -> bool:
         member_id = int(member_id)
@@ -403,3 +420,71 @@ class PlayersDB:
             return self.collection.find_one({'id': member_id})['lang']
         else:
             return None
+        
+    def get_stats_settings(self, member_id: int | str) -> StatsViewSettings:
+        member_id = int(member_id)
+        if self.check_member(member_id):
+            return StatsViewSettings.model_validate(self.collection.find_one({'id': member_id})['stats_settings'])
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+        
+    def set_stats_settings(self, member_id: int | str, stats_settings: StatsViewSettings):
+        member_id = int(member_id)
+        if self.check_member(member_id):
+            self.collection.update_one(
+                {'id' : member_id}, {'$set' : {'session_settings.stats_view' : stats_settings.model_dump()}}
+            )
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+        
+    def find_lock(self, game_id: int | str, requested_by: DBPlayer | int | None) -> bool:
+        game_id = int(game_id)
+        
+        matches = self.collection.find({'game_id': game_id})
+        
+        for data in matches:
+            data = DBPlayer.model_validate(data)
+            
+            if isinstance(requested_by, DBPlayer):
+                if data.id == requested_by.id:
+                    continue
+                
+                if data.game_id == requested_by.game_id:
+                    if requested_by.verified:
+                        continue
+            
+            elif isinstance(requested_by, int):
+                if data.game_id == requested_by:
+                    continue
+            
+            if data.locked:
+                return True
+            
+    def set_member_widget_settings(self, member_id: int | str, widget_settings: WidgetSettings):
+        member_id = int(member_id)
+        if self.check_member(member_id):
+            self.collection.update_one(
+                {'id' : member_id}, {'$set' : {'widget_settings' : widget_settings.model_dump()}}
+            )
+            return True
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+        
+    def get_member_widget_settings(self, member_id: int | str) -> WidgetSettings:
+        member_id = int(member_id)
+        if self.check_member(member_id):
+            return WidgetSettings.model_validate(self.collection.find_one({'id': member_id})['widget_settings'])
+        else:
+            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+        
+    def update_database(self):
+        for member in self.collection.find():
+            self.collection.update_one(
+                {'id' : member['id']}, 
+                {'$set' : 
+                    {
+                        'widget_settings' : WidgetSettings().model_dump(),
+                        'session_settings.stats_view' : StatsViewSettings().model_dump()
+                    },
+                }
+            )

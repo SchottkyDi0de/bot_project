@@ -1,6 +1,6 @@
 import traceback
-from enum import Enum
 from datetime import datetime
+from enum import Enum
 
 from lib.api.async_wotb_api import API
 from lib.data_classes.replay_data import ReplayData

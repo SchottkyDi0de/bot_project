@@ -10,10 +10,10 @@ from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.data_classes.db_player import ImageSettings
+from lib.data_classes.db_player import DBPlayer, ImageSettings
 from lib.blacklist.blacklist import check_user
 from lib.exceptions import api, data_parser
-from lib.exceptions.error_handler.error_handler import error_handler
+from lib.error_handler.common import hook_exceptions
 from lib.data_classes.db_server import ServerSettings
 from lib.logger.logger import get_logger
 from lib.utils.nickname_handler import handle_nickname, validate_nickname
@@ -22,7 +22,7 @@ _log = get_logger(__file__, 'CogStatsLogger', 'logs/cog_stats.log')
 
 
 class Stats(commands.Cog):
-    cog_command_error = error_handler(_log)
+    cog_command_error = hook_exceptions(_log)
 
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -74,9 +74,11 @@ class Stats(commands.Cog):
         image_settings = None
         user_exist = self.db.check_member(ctx.author.id)
         if user_exist:
+            member = self.db.get_member(ctx.author.id)
             image_settings = self.db.get_image_settings(ctx.author.id)
         else:
             image_settings = ImageSettings()
+            member = None
         
         server_settings = self.sdb.get_server_settings(ctx)
         
@@ -90,7 +92,8 @@ class Stats(commands.Cog):
             nickname=composite_nickname.nickname,
             game_id=composite_nickname.player_id,
             image_settings=image_settings, 
-            server_settings=server_settings
+            server_settings=server_settings,
+            requested_by=member
             )
 
         if img is not None:
@@ -113,25 +116,26 @@ class Stats(commands.Cog):
         
         if not self.db.check_member(ctx.author.id):
             await ctx.respond(embed=self.inf_msg.player_not_registred_astats())
-            
-        else:
-            player_data = self.db.get_member(ctx.author.id)
-            if player_data is not None:
-                image_settings = self.db.get_image_settings(ctx.author.id)
-                server_settings = self.sdb.get_server_settings(ctx)
-                img = await self.get_stats(
-                    ctx,
-                    region=player_data.region,
-                    game_id=player_data.game_id, 
-                    image_settings=image_settings, 
-                    server_settings=server_settings
-                    )
+            return
 
-                if img is not None:
-                    await ctx.respond(file=File(img, 'stats.png'))
-                    img.close()
-                else:
-                    raise TypeError('Image is None')
+        player_data = self.db.get_member(ctx.author.id)
+        if player_data is not None:
+            image_settings = self.db.get_image_settings(ctx.author.id)
+            server_settings = self.sdb.get_server_settings(ctx)
+            img = await self.get_stats(
+                ctx,
+                region=player_data.region,
+                game_id=player_data.game_id, 
+                image_settings=image_settings, 
+                server_settings=server_settings,
+                requested_by=player_data
+                )
+
+            if img is not None:
+                await ctx.respond(file=File(img, 'stats.png'))
+                img.close()
+            else:
+                return
 
     
     async def get_stats(
@@ -141,12 +145,16 @@ class Stats(commands.Cog):
             server_settings: ServerSettings,
             region: str,
             game_id: int | None = None,
-            nickname: str | None = None, 
+            nickname: str | None = None,
+            requested_by: DBPlayer | None = None
         ):
         exception = None
         try:
             data = await self.api.get_stats(
-                game_id=game_id, search=nickname, region=region
+                game_id=game_id,
+                search=nickname,
+                region=region,
+                requested_by=requested_by
                 )
         except* api.EmptyDataError:
             exception = 'unknown_error'
@@ -158,10 +166,13 @@ class Stats(commands.Cog):
             exception = 'uncorrect_region'
         except* api.NoPlayersFound:
             exception = 'player_not_found'
-        except* api.APIError:
-            exception = 'api_error'
         except* data_parser.DataParserError:
             exception = 'parser_error'
+        except* api.LockedPlayer:
+            exception = 'locked_player'
+        except* api.APIError:
+            exception = 'api_error'
+            
         if exception is not None:
             await ctx.respond(embed=getattr(self.err_msg, exception)())
             return None

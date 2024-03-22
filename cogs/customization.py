@@ -24,7 +24,7 @@ _log = get_logger(__file__, 'CogCustomizationLogger', 'logs/cog_customization.lo
 
 
 class Customization(Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.discord_oauth = DiscordOAuth()
         self.err_msg = ErrorMSG()
         self.inf_msg = InfoMSG()
@@ -459,5 +459,5 @@ class Customization(Cog):
             )
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(Customization(bot))

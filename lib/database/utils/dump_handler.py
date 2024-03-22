@@ -1,6 +1,6 @@
-from shutil import make_archive
 from os import system
 from os.path import exists
+from shutil import make_archive
 
 from pymongo import MongoClient
 

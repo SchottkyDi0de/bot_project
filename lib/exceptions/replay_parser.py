@@ -1,5 +1,6 @@
 from discord.ext.commands import CommandError
 
+
 class ReplayParserError(CommandError, BaseException):
     pass
 

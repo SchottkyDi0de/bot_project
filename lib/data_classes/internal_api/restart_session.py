@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-from lib.settings.settings import Config
 from lib.data_classes.db_player import SessionSettings
+from lib.settings.settings import Config
 
 _config = Config().get()
 

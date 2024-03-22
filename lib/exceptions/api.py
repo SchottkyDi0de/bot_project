@@ -1,5 +1,6 @@
 from discord.ext.commands import CommandError
 
+
 class APIError(CommandError, Exception):
     pass
 
@@ -25,4 +26,7 @@ class RequestsLimitExceeded(APIError):
     pass
 
 class APISourceNotAvailable(APIError):
+    pass
+
+class LockedPlayer(APIError):
     pass

@@ -11,7 +11,7 @@ venv
 /.idea
 database_copy.*
 *.pkl
-.tmp
+/tmp
 /.lprof
 *.dat
 /dump

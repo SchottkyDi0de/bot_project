@@ -1,8 +1,8 @@
 from discord import Colour, Embed
 
-from lib.utils.singleton_factory import singleton
-from lib.locale.locale import Text
 from lib.data_classes.locale_struct import Localization
+from lib.locale.locale import Text
+from lib.utils.singleton_factory import singleton
 
 
 @singleton
@@ -90,6 +90,13 @@ class ErrorMSG:
             title=Text().get().frequent.errors.error,
             description=Text().get().cmds.parse_replay.errors.uncorrect_file_format,
             colour=Colour.red()
+        )
+    
+    def locked_player(self) -> Embed:
+        return Embed(
+            title=Text().get().frequent.info.warning,
+            description=Text().get().frequent.errors.locked_player,
+            colour=Colour.orange()
         )
 
     def custom(
