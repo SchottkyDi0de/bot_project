@@ -105,6 +105,6 @@ report:
   bug_channel_id: 1214204057477054464
 
 dump:
-  export_to_id: 647499212073861151
+  export_to_id: 766019191836639273
   chunk_size: 24_117_248  #in bytes(now is 23 MB)
   directory: dump
