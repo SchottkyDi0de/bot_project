@@ -1,7 +1,5 @@
 import traceback
 
-from line_profiler import show_text
-
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.session import SessionDiffData, TankSessionData
 from lib.database.tankopedia import TanksDB
