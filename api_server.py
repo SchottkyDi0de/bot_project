@@ -71,7 +71,7 @@ def auth_complete():
     put_info(f'Game account: {game_nickname}')
     
     
-@config(title='Blitz Statistics Widget', theme='dark')
+@config(title='Blitz Statistics Widget')
 async def session_widget_app():
     with use_scope('root', clear=True):
         raw_query = await eval_js('window.location.search')
@@ -143,7 +143,8 @@ async def session_widget_app():
                     player=member,
                     server_settings=None,
                     extra=extra,
-                    output_type=ImageOutputType.pil_image
+                    output_type=ImageOutputType.pil_image,
+                    widget_mode=True
                 )
                 put_image(image, format='png').style('background: rgba(0, 0, 0, 0);')
             else:

@@ -1,5 +1,5 @@
-from re import compile as _compile
-from typing import Literal
+from re import compile as _compile, Match
+from typing import Callable, Literal
 
 
 class CompiledRegex:
@@ -8,31 +8,29 @@ class CompiledRegex:
 
 
 class ColorValidators:
-    def get_validator(type: str):
+    @staticmethod
+    def get_validator(type: str) -> Callable[[str | None], Match | None]:
         return getattr(ColorValidators, f"{type}_color_validate")
     
-    def hex_color_validate(color: str | None) -> bool:
-        if color is None:
-            return False
+    @staticmethod
+    def hex_color_validate(color: str | None) -> Match | None:
+        return CompiledRegex.hex.match(color)
     
-        return CompiledRegex.hex.match(color) is not None
-    
-    def rgb_color_validate(color: str | None) -> bool:
-        if color is None:
-            return False
-
-        re = CompiledRegex.rgb.match(color)
-        if not re:
-            return False
-        
-        return all(0 <= int(i) <= 255 for i in re.groups())
+    @staticmethod
+    def rgb_color_validate(color: str | None) -> Match | None:
+        return CompiledRegex.rgb.match(color)
 
 
-def color_validate(color: str | None) -> tuple[bool, Literal['hex', 'rgb']]:
+def color_validate(color: str | None) -> tuple[Match, Literal['hex', 'rgb']] | None:
     if color is None:
-        return False, 'hex'
+        return False
     
-    if ColorValidators.hex_color_validate(color):
-        return True, 'hex'
-
-    return ColorValidators.rgb_color_validate(color), 'rgb'
+    match_hex = ColorValidators.hex_color_validate(color)
+    if match_hex is not None:
+        return match_hex, 'hex'
+        
+    match_rgb = ColorValidators.rgb_color_validate(color)
+    if match_rgb is not None:
+        return match_rgb, 'rgb'
+        
+    return None

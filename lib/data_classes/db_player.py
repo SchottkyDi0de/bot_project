@@ -23,7 +23,7 @@ class WidgetSettings(BaseModel):
     disable_main_stats_block: bool = False
     use_bg_for_stats_blocks: bool = False
     adaptive_width: bool = True
-    stats_block_color: str = '(0, 0, 0)'
+    stats_block_color: str = '#000000'
 
 class SessionSettings(BaseModel):
     is_autosession: bool = False
@@ -49,6 +49,14 @@ class ImageSettings(BaseModel):
     stats_text_color: str = '#0088fc'
     negative_stats_color: str = '#c01515'
     positive_stats_color: str = '#1eff26'
+    
+    
+def set_widget_settings(**kwargs) -> WidgetSettings:
+    '''
+    Setup widget settings from kwargs
+    If value is None, it will be ignored
+    '''
+    return WidgetSettings(**{k: v for k, v in kwargs.items() if v is not None})
     
 
 def set_image_settings(**kwargs) -> ImageSettings:

@@ -5,7 +5,7 @@ from time import time
 from typing import Dict
 
 from discord.ext import commands
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageColor
 
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import (
@@ -25,6 +25,7 @@ from lib.image.for_image.icons import StatsIcons
 from lib.image.for_image.watermark import Watermark
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
+from lib.utils.color_converter import get_tuple_from_color
 from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
 from lib.image.utils.resizer import center_crop
@@ -47,6 +48,43 @@ class Leagues:
     platinum = Image.open('res/image/leagues/platinum.png', formats=['png'])  # Platinum league image
     brilliant = Image.open('res/image/leagues/brilliant.png', formats=['png'])  # Brilliant league image
     calibration = Image.open('res/image/leagues/calibr.png', formats=['png'])  # Calibration league image
+
+
+class BlocksStack():
+    def __init__(self):
+        self.small_blocks = 0
+        self.blocks = 0
+        
+        self.max_blocks = 4
+        self.max_small_blocks = 2
+        
+    def set_max_blocks(self, blocks: int, small_blocks: int):
+        self.max_blocks = blocks
+        self.max_small_blocks = small_blocks
+        
+    def add_blocks(self, val: int):
+        for _ in range(val):
+            if self.blocks < self.max_blocks:
+                self.blocks += 1
+            elif self.small_blocks < self.max_small_blocks:
+                self.small_blocks += 1
+            else:
+                break
+            
+    def add_block(self):
+        if self.blocks < self.max_blocks:
+            self.blocks += 1
+        elif self.small_blocks < self.max_small_blocks:
+            self.small_blocks += 1
+        else:
+            pass
+        
+    def get_blocks(self) -> tuple[int, int]:
+        return self.blocks, self.small_blocks
+        
+    def clear(self):
+        self.blocks = 0
+        self.small_blocks = 0
 
 
 class Cache():
@@ -378,12 +416,12 @@ class StatsBlockSize:
 class BlockOffsets:
     first_indent = 80
     block_indent = 20
-    horizontal_indent = 55
+    horizontal_indent = 50
 
 
 class ImageSize:
     max_height: int = 1350
-    max_width: int = 750
+    max_width: int = 800
     min_width: int = 525
 
 class LayoutDefiner:
@@ -396,14 +434,15 @@ class LayoutDefiner:
             widget_settings: WidgetSettings,
             widget_mode: bool
         ) -> None:
+        self.stack = BlocksStack()
         self.widget_mode = widget_mode
         self.data = data
         self.image_height = 0
         self.image_width = 0
-        self.blocks = 1
+        self.blocks = 0
         self.small_blocks = 0
-        self.max_fullstats_blocks = extra.stats_blocks_limit if extra.stats_blocks_limit > 0 else 1
-        self.max_short_stats_blocks = extra.stats_small_blocks_limit if extra.stats_small_blocks_limit >= 0 else 0
+        self.max_fullstats_blocks = widget_settings.max_stats_blocks if widget_mode else 4
+        self.max_short_stats_blocks = widget_settings.max_stats_small_blocks if widget_mode else 2
         self.image_settings = image_settings
         self.include_rating = False
         self.extra = extra
@@ -411,30 +450,28 @@ class LayoutDefiner:
         self.stats_view = stats_view_settings
         
     def _calculate_stats_blocks(self) -> None:
+        self.stack.set_max_blocks(
+            self.widget_settings.max_stats_blocks if self.widget_mode else 4,
+            self.widget_settings.max_stats_small_blocks if self.widget_mode else 2
+        )
         tanks_count = len(self.data.tank_stats)
+        self.stack.add_blocks(tanks_count)
+        
         if not self.image_settings.disable_rating_stats:
             include_rating = self.data.rating_session.battles > 0
         else:
             include_rating = False
             
         self.include_rating = include_rating
+        
+        if not (self.widget_mode and self.widget_settings.disable_main_stats_block):
+            self.stack.add_block()
 
         if include_rating:
-            self.blocks += 1
+            self.stack.add_block()
         
-        if (self.blocks + tanks_count) == self.max_fullstats_blocks:
-            self.blocks = self.max_fullstats_blocks
-            self.small_blocks = 0
-            return
-        
-        if (self.blocks + tanks_count) < self.max_fullstats_blocks:
-            self.blocks += tanks_count
-            return
-        
-        if (self.blocks + tanks_count) > self.max_fullstats_blocks:
-            self.blocks = self.max_fullstats_blocks - 1 if self.max_fullstats_blocks > 1 else 1
-            self.small_blocks = self.max_short_stats_blocks
-            return
+        self.blocks, self.small_blocks = self.stack.get_blocks()
+        _log.debug(f'Blocks: {self.blocks}, small blocks: {self.small_blocks}')
         
     def _calculate_image_size(self) -> None:
         if self.blocks == 4 and self.small_blocks == 2:
@@ -443,13 +480,11 @@ class LayoutDefiner:
         
         self.image_height = BlockOffsets.first_indent
         
-        self.image_height = (
-            StatsBlockSize.main_stats +
+        self.image_height += (
             BlockOffsets.block_indent * (self.blocks + self.small_blocks) +
-            StatsBlockSize.full_tank_stats * (self.blocks - 1) +
+            StatsBlockSize.full_tank_stats * self.blocks +
             StatsBlockSize.short_tank_stats * self.small_blocks
         )
-        self.image_height += BlockOffsets.first_indent
         
         if self.widget_settings.adaptive_width and self.widget_mode:
             self.image_width = (
@@ -467,7 +502,7 @@ class LayoutDefiner:
             (0, 0, 0, 0)
         )
         
-    def get_blocks_count(self):
+    def get_blocks_count(self) -> tuple[int, int]:
         return self.blocks, self.small_blocks
 
     def create_rectangle_map(self) -> Image.Image:
@@ -476,18 +511,21 @@ class LayoutDefiner:
         self._prepare_background()
         
         _log.debug(
-            f'img size: {self.image_height}x{self.image_width} blocks: {self.blocks} small: {self.small_blocks}'
+            f'img size: {self.image_width}x{self.image_height} blocks: {self.blocks} small: {self.small_blocks}'
             )
         drawable_layout = ImageDraw.Draw(self.layout_map)
         current_offset = BlockOffsets.first_indent
         color = (
-            *self.widget_settings.stats_block_color,
+            *get_tuple_from_color(self.widget_settings.stats_block_color),
             int(self.widget_settings.stats_blocks_transparency * 255)
         )
         
         first_block = True
 
         for _ in range(self.blocks):
+            if first_block and (self.widget_mode and self.widget_settings.disable_main_stats_block):
+                first_block = False
+            
             drawable_layout.rounded_rectangle(
                 (
                     BlockOffsets.horizontal_indent, 
@@ -512,7 +550,7 @@ class LayoutDefiner:
                     (
                         BlockOffsets.horizontal_indent, 
                         current_offset, 
-                        700 - BlockOffsets.horizontal_indent,
+                        self.image_width - BlockOffsets.horizontal_indent,
                         current_offset + StatsBlockSize.short_tank_stats
                     ),
                     fill=color,
@@ -582,10 +620,10 @@ class ImageGen():
         Returns:
             BytesIO: The image generated for the session stats.
         """
-        widget_mode = True
-        player.widget_settings.adaptive_width = True
-        player.widget_settings.disable_bg = True
-        player.widget_settings.use_bg_for_stats_blocks = True
+        # widget_mode = True
+        # player.widget_settings.adaptive_width = True
+        # player.widget_settings.disable_bg = True
+        # player.widget_settings.use_bg_for_stats_blocks = True
         
         self.player = player
         self.image_settings = player.image_settings

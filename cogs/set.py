@@ -272,7 +272,7 @@ class Set(commands.Cog):
                     await image.save(buffer)
                     pil_image = Image.open(buffer)
                     pil_image = pil_image.convert('RGBA')
-                    pil_image = resize_image(pil_image, (700, 1350), mode=getattr(ResizeMode, resize_mode))
+                    pil_image = resize_image(pil_image, (800, 1350), mode=getattr(ResizeMode, resize_mode))
                 with io.BytesIO() as buffer:
                     pil_image.save(buffer, format='PNG')
                     self.sdb.set_server_image(
@@ -300,7 +300,7 @@ class Set(commands.Cog):
             await image.save(buffer)
             pil_image = Image.open(buffer)
             pil_image = pil_image.convert('RGBA')
-            pil_image = resize_image(pil_image, (700, 1350), mode=getattr(ResizeMode, resize_mode))
+            pil_image = resize_image(pil_image, (800, 1350), mode=getattr(ResizeMode, resize_mode))
         with io.BytesIO() as buffer:
             pil_image.save(buffer, format='PNG')
             self.db.set_member_image(

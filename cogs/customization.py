@@ -2,6 +2,7 @@ from discord import Option, File, Cog
 import discord
 from discord.ext import commands
 from discord.commands import ApplicationContext
+from webcolors import rgb_to_hex
 
 from lib.api.async_wotb_api import API
 from lib.auth.discord import DiscordOAuth
@@ -17,9 +18,9 @@ from lib.image.utils.color_validator import color_validate
 from lib.image.settings_represent import SettingsRepresent
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
+from lib.utils.color_converter import get_tuple_from_color
 from lib.views import ViewMeta
 from lib.utils.stats_preview import StatsPreview
-from lib.utils.rgb_convert import rgb_convert
 
 _log = get_logger(__file__, 'CogCustomizationLogger', 'logs/cog_customization.log')
 
@@ -258,12 +259,14 @@ class Customization(Cog):
             if 'color' in key:
                 set_values_count += 1
                 validate_result = color_validate(value)
-                if not validate_result[0]:
+                if validate_result is None:
                     color_error = True
                     color_error_data.append({'param_name': key, 'value': value})
                     current_settings[key] = getattr(image_settings, key)
+                elif validate_result[1] == "hex":
+                    current_settings[key] = value
                 elif validate_result[1] == "rgb":
-                    current_settings[key] = rgb_convert(value)
+                    current_settings[key] = rgb_to_hex(get_tuple_from_color(value))
             if key == 'blocks_bg_opacity':
                 set_values_count += 1
                 current_settings[key] = value / 100
@@ -304,6 +307,7 @@ class Customization(Cog):
             
 
         current_image_settings = ImageSettings.model_validate(current_settings)
+        self.db.set_image_settings(ctx.author.id, current_image_settings)
         sptext, spimage = StatsPreview().preview(ctx, current_image_settings)
         await ctx.respond(sptext, file=spimage, 
                           view=ViewMeta(

@@ -21,6 +21,7 @@ from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
 from lib.image.for_image.medals import Medals
 from lib.image.for_image.watermark import Watermark
+from lib.image.utils.resizer import center_crop
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
@@ -327,6 +328,10 @@ class Values():
             'accuracy': self.val_normalizer.winrate(shorted_data.all.accuracy),
         }
 
+class ImageSize:
+    max_height: int = 1300
+    max_width: int = 700
+
 
 @singleton
 class ImageGen():
@@ -352,7 +357,7 @@ class ImageGen():
         if image.mode != 'RGBA':
             image = image.convert('RGBA')
 
-        self.image = image
+        self.image = center_crop(image, (ImageSize.max_width, ImageSize.max_height))
 
     def generate(self,
                  ctx: Context | None,
