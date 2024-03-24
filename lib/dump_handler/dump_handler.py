@@ -2,6 +2,7 @@ from os import system
 from os.path import exists
 from datetime import datetime
 from threading import Thread
+from asyncio import sleep, get_running_loop
 
 from discord import File
 from discord.ext.commands import Bot
@@ -17,6 +18,11 @@ _log = get_logger(__file__, 'DumpHandlerLogger', 'logs/dump_handler.log')
 class BackUp:
     def __init__(self):
         self.files: list[Buffer]
+    
+    async def _start_and_wait_for_thread(self, thread: Thread):
+        thread.start()
+        while thread.is_alive():
+            await sleep(0.1)
 
     async def _export_archive(self, bot: Bot):
         send_to_id = _config.dump.export_to_id
@@ -39,17 +45,13 @@ class BackUp:
     
     async def dump(self, bot: Bot):
         _log.info("Worker: Creating dump")
-        system(r"lib\dump_handler\bin\mongodump.exe")
+        await self._start_and_wait_for_thread(Thread(target=lambda: system(r"lib\dump_handler\bin\mongodump.exe")))
 
         if not exists("dump"):
             _log.error('Failed to create dump')
             return
         
-        thread = Thread(target=Zip().get_archive, args=(self,))
-        thread.start()
-
-        while thread.is_alive():
-            ...
+        await self._start_and_wait_for_thread(Thread(target=Zip().get_archive, args=(self,)))
         
         _log.info('Dump created. Exporting...')
         await self._export_archive(bot)
