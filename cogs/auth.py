@@ -51,17 +51,11 @@ class Auth(commands.Cog):
                 Button(
                     label=Text().get().cmds.verify.items.verify, 
                     url=insert_data(
-                        _config.auth.wg_uri,
+                        _config.auth.wg_redirect_uri,
                         {
-                            'region': region,
-                            'app_id': next(_env_config.LT_APP_IDS) if region == 'ru' else next(_env_config.WG_APP_IDS),
-                            'redirect_uri': insert_data(
-                                _config.auth.wg_redirect_uri,
-                                {
-                                    'host' : _config.server.host,
-                                    'port' : _config.server.port
-                                }
-                            )
+                            'host': _config.server.host,
+                            'port': _config.server.port,
+                            'region': region
                         }
                     )
                 )
