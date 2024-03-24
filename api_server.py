@@ -176,13 +176,9 @@ class Server:
         code: str = None, 
         nickname: Optional[str] = Cookie(None), 
         account_id: Optional[int] = Cookie(None),
-        request: Request = None
+        region: Optional[str] = Cookie(None),
         ):
-        
-        region = request.url.netloc.split('.')[1]
-        if region == '0':
-            region = 'ru'
-            
+
         _log.debug(f'Region: {region}')
         if region not in _config.default.available_regions:
             return JSONResponse({'Error' : 'Unknown region in url'}, status_code=400)
@@ -212,13 +208,12 @@ class Server:
         account_id: Optional[str] = None, 
         nickname: Optional[str] = None
         ):
-        
-        if status is None and region is not None:
-            return RedirectResponse(
+        if region is not None and status is None:
+            response = RedirectResponse(
                 insert_data(
                     _config.auth.wg_uri,
                     {
-                        'region' : region,
+                        'region' : _api._reg_normalizer(region),
                         'app_id' : next(_env_config.LT_APP_IDS) if region == 'ru' else next(_env_config.WG_APP_IDS),
                         'redirect_uri' : insert_data(
                             _config.auth.wg_redirect_uri,
@@ -230,6 +225,11 @@ class Server:
                     }    
                 )
             )
+            response.set_cookie(
+                key='region',
+                value=region
+            )
+            return response
         else:
             print(region, status, account_id, nickname)
             if status == 'ok':

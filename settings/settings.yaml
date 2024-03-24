@@ -52,7 +52,7 @@ session_widget:
   url: 'http://<host>:<port>/bot/session_widget_app?player_id=<user_id>'
 
 auth:
-  wg_redirect_uri: 'http://<host>:<port>/bot/auth/game'
+  wg_redirect_uri: 'http://<host>:<port>/bot/auth/game?region=<region>'
   wg_uri: 'https://api.worldoftanks.<region>/wot/auth/login/?application_id=<app_id>&redirect_uri=<redirect_uri>'
 
   ds_auth_redirect_url: 'http://<host>:<port>/bot/auth/discord'
