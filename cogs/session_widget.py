@@ -1,17 +1,21 @@
 from discord.ui import View, Button
+from discord import Option
 from discord.ext import commands
-from discord.commands import ApplicationContext, Option
+from discord.commands import ApplicationContext
+from webcolors import rgb_to_hex
 
 from lib.blacklist.blacklist import check_user
-from lib.data_classes.db_player import WidgetSettings
+from lib.data_classes.db_player import WidgetSettings, set_widget_settings
 from lib.database.players import PlayersDB
 from lib.embeds.info import InfoMSG
 from lib.error_handler.common import hook_exceptions
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
+from lib.utils.color_converter import get_tuple_from_color
 from lib.utils.string_parser import insert_data
 from lib.exceptions.database import MemberNotFound, LastStatsNotFound
+from lib.image.utils.color_validator import color_validate
 
 _config = Config().get()
 _log = get_logger(__file__, 'SessionWidgetLogger', 'logs/session_widget.log')
@@ -23,7 +27,7 @@ class SessionWidget(commands.Cog):
         self.bot = bot
         self.pdb = PlayersDB()
         self.inf_msg = InfoMSG()
-        
+
     @commands.slash_command(
         description=Text().get('en').cmds.session_widget.descr.this,
         description_localizations={
@@ -76,7 +80,7 @@ class SessionWidget(commands.Cog):
     async def session_widget_settings(
             self, 
             ctx: ApplicationContext,
-            disable_bg = Option(
+            disable_bg: Option(
                 bool,
                 description=Text().get('en').cmds.session_widget_settings.items.disable_bg,
                 description_localizations={
@@ -84,9 +88,9 @@ class SessionWidget(commands.Cog):
                     'pl': Text().get('pl').cmds.session_widget_settings.items.disable_bg,
                     'uk': Text().get('ua').cmds.session_widget_settings.items.disable_bg
                     },
-                default = None
+                required=False
                 ),
-            disable_nickname = Option(
+            disable_nickname: Option(
                 bool,
                 description=Text().get('en').cmds.session_widget_settings.items.disable_nickname,
                 description_localizations={
@@ -94,9 +98,9 @@ class SessionWidget(commands.Cog):
                     'pl': Text().get('pl').cmds.session_widget_settings.items.disable_nickname,
                     'uk': Text().get('ua').cmds.session_widget_settings.items.disable_nickname
                 },
-                default = None
+                required=False
             ),
-            max_stats_blocks=Option(
+            max_stats_blocks: Option(
                 int,
                 description=Text().get('en').cmds.session_widget_settings.items.max_stats_blocks,
                 description_localizations={
@@ -106,9 +110,9 @@ class SessionWidget(commands.Cog):
                 },
                 min_value=1,
                 max_value=4,
-                default=None
+                required=False
             ),
-            max_stats_small_blocks = Option(
+            max_stats_small_blocks: Option(
                 int,
                 description=Text().get('en').cmds.session_widget_settings.items.max_stats_small_blocks,
                 description_localizations={
@@ -118,9 +122,9 @@ class SessionWidget(commands.Cog):
                 },
                 min_value=0,
                 max_value=2,
-                default=None
+                required=False
             ),
-            update_per_seconds = Option(
+            update_per_seconds: Option(
                 int,
                 description=Text().get('en').cmds.session_widget_settings.items.update_per_seconds,
                 description_localizations={
@@ -130,9 +134,9 @@ class SessionWidget(commands.Cog):
                 },
                 min_value=60,
                 max_value=360,
-                default=None
+                required=False
             ),
-            stats_blocks_transparency = Option(
+            stats_blocks_transparency: Option(
                 float,
                 description=Text().get('en').cmds.session_widget_settings.items.stats_blocks_transparency,
                 description_localizations={
@@ -142,9 +146,9 @@ class SessionWidget(commands.Cog):
                 },
                 min_value=0,
                 max_value=1,
-                default=None
+                required=False
             ),
-            disable_main_stats_block = Option(
+            disable_main_stats_block: Option(
                 bool,
                 description=Text().get('en').cmds.session_widget_settings.items.disable_main_stats_block,
                 description_localizations={
@@ -152,9 +156,9 @@ class SessionWidget(commands.Cog):
                     'pl': Text().get('pl').cmds.session_widget_settings.items.disable_main_stats_block,
                     'uk': Text().get('ua').cmds.session_widget_settings.items.disable_main_stats_block
                 },
-                default=None
+                required=False
             ),
-            use_bg_for_stats_blocks = Option(
+            use_bg_for_stats_blocks: Option(
                 bool,
                 description=Text().get('en').cmds.session_widget_settings.items.use_bg_for_stats_blocks,
                 description_localizations={
@@ -162,9 +166,9 @@ class SessionWidget(commands.Cog):
                     'pl': Text().get('pl').cmds.session_widget_settings.items.use_bg_for_stats_blocks,
                     'uk': Text().get('ua').cmds.session_widget_settings.items.use_bg_for_stats_blocks
                 },
-                default=None
+                required=False
             ),
-            adaptive_width = Option(
+            adaptive_width: Option(
                 bool,
                 description=Text().get('en').cmds.session_widget_settings.items.adaptive_width,
                 description_localizations={
@@ -172,9 +176,9 @@ class SessionWidget(commands.Cog):
                     'pl': Text().get('pl').cmds.session_widget_settings.items.adaptive_width,
                     'uk': Text().get('ua').cmds.session_widget_settings.items.adaptive_width
                 },
-                default=None
+                required=False
             ),
-            stats_block_color = Option(
+            stats_block_color: Option(
                 str,
                 description=Text().get('en').cmds.session_widget_settings.items.stats_block_color,
                 description_localizations={
@@ -182,7 +186,7 @@ class SessionWidget(commands.Cog):
                     'pl': Text().get('pl').cmds.session_widget_settings.items.stats_block_color,
                     'uk': Text().get('ua').cmds.session_widget_settings.items.stats_block_color
                 },
-                default=None
+                required=False
             )
         ):
         Text().load_from_context(ctx)
@@ -202,14 +206,46 @@ class SessionWidget(commands.Cog):
             'disable_nickname': disable_nickname,
             'disable_bg': disable_bg
         }
-        
         set_values_count = 0
+        color_error_data = []
+        color_error = False
         for key, value in current_settings.items():
             if value is None:
                 current_settings[key] = getattr(widget_settings, key)
                 continue
+            if key == 'stats_block_color':
+                validation_res = color_validate(value)
+                if validation_res is not None:
+                    set_values_count += 1
+                    if validation_res[1] == 'hex':
+                        current_settings[key] = value
+                    else:
+                        current_settings[key] = rgb_to_hex(get_tuple_from_color(value))
+                else:
+                    color_error = True
+                    color_error_data.append({'param_name': key, 'value': value})
             else:
                 set_values_count += 1
+                current_settings[key] = value
+        
+        
+        if color_error:
+            await ctx.respond(
+                embed=self.inf_msg.custom(
+                    Text().get(),
+                    title=Text().get().frequent.info.warning,
+                    text=insert_data(
+                        Text().get().cmds.image_settings.errors.color_error,
+                        *color_error_data
+                        ),
+                    colour='orange',
+                    footer=Text().get().cmds.image_settings.items.color_error_footer
+                ).add_field(
+                    name=Text().get().frequent.info.info,
+                    value=Text().get().cmds.image_settings.items.color_error_note
+                )
+            )
+            return
         
         if set_values_count == 0:
             await ctx.respond(
@@ -222,7 +258,6 @@ class SessionWidget(commands.Cog):
             return
         
         self.pdb.set_member_widget_settings(ctx.author.id, WidgetSettings.model_validate(current_settings))
-        
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
@@ -231,6 +266,14 @@ class SessionWidget(commands.Cog):
             )
         )
     
+    @commands.slash_command(
+        description=Text().get('en').cmds.session_widget_settings_reset.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.session_widget_settings_reset.descr.this,
+            'pl': Text().get('pl').cmds.session_widget_settings_reset.descr.this,
+            'uk': Text().get('ua').cmds.session_widget_settings_reset.descr.this
+        }
+    )
     async def session_widget_settings_reset(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
