@@ -10,14 +10,21 @@ class StatsIcons:
     damage_ratio: Image.Image = Image.open('res/icons/for_stats/damage_ratio.png')
     destruction_ratio: Image.Image = Image.open('res/icons/for_stats/destruction_ratio.png')
     frags: Image.Image = Image.open('res/icons/for_stats/frags.png')
-    frags: Image.Image = Image.open('res/icons/for_stats/frags.png')
-    kills_per_battle: Image.Image = Image.open('res/icons/for_stats/kills_per_battle.png')
+    frags_per_battle: Image.Image = Image.open('res/icons/for_stats/kills_per_battle.png')
     max_frags: Image.Image = Image.open('res/icons/for_stats/max_frags.png')
     shots: Image.Image = Image.open('res/icons/for_stats/shots.png')
     survived: Image.Image = Image.open('res/icons/for_stats/survived.png')
     winrate: Image.Image = Image.open('res/icons/for_stats/winrate.png')
     xp: Image.Image = Image.open('res/icons/for_stats/xp.png')
     max_xp: Image.Image = Image.open('res/icons/for_stats/max_xp.png')
+    losses: Image.Image = Image.open('res/icons/for_stats/loose.png')
+    capture_points: Image.Image = Image.open('res/icons/for_stats/capture_points.png')
 
     winrate_r = winrate
     battles_r = battles
+    survived_battles = survived
+    hits = damage_dealt
+    wins = winrate
+    damage_received = damage_dealt.rotate(180).copy()
+    dropped_capture_points = capture_points
+    survival_ratio = survived

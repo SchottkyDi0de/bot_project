@@ -1,6 +1,6 @@
 import traceback
-from enum import Enum
 from datetime import datetime
+from enum import Enum
 
 from lib.api.async_wotb_api import API
 from lib.data_classes.replay_data import ReplayData
@@ -82,7 +82,7 @@ class ParseReplayData:
                 if not isinstance(player_stats, bool):
                     for player_result in parsed_data.player_results:
                         if player_stats.data.account_id == player_result.info.account_id:
-                            player_result.statistics = player_stats.data.statistics     
+                            player_result.statistics = player_stats.data.statistics
         
             for player_result in parsed_data.player_results:
                 if player_result.statistics is not None:
@@ -103,6 +103,9 @@ class ParseReplayData:
                     if player.account_id == player_result.info.account_id:
                         player_result.player_info = player.info
                         parsed_data.player_results[parsed_data.player_results.index(player_result)] = player_result
+
+            for player in parsed_data.players:
+                player.info.region = region
 
             try:
                 parsed_data.map_name = Maps(data.mode_map_id & 0xFFFF).name

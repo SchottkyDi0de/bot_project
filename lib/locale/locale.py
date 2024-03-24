@@ -1,15 +1,15 @@
 from typing import Dict
 
-import yaml
 import discord
+import yaml
 from discord.commands import ApplicationContext
 
 from lib.data_classes.locale_struct import Localization
-from lib.logger.logger import get_logger
-from lib.utils.singleton_factory import singleton
-from lib.settings.settings import Config
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
+from lib.logger.logger import get_logger
+from lib.settings.settings import Config
+from lib.utils.singleton_factory import singleton
 
 _config = Config().get()
 _log = get_logger(__file__, 'LocaleLogger', 'logs/locale.log')

@@ -1,5 +1,6 @@
 import re
 
+
 def validate(time_str: str | None) -> bool:
     if time_str is None:
         return False

@@ -1,7 +1,7 @@
 import elara
 
-from lib.logger import logger
 from lib.exceptions.database import TankNotFoundInTankopedia
+from lib.logger import logger
 from lib.utils.singleton_factory import singleton
 
 _log = logger.get_logger(__file__, 'TankopediaLogger', 'logs/tankopedia.log')
@@ -12,6 +12,7 @@ class TanksDB():
     def __init__(self) -> None:
         _log.debug('Tankopedia database initialized')
         self.db = elara.exe('database/tankopedia.eldb')
+        self.cdb = elara.exe('database/custom_tankopedia.eldb')
         self.db.commit()
 
     def set_tankopedia(self, data: dict):
@@ -25,7 +26,11 @@ class TanksDB():
         try:
             return self.db['root']['data'][id]
         except KeyError:
-            raise TankNotFoundInTankopedia(f'Tank with id {id} not found')
+            try:
+                return self.cdb['data'][id]
+            except KeyError:
+                _log.debug(f'Tank with id {id} not found')
+                raise TankNotFoundInTankopedia()
         
     def safe_get_tank_by_id(self, id: str | int) -> dict | None:
         try:

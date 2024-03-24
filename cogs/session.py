@@ -13,22 +13,22 @@ from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
-from lib.exceptions.error_handler.error_handler import error_handler
+from lib.error_handler.common import hook_exceptions
 from lib.image.session import ImageGen
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
-from lib.utils.time_validator import validate
+from lib.utils.validators import validate
 from lib.utils.bool_to_text import bool_handler
-from lib.utils.views import ViewMeta
 from lib.utils.time_converter import TimeConverter
 from lib.utils.string_parser import insert_data
+from lib.views import ViewMeta
 
 
 _log = get_logger(__file__, 'CogSessionLogger', 'logs/cog_session.log')
 
 
 class Session(commands.Cog):
-    cog_command_error = error_handler(_log)
+    cog_command_error = hook_exceptions(_log)
 
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -40,11 +40,14 @@ class Session(commands.Cog):
     
     async def _generate_image(self, ctx: ApplicationContext) -> File | Embed:
         member = self.db.get_member(ctx.author.id)
-        image_settings = self.db.get_image_settings(ctx.author.id)
         server_settings = self.sdb.get_server_settings(ctx)
         session_settings = self.db.get_member_session_settings(ctx.author.id)
 
-        stats = await self.api.get_stats(game_id=member.game_id, region=member.region)
+        stats = await self.api.get_stats(
+            game_id=member.game_id, 
+            region=member.region,
+            requested_by=member
+        )
 
         last_stats = self.db.get_member_last_stats(member.id)
             
@@ -53,7 +56,16 @@ class Session(commands.Cog):
 
         diff_stats = get_session_stats(last_stats, stats)
             
-        return File(ImageGen().generate(stats, diff_stats, ctx, image_settings, server_settings), 'session.png')
+        return File(
+            ImageGen().generate(
+                data=stats, 
+                diff_data=diff_stats, 
+                ctx=ctx, 
+                server_settings=server_settings, 
+                player=member
+                ), 
+            'session.png'
+        )
         
     @commands.slash_command(
         guild_only=True,
@@ -98,7 +110,7 @@ class Session(commands.Cog):
         await ctx.defer()
         
         if self.db.check_member(ctx.author.id):
-            valid_time = validate(restart_time)
+            valid_time = validate(restart_time, 'time')
             now_time = datetime.now(tz=pytz.utc).replace(hour=0, minute=0, second=0)
             member = self.db.get_member(ctx.author.id)
             
@@ -116,7 +128,11 @@ class Session(commands.Cog):
                         )
                 )
                 
-            last_stats = await self.api.get_stats(region=member.region, game_id=member.game_id)
+            last_stats = await self.api.get_stats(
+                region=member.region, 
+                game_id=member.game_id,
+                requested_by=member
+            )
             
             self.db.start_autosession(ctx.author.id, last_stats, session_settings)
             if valid_time or restart_time is None:
@@ -167,7 +183,11 @@ class Session(commands.Cog):
 
         if self.db.check_member(ctx.author.id):
             member = self.db.get_member(ctx.author.id)
-            last_stats = await self.api.get_stats(game_id=member.game_id, region=member.region)
+            last_stats = await self.api.get_stats(
+                game_id=member.game_id,
+                region=member.region,
+                requested_by=member
+            )
             session_settings = self.db.get_member_session_settings(ctx.author.id)
             session_settings.last_get = datetime.now(tz=pytz.utc)
             session_settings.is_autosession = False
@@ -298,5 +318,5 @@ class Session(commands.Cog):
                 )
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(Session(bot))

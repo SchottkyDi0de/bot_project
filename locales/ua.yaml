@@ -44,7 +44,7 @@ for_image:
       ЛІГИ
     calibration: КАЛІБРУВАННЯ
   total: ЗАГАЛЬНІ
-  kills_per_battle: |-
+  frags_per_battle: |-
     ЗНИЩЕНО
     ЗА БІЙ
   max_frags: |-
@@ -56,19 +56,19 @@ for_image:
   destruction_ratio: |-
     КОЕФІЦІЄНТ
     ЗНИЩЕННЯ
-  damage_caused: |-
+  damage_dealt: |-
     НАНЕСЕНО
     УРОНУ
   damage_ratio: |-
     КОЕФІЦІЄНТ
     УРОНУ
-  average_spotted: |-
+  avg_spotted: |-
     ВИЯВЛЕНО
     ЗА БІЙ
-  battles_survived: |-
+  survived_battles: |-
     ВИЖИВ У
     БОЯХ
-  all_xp: |-
+  xp: |-
     ВСЬОГО
     ДОСВІДУ
   max_xp: |-
@@ -80,6 +80,22 @@ for_image:
     СТРІЛЬБИ
   no_clan: НЕМАЄ КЛАНУ
   no_data: НЕМАЄ ДАНИХ
+  survival_ratio: |- # TODO: Auto translate, need check
+    КОЕФІЦІЄНТ
+    ВИЖИВЛЕННЯ
+  dropped_capture_points: |- # TODO: Need translate
+    СБИТЫЕ ОЧКИ
+    ЗАХВАТА
+  capture_points: |- # TODO: Need translate
+    ОЧКИ 
+    ЗАХВАТА
+  damage_received: |- # TODO: Auto translate, need check
+    ОТРИМАНО
+    УРОНУ
+  hits: ПОПАДАНЬ # TODO: Auto translate, need check
+  frags: ЗНИЩЕНО # TODO: Auto translate, need check
+  losses: DEFEATS # TODO: Need translate
+  wins: VICTORIES # TODO: Need translate
 
 map_names:
   rockfield: Балтійський щит
@@ -135,6 +151,8 @@ frequent:
     user_banned: Ви заблоковані і не можете використовувати команди цього бота.
     api_error: Помилка при роботі з API.
     parser_error: Помилка обробки даних.
+    verify_error: Аккаунт не верифіковано. Сперша проведіть верифікацію для того щоби використовувати цю команду.
+    locked_player: Цей гравець заборонив перегляд своєї статистики. # <<< Auto translated need to check  TODO
 
   info:
     info: Інформація
@@ -228,21 +246,21 @@ cmds:
       # In your editor, select monospaced font and try to align everything.
       started: |- 
         ```py
-        Session started.
+        Сесію розпочато.
         +----------------------------------+
-        Autosession:              <is_autosession>
+        Автосесія:              <is_autosession>
         +__________________________________+
-        Autosession restart time:
+        Час рестарту автосесії:
         <update_time> | UTC + <timezone>
-        Restart in:               <restart_in>
+        Рестарт через:               <restart_in>
         +..................................+
-        Session time:             <time>
-        Battles played:           <battles>
-        Time remaining:           <time_left>
+        Час сесії:             <time>
+        Боїв зіграно:           <battles>
+        Часу залишилось:           <time_left>
         +----------------------------------+
-        >>> Reset session: 
+        >>> Перезапустити сесію: 
         /start_session
-        >>> Reset autosession:
+        >>> Перезапустити аутосесію:
         /start_autosession
         ```
       not_started: '`Сесія не запущена.`'
@@ -278,21 +296,21 @@ cmds:
 # start autosession command
   start_autosession:
     descr:
-      this: Start autosession
+      this: Запуск автосесії
       sub_descr:
-        timezone: Time zone (0 - 12)
-        restart_time: 'Restart time in the format HH:MM'
+        timezone: Часова зона (0 - 12)
+        restart_time: 'Час рестарту в форматі HH:MM'
     errors:
       uncorrect_r_time: |-
-        Incorrect restart time.
-        Expected time format: "HH:MM"
-        Received: <time>
-        Examples of correct time:
+        Неправильний час рестарту.
+        Неправильний формат часу: "HH:MM"
+        Отримано: <time>
+        Приклад часу в правильному фораті:
         00:20, 03:15, 22:40, 13:20
-        The set value will be ignored.
+        Встановлене значення буде проігноровано.
     info:
-      player_not_registred: To start a session, first save your data using `/set_player`
-      started: Autosession started. Now you can play several battles and get session statistics using `/get_session`
+      player_not_registred: Щоб розпочати сесії, спочатку збережіть свої дані за допомогою `/set_player`
+      started: Автосесію розпочато. Тепер ви можете зіграти кілька битв і отримати статистику сесії `/get_session`
     items:
       ''
 
@@ -323,11 +341,11 @@ cmds:
         use_custom_bg: Використовувати кастомний фон
         glass_effect: Ефект скла 0 - Виключено (0-30)
         blocks_bg_brightness: Прозорість блоків зі статистикою (0-100)
-        nickname_color: 'Кольор нікнейму (HEX Color)'
-        clan_tag_color: 'Кольор клан-тегу (HEX Color)'
-        stats_color: 'Колір основних ститистик (HEX Color)'
-        main_text_color: 'Колір основного тексту (HEX Color)'
-        stats_text_color: 'Колір тексту статистик (HEX Color)'
+        nickname_color: 'Кольор нікнейму (HEX або RGB Color)'
+        clan_tag_color: 'Кольор клан-тегу (HEX або RGB Color)'
+        stats_color: 'Колір основних ститистик (HEX або RGB Color)'
+        main_text_color: 'Колір основного тексту (HEX або RGB Color)'
+        stats_text_color: 'Колір тексту статистик (HEX або RGB Color)'
         disable_flag: 'Вимкнути відображення прапору'
         hide_nickname: 'Сховати нікнейм, буде заміно на Player'
         hide_clan_tag: 'Сховати клан-тег, буде видалено'
@@ -343,7 +361,7 @@ cmds:
       preview: 'Ви хочете застосувати зміни? Предперегляд статистики:'
     items:
       color_error_note: 'Усі неприпустимі значення будуть проігноровані.'
-      color_error_footer: 'Формат кольорового коду: #rrggbb або #rgb. Приклад правильного кольору: #FF9900 - Оранжевий.'
+      color_error_footer: 'Формат кольорового коду(HEX): #rrggbb або #rgb. Приклад правильного кольору: #FF9900 - Оранжевий. Формат кольорового коду(RGB): 255;165;0 - Оранжевий.'
 
   server_settings:
     descr:
@@ -492,6 +510,21 @@ cmds:
         # and align placeholders relative to each other
         # I recomended VS Code or Sublime Text with monospaced font
         # _Zener
+      formenu: |-
+        Нікнейм: `<nickname>`
+        ```py
+        Назва танку: <tank_name>
+        Шкоди завдано: <damage>
+        Втрати за допомогою гравця: <spotted>
+        Чистий досвід: <xp>
+        Знищено танків: <frags>
+        Заблоковано шкоди: <blocked>
+        Зроблено пострілів: <shots>
+        Пострілів попало: <shots_hit>
+        Пробиттів: <shots_penetrated>
+        Точність: <accuracy>
+        Коефіцієнт пробитів: <penetration_ratio>
+        ```
       description: |-
         ```py
         Основна інформація:
@@ -550,4 +583,99 @@ cmds:
     info:
       cooldown_not_expired: Зачекайте трішки перед наступним використанням.
       
+# All commands below are subject to translation validation
+# Verify command
+  verify: 
+    descr:
+      this: Верификація аккаунта
+    items:
+      verify: Верификація
+      message:
+        title: 'Підтвердити свій аккаунт'
+        description: |- 
+          Щоб отримати доступ до спеціальних команд бота (наприклад `/lock`) 
+          Ви маєте верифікувати або зареєструвати верифікований аккаунт.
+        additional_info: |-
+          Якщо Ви вже маєте неподтверджений аккаунт, то при верифікації аккаунт буде перезаписаний! Запущені сесії будуть скинуті.
+        button_lt: Lesta
+        button_wg: WG
+      check_dm: Перевірте свої листи, посилання для верифікації була надіслана.
+
+# Lock command
+  set_lock:
+    descr:
+      this: Заборонити перегляд статистики свого аккаунта для інших.
+      sub_descr:
+        lock: Заборонити / дозволити перегляд статистики свого аккаунта.
+    info:
+      set_true: Статистика вашого аккаунта тепер доступна лише вам.
+      set_false: Статистика вашого аккаунта тепер доступна всім.
+    items:
+      ''
+
+# session_view_settings command
+  session_view_settings:
+    descr:
+      this: Налаштування відображення сесійної статистики
+    info:
+      success: Налаштування відображення статистики були применені.
+    errors: 
+      empty_slots: Недопустиме встановлення всіх порожніх слотів, повинен бути налаштовано хоча б один слот.
+    items:
+      ''
+
+# session_view_settings_reset command
+  session_view_settings_reset:
+    descr:
+      this: Скидання налаштувань відображення сесійної статистики
+    info:
+      success: Налаштування відображення статистики були скидані.
+    items:
+      ''
+
+# session_widget command
+  session_widget:
+    descr:
+      this: Запуск сесійного WEB віджета.
+    info:
+      success: |- 
+        Ваш віджет сесійної статистики був запущений.
+        Посилання: <link>
+        Налаштування CSS для коректного відображення: 
+        ```css
+        body { background-color: rgba(0,0,0,0)!important; overflow: hidden }
+        ```
+        Налаштування віджета: `/session_widget_settings`
+    errors: 
+      ''
+    items:
+      btn: Open
+
+# session_widget_settings command
+  session_widget_settings:
+    descr:
+      this: Налаштування віджету сесійної статистики
+    info:
+      success: Налаштування віджету сесійної статистики було примкнені.
+    errors:
+      nothing_changed: Змініть хоча б один параметр.
+    items:
+      disable_bg: Вимкніть фон
+      disable_nickname: Вимкніть нікнейм
+      max_stats_blocks: Максимальне кількість блоків статистики
+      max_stats_small_blocks: Максимальне кількість маленьких блоків статистики
+      update_per_seconds: Час оновлення в секундах
+      stats_blocks_transparency: Прозорість блоків статистики
+      disable_main_stats_block: Вимкніть основний блок статистики
+      use_bg_for_stats_blocks: Використовувати фон для блоків статистики
+      adaptive_width: Адаптивна ширина [ТЕСТОВИЙ Режим]
+      stats_block_color: Колір блоків статистики
       
+# session_widget_settings_reset command
+  session_widget_settings_reset:
+    descr:
+      this: Скидання налаштувань віджету сесійної статистики
+    info:
+      success: Налаштування віджету сесійної статистики були скидані.
+    items:
+      ''

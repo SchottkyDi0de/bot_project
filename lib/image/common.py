@@ -2,32 +2,30 @@
 Модуль для генерирования изображения
 со статистикой
 '''
-from enum import Enum
+import base64
 from enum import Enum
 from io import BytesIO
-import base64
-from random import randint
 from time import time
 
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 from discord.ext.commands import Context
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
-from lib.database.players import PlayersDB
-from lib.database.servers import ServersDB
-from lib.data_classes.db_player import ImageSettings
 import lib.api.async_wotb_api as async_wotb_api
 from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.locale.locale import Text
-from lib.logger.logger import get_logger
+from lib.data_classes.db_player import ImageSettings
 from lib.data_classes.db_server import ServerSettings
-from lib.utils.singleton_factory import singleton
-from lib.locale.locale import Text
-from lib.image.for_image.icons import StatsIcons
-from lib.image.for_image.medals import Medals
-from lib.settings.settings import Config
+from lib.database.players import PlayersDB
+from lib.database.servers import ServersDB
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
+from lib.image.for_image.icons import StatsIcons
+from lib.image.for_image.medals import Medals
 from lib.image.for_image.watermark import Watermark
+from lib.image.utils.resizer import center_crop
+from lib.locale.locale import Text
+from lib.logger.logger import get_logger
+from lib.settings.settings import Config
+from lib.utils.singleton_factory import singleton
 
 _log = get_logger(__file__, 'ImageCommonLogger', 'logs/image_common.log')
 _config = Config().get()
@@ -45,7 +43,7 @@ class IconsCoords(Enum):
     battles_r: tuple[int] = (532, 450)
 
     # Total
-    kills_per_battle: tuple[int] = (125, 630)
+    frags_per_battle: tuple[int] = (125, 630)
     shots: tuple[int] = (325, 630)
     xp: tuple[int] = (532, 630)
     # Line 1
@@ -127,17 +125,17 @@ class Coordinates():
             'warrior': (560, 365),
         }
         self.common_stats_labels = {
-            'kills_per_battle': (150, 712),
+            'frags_per_battle': (150, 712),
             'damage_ratio': (150, 865),
             'destruction_ratio': (150, 1010),
-            'average_spotted': (150, 1160),
+            'avg_spotted': (150, 1160),
 
             'shots': (350, 712),
-            'damage_caused': (350, 865),
+            'damage_dealt': (350, 865),
             'enemies_destroyed': (350, 1010),
-            'battles_survived': (350, 1160),
+            'survived_battles': (350, 1160),
 
-            'all_xp': (553, 712),
+            'xp': (553, 712),
             'max_xp': (553, 865),
             'max_frags': (553, 1010),
             'accuracy': (550, 1160),
@@ -239,14 +237,8 @@ class ValueNormalizer():
                   If val is 0, returns '—'.
                   Otherwise, returns the ratio value formatted as '{:.2f}'.
         """
-        if round(val, 2) == val == 0:
-            if not enable_null:
-                return '—'
-            else:
-                return '0'
-
-        return '{:.2f}'.format(val)
-
+        return ValueNormalizer.winrate(val, enable_null).replace('%', '')
+    
     @staticmethod
     def other(val, enable_null=False, str_bypass=False):
         """
@@ -266,7 +258,7 @@ class ValueNormalizer():
                   Otherwise, returns the value as a string.
         """
         if str_bypass:
-            if type(val) == str:
+            if isinstance(val, str):
                 return val
 
         if round(val) == 0:
@@ -288,6 +280,21 @@ class ValueNormalizer():
             return str(val)
 
         return val
+    
+    @staticmethod
+    def adaptive(value):
+        '''
+        Automatically selects the value normalizer based on the type of the value.
+        args:
+            value (float or int): The value to normalize.
+        returns:
+            str: The normalized value as a string.
+        '''
+        if isinstance(value, float):
+            return ValueNormalizer.ratio(value)
+        if isinstance(value, int):
+            return ValueNormalizer.other(value)
+        
 
 
 class Values():
@@ -321,6 +328,10 @@ class Values():
             'accuracy': self.val_normalizer.winrate(shorted_data.all.accuracy),
         }
 
+class ImageSize:
+    max_height: int = 1300
+    max_width: int = 700
+
 
 @singleton
 class ImageGen():
@@ -346,7 +357,7 @@ class ImageGen():
         if image.mode != 'RGBA':
             image = image.convert('RGBA')
 
-        self.image = image
+        self.image = center_crop(image, (ImageSize.max_width, ImageSize.max_height))
 
     def generate(self,
                  ctx: Context | None,
@@ -397,20 +408,8 @@ class ImageGen():
             if self.image.mode != 'RGBA':
                 self.image.convert('RGBA').save('res/image/default_image/default_bg.png')
                 self.load_image(_config.image.default_bg_path)
-        
-        # TODO Удалить в следующем обновлении
-        if randint(0, 1000) == 322:
-            self.load_image('res/image/default_image/event_winner.png')
-            _log.info(
-                f'EVENT: WINNER INFO:'
-                f'ID: {ctx.author.id}'
-                f'NICKNAME: {ctx.author.display_name}'
-                f'GAME ID: {data.id}'
-                f'GAME NICKNAME: {data.nickname}'
-            )
 
         self.image = self.image.crop((0, 50, 700, 1300))
-
         self.img_size = self.image.size
         self.coord = Coordinates(self.img_size)
         img_draw = ImageDraw.Draw(self.image)
@@ -907,18 +906,3 @@ class ImageGen():
                 return Colors.cyan
             if val >= 85:
                 return Colors.purple
-
-    async def speed_test(self):
-        try:
-            data, response_time = await async_wotb_api.test('rtx4080', 'eu', speed_test=True)
-        except:
-            return (0, 0)
-        generate_time = self.generate(ctx=None, 
-                                      data=data, 
-                                      speed_test=True, 
-                                      image_settings=ImageSettings.model_validate({}),
-                                      server_settings=ServerSettings.model_validate({}))
-        return (
-            round(response_time, 3),
-            round(generate_time, 3)
-        )

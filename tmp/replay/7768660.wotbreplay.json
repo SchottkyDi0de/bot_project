@@ -1,0 +1,583 @@
+{
+  "mode_map_id": 65561,
+  "timestamp_secs": 1710158110,
+  "winner_team_number": 1,
+  "author": {
+    "hitpoints_left": -3,
+    "total_credits": 49714,
+    "total_xp": 912,
+    "n_shots": 20,
+    "n_hits": 12,
+    "n_splashes": 0,
+    "n_penetrations": 9,
+    "damage_dealt": 3252,
+    "account_id": 596572959,
+    "team_number": 2
+  },
+  "room_type": 1,
+  "free_xp": 45,
+  "players": [
+    {
+      "account_id": 544865056,
+      "info": {
+        "nickname": "BlackBaron1940",
+        "platoon_id": null,
+        "team": 1,
+        "clan_tag": "BRD56",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_progressive_bp_43_paid_5/240129_110158_535136.webp",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_progressive_bp_43_paid_5/240129_110201_097370.webp",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 600579062,
+      "info": {
+        "nickname": "Nezameten_6666",
+        "platoon_id": null,
+        "team": 2,
+        "clan_tag": null,
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_catcher_legendary/201013_121434_556205.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_catcher_legendary/201013_121437_997078.png",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 596865922,
+      "info": {
+        "nickname": "A_n_E_t_U_m",
+        "platoon_id": null,
+        "team": 1,
+        "clan_tag": "TRI4D",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_progressive_bp_41_free_2/231130_101952_597322.webp",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_progressive_bp_41_free_2/231130_101955_503060.webp",
+            "kind": "common"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 562322730,
+      "info": {
+        "nickname": "Derkacmaks21",
+        "platoon_id": null,
+        "team": 2,
+        "clan_tag": null,
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_starwars_legendary/191209_081934_742970.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_starwars_legendary/191209_081937_903677.png",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 618390567,
+      "info": {
+        "nickname": "Iskramet999",
+        "platoon_id": null,
+        "team": 2,
+        "clan_tag": "30TAN",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_unity_legendary/200916_100928_064009.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_unity_legendary/200916_100932_057709.png",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 595265332,
+      "info": {
+        "nickname": "KEPA_1313",
+        "platoon_id": null,
+        "team": 1,
+        "clan_tag": "JYK",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_UA_legendary_anim/231004_151723_941164.webp",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_UA_legendary_anim/231004_151727_980220.webp",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 578076629,
+      "info": {
+        "nickname": "_Tank_komander_",
+        "platoon_id": null,
+        "team": 2,
+        "clan_tag": "RES3T",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_brave_legendary/200123_083657_948997.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_brave_legendary/200123_083701_333478.png",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 595180994,
+      "info": {
+        "nickname": "TBOJI_CTRAH",
+        "platoon_id": null,
+        "team": 1,
+        "clan_tag": "__ZSU",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://wotblitz-gc.gcdn.co/icons/avatars/Gfx/gold_wolf.png",
+            "gfx2_url": "https://wotblitz-gc.gcdn.co/icons/avatars/Gfx2/gold_wolf.png",
+            "kind": "unique"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 594709013,
+      "info": {
+        "nickname": "__shkoda___",
+        "platoon_id": 811097029,
+        "team": 1,
+        "clan_tag": "LD_UA",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_Van_shop_legendary_anim/220523_103125_158841.webp",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_Van_shop_legendary_anim/220523_103130_356790.webp",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 586011910,
+      "info": {
+        "nickname": "Strange_Ebat",
+        "platoon_id": 811097029,
+        "team": 1,
+        "clan_tag": "LD_UA",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_valentine2023_pink_legendary/230202_154358_952861.webp",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_valentine2023_pink_legendary/230202_154402_538618.webp",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 584869892,
+      "info": {
+        "nickname": "jeka_243",
+        "platoon_id": 811449497,
+        "team": 2,
+        "clan_tag": "BIHAN",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_smiley_cool_rare/191024_065542_770234.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_smiley_cool_rare/191024_065545_476656.png",
+            "kind": "rare"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 596572959,
+      "info": {
+        "nickname": "_Semen_Van_",
+        "platoon_id": null,
+        "team": 2,
+        "clan_tag": "GLFNX",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_profile_chest_4_legendary/211214_221116_704020.webp",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_profile_chest_4_legendary/211214_221116_719354.webp",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 596050171,
+      "info": {
+        "nickname": "1344_iron",
+        "platoon_id": null,
+        "team": 1,
+        "clan_tag": "7_MK1",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_mashroom_legendary_anim/230322_161115_754535.webp",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_mashroom_legendary_anim/230322_161119_178426.webp",
+            "kind": "legendary"
+          }
+        }
+      }
+    },
+    {
+      "account_id": 596634808,
+      "info": {
+        "nickname": "Svyat_Bisheev",
+        "platoon_id": 811449497,
+        "team": 2,
+        "clan_tag": "BIHAN",
+        "avatar": {
+          "info": {
+            "gfx_url": "https://stufficons.wgcdn.co/Gfx/avatar_hammer_legendary/191230_095328_553927.png",
+            "gfx2_url": "https://stufficons.wgcdn.co/Gfx2/avatar_hammer_legendary/191230_095331_344925.png",
+            "kind": "legendary"
+          }
+        }
+      }
+    }
+  ],
+  "player_results": [
+    {
+      "result_id": 812011717,
+      "info": {
+        "credits_earned": 5163,
+        "base_xp": 343,
+        "n_shots": 3,
+        "n_hits_dealt": 3,
+        "n_penetrations_dealt": 3,
+        "damage_dealt": 1125,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 4,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 4,
+        "n_enemies_damaged": 2,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 0,
+        "victory_points_seized": 0,
+        "account_id": 562322730,
+        "tank_id": 3649,
+        "mm_rating": null,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 812011718,
+      "info": {
+        "credits_earned": 14249,
+        "base_xp": 921,
+        "n_shots": 10,
+        "n_hits_dealt": 6,
+        "n_penetrations_dealt": 5,
+        "damage_dealt": 2028,
+        "damage_assisted_1": 463,
+        "damage_assisted_2": 0,
+        "n_hits_received": 14,
+        "n_non_penetrating_hits_received": 4,
+        "n_penetrations_received": 10,
+        "n_enemies_damaged": 3,
+        "n_enemies_destroyed": 2,
+        "victory_points_earned": 40,
+        "victory_points_seized": 40,
+        "account_id": 594709013,
+        "tank_id": 12049,
+        "mm_rating": 47.609283,
+        "damage_blocked": 5690
+      }
+    },
+    {
+      "result_id": 812011719,
+      "info": {
+        "credits_earned": 28558,
+        "base_xp": 1292,
+        "n_shots": 19,
+        "n_hits_dealt": 17,
+        "n_penetrations_dealt": 17,
+        "damage_dealt": 5102,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 8,
+        "n_non_penetrating_hits_received": 4,
+        "n_penetrations_received": 4,
+        "n_enemies_damaged": 4,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 0,
+        "victory_points_seized": 0,
+        "account_id": 596865922,
+        "tank_id": 10785,
+        "mm_rating": 50.567043,
+        "damage_blocked": 2950
+      }
+    },
+    {
+      "result_id": 812011720,
+      "info": {
+        "credits_earned": 33143,
+        "base_xp": 608,
+        "n_shots": 20,
+        "n_hits_dealt": 12,
+        "n_penetrations_dealt": 9,
+        "damage_dealt": 3252,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 7,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 7,
+        "n_enemies_damaged": 4,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 0,
+        "victory_points_seized": 0,
+        "account_id": 596572959,
+        "tank_id": 8513,
+        "mm_rating": 305.47668,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 812011721,
+      "info": {
+        "credits_earned": 12102,
+        "base_xp": 906,
+        "n_shots": 15,
+        "n_hits_dealt": 9,
+        "n_penetrations_dealt": 8,
+        "damage_dealt": 2067,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 4,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 4,
+        "n_enemies_damaged": 2,
+        "n_enemies_destroyed": 1,
+        "victory_points_earned": 40,
+        "victory_points_seized": 40,
+        "account_id": 595265332,
+        "tank_id": 5505,
+        "mm_rating": 170.37491,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 812011722,
+      "info": {
+        "credits_earned": 23887,
+        "base_xp": 519,
+        "n_shots": 11,
+        "n_hits_dealt": 7,
+        "n_penetrations_dealt": 5,
+        "damage_dealt": 2179,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 5,
+        "n_non_penetrating_hits_received": 2,
+        "n_penetrations_received": 3,
+        "n_enemies_damaged": 4,
+        "n_enemies_destroyed": 1,
+        "victory_points_earned": 40,
+        "victory_points_seized": 40,
+        "account_id": 578076629,
+        "tank_id": 24577,
+        "mm_rating": 33.46308,
+        "damage_blocked": 850
+      }
+    },
+    {
+      "result_id": 812011723,
+      "info": {
+        "credits_earned": 8015,
+        "base_xp": 551,
+        "n_shots": 10,
+        "n_hits_dealt": 10,
+        "n_penetrations_dealt": 8,
+        "damage_dealt": 938,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 643,
+        "n_hits_received": 14,
+        "n_non_penetrating_hits_received": 1,
+        "n_penetrations_received": 13,
+        "n_enemies_damaged": 2,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 350,
+        "victory_points_seized": 0,
+        "account_id": 596634808,
+        "tank_id": 6929,
+        "mm_rating": 26.60399,
+        "damage_blocked": 2620
+      }
+    },
+    {
+      "result_id": 812011724,
+      "info": {
+        "credits_earned": 9293,
+        "base_xp": 719,
+        "n_shots": 3,
+        "n_hits_dealt": 2,
+        "n_penetrations_dealt": 2,
+        "damage_dealt": 897,
+        "damage_assisted_1": 136,
+        "damage_assisted_2": 0,
+        "n_hits_received": 10,
+        "n_non_penetrating_hits_received": 4,
+        "n_penetrations_received": 6,
+        "n_enemies_damaged": 2,
+        "n_enemies_destroyed": 1,
+        "victory_points_earned": 0,
+        "victory_points_seized": 0,
+        "account_id": 596050171,
+        "tank_id": 12049,
+        "mm_rating": 58.978386,
+        "damage_blocked": 1630
+      }
+    },
+    {
+      "result_id": 812011725,
+      "info": {
+        "credits_earned": 7529,
+        "base_xp": 417,
+        "n_shots": 6,
+        "n_hits_dealt": 3,
+        "n_penetrations_dealt": 3,
+        "damage_dealt": 1332,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 4,
+        "n_non_penetrating_hits_received": 1,
+        "n_penetrations_received": 3,
+        "n_enemies_damaged": 2,
+        "n_enemies_destroyed": 2,
+        "victory_points_earned": 185,
+        "victory_points_seized": 80,
+        "account_id": 600579062,
+        "tank_id": 13857,
+        "mm_rating": 86.38201,
+        "damage_blocked": 820
+      }
+    },
+    {
+      "result_id": 812011726,
+      "info": {
+        "credits_earned": 11770,
+        "base_xp": 823,
+        "n_shots": 2,
+        "n_hits_dealt": 2,
+        "n_penetrations_dealt": 2,
+        "damage_dealt": 1139,
+        "damage_assisted_1": 422,
+        "damage_assisted_2": 0,
+        "n_hits_received": 4,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 4,
+        "n_enemies_damaged": 1,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 625,
+        "victory_points_seized": 0,
+        "account_id": 595180994,
+        "tank_id": 20257,
+        "mm_rating": null,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 812011727,
+      "info": {
+        "credits_earned": 11117,
+        "base_xp": 855,
+        "n_shots": 11,
+        "n_hits_dealt": 7,
+        "n_penetrations_dealt": 3,
+        "damage_dealt": 1235,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 8,
+        "n_non_penetrating_hits_received": 2,
+        "n_penetrations_received": 6,
+        "n_enemies_damaged": 2,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 0,
+        "victory_points_seized": 0,
+        "account_id": 586011910,
+        "tank_id": 7169,
+        "mm_rating": 17.513117,
+        "damage_blocked": 2080
+      }
+    },
+    {
+      "result_id": 812011728,
+      "info": {
+        "credits_earned": 37402,
+        "base_xp": 591,
+        "n_shots": 11,
+        "n_hits_dealt": 9,
+        "n_penetrations_dealt": 7,
+        "damage_dealt": 3002,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 10,
+        "n_non_penetrating_hits_received": 4,
+        "n_penetrations_received": 6,
+        "n_enemies_damaged": 2,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 0,
+        "victory_points_seized": 0,
+        "account_id": 618390567,
+        "tank_id": 21777,
+        "mm_rating": 47.4017,
+        "damage_blocked": 1610
+      }
+    },
+    {
+      "result_id": 812011729,
+      "info": {
+        "credits_earned": 1922,
+        "base_xp": 260,
+        "n_shots": 5,
+        "n_hits_dealt": 3,
+        "n_penetrations_dealt": 1,
+        "damage_dealt": 0,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 5,
+        "n_non_penetrating_hits_received": 0,
+        "n_penetrations_received": 5,
+        "n_enemies_damaged": 1,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 0,
+        "victory_points_seized": 0,
+        "account_id": 584869892,
+        "tank_id": 12049,
+        "mm_rating": -2.2792983,
+        "damage_blocked": 0
+      }
+    },
+    {
+      "result_id": 812011730,
+      "info": {
+        "credits_earned": 10058,
+        "base_xp": 687,
+        "n_shots": 6,
+        "n_hits_dealt": 5,
+        "n_penetrations_dealt": 4,
+        "damage_dealt": 1178,
+        "damage_assisted_1": 0,
+        "damage_assisted_2": 0,
+        "n_hits_received": 3,
+        "n_non_penetrating_hits_received": 1,
+        "n_penetrations_received": 2,
+        "n_enemies_damaged": 3,
+        "n_enemies_destroyed": 0,
+        "victory_points_earned": 0,
+        "victory_points_seized": 0,
+        "account_id": 544865056,
+        "tank_id": 18001,
+        "mm_rating": 5.0105324,
+        "damage_blocked": 350
+      }
+    }
+  ]
+}

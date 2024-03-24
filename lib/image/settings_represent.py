@@ -1,13 +1,13 @@
 from io import BytesIO
 
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
-from lib.utils.singleton_factory import singleton
 from lib.data_classes.db_player import ImageSettings
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
 from lib.locale.locale import Text
 from lib.utils.bool_to_text import bool_handler
+from lib.utils.singleton_factory import singleton
 
 
 class Offsets:

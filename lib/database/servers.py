@@ -1,8 +1,8 @@
-from pymongo import MongoClient
 from discord.ext.commands import Context
+from pymongo import MongoClient
 
-from lib.utils.singleton_factory import singleton
 from lib.data_classes.db_server import ServerSettings
+from lib.utils.singleton_factory import singleton
 
 
 @singleton

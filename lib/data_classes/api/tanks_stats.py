@@ -9,13 +9,13 @@ class All(BaseModel):
     frags: int
     max_xp: int
     wins: int
-    losses: int
+    losses: Optional[int] = None
     capture_points: int
     battles: int
     damage_dealt: int
     damage_received: int
     max_frags: int
-    shoots: Optional[int] = None
+    shots: Optional[int] = None
     frags8p: int
     xp: int
     win_and_survived: int
@@ -24,6 +24,12 @@ class All(BaseModel):
 
     winrate: Optional[float] = None
     avg_damage: Optional[float] = None
+    accuracy: Optional[float] = None
+    damage_ratio: Optional[float] = None
+    destruction_ratio: Optional[float] = None
+    frags_per_battle: Optional[float] = None
+    avg_spotted: Optional[float] = None
+    survival_ratio: Optional[float] = None
 
 
 class TankStats(BaseModel):

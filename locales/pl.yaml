@@ -44,7 +44,7 @@ for_image:
     no_league: BRAK KWALIFIKACJI
     calibration: KALIBRACJA
   total: RAZEM
-  kills_per_battle: |-
+  frags_per_battle: |-
     ZNISZCZENIA 
     NA BITWĘ
   max_frags: |-
@@ -56,19 +56,19 @@ for_image:
   destruction_ratio: |-
     STOSUNEK 
     ZNISZCZEŃ
-  damage_caused: |-
+  damage_dealt: |-
     ZADANE 
     USZKODZENIA 
   damage_ratio: |-
     STOSUNEK 
     ZNISZCZEŃ
-  average_spotted: |-
+  avg_spotted: |-
     ŚREDNIA WYKRYTYCH 
     PRZECIWNIKÓW
-  battles_survived: |-
+  survived_battles: |-
     PRZETRWANE 
     BITWY
-  all_xp: |-
+  xp: |-
     ŁACZNIE 
     DOŚWIADCZENIA
   max_xp: |-
@@ -79,6 +79,25 @@ for_image:
     SKUTECZNOŚĆ
   no_clan: BRAK KLANU
   no_data: BRAK DANYCH
+  survival_ratio: |- # TODO: Auto translated, need to check
+    STOSUNEK 
+    PRZETRWANIA
+  dropped_capture_points: |- # TODO: Need translate
+    DROPPED CAPTURE
+    POINTS
+  capture_points: |- # TODO: Need translate
+    CAPTURE POINTS
+  damage_received: |- # TODO: Auto translated, need to check
+    OTRZYMANE 
+    USZKODZENIA
+  hits: |- # TODO: Auto translated, need to check
+    ZADANE 
+    STRZAŁY
+  frags: |-  # TODO: Auto translated, need to check
+    ZNISZCZENIA
+    NA BITWĘ
+  losses: DEFEATS # TODO: Need translate
+  wins: WINS # TODO: Need translate
 
 map_names:
   rockfield: Rockfield
@@ -134,6 +153,8 @@ frequent:
     user_banned: Jesteś zablokowany i nie możesz używać poleceń tego bota.
     api_error: Błąd podczas pracy z API.
     parser_error: Błąd podczas analizowania danych.
+    verify_error: Konto nie zostało zweryfikowane. Najpierw wykonaj weryfikację, aby móc użyć tej komendy.
+    locked_player: Ten gracz zablokował wyświetlanie jego statystyk # <<< Auto translated need to check  TODO
 
   info:
     info: Informacje
@@ -321,11 +342,11 @@ cmds:
         use_custom_bg: Use custom background
         glass_effect: Glass effect 0 - Disable (0-30)
         blocks_bg_brightness: Block background brightness (0-100)
-        nickname_color: 'Nickname color (HEX Color)'
-        clan_tag_color: 'Clan tag color (HEX Color)'
-        stats_color: 'Main statistics color (HEX Color)'
-        main_text_color: 'Main text color (HEX Color)'
-        stats_text_color: 'Statistics text color (HEX Color)'
+        nickname_color: 'Nickname color (HEX or RGB Color)'
+        clan_tag_color: 'Clan tag color (HEX or RGB Color)'
+        stats_color: 'Main statistics color (HEX or RGB Color)'
+        main_text_color: 'Main text color (HEX or RGB Color)'
+        stats_text_color: 'Statistics text color (HEX or RGB Color)'
         disable_flag: 'Disable region flag rendering'
         hide_nickname: 'Hide nickname, will be replaced with Player'
         hide_clan_tag: 'Hide clan tag, will be removed'
@@ -341,7 +362,7 @@ cmds:
       preview: 'Do you want to apply the changes? Statistics preview:'
     items:
       color_error_note: 'All invalid values will be ignored.'
-      color_error_footer: 'Color code format: #rrggbb or #rgb. Example of valid color: #FF9900 - Orange.'
+      color_error_footer: 'Color code format(HEX): #rrggbb or #rgb. Example of valid color: #FF9900 - Orange. Color code format(RGB): r;g;b. Example of valid color: 255;165;0 - Orange.'
 
   server_settings:
     descr:
@@ -487,6 +508,21 @@ cmds:
         # When localizing, use an editor with a monospaced font 
         # and align placeholders relative to each other
         # I recomended VS Code or Sublime Text with monospaced font
+      formenu: |-
+        Nickname: `<nickname>`
+        ```py
+        Tank name: <tank_name>
+        Damage: <damage>
+        Spotted: <spotted>
+        XP: <xp>
+        Frags: <frags>
+        Blocked: <blocked>
+        Shots: <shots>
+        Shots hit: <shots_hit>
+        Penetrations: <shots_penetrated>
+        Accuracy: <accuracy>
+        Penetration ratio: <penetration_ratio>
+        ```
       description: |-
         ```py
         Main battle info:
@@ -535,11 +571,108 @@ cmds:
         ==================+====+=====
         <enemies>
   
-#Cooldown for command
+# Cooldown for commands
   cooldown:
     descr:
       this: Prevents commands from being used too often.
       
     info:
       cooldown_not_expired: Wait a little before next use.
-  
+
+# All commands below are subject to translation validation
+# Verify command
+  verify: 
+    descr:
+      this: Weryfikacja konta
+    items:
+      verify: Weryfikacja
+      message:
+        title: 'Potwierdź swój konto'
+        description: |- 
+          Aby uzyskać dostęp do specjalnych poleceń bota (np. `/lock`) 
+          musisz zweryfikować lub zarejestrować zweryfikowany konto.
+        additional_info: |-
+          Jeśli już posiadasz niezatwierdzony konto, to w trakcie weryfikacji konto zostanie nadpisane! Rozpoczęte sesje zostaną wyczyszczone.
+        button_lt: Lesta
+        button_wg: WG
+      check_dm: Sprawdź prywatne wiadomości, link do weryfikacji został wysłany.
+
+# Lock command
+  set_lock:
+    descr:
+      this: Zabronić wyświetlanie statystyk swojego konta dla innych.
+      sub_descr:
+        lock: Zabronić / Zezwolić na wyświetlanie statystyk swojego konta.
+    info:
+      set_true: Statystyka Twojego konta jest teraz dostępna tylko Tobie.
+      set_false: Statystyka Twojego konta jest teraz dostępna wszystkim.
+    items:
+      ''
+
+# session_view_settings command
+  session_view_settings:
+    descr:
+      this: Ustawienia wyświetlania statystyk sesji
+    info:
+      success: Ustawienia wyświetlania statystyk zostały zastosowane.
+    errors: 
+      empty_slots: Nie dopuszczalne ustawienie wszystkich pustych slotów, musi być ustawiony przynajmniej jeden slot.
+    items:
+      ''
+
+# session_view_settings_reset command
+  session_view_settings_reset:
+    descr:
+      this: Reset ustawień wyświetlania statystyk sesji
+    info:
+      success: Ustawienia wyświetlania statystyk zostały wyczyszczone.
+    items:
+      ''
+
+# session_widget command
+  session_widget:
+    descr:
+      this: Rozpoczęcie WEB widżetu statystyk sesji
+    info:
+      success: |- 
+        Twój WEB widżet statystyk sesji został rozpoczęty.
+        Link: <link>
+        Ustawienia CSS do prawidłowego wyświetlenia: 
+        ```css
+        body { background-color: rgba(0,0,0,0)!important; overflow: hidden }
+        ```
+        Ustawienia widżetu: `/session_widget_settings`
+    errors: 
+      ''
+    items:
+      btn: Open
+
+# session_widget_settings command
+  session_widget_settings:
+    descr:
+      this: Ustawienia widżetu statystyk sesji
+    info:
+      success: Ustawienia widżetu statystyk sesji zostały zastosowane.
+    errors:
+      nothing_changed: Zmień co najmniej jedno ustawienie.
+    items:
+      disable_bg: Wyłącz tło
+      disable_nickname: Wyłącz nick
+      max_stats_blocks: Maksymalna ilość bloków statystyk
+      max_stats_small_blocks: Maksymalna ilość małych bloków statystyk
+      update_per_seconds: Czas aktualizacji w sekundach
+      stats_blocks_transparency: Przezroczystość bloków statystyk
+      disable_main_stats_block: Wyłącz główny blok statystyk
+      use_bg_for_stats_blocks: Użyj tła dla bloków statystyk
+      adaptive_width: tryb adaptacyjnej szerokości [TRYB TESTOWY]
+      stats_block_color: Kolor bloków statystyk
+
+# session_widget_settings_reset command
+  session_widget_settings_reset:
+    descr:
+      this: Zresetuj ustawienia widżetu statystyk sesji
+    info:
+      success: Ustawienia widżetu statystyk sesji zostały wyczyszczone.
+    items:
+      ''
+

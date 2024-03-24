@@ -37,6 +37,8 @@ class Info(BaseModel):
     clan_tag: Optional[str]
     avatar: Avatar
 
+    region: str = None
+
 
 class Player(BaseModel):
     account_id: int
@@ -110,9 +112,39 @@ class All(BaseModel):
     dropped_capture_points: int
 
 
+class Rating(BaseModel):
+    spotted: int
+    calibration_battles_left: int
+    hits: int
+    frags: int
+    recalibration_start_time: int
+    mm_rating: Optional[float] = None
+    wins: int
+    losses: int
+    is_recalibration: bool
+    capture_points: int
+    battles: int
+    current_season: int
+    damage_dealt: int
+    damage_received: int
+    shots: int
+    frags8p: int
+    xp: int
+    win_and_survived: int
+    survived_battles: int
+    dropped_capture_points: int
+    max_xp: Optional[int] = None
+    max_xp_tanx_id: Optional[int] = None
+
+    rating: Optional[float] = None
+    winrate: Optional[float] = None
+    rating: Optional[int] = None
+
+
 class Statistics(BaseModel):
     clan: Optional[Clan] = None
     all: All
+    rating: Optional[Rating] = None
 
 
 class PlayerResult(BaseModel):

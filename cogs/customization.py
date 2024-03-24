@@ -2,6 +2,7 @@ from discord import Option, File, Cog
 import discord
 from discord.ext import commands
 from discord.commands import ApplicationContext
+from webcolors import rgb_to_hex
 
 from lib.api.async_wotb_api import API
 from lib.auth.discord import DiscordOAuth
@@ -13,18 +14,19 @@ from lib.embeds.info import InfoMSG
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.blacklist.blacklist import check_user
-from lib.image.utils.hex_color_validator import hex_color_validate
+from lib.image.utils.color_validator import color_validate
 from lib.image.settings_represent import SettingsRepresent
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
-from lib.utils.views import ViewMeta
+from lib.utils.color_converter import get_tuple_from_color
+from lib.views import ViewMeta
 from lib.utils.stats_preview import StatsPreview
 
 _log = get_logger(__file__, 'CogCustomizationLogger', 'logs/cog_customization.log')
 
 
 class Customization(Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.discord_oauth = DiscordOAuth()
         self.err_msg = ErrorMSG()
         self.inf_msg = InfoMSG()
@@ -83,7 +85,6 @@ class Customization(Cog):
             str,
             required=False,
             min_length=4,
-            max_length=7,
             description=Text().get('en').cmds.image_settings.descr.sub_descr.nickname_color,
             description_localizations={
                 'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.nickname_color,
@@ -95,7 +96,6 @@ class Customization(Cog):
             str,
             required=False,
             min_length=4,
-            max_length=7,
             description=Text().get('en').cmds.image_settings.descr.sub_descr.clan_tag_color,
             description_localizations={
                 'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.clan_tag_color,
@@ -107,7 +107,6 @@ class Customization(Cog):
             str,
             required=False,
             min_length=4,
-            max_length=7,
             description=Text().get('en').cmds.image_settings.descr.sub_descr.stats_color,
             description_localizations={
                 'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.stats_color,
@@ -119,7 +118,6 @@ class Customization(Cog):
             str,
             required=False,
             min_length=4,
-            max_length=7,
             description=Text().get('en').cmds.image_settings.descr.sub_descr.main_text_color,
             description_localizations={
                 'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.main_text_color,
@@ -131,7 +129,6 @@ class Customization(Cog):
             str,
             required=False,
             min_length=4,
-            max_length=7,  
             description=Text().get('en').cmds.image_settings.descr.sub_descr.stats_text_color,
             description_localizations={
                 'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.stats_text_color,
@@ -203,7 +200,6 @@ class Customization(Cog):
             str,
             required=False,
             min_length=4,
-            max_length=7,
             description=Text().get('en').cmds.image_settings_get.items.positive_stats_color,
             description_localizations={
                 'ru': Text().get('ru').cmds.image_settings_get.items.positive_stats_color,
@@ -215,7 +211,6 @@ class Customization(Cog):
             str,
             required=False,
             min_length=4,
-            max_length=7,
             description=Text().get('en').cmds.image_settings_get.items.negative_stats_color,
             description_localizations={
                 'ru': Text().get('ru').cmds.image_settings_get.items.negative_stats_color,
@@ -263,10 +258,15 @@ class Customization(Cog):
                 set_values_count += 1
             if 'color' in key:
                 set_values_count += 1
-                if not hex_color_validate(value):
+                validate_result = color_validate(value)
+                if validate_result is None:
                     color_error = True
                     color_error_data.append({'param_name': key, 'value': value})
                     current_settings[key] = getattr(image_settings, key)
+                elif validate_result[1] == "hex":
+                    current_settings[key] = value
+                elif validate_result[1] == "rgb":
+                    current_settings[key] = rgb_to_hex(get_tuple_from_color(value))
             if key == 'blocks_bg_opacity':
                 set_values_count += 1
                 current_settings[key] = value / 100
@@ -307,6 +307,7 @@ class Customization(Cog):
             
 
         current_image_settings = ImageSettings.model_validate(current_settings)
+        self.db.set_image_settings(ctx.author.id, current_image_settings)
         sptext, spimage = StatsPreview().preview(ctx, current_image_settings)
         await ctx.respond(sptext, file=spimage, 
                           view=ViewMeta(
@@ -459,5 +460,5 @@ class Customization(Cog):
             )
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(Customization(bot))

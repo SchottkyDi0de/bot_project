@@ -29,11 +29,12 @@ class Rating(BaseModel):
     survived_battles: int
     dropped_capture_points: int
     max_xp: Optional[int] = None
-    max_xp_tanx_id: Optional[int] = None
+    max_xp_tank_id: Optional[int] = None
 
     rating: Optional[float] = None
     winrate: Optional[float] = None
     rating: Optional[int] = None
+    accuracy: Optional[float] = None
 
 
 class All(BaseModel):
@@ -55,7 +56,7 @@ class All(BaseModel):
     survived_battles: int
     dropped_capture_points: int
     max_xp: int
-    max_xp_tanx_id: Optional[int] = None
+    max_xp_tank_id: Optional[int] = None
 
     avg_xp: Optional[int] = None
     avg_damage: Optional[int] = None

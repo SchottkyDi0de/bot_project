@@ -1,6 +1,8 @@
-from pymongo import MongoClient
 from pprint import pprint
 from time import sleep
+
+from pymongo import MongoClient
+
 
 class PlayersDB:
     def __init__(self) -> None:

@@ -1,15 +1,16 @@
 from typing import Literal
 
-from discord import ButtonStyle, Interaction, File, InputTextStyle
+from discord import ButtonStyle, File, InputTextStyle, Interaction
 from discord.commands import ApplicationContext
 from discord.ext import commands
-from discord.ui import View, InputText, Modal, button
+from discord.ui import InputText, Modal, View, button
 
 from lib.data_classes.db_player import ImageSettings
 from lib.database.players import PlayersDB
 from lib.embeds.info import InfoMSG
 from lib.locale.locale import Text
 from lib.settings.settings import Config
+
 
 class Session:
     ...

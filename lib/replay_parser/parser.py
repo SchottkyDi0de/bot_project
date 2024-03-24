@@ -3,10 +3,10 @@ import pathlib
 import subprocess
 import traceback
 
-from lib.exceptions.replay_parser import ReplayParserError, PathNotExists
 from lib.data_classes.replay_data import ReplayData
-from lib.utils.singleton_factory import singleton
+from lib.exceptions.replay_parser import PathNotExists, ReplayParserError
 from lib.logger.logger import get_logger
+from lib.utils.singleton_factory import singleton
 
 _log = get_logger(__file__, 'ReplayParserLogger', 'logs/replay_parser.log')
 
