@@ -92,10 +92,6 @@ async def session_widget_app():
         
         member = _pdb.get_member(player_id)
         
-        if _pdb.find_lock(player_id, requested_by=member):
-            put_info('Player is locked!', closable=True)
-            return
-        
         if not _pdb.check_member_last_stats(player_id):
             put_info('Active session not found!', closable=True)
             return
@@ -148,7 +144,7 @@ async def session_widget_app():
                 )
                 put_image(image, format='png').style('background: rgba(0, 0, 0, 0);')
             else:
-                put_info('No diff data!', closable=True)
+                put_info('No session data, play some battles.', closable=True)
 
             await run_asyncio_coroutine(sleep(60))
             run_js('window.location.reload()')
