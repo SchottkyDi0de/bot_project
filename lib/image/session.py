@@ -871,9 +871,6 @@ class ImageGen():
                 bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_opacity)
                 bg.filter(gaussian_filter)
 
-            self.image.show()
-            bg.show()
-            rectangle_map.show()
             self.image.paste(bg, (0, 0), rectangle_map)
 
     def draw_debug_label(self, img: ImageDraw.ImageDraw) -> None:
