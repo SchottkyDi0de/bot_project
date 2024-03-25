@@ -1,7 +1,6 @@
 import os
 from asyncio import TaskGroup
 
-import nest_asyncio
 from discord import Intents, Activity, Status, ActivityType
 from discord.ext import commands
 
@@ -68,7 +67,7 @@ class App():
             await self.run_workers()
 
         self.load_extension(self.extension_names)
-        self.bot.run(EnvConfig.DISCORD_TOKEN_DEV)
+        self.bot.run(EnvConfig.DISCORD_TOKEN)
 
     @staticmethod
     async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:
@@ -86,6 +85,5 @@ class App():
         _log.info('Failed to get tankopedia data, ignoring...')
 
 if __name__ == '__main__':
-    nest_asyncio.apply()
     app = App()
     app.main()

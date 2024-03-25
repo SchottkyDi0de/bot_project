@@ -55,7 +55,7 @@ class BlocksStack():
         self.small_blocks = 0
         self.blocks = 0
         
-        self.max_blocks = 4
+        self.max_blocks = 3
         self.max_small_blocks = 2
         
     def set_max_blocks(self, blocks: int, small_blocks: int):
@@ -421,6 +421,7 @@ class BlockOffsets:
 
 class ImageSize:
     max_height: int = 1350
+    min_height: int = 380
     max_width: int = 800
     min_width: int = 525
 
@@ -437,9 +438,9 @@ class LayoutDefiner:
         self.stack = BlocksStack()
         self.widget_mode = widget_mode
         self.data = data
-        self.image_height = 0
-        self.image_width = 0
-        self.blocks = 0
+        self.image_height = ImageSize.min_height
+        self.image_width = ImageSize.min_width
+        self.blocks = 1
         self.small_blocks = 0
         self.max_fullstats_blocks = widget_settings.max_stats_blocks if widget_mode else 4
         self.max_short_stats_blocks = widget_settings.max_stats_small_blocks if widget_mode else 2
@@ -451,7 +452,7 @@ class LayoutDefiner:
         
     def _calculate_stats_blocks(self) -> None:
         self.stack.set_max_blocks(
-            self.widget_settings.max_stats_blocks if self.widget_mode else 4,
+            self.widget_settings.max_stats_blocks if self.widget_mode else 3,
             self.widget_settings.max_stats_small_blocks if self.widget_mode else 2
         )
         tanks_count = len(self.data.tank_stats)
@@ -474,8 +475,9 @@ class LayoutDefiner:
         _log.debug(f'Blocks: {self.blocks}, small blocks: {self.small_blocks}')
         
     def _calculate_image_size(self) -> None:
-        if self.blocks == 4 and self.small_blocks == 2:
-            self.image_height = 1350
+        if self.blocks == 3 and self.small_blocks == 2:
+            self.image_height = ImageSize.max_height 
+            self.image_width = ImageSize.max_width
             return
         
         self.image_height = BlockOffsets.first_indent
@@ -519,6 +521,8 @@ class LayoutDefiner:
             *get_tuple_from_color(self.widget_settings.stats_block_color),
             int(self.widget_settings.stats_blocks_transparency * 255)
         )
+        if not self.widget_mode:
+            color = (255, 255, 255, 255)
         
         first_block = True
 
@@ -865,7 +869,11 @@ class ImageGen():
                 bg = bg.filter(gaussian_filter)
             if self.image_settings.blocks_bg_opacity > 0:
                 bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_opacity)
+                bg.filter(gaussian_filter)
 
+            self.image.show()
+            bg.show()
+            rectangle_map.show()
             self.image.paste(bg, (0, 0), rectangle_map)
 
     def draw_debug_label(self, img: ImageDraw.ImageDraw) -> None:
