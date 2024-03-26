@@ -16,7 +16,7 @@ class StatsViewSettings(BaseModel):
 class WidgetSettings(BaseModel):
     disable_bg: bool = True
     disable_nickname: bool = False
-    max_stats_blocks: int = 4
+    max_stats_blocks: int = 3
     max_stats_small_blocks: int = 2
     update_per_seconds: int = 60  # Seconds
     stats_blocks_transparency: float = 0.7

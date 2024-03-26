@@ -521,7 +521,7 @@ class LayoutDefiner:
             *get_tuple_from_color(self.widget_settings.stats_block_color),
             int(self.widget_settings.stats_blocks_transparency * 255)
         )
-        if not self.widget_mode:
+        if not self.widget_mode or self.widget_settings.disable_bg:
             color = (255, 255, 255, 255)
         
         first_block = True
@@ -852,6 +852,7 @@ class ImageGen():
             if widget_settings.disable_bg:
                 self.image = image
                 self.image.paste(rectangle_map, (0, 0), rectangle_map)
+                return
                 
             elif widget_settings.use_bg_for_stats_blocks:
                 bg = self.image.copy()
@@ -859,19 +860,21 @@ class ImageGen():
                 _log.debug(f'Rectangle map size: {rectangle_map.size}')
                 self.image = image
                 self.image.paste(bg, (0, 0), rectangle_map)
+                return
+            else:
+                pass
         
-        else:
-            bg = self.image.copy()
-            
-            gaussian_filter = ImageFilter.GaussianBlur(radius=self.image_settings.glass_effect)
+        bg = self.image.copy()
+        
+        gaussian_filter = ImageFilter.GaussianBlur(radius=self.image_settings.glass_effect)
 
-            if self.image_settings.glass_effect > 0:
-                bg = bg.filter(gaussian_filter)
-            if self.image_settings.blocks_bg_opacity > 0:
-                bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_opacity)
-                bg.filter(gaussian_filter)
+        if self.image_settings.glass_effect > 0:
+            bg = bg.filter(gaussian_filter)
+        if self.image_settings.blocks_bg_opacity > 0:
+            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_opacity)
+            bg.filter(gaussian_filter)
 
-            self.image.paste(bg, (0, 0), rectangle_map)
+        self.image.paste(bg, (0, 0), rectangle_map)
 
     def draw_debug_label(self, img: ImageDraw.ImageDraw) -> None:
         bbox = img.textbbox(
