@@ -10,7 +10,7 @@ from lib.utils.singleton_factory import singleton
 
 _log = get_logger(__file__, 'ReplayParserLogger', 'logs/replay_parser.log')
 
-_EXE = 'parser.exe' if os.name == 'nt' else './parser'
+_EXE = 'parser.exe' if os.name == 'nt' else 'parser'
 _PATH = 'lib/replay_parser/bin/' + _EXE
 _ARGUMENT = 'battle-results'
 

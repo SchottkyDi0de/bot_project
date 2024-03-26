@@ -632,8 +632,8 @@ class API:
         await self.rate_limiter.wait()
         try:
             if self.session.closed:
-                raise ValueError
-        except AttributeError | ValueError:
+                raise ValueError()
+        except (AttributeError, ValueError):
             async with aiohttp.ClientSession() as session:
                 async with session.get(url_get_achievements, verify_ssl=False) as response:
                     data = await self.response_handler(response)
