@@ -340,6 +340,7 @@ cmds:
       this: Image settings
       sub_descr:
         use_custom_bg: Use custom background
+        colorize_stats: Statystyki kolorów
         glass_effect: Glass effect 0 - Disable (0-30)
         blocks_bg_brightness: Block background brightness (0-100)
         nickname_color: 'Nickname color (HEX or RGB Color)'
@@ -387,6 +388,7 @@ cmds:
       get_ok: 'Current image settings:'
     items:
       use_custom_bg: Niestandardowe tło
+      colorize_stats: Statystyki kolorów
       glass_effect: Efekt szkła
       blocks_bg_opacity: Przezroczystość bloków ze statystykami
       nickname_color: Kolor nazwy użytkownika

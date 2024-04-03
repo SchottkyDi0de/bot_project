@@ -12,7 +12,7 @@ bot_name:
 
 server:
   host: 'blitzhub.eu'
-  port: 8000
+  port: 80
 
 session:
   ttl: 172_800 # in seconds

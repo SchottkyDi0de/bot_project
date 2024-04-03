@@ -391,4 +391,4 @@ class Server:
         return JSONResponse({'count' : sessions}, status_code=200)
 
 if __name__ == '__main__':
-    uvicorn.run(Server().app, host=_config.server.host, port=8000)
+    uvicorn.run(Server().app, host=_config.server.host, port=_config.server.port)
