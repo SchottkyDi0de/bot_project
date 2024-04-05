@@ -347,6 +347,7 @@ class SetBackground(BaseModel):
 
 class SubDescr6(BaseModel):
     use_custom_bg: str
+    colorize_stats: str
     glass_effect: str
     blocks_bg_brightness: str
     nickname_color: str
@@ -425,6 +426,7 @@ class Info11(BaseModel):
 
 class Items2(BaseModel):
     use_custom_bg: str
+    colorize_stats: str
     glass_effect: str
     blocks_bg_opacity: str
     nickname_color: str

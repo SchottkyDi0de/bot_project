@@ -12,3 +12,12 @@ class Colors:
     grey = (121, 121, 121)   # Represents the color grey
     l_grey = (200, 200, 200) # Represents the color light grey
     white = (240, 240, 240)  # Represents the color white
+    
+class StatsColors:
+    """
+    A class that represents different colors for stats.
+    """
+    grey = (200, 200, 200)
+    green = (30, 255, 38)
+    cyan = (30, 187, 169)
+    purple = (141, 47, 249)
