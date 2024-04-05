@@ -6,7 +6,6 @@ import pytz
 from bson.codec_options import CodecOptions
 from pymongo import MongoClient
 from pymongo.results import DeleteResult
-from PIL import Image
 
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import (DBPlayer, ImageSettings,
