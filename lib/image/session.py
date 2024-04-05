@@ -859,6 +859,9 @@ class ImageGen():
                 _log.debug(f'BG size: {bg.size}')
                 _log.debug(f'Rectangle map size: {rectangle_map.size}')
                 self.image = image
+                if bg.size != rectangle_map.size:
+                    bg = bg.resize(rectangle_map.size)
+                
                 self.image.paste(bg, (0, 0), rectangle_map)
         
         else:
