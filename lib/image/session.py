@@ -22,6 +22,7 @@ from lib.image.for_image.colors import Colors
 from lib.image.for_image.flags import Flags
 from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
+from lib.image.for_image.stats_coloring import colorize
 from lib.image.for_image.watermark import Watermark
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
@@ -858,6 +859,9 @@ class ImageGen():
                 _log.debug(f'BG size: {bg.size}')
                 _log.debug(f'Rectangle map size: {rectangle_map.size}')
                 self.image = image
+                if bg.size != rectangle_map.size:
+                    bg = bg.resize(rectangle_map.size)
+                
                 self.image.paste(bg, (0, 0), rectangle_map)
         
         else:
@@ -998,14 +1002,18 @@ class ImageGen():
 
     def draw_main_stats(self, img: ImageDraw.ImageDraw):
         coords = self.coord.main_stats(self.current_offset)
-        for slot, _ in self.stats_view.slots.items():
+        for slot, value in self.stats_view.slots.items():
             img.text(
                 coords[slot],
                 text=self.values.main[slot],
                 font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
-                fill=self.image_settings.stats_color
+                fill=colorize(
+                    value,
+                    self.values.main[slot],
+                    self.image_settings.stats_color
+                    )
                 )
 
     def draw_main_diff_stats(self, img: ImageDraw.ImageDraw):
@@ -1022,14 +1030,19 @@ class ImageGen():
     
     def draw_main_session_stats(self, img: ImageDraw.ImageDraw):
         coords = self.coord.main_session_stats(self.current_offset)
-        for slot in self.stats_view.slots.keys():
+        for slot, value in self.stats_view.slots.items():
             img.text(
                 coords[slot],
                 text=self.session_values.main[slot],
                 font=self.fonts.roboto_25,
                 anchor='ma',
                 align='center',
-                fill=Colors.l_grey)
+                fill=colorize(
+                    value,
+                    self.session_values.main[slot],
+                    Colors.l_grey
+                )
+            )
 
     def draw_rating_labels(self, img: ImageDraw.ImageDraw):
         coords = self.coord.rating_labels(self.current_offset)
@@ -1053,7 +1066,12 @@ class ImageGen():
                 font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
-                fill=self.image_settings.stats_color
+                fill=colorize(
+                    i,
+                    self.values.rating[i],
+                    self.image_settings.stats_color,
+                    rating=True
+                    )
                 )
             
     def draw_rating_session_stats(self, img: ImageDraw.ImageDraw):
@@ -1065,7 +1083,13 @@ class ImageGen():
                 font=self.fonts.roboto_25,
                 anchor='ma',
                 align='center',
-                fill=Colors.l_grey)
+                fill=colorize(
+                    i,
+                    self.session_values.rating[i],
+                    Colors.l_grey,
+                    rating=True
+                )
+            )
 
     def draw_rating_league(self) -> None:
         coords = self.coord.rating_league_icon(self.current_offset)
@@ -1125,27 +1149,35 @@ class ImageGen():
     def draw_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.tank_stats(self.current_offset)
         tank_stats = self.values.get_tank_stats(curr_tank.tank_id)
-        for slot in self.stats_view.slots.keys():
+        for slot, value in self.stats_view.slots.items():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
                 font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
-                fill=self.image_settings.stats_color
+                fill=colorize(
+                    value,
+                    tank_stats[slot],
+                    self.image_settings.stats_color
+                )
             )
     
     def draw_short_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.short_tank_stats(self.current_offset)
         tank_stats = self.values.get_tank_stats(curr_tank.tank_id)
-        for slot in self.stats_view.slots.keys():
+        for slot, value in self.stats_view.slots.items():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
                 font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
-                fill=self.image_settings.stats_color
+                fill=colorize(
+                    value,
+                    tank_stats[slot],
+                    self.image_settings.stats_color
+                    )
             )
 
     def draw_short_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
@@ -1176,14 +1208,19 @@ class ImageGen():
     def draw_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.tank_session_stats(self.current_offset)
         tank_stats = self.session_values.tank_stats(curr_tank.tank_id)
-        for slot in self.stats_view.slots.keys():
+        for slot, value in self.stats_view.slots.items():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
                 font=self.fonts.roboto_25,
                 anchor='ma',
                 align='center',
-                fill=Colors.l_grey)
+                fill=colorize(
+                    value,
+                    tank_stats[slot],
+                    Colors.l_grey
+                )
+            )
 
     def draw_tank_labels(self, img: ImageDraw.ImageDraw):
         coords = self.coord.tank_stats_labels(self.current_offset)

@@ -6,7 +6,6 @@ import pytz
 from bson.codec_options import CodecOptions
 from pymongo import MongoClient
 from pymongo.results import DeleteResult
-from PIL import Image
 
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import (DBPlayer, ImageSettings,
@@ -26,7 +25,7 @@ class PlayersDB:
             codec_options=CodecOptions(tz_aware=True)
         )
         self.collection = self.db['players']
-        # self.update_database() # TODO: remove this after first use
+        self.update_database() # TODO: remove this after first use
 
     def set_member(self, data: DBPlayer, override: bool = False) -> bool:
         ds_id = data.id
@@ -482,26 +481,8 @@ class PlayersDB:
         
     def update_database(self):
         for member in self.collection.find():
+            member = DBPlayer.model_validate(member)
             self.collection.update_one(
-                {'id' : member['id']}, 
-                {'$set' : 
-                    {
-                        'widget_settings' : WidgetSettings().model_dump(),
-                        'session_settings' : SessionSettings().model_dump(),
-                        'last_stats' : None
-                    },
-                }
+                {'id': member.id},
+                {'$set': {'image_settings.colorize_stats': True}}
             )
-            image = member['image']
-            if image is not None:
-                image_bytes = base64.b64decode(image)
-                if image_bytes != None:
-                    image_buffer = BytesIO(image_bytes)
-                    image = Image.open(image_buffer)
-                    image = resize_image(image, (800, 1350))
-                    with BytesIO() as buffer:
-                        image.save(buffer, format='PNG')
-                        self.set_member_image(
-                            member['id'],
-                            base64.b64encode(buffer.getvalue()).decode(),
-                        )

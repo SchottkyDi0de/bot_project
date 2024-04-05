@@ -26,6 +26,7 @@ from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
+from lib.image.for_image.stats_coloring import colorize
 
 _log = get_logger(__file__, 'ImageCommonLogger', 'logs/image_common.log')
 _config = Config().get()
@@ -678,7 +679,11 @@ class ImageGen():
                 text=self.values.main[i],
                 font=self.fonts.roboto,
                 anchor='mm',
-                fill=self.image_settings.stats_color
+                fill=colorize(
+                    i,
+                    self.values.main[i],
+                    self.image_settings.stats_color
+                ) if self.image_settings.colorize_stats else self.image_settings.stats_color
             )
 
     def draw_rating_stats(self, img: Image.Image):
@@ -688,7 +693,12 @@ class ImageGen():
                 text=self.values.rating[i],
                 font=self.fonts.roboto,
                 anchor='ma',
-                fill=self.image_settings.stats_color
+                fill=colorize(
+                    i,
+                    self.values.rating[i],
+                    self.image_settings.stats_color,
+                    rating=True
+                ) if self.image_settings.colorize_stats else self.image_settings.stats_color
             )
 
     def draw_common_stats(self, img: Image.Image):
@@ -698,7 +708,11 @@ class ImageGen():
                 text=self.values.common[i],
                 font=self.fonts.roboto,
                 anchor='ma',
-                fill=self.image_settings.stats_color
+                fill=colorize(
+                    i,
+                    self.values.common[i],
+                    self.image_settings.stats_color
+                ) if self.image_settings.colorize_stats else self.image_settings.stats_color
             )
 
     def draw_medal_count(self, img: Image.Image):
@@ -760,149 +774,3 @@ class ImageGen():
                 self.image.paste(self.flags.usa, (10, 10), self.flags.usa)
             case 'asia':
                 self.image.paste(self.flags.china, (10, 10), self.flags.china)
-
-    def point_coloring(self, stats_type, stats_value, rating=False):
-        val = stats_value
-        if stats_type == 'winrate':
-            if val == 0:
-                return Colors.grey
-            if val <= 44:
-                return Colors.red
-            if val <= 47:
-                return Colors.orange
-            if val <= 50:
-                return Colors.yellow
-            if val <= 55:
-                return Colors.green
-            if val < 60:
-                return Colors.cyan
-            if val >= 60:
-                return Colors.purple
-
-        elif stats_type == 'avg_damage':
-            if val == 0:
-                return Colors.grey
-            if val < 600:
-                return Colors.red
-            if val < 900:
-                return Colors.orange
-            if val < 1200:
-                return Colors.yellow
-            if val < 1700:
-                return Colors.green
-            if val < 2500:
-                return Colors.cyan
-            if val >= 2500:
-                return Colors.purple
-
-        elif stats_type == 'battles':
-            if val == 0:
-                return Colors.grey
-            if val < 2000:
-                return Colors.red
-            if val < 5000:
-                return Colors.orange
-            if val < 10000:
-                return Colors.yellow
-            if val < 30000:
-                return Colors.green
-            if val < 50000:
-                return Colors.cyan
-            if val >= 50000:
-                return Colors.purple
-
-        elif stats_type == 'battles' and rating:
-            if val == 0:
-                return Colors.grey
-            if val < 300:
-                return Colors.red
-            if val < 700:
-                return Colors.orange
-            if val < 1000:
-                return Colors.yellow
-            if val < 3000:
-                return Colors.green
-            if val < 6000:
-                return Colors.cyan
-            if val >= 6000:
-                return Colors.purple
-
-        elif stats_type == 'frags_per_battle':
-            if val == 0:
-                return Colors.grey
-            if val < 0.60:
-                return Colors.red
-            if val < 0.75:
-                return Colors.orange
-            if val < 1:
-                return Colors.yellow
-            if val < 1.2:
-                return Colors.green
-            if val < 1.3:
-                return Colors.cyan
-            if val >= 1.3:
-                return Colors.purple
-
-        elif stats_type == 'damage_ratio':
-            if val == 0:
-                return Colors.grey
-            if val < 0.7:
-                return Colors.red
-            if val < 0.9:
-                return Colors.orange
-            if val < 1:
-                return Colors.yellow
-            if val < 1.3:
-                return Colors.green
-            if val < 2:
-                return Colors.cyan
-            if val >= 2:
-                return Colors.purple
-
-        elif stats_type == 'destruction_ratio':
-            if val == 0:
-                return Colors.grey
-            if val < 0.6:
-                return Colors.red
-            if val < 0.8:
-                return Colors.orange
-            if val < 1:
-                return Colors.yellow
-            if val < 1.4:
-                return Colors.green
-            if val < 2.4:
-                return Colors.cyan
-            if val >= 2.4:
-                return Colors.purple
-
-        elif stats_type == 'avg_spotted':
-            if val == 0:
-                return Colors.grey
-            if val < 0.7:
-                return Colors.red
-            if val < 0.9:
-                return Colors.orange
-            if val < 1:
-                return Colors.yellow
-            if val < 1.2:
-                return Colors.green
-            if val < 1.5:
-                return Colors.cyan
-            if val >= 1.5:
-                return Colors.purple
-
-        elif stats_type == 'accuracy':
-            if val == 0:
-                return Colors.grey
-            if val < 60:
-                return Colors.red
-            if val < 65:
-                return Colors.orange
-            if val < 70:
-                return Colors.yellow
-            if val < 75:
-                return Colors.green
-            if val < 85:
-                return Colors.cyan
-            if val >= 85:
-                return Colors.purple

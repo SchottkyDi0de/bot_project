@@ -42,7 +42,7 @@ class Auth(commands.Cog):
             },
             required=True,
             choices=_config.default.available_regions
-            )
+            ) # type: ignore
         ):
         Text().load_from_context(ctx)
         await ctx.respond(

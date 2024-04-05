@@ -56,7 +56,17 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.use_custom_bg,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.use_custom_bg
                 }
-            ),
+            ), # type: ignore
+        colorize_stats: Option(
+            bool,
+            required=False,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.colorize_stats,
+            description_localizations={
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.colorize_stats,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.colorize_stats,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.colorize_stats
+            }
+        ), # type: ignore
         glass_effect: Option(
             int,
             required=False,
@@ -68,7 +78,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.glass_effect,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.glass_effect
                 }
-            ),
+            ), # type: ignore
         blocks_bg_opacity: Option(
             int,
             min_value=0,
@@ -80,7 +90,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.blocks_bg_brightness,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.blocks_bg_brightness
                 }
-            ),
+            ), # type: ignore
         nickname_color: Option(
             str,
             required=False,
@@ -91,9 +101,9 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.nickname_color,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.nickname_color
                 }
-            ),
+            ), # type: ignore
         clan_tag_color: Option(
-            str,
+            str, 
             required=False,
             min_length=4,
             description=Text().get('en').cmds.image_settings.descr.sub_descr.clan_tag_color,
@@ -102,7 +112,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.clan_tag_color,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.clan_tag_color
                 }
-            ),
+            ), # type: ignore
         stats_color: Option(
             str,
             required=False,
@@ -113,7 +123,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.stats_color,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.stats_color
                 }
-            ),
+            ), # type: ignore
         main_text_color: Option(
             str,
             required=False,
@@ -124,7 +134,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.main_text_color,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.main_text_color
                 }
-            ),
+            ), # type: ignore
         stats_text_color: Option(
             str,
             required=False,
@@ -135,7 +145,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.stats_text_color,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.stats_text_color
                 }
-            ),
+            ), # type: ignore
         disable_flag: Option(
             bool,
             required=False,
@@ -145,7 +155,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_flag,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_flag
                 }
-            ),
+            ), # type: ignore
         hide_nickname: Option(
             bool,
             required=False,
@@ -155,7 +165,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.hide_nickname,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.hide_nickname
                 }
-            ),
+            ), # type: ignore
         hide_clan_tag: Option(
             bool,
             required=False,
@@ -165,7 +175,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.hide_clan_tag,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.hide_clan_tag
                 }
-            ),
+            ), # type: ignore
         disable_stats_blocks: Option(
             bool,
             required=False,
@@ -175,7 +185,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_stats_blocks,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_stats_blocks
                 }
-            ),
+            ), # type: ignore
         disable_rating_stats: Option(
             bool,
             required=False,
@@ -185,7 +195,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_rating_stats,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_rating_stats
                 }
-            ),
+            ), # type: ignore
         disable_cache_label: Option(
             bool,
             required=False,
@@ -195,7 +205,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_cache_label,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_cache_label
                 }
-            ),
+            ), # type: ignore
         positive_stats_color: Option(
             str,
             required=False,
@@ -206,7 +216,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings_get.items.positive_stats_color,
                 'uk': Text().get('ua').cmds.image_settings_get.items.positive_stats_color
                 }
-            ),
+            ), # type: ignore
         negative_stats_color: Option(
             str,
             required=False,
@@ -217,7 +227,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings_get.items.negative_stats_color,
                 'uk': Text().get('ua').cmds.image_settings_get.items.negative_stats_color
                 }
-            )
+            ) # type: ignore
         ):
         Text().load_from_context(ctx)
         check_user(ctx)
@@ -232,6 +242,7 @@ class Customization(Cog):
         
         current_settings = {
             'use_custom_bg': use_custom_bg,
+            'colorize_stats': colorize_stats,
             'glass_effect': glass_effect,
             'main_text_color': main_text_color,
             'blocks_bg_opacity': blocks_bg_opacity,
@@ -256,7 +267,7 @@ class Customization(Cog):
                 continue
             else:
                 set_values_count += 1
-            if 'color' in key:
+            if '_color' in key:
                 set_values_count += 1
                 validate_result = color_validate(value)
                 if validate_result is None:
@@ -420,7 +431,7 @@ class Customization(Cog):
             },
             required=False,
             default=False
-            )
+            ) # type: ignore
         ):
         Text().load_from_context(ctx)
         check_user(ctx)

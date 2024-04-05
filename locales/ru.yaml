@@ -338,6 +338,7 @@ cmds:
       this: Настройки изображения
       sub_descr:
         use_custom_bg: Использовать нестандартный фон
+        colorize_stats: Цветная статистика
         glass_effect: Эффект стекла 0 - Выключить (0-30)
         blocks_bg_brightness: Прозрачность блоков со статистикой (0-100)
         nickname_color: 'Цвет никнейма (HEX или RGB Color)'
@@ -387,6 +388,7 @@ cmds:
       get_ok: 'Текущие настройки изображения:'
     items:
       use_custom_bg: Пользовательский фон
+      colorize_stats: Цветная статистика
       glass_effect: Эффект стекла
       blocks_bg_opacity: Непрозрачность блоков со статистикой
       nickname_color: Цвет ника игрока
