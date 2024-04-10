@@ -1,3 +1,5 @@
+import os
+import asyncio
 import traceback
 from asyncio import sleep
 from typing import Annotated, Optional
@@ -29,6 +31,10 @@ from lib.data_parser.parse_data import get_normalized_data, get_session_stats
 from lib.data_classes.image import ImageGenExtraSettings
 from lib.exceptions.api import APIError
 from lib.utils.string_parser import insert_data
+
+if os.name == 'posix':
+    import uvloop
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 _pdb = PlayersDB()
 _env_config = EnvConfig()
@@ -391,4 +397,4 @@ class Server:
         return JSONResponse({'count' : sessions}, status_code=200)
 
 if __name__ == '__main__':
-    uvicorn.run(Server().app, host=_config.server.host, port=_config.server.port)
+    uvicorn.run('api_server:Server', host='0.0.0.0', port=_env_config.INTERNAL_API_KEY)
