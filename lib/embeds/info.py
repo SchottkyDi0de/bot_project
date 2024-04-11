@@ -8,7 +8,7 @@ from lib.utils.singleton_factory import singleton
 @singleton
 class InfoMSG:
 
-    def player_not_registred(self) -> Embed:
+    def player_not_registered(self) -> Embed:
         return Embed(
             title=Text().get().frequent.info.info,
             description=Text().get().frequent.info.player_not_registred,

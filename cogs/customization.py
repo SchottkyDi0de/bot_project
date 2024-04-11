@@ -11,6 +11,7 @@ from lib.database.servers import ServersDB
 from lib.data_classes.db_player import ImageSettings
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
+from lib.error_handler.common import hook_exceptions
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.blacklist.blacklist import check_user
@@ -21,11 +22,14 @@ from lib.utils.bool_to_text import bool_handler
 from lib.utils.color_converter import get_tuple_from_color
 from lib.views import ViewMeta
 from lib.utils.stats_preview import StatsPreview
+from lib.settings.settings import Config
 
 _log = get_logger(__file__, 'CogCustomizationLogger', 'logs/cog_customization.log')
-
+_config = Config().get()
 
 class Customization(Cog):
+    cog_command_error = hook_exceptions(_log)
+
     def __init__(self, bot: commands.Bot):
         self.discord_oauth = DiscordOAuth()
         self.err_msg = ErrorMSG()
@@ -47,6 +51,17 @@ class Customization(Cog):
     async def image_settings(
         self,
         ctx: ApplicationContext,
+        theme: Option(
+            str,
+            required=False,
+            description=Text().get('en').cmds.set_theme.items.theme,
+            description_localizations={
+                'ru': Text().get('ru').cmds.set_theme.items.theme,
+                'pl': Text().get('pl').cmds.set_theme.items.theme,
+                'uk': Text().get('ua').cmds.set_theme.items.theme
+            },
+            choices=_config.themes.available
+        ), # type: ignore
         use_custom_bg: Option(
             bool,
             required=False,
@@ -233,7 +248,7 @@ class Customization(Cog):
         check_user(ctx)
 
         if not self.db.check_member(ctx.author.id):
-            await ctx.respond(embed=self.inf_msg.player_not_registred())
+            await ctx.respond(embed=self.inf_msg.player_not_registered())
             return
 
         image_settings = self.db.get_image_settings(ctx.author.id)
@@ -241,6 +256,7 @@ class Customization(Cog):
         color_error = False
         
         current_settings = {
+            'theme': theme,
             'use_custom_bg': use_custom_bg,
             'colorize_stats': colorize_stats,
             'glass_effect': glass_effect,
@@ -315,7 +331,6 @@ class Customization(Cog):
             )
             self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(current_settings))
             return
-            
 
         current_image_settings = ImageSettings.model_validate(current_settings)
         self.db.set_image_settings(ctx.author.id, current_image_settings)
@@ -346,7 +361,7 @@ class Customization(Cog):
         await ctx.defer()
 
         if not self.db.check_member(ctx.author.id):
-            await ctx.respond(embed=self.inf_msg.player_not_registred())
+            await ctx.respond(embed=self.inf_msg.player_not_registered())
             return
         
         image_settings = self.db.get_image_settings(ctx.author.id)
@@ -372,7 +387,7 @@ class Customization(Cog):
         check_user(ctx)
 
         if not self.db.check_member(ctx.author.id):
-            await ctx.respond(embed=self.inf_msg.player_not_registred())
+            await ctx.respond(embed=self.inf_msg.player_not_registered())
             return
         
         self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate({}))
