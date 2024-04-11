@@ -24,6 +24,7 @@ from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
 from lib.image.for_image.stats_coloring import colorize
 from lib.image.for_image.watermark import Watermark
+from lib.image.themes.theme_loader import get_theme
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.utils.color_converter import get_tuple_from_color
@@ -665,7 +666,12 @@ class ImageGen():
         else:
             allow_custom_background = False
 
-        if player.image_settings.use_custom_bg or server_bg:
+        if player.image_settings.theme != 'default':
+            theme = get_theme(player.image_settings.theme)
+            self.image = center_crop(theme.bg, (ImageSize.max_width, ImageSize.max_height))
+            self.image_settings = theme.image_settings
+            
+        elif player.image_settings.use_custom_bg or server_bg:
             if user_bg and allow_custom_background:
                 image_bytes = base64.b64decode(self.pdb.get_member_image(ctx.author.id))
                 if image_bytes != None:

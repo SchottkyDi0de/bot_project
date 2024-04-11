@@ -678,3 +678,11 @@ cmds:
     items:
       ''
 
+# set theme command
+  set_theme:
+    descr:
+      this: Wybierz motyw
+    info:
+      success: Motyw został pomyślnie ustawiony
+    items:
+      theme: Motyw

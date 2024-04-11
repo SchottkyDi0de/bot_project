@@ -671,3 +671,12 @@ cmds:
       success: Settings for session statistics widget have been reset.
     items:
       ''
+
+# set theme command
+  set_theme:
+    descr:
+      this: Select theme
+    info:
+      success: Theme has been successfully set
+    items:
+      theme: Theme

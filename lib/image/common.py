@@ -20,6 +20,7 @@ from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
 from lib.image.for_image.medals import Medals
+from lib.image.themes.theme_loader import get_theme
 from lib.image.for_image.watermark import Watermark
 from lib.image.utils.resizer import center_crop
 from lib.locale.locale import Text
@@ -27,6 +28,7 @@ from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
 from lib.image.for_image.stats_coloring import colorize
+from lib.data_classes.db_player import DBPlayer
 
 _log = get_logger(__file__, 'ImageCommonLogger', 'logs/image_common.log')
 _config = Config().get()
@@ -384,8 +386,12 @@ class ImageGen():
         user_bg = pdb.get_member_image(ctx.author.id) is not None
         server_bg = sdb.get_server_image(ctx.guild.id) is not None
         allow_bg = server_settings.allow_custom_backgrounds
-
-        if image_settings.use_custom_bg or server_bg:
+        
+        if image_settings.theme != 'default':
+            theme = get_theme(image_settings.theme)
+            self.image = center_crop(theme.bg, (ImageSize.max_width, ImageSize.max_height))
+            self.image_settings = theme.image_settings
+        elif (image_settings.use_custom_bg or server_bg):
             if user_bg and allow_bg and image_settings.use_custom_bg:
                 image_bytes = base64.b64decode(pdb.get_member_image(ctx.author.id))
                 if image_bytes != None:

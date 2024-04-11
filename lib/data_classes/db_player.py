@@ -33,6 +33,7 @@ class SessionSettings(BaseModel):
     stats_view: StatsViewSettings = StatsViewSettings()
 
 class ImageSettings(BaseModel):
+    theme: str = 'default'
     colorize_stats: bool = True
     use_custom_bg: bool = True
     hide_nickname: bool = False
