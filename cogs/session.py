@@ -91,7 +91,7 @@ class Session(commands.Cog):
             min_value=0,
             max_value=12,
             required=False
-            ),
+            ), # type: ignore
         restart_time: Option(
             str,
             description=Text().get('en').cmds.start_autosession.descr.sub_descr.restart_time,
@@ -103,7 +103,7 @@ class Session(commands.Cog):
             },
             length=5,
             required=False
-            )
+            ) # type: ignore
         ):
         Text().load_from_context(ctx)
         check_user(ctx)

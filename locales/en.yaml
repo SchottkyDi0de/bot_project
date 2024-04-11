@@ -382,6 +382,7 @@ cmds:
     info:
       get_ok: 'Current image settings:'
     items:
+      theme: Theme
       use_custom_bg: Custom background
       colorize_stats: Colorize statistics
       glass_effect: Glass effect

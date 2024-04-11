@@ -24,6 +24,9 @@ class Fonts():
     anca_coder = ImageFont.truetype('res/fonts/Anca-Coder_bold.ttf', size=18)
     """The Anca Coder font with a size of 22."""
     
+    anca_coder_16 = ImageFont.truetype('res/fonts/Anca-Coder_bold.ttf', size=16)
+    """The Anca Coder font with a size of 16."""
+    
     roboto_25 = ImageFont.truetype('res/fonts/Roboto-Medium.ttf', size=25)
     """The Roboto font with a size of 25."""
 

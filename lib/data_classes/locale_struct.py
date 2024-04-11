@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 
 
+from pydantic import BaseModel
+
+
 class Leagues(BaseModel):
     gold: str
     platinum: str
@@ -425,6 +428,7 @@ class Info11(BaseModel):
 
 
 class Items2(BaseModel):
+    theme: str
     use_custom_bg: str
     colorize_stats: str
     glass_effect: str
