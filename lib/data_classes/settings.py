@@ -89,6 +89,8 @@ class Report(BaseModel):
     suggestion_channel_id: int
     bug_channel_id: int
 
+class Themes(BaseModel):
+    available: List[str]
 
 class ConfigStruct(BaseModel):
     bot_name: str
@@ -105,3 +107,4 @@ class ConfigStruct(BaseModel):
     ds_api: DsApi
     report: Report
     dump: Dump
+    themes: Themes
