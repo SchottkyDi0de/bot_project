@@ -702,6 +702,16 @@ class SessionWidgetSettingsReset(BaseModel):
     items: str
 
 
+class Items9(BaseModel):
+    theme: str
+
+
+class SetTheme(BaseModel):
+    descr: Descr22
+    info: Info20
+    items: Items9
+
+
 class Cmds(BaseModel):
     astats: Astats
     stats: Stats
@@ -730,6 +740,7 @@ class Cmds(BaseModel):
     session_widget: SessionWidget
     session_widget_settings: SessionWidgetSettings
     session_widget_settings_reset: SessionWidgetSettingsReset
+    set_theme: SetTheme
 
 
 class Localization(BaseModel):

@@ -39,6 +39,9 @@ image:
     avg_spotted, survival_ratio, empty
     ]
 
+themes:
+  available: ['default', 'tiger_girl']
+
 internal:
   ignore_tankopedia_failures: true
 

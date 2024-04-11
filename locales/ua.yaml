@@ -681,3 +681,12 @@ cmds:
       success: Налаштування віджету сесійної статистики були скидані.
     items:
       ''
+
+# set theme command
+  set_theme:
+    descr:
+      this: Обрахнути тему
+    info:
+      success: Тема була успішно вибрана
+    items:
+      theme: Тема

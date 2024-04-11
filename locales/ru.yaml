@@ -104,7 +104,7 @@ map_names:
   copperfield: Карьеры
   alpenstadt: Альпенштадт
   mines: Рудники
-  dead_rail: Эшелонs
+  dead_rail: Эшелон
   fort_despair: Форт
   himmelsdorf: Химмельсдорф
   black_goldville: Золотая долина
@@ -679,3 +679,12 @@ cmds:
       success: Настройки виджета сессионной статистики были сброшены.
     items:
       ''
+
+# set theme command
+  set_theme:
+    descr:
+      this: Выбор темы
+    info:
+      success: Тема успешно установлена
+    items:
+      theme: Тема

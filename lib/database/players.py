@@ -25,7 +25,7 @@ class PlayersDB:
             codec_options=CodecOptions(tz_aware=True)
         )
         self.collection = self.db['players']
-        self.update_database() # TODO: remove this after first use
+        # self.update_database() # TODO: remove this after first use
 
     def set_member(self, data: DBPlayer, override: bool = False) -> bool:
         ds_id = data.id
@@ -484,5 +484,5 @@ class PlayersDB:
             member = DBPlayer.model_validate(member)
             self.collection.update_one(
                 {'id': member.id},
-                {'$set': {'image_settings.colorize_stats': True}}
+                {'$set': {'image_settings.theme': 'default'}}
             )
