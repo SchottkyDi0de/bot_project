@@ -14,6 +14,7 @@ class Offsets:
     base_offset = 40
     base_offset_y = 30
     rect_offset = 550
+    rect_center_offset = rect_offset + 55
     line_offset_y = 60
     rect_size = 40
     after_rectangle_offset = rect_offset + rect_size
@@ -23,6 +24,7 @@ class Offsets:
 class SettingsRepresent:
     def __init__(self):
         self.font = Fonts.anca_coder
+        self.small_font = Fonts.anca_coder_16
         self.global_offset = 0
         self.offsets = Offsets()
         self.image = None
@@ -39,6 +41,7 @@ class SettingsRepresent:
         self.draw_bool_values(self.img_draw, image_settings)
         self.draw_block_bg_opacity_repr(image_settings)
         self.draw_glass_effect_repr(image_settings)
+        self.draw_theme_repr(self.img_draw, image_settings)
         
         if image_settings.disable_stats_blocks:
             self.inactive_block_bg_settings(image_settings)
@@ -110,9 +113,9 @@ class SettingsRepresent:
             )
             
     def draw_color_represent(self, img_draw: ImageDraw.ImageDraw, image_settings: ImageSettings):
-        image_settings = image_settings.model_dump()
+        image_settings: dict = image_settings.model_dump()
         for index, (key, value) in enumerate(image_settings.items()):
-            if 'color' in key:
+            if '_color' in key:
                 img_draw.rounded_rectangle(
                     (
                         self.offsets.rect_offset - self.offsets.rect_size // 2,
@@ -151,7 +154,24 @@ class SettingsRepresent:
                     fill=Colors.green if value else Colors.red
                 )
             index += 1
-        
+    
+    def draw_theme_repr(self, img_draw: ImageDraw.ImageDraw, image_settings: ImageSettings):
+        image_settings: dict = image_settings.model_dump()
+        index = 0
+        for index, (key, value) in enumerate(image_settings.items()):
+            if key == 'theme':
+                img_draw.text(
+                    (
+                        self.offsets.rect_center_offset, 
+                        self.offsets.base_offset_y + index * self.offsets.line_offset_y
+                    ),
+                    text=value.upper().replace('_', ' '),
+                    font=self.font,
+                    anchor='mm',
+                    align='center',
+                    fill=Colors.grey
+                )
+            index += 1
     
     def draw_text(self, img_draw: ImageDraw.ImageDraw, image_settings: ImageSettings):
         image_settings_dict = image_settings.model_dump()
