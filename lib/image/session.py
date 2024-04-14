@@ -457,7 +457,11 @@ class LayoutDefiner:
             self.widget_settings.max_stats_blocks if self.widget_mode else 3,
             self.widget_settings.max_stats_small_blocks if self.widget_mode else 2
         )
-        tanks_count = len(self.data.tank_stats)
+        if self.data.tank_stats is not None:
+            tanks_count = len(self.data.tank_stats)
+        else:
+            tanks_count = 0
+            
         self.stack.add_blocks(tanks_count)
         
         if not self.image_settings.disable_rating_stats:
@@ -650,7 +654,10 @@ class ImageGen():
         self.session_values = SessionValues(diff_data, player.session_settings.stats_view)
         self.values = Values(data, diff_data, player.session_settings.stats_view)
         self.current_offset = 0
-        self.tank_iterator = iter(diff_data.tank_stats)
+        if diff_data.tank_stats is not None:
+            self.tank_iterator = iter(diff_data.tank_stats)
+        else: 
+            self.tank_iterator = iter([])
         self.stats_view = player.session_settings.stats_view
 
         if ctx is not None:
