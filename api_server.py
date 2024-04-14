@@ -112,15 +112,12 @@ async def session_widget_app():
                 )
         )
         new_stats_normalized = get_normalized_data(new_stats)
-        
-        try:
-            session_stats = get_session_stats(last_stats, new_stats)
-        except NoDiffData:
-            session_stats = None
+
+        session_stats = get_session_stats(last_stats, new_stats, zero_bypass=True)
             
         extra = ImageGenExtraSettings()
-        extra.disable_bg = True
-        extra.stats_blocks_color = (0, 0, 0, 245)
+        # extra.disable_bg = True
+        # extra.stats_blocks_color = (0, 0, 0, 245)
         
         while True:
             try:
@@ -395,6 +392,11 @@ class Server:
         
         sessions = _pdb.count_sessions()
         return JSONResponse({'count' : sessions}, status_code=200)
+    
+def run():
+    server = Server()
+    return server.app
+    
 
 if __name__ == '__main__':
     uvicorn.run('api_server:Server', host='0.0.0.0', port=_env_config.INTERNAL_API_KEY)

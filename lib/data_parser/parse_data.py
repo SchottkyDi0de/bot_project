@@ -86,13 +86,28 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
     else:
         return data
     
-def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> SessionDiffData:
+def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData, zero_bypass: bool = False) -> SessionDiffData:
     '''
     Return stats difference
     '''
     try:
         tank_stats = _generate_tank_session_dict(data_old, data_new)
         battles_not_updated = True if tank_stats is None else False
+
+        if battles_not_updated and not zero_bypass:
+            _log.debug('Different data generating error: player data not updated')
+            raise data_parser.NoDiffData('Different data generating error: player data not updated')
+        
+        if battles_not_updated and zero_bypass:
+            return SessionDiffData.model_validate(
+                {
+                    'main_diff': dict(),
+                    'main_session' : dict(),
+                    'rating_diff' : dict(),
+                    'rating_session' : dict(),
+                    'tank_stats' : None
+                }
+            )
 
         data_new_shorted = data_new.data.statistics
         data_old_shorted = data_old.data.statistics
@@ -108,9 +123,6 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
             r_session_winrate = 0
             r_session_rating = 0
 
-        if battles_not_updated:
-            _log.debug('Different data generating error: player data not updated')
-            raise data_parser.NoDiffData('Different data generating error: player data not updated')
         
         hits = data_new_shorted.all.hits - data_old_shorted.all.hits
         frags = data_new_shorted.all.frags - data_old_shorted.all.frags
