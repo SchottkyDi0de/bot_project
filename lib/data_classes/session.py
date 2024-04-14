@@ -53,63 +53,63 @@ class TankSessionData(BaseModel):
 
 
 class MainDiff(BaseModel):
-    hits: int
-    frags: int
-    wins: int
-    losses: int
-    capture_points: int
-    damage_dealt: int
-    damage_received: int
-    shots: int
-    xp: int
-    survived_battles: int
-    dropped_capture_points: int
+    hits: int = 0
+    frags: int = 0
+    wins: int = 0
+    losses: int = 0
+    capture_points: int = 0
+    damage_dealt: int = 0
+    damage_received: int = 0
+    shots: int = 0
+    xp: int = 0
+    survived_battles: int = 0
+    dropped_capture_points: int = 0
     
-    winrate: float
-    avg_damage: int
-    battles: int
-    accuracy: float
-    damage_ratio: float
-    destruction_ratio: float
-    frags_per_battle: float
-    survival_ratio: float
-    avg_spotted: float
+    winrate: float = 0.0
+    avg_damage: int = 0
+    battles: int = 0
+    accuracy: float = 0.0
+    damage_ratio: float = 0.0
+    destruction_ratio: float = 0.0
+    frags_per_battle: float = 0.0
+    survival_ratio: float = 0.0
+    avg_spotted: float = 0.0
 
 
 class MainSession(BaseModel):
-    hits: int
-    frags: int
-    wins: int
-    losses: int
-    capture_points: int
-    damage_dealt: int
-    damage_received: int
-    shots: int
-    xp: int
-    survived_battles: int
-    dropped_capture_points: int
+    hits: int = 0
+    frags: int = 0
+    wins: int = 0
+    losses: int = 0
+    capture_points: int = 0
+    damage_dealt: int = 0
+    damage_received: int = 0
+    shots: int = 0
+    xp: int = 0
+    survived_battles: int = 0
+    dropped_capture_points: int = 0
     
-    winrate: float
-    avg_damage: int
-    battles: int
-    accuracy: float
-    damage_ratio: float
-    destruction_ratio: float
-    frags_per_battle: float
-    survival_ratio: float
-    avg_spotted: float
+    winrate: float = 0.0
+    avg_damage: int = 0
+    battles: int = 0
+    accuracy: float = 0.0
+    damage_ratio: float = 0.0
+    destruction_ratio: float = 0.0
+    frags_per_battle: float = 0.0
+    survival_ratio: float = 0.0
+    avg_spotted: float = 0.0
 
 
 class RatingDiff(BaseModel):
-    winrate: float
-    rating: int
-    battles: int
+    winrate: float = 0.0
+    rating: int = 0
+    battles: int = 0
 
 
 class RatingSession(BaseModel):
-    winrate: float
-    rating: int
-    battles: int
+    winrate: float = 0.0
+    rating: int = 0
+    battles: int = 0
     
 
 class SessionDiffData(BaseModel):
@@ -117,4 +117,4 @@ class SessionDiffData(BaseModel):
     main_session: MainSession
     rating_diff: RatingDiff
     rating_session: RatingSession
-    tank_stats: dict[str, TankSessionData]
+    tank_stats: dict[str, TankSessionData] | None
