@@ -11,8 +11,8 @@ bot_name:
   'Blitz Statistics'
 
 server:
-  host: '127.0.0.1'
-  port: 8000
+  host: 'blitzhub.eu'
+  port: 80
 
 session:
   ttl: 172_800 # in seconds

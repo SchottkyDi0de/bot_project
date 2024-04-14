@@ -67,7 +67,7 @@ class App():
             await self.run_workers()
 
         self.load_extension(self.extension_names)
-        self.bot.run(EnvConfig.DISCORD_TOKEN_DEV)
+        self.bot.run(EnvConfig.DISCORD_TOKEN)
 
     @staticmethod
     async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:
