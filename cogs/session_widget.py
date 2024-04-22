@@ -61,7 +61,7 @@ class SessionWidget(commands.Cog):
                         {
                             'host' : _config.server.host,
                             'port' : _config.server.port,
-                            'user_id' : ctx.author.id,
+                            'p_id' : ctx.author.id,
                             'lang' : Text().get_current_lang()
                         }
                     )
