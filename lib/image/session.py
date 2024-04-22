@@ -661,7 +661,7 @@ class ImageGen():
             )
         self.layout_map = self.layout_definer.create_rectangle_map()
         self.blocks, self.small_blocks = self.layout_definer.get_blocks_count()
-        self.include_rating = self.layout_definer.include_rating if not widget_mode else False
+        self.include_rating = self.layout_definer.include_rating
         self.diff_data = diff_data
         self.data = data
         self.diff_values = DiffValues(diff_data, player.session_settings.stats_view)
