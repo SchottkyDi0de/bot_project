@@ -1,5 +1,4 @@
 ---
-
 # This YAML file use placeholders:
 # format: <key_name>
 #
@@ -7,6 +6,7 @@
 #   srv_id: "server_id: <id>"
 #
 # _Zener
+
 bot_name:
   'Blitz Statistics'
 
@@ -38,6 +38,18 @@ image:
     damage_ratio, destruction_ratio, frags_per_battle,
     avg_spotted, survival_ratio, empty
     ]
+  available_rating_stats: [
+    winrate, avg_damage, battles,
+    accuracy, hits, frags,
+    wins, losses, capture_points,
+    damage_dealt, damage_received, shots,
+    xp, survived_battles, dropped_capture_points,
+    damage_ratio, destruction_ratio, frags_per_battle,
+    avg_spotted, survival_ratio, rating, empty
+    ]
+
+themes:
+  available: ['default', 'tiger_girl']
 
 internal:
   ignore_tankopedia_failures: true
@@ -49,7 +61,7 @@ help_urls:
   pl: https://blitzhub.gitbook.io/blitz-statistics-bot/pl-docs
 
 session_widget:
-  url: 'http://<host>:<port>/bot/session_widget_app?player_id=<user_id>'
+  url: 'http://<host>:<port>/bot/session_widget_app?player_id=<user_id>&lang=<lang>'
 
 auth:
   wg_redirect_uri: 'http://<host>:<port>/bot/auth/game?region=<region>'

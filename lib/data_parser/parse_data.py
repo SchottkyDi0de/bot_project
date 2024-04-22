@@ -13,6 +13,7 @@ _tdb = TanksDB()
 def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
     try:
         all_stats = data.data.statistics.all
+        rating_stats = data.data.statistics.rating
 
         data.data.statistics.all.avg_xp = all_stats.xp // all_stats.battles
         data.data.statistics.all.avg_damage = all_stats.damage_dealt // all_stats.battles
@@ -24,11 +25,22 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
         data.data.statistics.all.survival_ratio = (all_stats.survived_battles / all_stats.battles)
         data.data.statistics.all.damage_ratio = safe_divide(all_stats.damage_dealt, all_stats.damage_received)
         data.data.statistics.all.destruction_ratio = safe_divide(all_stats.frags, all_stats.not_survived_battles)
+        
+        data.data.statistics.rating.avg_xp = rating_stats.xp // rating_stats.battles
+        data.data.statistics.rating.avg_damage = rating_stats.damage_dealt // rating_stats.battles
+        data.data.statistics.rating.accuracy = safe_divide(rating_stats.hits, rating_stats.shots) * 100
+        data.data.statistics.rating.winrate = (rating_stats.wins / rating_stats.battles) * 100
+        data.data.statistics.rating.avg_spotted = rating_stats.spotted / rating_stats.battles
+        data.data.statistics.rating.frags_per_battle = rating_stats.frags / rating_stats.battles
+        data.data.statistics.rating.not_survived_battles = rating_stats.battles - rating_stats.survived_battles
+        data.data.statistics.rating.survival_ratio = (rating_stats.survived_battles / rating_stats.battles)
+        data.data.statistics.rating.damage_ratio = safe_divide(rating_stats.damage_dealt, rating_stats.damage_received)
+        data.data.statistics.rating.destruction_ratio = safe_divide(rating_stats.frags, rating_stats.not_survived_battles)
 
-        data.data.statistics.rating.rating = 0
-
-        if data.data.statistics.rating.calibration_battles_left == 0:
+        if data.data.statistics.rating.calibration_battles_left == 0 and data.data.statistics.rating.battles != 0:
             data.data.statistics.rating.rating = round(data.data.statistics.rating.mm_rating * 10 + 3000)
+        else:
+            data.data.statistics.rating.rating = 0
 
         if data.data.statistics.rating.battles != 0:
             data.data.statistics.rating.winrate = (data.data.statistics.rating.wins / data.data.statistics.rating.battles) * 100
@@ -54,7 +66,7 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
 
         tanks = data.data.tank_stats
 
-        for _, (key, tank) in enumerate(tanks.items()):
+        for key, tank in tanks.items():
             if tank.all.battles != 0:
                 tank.all.winrate = (tank.all.wins / tank.all.battles) * 100
                 tank.all.avg_damage = tank.all.damage_dealt // tank.all.battles
@@ -86,66 +98,100 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
     else:
         return data
     
-def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> SessionDiffData:
+def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData, zero_bypass: bool = False) -> SessionDiffData:
     '''
     Return stats difference
     '''
     try:
+        diff_battles = data_new.data.statistics.all.battles - data_old.data.statistics.all.battles
         tank_stats = _generate_tank_session_dict(data_old, data_new)
-        battles_not_updated = True if tank_stats is None else False
+        battles_not_updated = True if diff_battles == 0 else False
+        r_diff_battles = data_new.data.statistics.rating.battles - data_old.data.statistics.rating.battles
+        rating_not_updated = True if r_diff_battles == 0 else False
 
-        data_new_shorted = data_new.data.statistics
-        data_old_shorted = data_old.data.statistics
-
-        r_diff_battles = data_new_shorted.rating.battles - data_old_shorted.rating.battles
-        r_diff_rating = data_new_shorted.rating.rating - data_old_shorted.rating.rating
-        r_diff_winrate = data_new_shorted.rating.winrate - data_old_shorted.rating.winrate
-
-        if r_diff_battles != 0:
-            r_session_winrate = (data_new_shorted.rating.wins - data_old_shorted.rating.wins) / r_diff_battles * 100
-            r_session_rating = (data_new_shorted.rating.mm_rating - data_old_shorted.rating.mm_rating) * 10 + 3000
-        else:
-            r_session_winrate = 0
-            r_session_rating = 0
-
-        if battles_not_updated:
+        if (battles_not_updated and rating_not_updated) and not zero_bypass:
             _log.debug('Different data generating error: player data not updated')
             raise data_parser.NoDiffData('Different data generating error: player data not updated')
         
-        hits = data_new_shorted.all.hits - data_old_shorted.all.hits
-        frags = data_new_shorted.all.frags - data_old_shorted.all.frags
-        wins = data_new_shorted.all.wins - data_old_shorted.all.wins
-        losses = data_new_shorted.all.losses - data_old_shorted.all.losses
-        capture_points = data_new_shorted.all.capture_points - data_old_shorted.all.capture_points
-        damage_dealt = data_new_shorted.all.damage_dealt - data_old_shorted.all.damage_dealt
-        damage_received = data_new_shorted.all.damage_received - data_old_shorted.all.damage_received
-        shots = data_new_shorted.all.shots - data_old_shorted.all.shots
-        xp = data_new_shorted.all.xp - data_old_shorted.all.xp
-        survived_battles = data_new_shorted.all.survived_battles - data_old_shorted.all.survived_battles
-        dropped_capture_points = data_new_shorted.all.dropped_capture_points - data_old_shorted.all.dropped_capture_points
-        
-        diff_battles = data_new_shorted.all.battles - data_old_shorted.all.battles
-        diff_winrate = data_new_shorted.all.winrate - data_old_shorted.all.winrate
-        diff_avg_damage = data_new_shorted.all.avg_damage - data_old_shorted.all.avg_damage
-        diff_accuracy = data_new_shorted.all.accuracy - data_old_shorted.all.accuracy
-        diff_damage_ratio = data_new_shorted.all.damage_ratio - data_old_shorted.all.damage_ratio
-        diff_destruction_ratio = data_new_shorted.all.destruction_ratio - data_old_shorted.all.destruction_ratio
-        diff_frags_per_battle = data_new_shorted.all.frags_per_battle - data_old_shorted.all.frags_per_battle
-        diff_survival_ratio = data_new_shorted.all.survival_ratio - data_old_shorted.all.survival_ratio
-        diff_avg_spotted = data_new_shorted.all.avg_spotted - data_old_shorted.all.avg_spotted
+        if (battles_not_updated and rating_not_updated) and zero_bypass:
+            return SessionDiffData.model_validate(
+                {
+                    'main_diff': dict(),
+                    'main_session' : dict(),
+                    'rating_diff' : dict(),
+                    'rating_session' : dict(),
+                    'tank_stats' : None
+                }
+            )
 
-        if diff_battles > 0:
-            session_winrate = wins / diff_battles * 100
-            session_avg_damage = damage_dealt // diff_battles
-            session_accuracy = safe_divide(hits, shots) * 100
-            session_damage_ratio = safe_divide(damage_dealt, damage_received)
-            session_destruction_ratio = safe_divide(frags, (diff_battles - survived_battles))
-            session_frags_per_battle = safe_divide(frags, diff_battles)
-            session_survival_ratio = safe_divide(wins, diff_battles)
-            session_avg_spotted = safe_divide(data_new_shorted.all.spotted, diff_battles)
-        else:
-            session_winrate = 0
-            session_avg_damage = 0
+        n_data = data_new.data.statistics
+        o_data = data_old.data.statistics
+        
+        hits = n_data.all.hits - o_data.all.hits
+        frags = n_data.all.frags - o_data.all.frags
+        wins = n_data.all.wins - o_data.all.wins
+        losses = n_data.all.losses - o_data.all.losses
+        capture_points = n_data.all.capture_points - o_data.all.capture_points
+        damage_dealt = n_data.all.damage_dealt - o_data.all.damage_dealt
+        damage_received = n_data.all.damage_received - o_data.all.damage_received
+        shots = n_data.all.shots - o_data.all.shots
+        xp = n_data.all.xp - o_data.all.xp
+        survived_battles = n_data.all.survived_battles - o_data.all.survived_battles
+        dropped_capture_points = n_data.all.dropped_capture_points - o_data.all.dropped_capture_points
+        
+        r_hits = n_data.rating.hits - o_data.rating.hits
+        r_frags = n_data.rating.frags - o_data.rating.frags
+        r_wins = n_data.rating.wins - o_data.rating.wins
+        r_losses = n_data.rating.losses - o_data.rating.losses
+        r_capture_points = n_data.rating.capture_points - o_data.rating.capture_points
+        r_damage_dealt = n_data.rating.damage_dealt - o_data.rating.damage_dealt
+        r_damage_received = n_data.rating.damage_received - o_data.rating.damage_received
+        r_shots = n_data.rating.shots - o_data.rating.shots
+        r_xp = n_data.rating.xp - o_data.rating.xp
+        r_survived_battles = n_data.rating.survived_battles - o_data.rating.survived_battles
+        r_dropped_capture_points = n_data.rating.dropped_capture_points - o_data.rating.dropped_capture_points
+        
+        diff_mm_rating = n_data.rating.mm_rating - o_data.rating.mm_rating
+        diff_rating = n_data.rating.rating - o_data.rating.rating
+        r_diff_avg_damage = n_data.rating.avg_damage - o_data.rating.avg_damage
+        r_diff_winrate = n_data.rating.winrate - o_data.rating.winrate
+        r_diff_avg_spotted = n_data.rating.avg_spotted - o_data.rating.avg_spotted
+        r_diff_accuracy = n_data.rating.accuracy - o_data.rating.accuracy
+        r_diff_damage_ratio = n_data.rating.damage_ratio - o_data.rating.damage_ratio
+        r_diff_destruction_ratio = n_data.rating.destruction_ratio - o_data.rating.destruction_ratio
+        r_diff_frags_per_battle = n_data.rating.frags_per_battle - o_data.rating.frags_per_battle
+        r_diff_survival_ratio = n_data.rating.survival_ratio - o_data.rating.survival_ratio
+        r_diff_avg_spotted = n_data.rating.avg_spotted - o_data.rating.avg_spotted
+        
+        diff_winrate = n_data.all.winrate - o_data.all.winrate
+        diff_avg_damage = n_data.all.avg_damage - o_data.all.avg_damage
+        diff_accuracy = n_data.all.accuracy - o_data.all.accuracy
+        diff_damage_ratio = n_data.all.damage_ratio - o_data.all.damage_ratio
+        diff_destruction_ratio = n_data.all.destruction_ratio - o_data.all.destruction_ratio
+        diff_frags_per_battle = n_data.all.frags_per_battle - o_data.all.frags_per_battle
+        diff_survival_ratio = n_data.all.survival_ratio - o_data.all.survival_ratio
+        diff_avg_spotted = n_data.all.avg_spotted - o_data.all.avg_spotted
+
+       
+        session_winrate = safe_divide(wins, diff_battles, 0) * 100
+        session_avg_damage = int(safe_divide(damage_dealt, diff_battles, 0))
+        session_accuracy = safe_divide(hits, shots, 0) * 100
+        session_damage_ratio = safe_divide(damage_dealt, damage_received, 0)
+        session_destruction_ratio = safe_divide(frags, (diff_battles - survived_battles), 0)
+        session_frags_per_battle = safe_divide(frags, diff_battles, 0)
+        session_survival_ratio = safe_divide(wins, diff_battles, 0)
+        session_avg_spotted = safe_divide(n_data.all.spotted, diff_battles, 0)
+
+        session_rating = diff_mm_rating * 100 + 3000
+        r_session_winrate = safe_divide(r_wins, r_diff_battles) * 100
+        r_session_avg_damage = int(safe_divide(r_damage_dealt, r_diff_battles))
+        r_session_accuracy = safe_divide(r_hits, r_shots) * 100
+        r_session_damage_ratio = safe_divide(r_damage_dealt, r_damage_received)
+        r_session_destruction_ratio = safe_divide(r_frags, (r_diff_battles - r_survived_battles))
+        r_session_frags_per_battle = safe_divide(r_frags, r_diff_battles)
+        r_session_survival_ratio = safe_divide(r_wins, r_diff_battles)
+        r_session_avg_spotted = safe_divide(n_data.rating.spotted, r_diff_battles)
+            
 
         diff_data_dict = {
             'main_diff' : {
@@ -199,15 +245,55 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
             },
 
             'rating_diff' : {
-                'winrate' : r_diff_winrate,
-                'rating' : r_diff_rating,
-                'battles' : r_diff_battles
+                'hits': r_hits,
+                'frags': r_frags,
+                'wins': r_wins,
+                'losses': r_losses,
+                'capture_points': r_capture_points,
+                'battles': r_diff_battles,
+                'damage_dealt': r_damage_dealt,
+                'damage_received': r_damage_received,
+                'shots': r_shots,
+                'xp': r_xp,
+                'survived_battles': r_survived_battles,
+                'dropped_capture_points': r_dropped_capture_points,
+                'rating': diff_rating,
+                
+                'winrate': r_diff_winrate,
+                'avg_damage': r_diff_avg_damage,
+                'battles': r_diff_battles,
+                'accuracy': r_diff_accuracy,
+                'damage_ratio': r_diff_damage_ratio,
+                'destruction_ratio': r_diff_destruction_ratio,
+                'frags_per_battle': r_diff_frags_per_battle,
+                'survival_ratio': r_diff_survival_ratio,
+                'avg_spotted': r_diff_avg_spotted
             },
 
             'rating_session' : {
-                'winrate' : r_session_winrate,
-                'rating' : round(r_session_rating),
-                'battles' : r_diff_battles
+                'hits' : r_hits,
+                'frags' : r_frags,
+                'wins' : r_wins,
+                'losses' : r_losses,
+                'capture_points' : r_capture_points,
+                'battles' : r_diff_battles,
+                'damage_dealt' : r_damage_dealt,
+                'damage_received' : r_damage_received,
+                'shots' : r_shots,
+                'xp' : r_xp,
+                'survived_battles' : r_survived_battles,
+                'dropped_capture_points' : dropped_capture_points,
+                'rating': session_rating,
+                
+                'winrate': r_session_winrate,
+                'avg_damage': r_session_avg_damage,
+                'battles': r_diff_battles,
+                'accuracy': r_session_accuracy,
+                'damage_ratio': r_session_damage_ratio,
+                'destruction_ratio': r_session_destruction_ratio,
+                'frags_per_battle': r_session_frags_per_battle,
+                'survival_ratio': r_session_survival_ratio,
+                'avg_spotted': r_session_avg_spotted
             },
             'tank_stats' : tank_stats,
         }
@@ -221,6 +307,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData) ->
 def _generate_tank_session_dict(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> None | dict[str, TankSessionData]:
     if not isinstance(data_old, PlayerGlobalData) or not isinstance(data_new, PlayerGlobalData):
         raise TypeError('Wrong data type, expected PlayerGlobalData for both data_old and data_new')
+    
     tank_stats = None
     tanks = data_new.data.tank_stats
     tanks_old = data_old.data.tank_stats

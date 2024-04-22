@@ -10,7 +10,6 @@ from time import time
 from discord.ext.commands import Context
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
-import lib.api.async_wotb_api as async_wotb_api
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import ImageSettings
 from lib.data_classes.db_server import ServerSettings
@@ -20,6 +19,7 @@ from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
 from lib.image.for_image.medals import Medals
+from lib.image.themes.theme_loader import get_theme
 from lib.image.for_image.watermark import Watermark
 from lib.image.utils.resizer import center_crop
 from lib.locale.locale import Text
@@ -27,6 +27,7 @@ from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
 from lib.image.for_image.stats_coloring import colorize
+from lib.image.for_image.icons import LeaguesIcons
 
 _log = get_logger(__file__, 'ImageCommonLogger', 'logs/image_common.log')
 _config = Config().get()
@@ -76,26 +77,6 @@ class BackgroundRectangleMap():
     medals = (55, 245, 645, 410)
     rating = (55, 425, 645, 575)
     total = (55, 590, 645, 1210)
-
-
-class Leagues():
-    """Class that represents different leagues in the application."""
-
-    empty = Image.open('res/image/leagues/no-rating.png', formats=['png'])
-    """Image representing an empty league."""
-
-    gold = Image.open('res/image/leagues/gold.png', formats=['png'])
-    """Image representing a gold league."""
-
-    platinum = Image.open('res/image/leagues/platinum.png', formats=['png'])
-    """Image representing a platinum league."""
-
-    brilliant = Image.open('res/image/leagues/brilliant.png', formats=['png'])
-    """Image representing a brilliant league."""
-
-    calibration = Image.open('res/image/leagues/calibr.png', formats=['png'])
-    """Image representing a calibration league."""
-
 
 class Flags():
     eu = Image.open('res/image/flags/eu.png', formats=['png'])
@@ -243,36 +224,41 @@ class ValueNormalizer():
     @staticmethod
     def other(val, enable_null=False, str_bypass=False):
         """
-        Normalizes a value.
+        Normalizes a value based on certain conditions.
 
         Args:
             val (float or int): The value to normalize.
+            enable_null (bool): If True, returns '0' for zero values. Defaults to False.
+            str_bypass (bool): If True, returns the value as a string if it's a string. Defaults to False.
 
         Returns:
-            str: The normalized value as a string.
-                  If val is 0, returns '—'.
-                  If val is a string, returns '—'.
-                  If val is between 100,000 and 1,000,000, returns the value divided by 1,000
-                    rounded to 2 decimal places and appended with 'K'.
-                  If val is greater than or equal to 1,000,000, returns the value divided by 1,000,000
-                    rounded to 2 decimal places and appended with 'M'.
-                  Otherwise, returns the value as a string.
+            str:
+            The normalized value as a string.
+            If val is 0 or equal to 0, returns '—' if enable_null is False, else '0'.
+            If val is a string, returns '—'.
+            If val is between 100,000 and 1,000,000, returns the value divided by 1,000
+            rounded to 2 decimal places and appended with 'K'.
+            If val is greater than or equal to 1,000,000, returns the value divided by 1,000,000
+            rounded to 2 decimal places and appended with 'M'.
+            Otherwise, returns the value as a string.
         """
-        if str_bypass:
-            if isinstance(val, str):
-                return val
+        # Convert value to string if str_bypass is True and it's a string
+        if str_bypass and isinstance(val, str):
+            return val
 
+        # Check if value is 0 or equal to 0, return special value if enable_null is False
         if round(val) == 0:
             if not enable_null:
                 return '—'
             else:
                 return '0'
 
-        if type(val) == str:
+        # Check if value is a string, return special value
+        if isinstance(val, str):
             return '—'
 
+        # Define the index and round the value based on certain conditions
         index = ['K', 'M']
-
         if val >= 100_000 and val < 1_000_000:
             val = str(round(val / 1_000, 2)) + index[0]
         elif val >= 1_000_000:
@@ -280,6 +266,7 @@ class ValueNormalizer():
         else:
             return str(val)
 
+        # Return the normalized value
         return val
     
     @staticmethod
@@ -338,7 +325,7 @@ class ImageSize:
 class ImageGen():
     text = None
     fonts = Fonts()
-    leagues = Leagues()
+    leagues = LeaguesIcons()
     flags = Flags()
     value = None
     data = None
@@ -384,8 +371,12 @@ class ImageGen():
         user_bg = pdb.get_member_image(ctx.author.id) is not None
         server_bg = sdb.get_server_image(ctx.guild.id) is not None
         allow_bg = server_settings.allow_custom_backgrounds
-
-        if image_settings.use_custom_bg or server_bg:
+        
+        if image_settings.theme != 'default':
+            theme = get_theme(image_settings.theme)
+            self.image = center_crop(theme.bg, (ImageSize.max_width, ImageSize.max_height))
+            self.image_settings = theme.image_settings
+        elif (image_settings.use_custom_bg or server_bg):
             if user_bg and allow_bg and image_settings.use_custom_bg:
                 image_bytes = base64.b64decode(pdb.get_member_image(ctx.author.id))
                 if image_bytes != None:

@@ -132,6 +132,9 @@ def center_crop(image: Image.Image, size: tuple[int, int]) -> Image.Image:
     """
     if not isinstance(image, Image.Image):
         raise TypeError('image must be PIL.Image.Image')
+    
+    if image.size == size:
+        return image
         
     x_oversize = image.size[0] - size[0]
     y_oversize = image.size[1] - size[1]

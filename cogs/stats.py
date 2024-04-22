@@ -55,7 +55,7 @@ class Stats(commands.Cog):
                     'uk': Text().get('ua').frequent.common.nickname
                 },
                 required=True,
-            ),
+            ), # type: ignore
             region: Option(
                 str,
                 description=Text().get('en').frequent.common.region,
@@ -66,7 +66,7 @@ class Stats(commands.Cog):
                 },
                 choices=Config().get().default.available_regions,
                 required=True
-            ),
+            ), # type: ignore
         ):
         Text().load_from_context(ctx)
         check_user(ctx)
@@ -178,7 +178,12 @@ class Stats(commands.Cog):
             await ctx.respond(embed=getattr(self.err_msg, exception)())
             return None
         else:
-            img_data = self.img_gen.generate(ctx, data, image_settings, server_settings)
+            img_data = self.img_gen.generate(
+                ctx=ctx, 
+                data=data, 
+                image_settings=image_settings, 
+                server_settings=server_settings
+                )
             return img_data
 
 

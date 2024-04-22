@@ -28,3 +28,10 @@ class StatsIcons:
     damage_received = damage_dealt.rotate(180).copy()
     dropped_capture_points = capture_points
     survival_ratio = survived
+    
+class LeaguesIcons:
+    gold = Image.open('res/icons/leagues/gold.png')
+    platinum = Image.open('res/icons/leagues/platinum.png')
+    brilliant = Image.open('res/icons/leagues/brilliant.png')
+    calibration = Image.open('res/icons/leagues/calibr.png')
+    empty = Image.open('res/icons/leagues/no-rating.png')

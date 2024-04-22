@@ -6,11 +6,17 @@ from pydantic import BaseModel
 
 
 class StatsViewSettings(BaseModel):
-    slots: dict = {
+    common_slots: dict = {
         'slot_1' : 'winrate',
         'slot_2' : 'avg_damage',
         'slot_3' : 'battles',
         'slot_4' : 'accuracy'
+    }
+    rating_slots: dict = {
+        'slot_1' : 'winrate',
+        'slot_2' : 'avg_damage',
+        'slot_3' : 'battles',
+        'slot_4' : 'rating'
     }
 
 class WidgetSettings(BaseModel):
@@ -33,6 +39,7 @@ class SessionSettings(BaseModel):
     stats_view: StatsViewSettings = StatsViewSettings()
 
 class ImageSettings(BaseModel):
+    theme: str = 'default'
     colorize_stats: bool = True
     use_custom_bg: bool = True
     hide_nickname: bool = False

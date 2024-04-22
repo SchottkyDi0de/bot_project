@@ -31,10 +31,17 @@ class Rating(BaseModel):
     max_xp: Optional[int] = None
     max_xp_tank_id: Optional[int] = None
 
-    rating: Optional[float] = None
-    winrate: Optional[float] = None
     rating: Optional[int] = None
+    avg_xp: Optional[int] = None
+    avg_damage: Optional[int] = None
     accuracy: Optional[float] = None
+    winrate: Optional[float] = None
+    avg_spotted: Optional[float] = None
+    frags_per_battle: Optional[float] = None
+    not_survived_battles: Optional[int] = None
+    survival_ratio: Optional[float] = None
+    damage_ratio: Optional[float] = None
+    destruction_ratio: Optional[float] = None
 
 
 class All(BaseModel):

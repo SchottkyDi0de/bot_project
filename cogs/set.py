@@ -19,7 +19,6 @@ from lib.data_classes.db_server import set_server_settings
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.error_handler.common import hook_exceptions
-from lib.exceptions.api import NeedMoreBattlesError
 from lib.logger.logger import get_logger
 from lib.locale.locale import Text
 from lib.utils.nickname_handler import handle_nickname
@@ -62,7 +61,7 @@ class Set(commands.Cog):
                 },
                 choices=_config.default.available_locales,
                 required=True
-            ),
+            ), # type: ignore
         ):
         check_user(ctx)
         
@@ -96,7 +95,7 @@ class Set(commands.Cog):
                     'uk': Text().get('ua').cmds.set_player.descr.sub_descr.nickname
                 },
                 required=True
-            ),
+            ), # type: ignore
             region: Option(
                 str,
                 description=Text().get('en').cmds.set_player.descr.sub_descr.region,
@@ -107,7 +106,7 @@ class Set(commands.Cog):
                 },
                 choices=_config.default.available_regions,
                 required=True
-            )
+            ) # type: ignore
         ):
         Text().load_from_context(ctx)
         check_user(ctx)
@@ -148,7 +147,7 @@ class Set(commands.Cog):
                     'uk': Text().get('ua').cmds.server_settings.descr.sub_descr.allow_custom_backgrounds
                 },
                 required=False,
-            )
+            ) # type: ignore
         ):
         Text().load_from_context(ctx)
         check_user(ctx)
@@ -196,7 +195,7 @@ class Set(commands.Cog):
                     'uk': Text().get('ua').cmds.set_background.descr.sub_descr.image
                     },
                 required=True
-                ),
+                ), # type: ignore
             server: Option(
                 bool,
                 description=Text().get('en').cmds.set_background.descr.sub_descr.server,
@@ -206,14 +205,14 @@ class Set(commands.Cog):
                     'uk': Text().get('ua').cmds.set_background.descr.sub_descr.server
                     },
                 required=False
-                ),
+                ), # type: ignore
             resize_mode: Option(
                 str, 
                 description='Test resize mode',
                 required=False,
                 default='AUTO',
                 choices=['AUTO', 'RESIZE', 'CROP_OR_FILL'],
-                )
+                ) # type: ignore
             ):
         check_user(ctx)
 
@@ -323,29 +322,29 @@ class Set(commands.Cog):
             'uk': Text().get('ua').cmds.session_view_settings.descr.this
         }
     )
-    async def session_view_settings(
+    async def stats_position(
         self, 
         ctx: ApplicationContext,
         slot_1: Option(
             str,
             choices=_config.image.available_stats,
             required=True,
-            ),
+            ), # type: ignore
         slot_2: Option(
             str,
             choices=_config.image.available_stats,
             required=True,
-            ),
+            ), # type: ignore
         slot_3: Option(
             str,
             choices=_config.image.available_stats,
             required=True,
-            ),
+            ), # type: ignore
         slot_4: Option(
             str,
             choices=_config.image.available_stats,
             required=True,
-            ),
+            ), # type: ignore
         ):
         check_user(ctx)
         Text().load_from_context(ctx)
@@ -355,6 +354,7 @@ class Set(commands.Cog):
             'slot_3': slot_3,
             'slot_4': slot_4
         }
+        stats_view_settings = self.db.get_stats_settings(ctx.author.id)
         for slot, value in stats_settings.copy().items():
             if value == 'empty':
                 del stats_settings[slot]
@@ -375,7 +375,85 @@ class Set(commands.Cog):
             )
             return
                 
-        self.db.set_stats_settings(ctx.author.id, StatsViewSettings.model_validate({'slots': parsed_stats_settings}))
+        self.db.set_stats_settings(
+            ctx.author.id, StatsViewSettings.model_validate(
+                {'common_slots': parsed_stats_settings, 'rating_slots': stats_view_settings.rating_slots}
+                )
+            )
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=Text().get().cmds.session_view_settings.info.success,
+                colour='green'
+            )
+        )
+
+    @commands.slash_command(
+        description=Text().get('en').cmds.session_view_settings.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.session_view_settings.descr.this,
+            'pl': Text().get('pl').cmds.session_view_settings.descr.this,
+            'uk': Text().get('ua').cmds.session_view_settings.descr.this
+        }
+    )
+    async def stats_position_rating(
+        self, 
+        ctx: ApplicationContext,
+        slot_1: Option(
+            str,
+            choices=_config.image.available_rating_stats,
+            required=True,
+            ), # type: ignore
+        slot_2: Option(
+            str,
+            choices=_config.image.available_rating_stats,
+            required=True,
+            ), # type: ignore
+        slot_3: Option(
+            str,
+            choices=_config.image.available_rating_stats,
+            required=True,
+            ), # type: ignore
+        slot_4: Option(
+            str,
+            choices=_config.image.available_rating_stats,
+            required=True,
+            ), # type: ignore
+        ):
+        check_user(ctx)
+        Text().load_from_context(ctx)
+        stats_settings = {
+            'slot_1': slot_1,
+            'slot_2': slot_2,
+            'slot_3': slot_3,
+            'slot_4': slot_4
+        }
+        stats_view_settings = self.db.get_stats_settings(ctx.author.id)
+        for slot, value in stats_settings.copy().items():
+            if value == 'empty':
+                del stats_settings[slot]
+                continue
+            
+        parsed_stats_settings = {}
+        for index, key in enumerate(stats_settings.keys()):
+            parsed_stats_settings[f'slot_{index + 1}'] = stats_settings[key]
+        
+        if len(parsed_stats_settings) == 0:
+            await ctx.respond(
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    title=Text().get().frequent.info.warning,
+                    text=Text().get().cmds.session_view_settings.errors.empty_slots,
+                    colour='orange'
+                )
+            )
+            return
+                
+        self.db.set_stats_settings(
+            ctx.author.id, StatsViewSettings.model_validate(
+                {'rating_slots': parsed_stats_settings, 'common_slots': stats_view_settings.common_slots}
+                )
+            )
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
@@ -392,7 +470,7 @@ class Set(commands.Cog):
             'uk': Text().get('ua').cmds.session_view_settings_reset.descr.this
         }
     )
-    async def session_view_settings_reset(self, ctx: ApplicationContext):
+    async def stats_position_reset(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
         
@@ -425,7 +503,7 @@ class Set(commands.Cog):
                 'uk': Text().get('ua').cmds.set_lock.descr.sub_descr.lock
             },
             required=True
-            )
+            ) # type: ignore
         ):
         Text().load_from_context(ctx)
         check_user(ctx)
@@ -442,6 +520,43 @@ class Set(commands.Cog):
             embed=self.inf_msg.custom(
                 Text().get(),
                 text=text.set_true if lock else text.set_false,
+                colour='green'
+            )
+        )
+    
+    @commands.slash_command(
+        description=Text().get('en').cmds.set_theme.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.set_theme.descr.this,
+            'pl': Text().get('pl').cmds.set_theme.descr.this,
+            'uk': Text().get('ua').cmds.set_theme.descr.this
+        }
+    )
+    async def set_theme(
+        self, 
+        ctx: ApplicationContext,
+        theme: Option(
+            str,
+            description=Text().get('en').cmds.set_theme.items.theme,
+            description_localizations={
+                'ru': Text().get('ru').cmds.set_theme.items.theme,
+                'pl': Text().get('pl').cmds.set_theme.items.theme,
+                'uk': Text().get('ua').cmds.set_theme.items.theme
+            },
+            choices=_config.themes.available
+            ) # type: ignore
+        ):
+        Text().load_from_context(ctx)
+        check_user(ctx)
+        
+        image_settings = self.db.get_image_settings(ctx.author.id)
+        image_settings.theme = theme
+        self.db.set_image_settings(ctx.author.id, image_settings)
+        
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=Text().get().cmds.set_theme.info.success,
                 colour='green'
             )
         )

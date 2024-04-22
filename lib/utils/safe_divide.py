@@ -1,14 +1,15 @@
-def safe_divide(dividend: float | int, divisor: float | int) -> float:
+def safe_divide(dividend: float | int, divisor: float | int, default: float = 1.0) -> float:
     '''
     This function safely divides dividend by divisor
-    if divisor is 0, returns 0.0 (float)
+    if divisor is 0, returns default (1.0)
     
     args:
         dividend: int | float
         divisor: int | float
+        default: int | float = 1.0
         
     returns:
-        float
+        int | float
         
     raises:
         TypeError
@@ -19,6 +20,6 @@ def safe_divide(dividend: float | int, divisor: float | int) -> float:
         raise TypeError(f'Type of divisor must be float or int, but {type(divisor)} was given')
         
     if divisor == 0:
-        return 1.0
+        return default
     else:
         return dividend / divisor

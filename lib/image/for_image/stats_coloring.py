@@ -57,7 +57,7 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
                 return Colors.green
             elif val < 2500:
                 return Colors.cyan
-            elif val >= 3000:
+            else:
                 return Colors.purple
 
         elif stats_type == 'battles':
@@ -67,7 +67,7 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
                 return Colors.green
             elif val < 30000:
                 return Colors.cyan
-            elif val < 50000:
+            else:
                 return Colors.purple
 
         elif stats_type == 'battles' and rating:
@@ -77,7 +77,7 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
                 return Colors.green
             elif val < 6000:
                 return Colors.cyan
-            elif val >= 6000:
+            else:
                 return Colors.purple
 
         elif stats_type == 'frags_per_battle':
@@ -87,7 +87,7 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
                 return Colors.green
             elif val < 1.3:
                 return Colors.cyan
-            elif val >= 1.3:
+            else:
                 return Colors.purple
 
         elif stats_type == 'damage_ratio':
@@ -97,7 +97,7 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
                 return Colors.green
             elif val < 2:
                 return Colors.cyan
-            elif val >= 2:
+            else:
                 return Colors.purple
 
         elif stats_type == 'destruction_ratio':
@@ -107,7 +107,7 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
                 return Colors.green
             elif val < 2.4:
                 return Colors.cyan
-            elif val >= 2.4:
+            else:
                 return Colors.purple
 
         elif stats_type == 'avg_spotted':
@@ -117,7 +117,7 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
                 return Colors.green
             elif val < 1.5:
                 return Colors.cyan
-            elif val >= 1.5:
+            else:
                 return Colors.purple
 
         elif stats_type == 'accuracy':
@@ -127,7 +127,7 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
                 return Colors.green
             elif val < 85:
                 return Colors.cyan
-            elif val >= 85:
+            else:
                 return Colors.purple
         else:
             return default_color
