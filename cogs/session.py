@@ -273,7 +273,11 @@ class Session(commands.Cog):
                 session_time = now_time - last_stats.timestamp
                 
                 battles_before = last_stats.data.statistics.all.battles
-                battles_after = await self.api.get_player_battles(last_stats.region, str(last_stats.id))
+                r_battles_before = last_stats.data.statistics.rating.battles
+                battles_after, r_battles_after = await self.api.get_player_battles(last_stats.region, str(last_stats.id))
+                
+                diff_battles = battles_after - battles_before
+                diff_r_battles = r_battles_after - r_battles_before
 
                 text = insert_data(
                     Text().get().cmds.session_state.items.started,
@@ -284,7 +288,7 @@ class Session(commands.Cog):
                         'timezone' : session_settings.timezone,
                         'time': TimeConverter.formatted_from_secs(int(session_time.total_seconds()), long_time_format),
                         'time_left': TimeConverter.formatted_from_secs(int(time_left.total_seconds()), long_time_format),
-                        'battles': str(battles_after - battles_before)
+                        'battles': f'{diff_battles} | {diff_r_battles}'
                     }
                 ) if session_settings.is_autosession else \
                     insert_data(

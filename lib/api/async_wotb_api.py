@@ -351,7 +351,8 @@ class API:
         exact: bool = True, 
         raw_dict: bool = False,
         requested_by: DBPlayer | None = None,
-        ignore_lock: bool = False
+        ignore_lock: bool = False,
+        disable_cache: bool = False
         ) -> PlayerGlobalData:
         """
         Asynchronously retrieves player statistics for a game. Optionally filters by game ID, player search string, and region.
@@ -387,16 +388,17 @@ class API:
             ignore_lock=ignore_lock
             )
         
-        cached_data = self.cache.get((str(player['account_id']), region))
-        if cached_data is not None:
-            data = PlayerGlobalData.model_validate(cached_data)
-            if not ignore_lock:
-                if self.pdb.find_lock(player['account_id'], requested_by):
-                    raise api_exceptions.LockedPlayer()
-            data.from_cache = True
-            return get_normalized_data(data)
-        else:
-            need_caching = True
+        if not disable_cache:
+            cached_data = self.cache.get((str(player['account_id']), region))
+            if cached_data is not None:
+                data = PlayerGlobalData.model_validate(cached_data)
+                if not ignore_lock:
+                    if self.pdb.find_lock(player['account_id'], requested_by):
+                        raise api_exceptions.LockedPlayer()
+                data.from_cache = True
+                return get_normalized_data(data)
+            else:
+                need_caching = True
         
         self.player['id'] = player['account_id']
 
@@ -415,6 +417,7 @@ class API:
 
         default_params = {"account_id": player['account_id'], "region": region}
         self.player, self.player_stats = {}, {}
+        _log.debug('start collect data')
         async with aiohttp.ClientSession() as self.session:
             async with asyncio.TaskGroup() as tg:
                 for i, task in enumerate(tasks):
@@ -441,6 +444,7 @@ class API:
             player_stats.from_cache = False
             self.cache.add((str(game_id), region), player_stats.model_dump())
 
+        _log.debug('all user data collected')
         return get_normalized_data(player_stats)
 
     def create_task(
@@ -531,7 +535,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
-    async def get_player_battles(self, region: str, account_id: str, **kwargs) -> int:
+    async def get_player_battles(self, region: str, account_id: str, **kwargs) -> tuple[int, int]:
         """
         Retrieves the number of battles played by a player.
 
@@ -541,20 +545,24 @@ class API:
             **kwargs: Additional keyword arguments.
 
         Returns:
-            int: The number of battles played by the player.
+            tuple: The number of common and rating battles of the player.
         """
         url_get_battles = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
             f'?application_id={self._get_id_by_reg(region)}'
             f'&account_id={account_id}'
             f'&fields=-statistics.clan'
+            f'&extra=statistics.rating'
         )
         await self.rate_limiter.wait()
         async with aiohttp.ClientSession() as session:
             async with session.get(url_get_battles, verify_ssl=False) as response:
-                data = await self.response_handler(response)
+                data = await self.response_handler(response, check_data=True)
 
-        return data['data'][str(account_id)]['statistics']['all']['battles']
+        return (
+            data['data'][str(account_id)]['statistics']['all']['battles'], 
+            data['data'][str(account_id)]['statistics']['rating']['battles']
+        )
     
 
     @retry(
@@ -583,7 +591,6 @@ class API:
             EmptyDataError: If the "battles" field is not present in the output data.
             NeedMoreBattlesError: If the player has less than 100 battles.
         """
-        _log.debug('Get main stats started')
         url_get_stats = insert_data(
             _config.game_api.urls.get_stats,
             {
@@ -622,7 +629,6 @@ class API:
         Returns:
             None
         """
-        _log.debug('Get achievements started')
         url_get_achievements = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/achievements/'
             f'?application_id={self._get_id_by_reg(region)}'
@@ -668,7 +674,6 @@ class API:
             api_exceptions.RequestsLimitExceeded: If the API requests limit is exceeded.
             api_exceptions.SourceNotAvailable: If the API source is not available.
         """
-        _log.debug('Get clan stats started')
         url_get_clan_stats = (
             f'https://{self._get_url_by_reg(region)}/wotb/clans/accountinfo/'
             f'?application_id={self._get_id_by_reg(region)}'
@@ -718,7 +723,6 @@ class API:
             api_exceptions.RequestsLimitExceeded: If the requests limit has been exceeded.
             api_exceptions.SourceNotAvailable: If the data source is not available.
         """
-        _log.debug('Get player tank stats started')
         url_get_tanks_stats = (
             f'https://{self._get_url_by_reg(region)}/wotb/tanks/stats/'
             f'?application_id={self._get_id_by_reg(region)}'

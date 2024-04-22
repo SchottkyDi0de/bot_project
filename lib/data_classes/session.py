@@ -101,15 +101,53 @@ class MainSession(BaseModel):
 
 
 class RatingDiff(BaseModel):
-    winrate: float = 0.0
+    hits: int = 0
+    frags: int = 0
+    wins: int = 0
+    losses: int = 0
+    capture_points: int = 0
+    damage_dealt: int = 0
+    damage_received: int = 0
+    shots: int = 0
+    xp: int = 0
+    survived_battles: int = 0
+    dropped_capture_points: int = 0
     rating: int = 0
+    
+    winrate: float = 0.0
+    avg_damage: int = 0
     battles: int = 0
+    accuracy: float = 0.0
+    damage_ratio: float = 0.0
+    destruction_ratio: float = 0.0
+    frags_per_battle: float = 0.0
+    survival_ratio: float = 0.0
+    avg_spotted: float = 0.0
 
 
 class RatingSession(BaseModel):
-    winrate: float = 0.0
+    hits: int = 0
+    frags: int = 0
+    wins: int = 0
+    losses: int = 0
+    capture_points: int = 0
+    damage_dealt: int = 0
+    damage_received: int = 0
+    shots: int = 0
+    xp: int = 0
+    survived_battles: int = 0
+    dropped_capture_points: int = 0
     rating: int = 0
+    
+    winrate: float = 0.0
+    avg_damage: int = 0
     battles: int = 0
+    accuracy: float = 0.0
+    damage_ratio: float = 0.0
+    destruction_ratio: float = 0.0
+    frags_per_battle: float = 0.0
+    survival_ratio: float = 0.0
+    avg_spotted: float = 0.0
     
 
 class SessionDiffData(BaseModel):

@@ -2,7 +2,9 @@ import traceback
 from asyncio import sleep
 from typing import Annotated, Optional
 from urllib import parse
+from asyncio import run
 
+from nicegui import app, ui
 from fastapi import Cookie, FastAPI, Header, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
@@ -29,6 +31,7 @@ from lib.data_parser.parse_data import get_normalized_data, get_session_stats
 from lib.data_classes.image import ImageGenExtraSettings
 from lib.exceptions.api import APIError
 from lib.utils.string_parser import insert_data
+from web.components.session_widget import init_app
 
 _pdb = PlayersDB()
 _env_config = EnvConfig()
@@ -150,7 +153,7 @@ class Server:
     def __init__(self):
         self.app = app
         self.app.mount('/bot/register_success', asgi_app(auth_complete))
-        self.app.mount('/bot/session_widget_app', asgi_app(session_widget_app))
+        # self.app.mount('/bot/session_widget_app', asgi_app(session_widget_app))
     
     @app.get('/', include_in_schema=False)
     async def root():
@@ -389,8 +392,8 @@ class Server:
     
 def run():
     server = Server()
+    init_app(server.app)
     return server.app
-    
 
 if __name__ == '__main__':
-    uvicorn.run(Server().app, host=_config.server.host, port=_config.server.port)
+    print('Server cannot be run directly, use -> \nuvicorn server:app --workers 1 --host blitzhub.eu --port 80')

@@ -31,25 +31,10 @@ from lib.utils.color_converter import get_tuple_from_color
 from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
 from lib.image.utils.resizer import center_crop
+from lib.image.for_image.icons import LeaguesIcons
 
 _log = get_logger(__file__, 'ImageSessionLogger', 'logs/image_session.log')
 _config = Config().get()
-
-
-class BlockTypes(Enum):
-    main_stats = 0
-    rating_stats = 1
-    full_tank_stats = 2
-    short_tank_stats = 3
-
-
-class Leagues:
-    """A class that holds different league images."""
-    empty = Image.open('res/image/leagues/no-rating.png', formats=['png'])  # Empty league image
-    gold = Image.open('res/image/leagues/gold.png', formats=['png'])  # Gold league image
-    platinum = Image.open('res/image/leagues/platinum.png', formats=['png'])  # Platinum league image
-    brilliant = Image.open('res/image/leagues/brilliant.png', formats=['png'])  # Brilliant league image
-    calibration = Image.open('res/image/leagues/calibr.png', formats=['png'])  # Calibration league image
 
 
 class BlocksStack():
@@ -65,6 +50,9 @@ class BlocksStack():
         self.max_small_blocks = small_blocks
         
     def add_blocks(self, val: int):
+        if val == 0:
+            return
+        
         for _ in range(val):
             if self.blocks < self.max_blocks:
                 self.blocks += 1
@@ -102,8 +90,10 @@ class RelativeCoordinates():
         - img_size (tuple): Size of the image (width, height)
         """
         
-        self.slots = len(view_settings.slots.keys())
+        self.slots = len(view_settings.common_slots.keys())
+        self.rating_slots = len(view_settings.rating_slots.keys())
         self.x_coords = []
+        self.x_coords_rating = []
         
         for index in range(self.slots + 1):
             if index == 0:
@@ -111,13 +101,19 @@ class RelativeCoordinates():
             
             self.x_coords.append(image_size[0]//(self.slots + 1) * index)
             
+        for index in range(self.rating_slots + 1):
+            if index == 0:
+                continue
+            
+            self.x_coords_rating.append(image_size[0]//(self.rating_slots + 1) * index)
+            
         self.center_x = image_size[0] // 2
         
     def blocks_labels(self, offset_y):
         return (self.center_x, offset_y + 15)
 
         # Main stats labels position in the stats block
-    def main_stast_labels(self, offset_y) -> Dict[str, tuple]:
+    def main_stats_labels(self, offset_y) -> Dict[str, tuple]:
         coords = {}
         
         for index in range(self.slots):
@@ -138,10 +134,12 @@ class RelativeCoordinates():
         return self.main_stats_icons(offset_y, icons_size)
     
     def rating_stats_icons(self, offset_y, icons_size: tuple[int, int]):
-        return {
-            'winrate': (150 - icons_size[1] // 2, offset_y + 40),  # Winrate icon
-            'battles': (553 - icons_size[1] // 2, offset_y + 40),  # Battles icon
-        }
+        coords = {}
+        
+        for index in range(self.rating_slots):
+            coords[f'slot_{index + 1}'] = (self.x_coords_rating[index] - icons_size[1] // 2, offset_y + 40)
+            
+        return coords
 
     # Main stats values position in the stats block
     def main_stats(self, offset_y):
@@ -172,38 +170,36 @@ class RelativeCoordinates():
 
     # Rating labels
     def rating_labels(self, offset_y):
-        return {
-            'winrate': (150, 225 + offset_y),  # Winrate label
-            'battles': (553, 225 + offset_y),  # Battles label
-        }
+        coords = {}
         
-    def rating_league_label(self, offset_y) -> tuple[int]:
-        return (self.center_x, offset_y + 225)
-    
-    def rating_league_icon(self, offset_y) -> tuple[int]:
-        icon_width = Leagues.empty.size[0]
-        return (self.center_x - icon_width // 2, offset_y + 40)
+        for index in range(self.rating_slots):
+            coords[f'slot_{index + 1}'] = (self.x_coords_rating[index], offset_y + 196)
+            
+        return coords
         
     def rating_stats(self, offset_y):
-        return {
-            'winrate': (150, 102 + offset_y),  # Winrate stat
-            'rating': (self.center_x, 102 + offset_y),  # Rating stat
-            'battles': (553, 102 + offset_y),  # Battles stat
-        }
+        coords = {}
+        
+        for index in range(self.rating_slots):
+            coords[f'slot_{index + 1}'] = (self.x_coords_rating[index], offset_y + 97)
+        
+        return coords
     
     def rating_session_stats(self, offset_y):
-        return {
-            'winrate': (150, 152 + offset_y),  # Winrate session stats
-            'rating': (self.center_x, 152 + offset_y),  # Rating session stats
-            'battles': (553, 152 + offset_y),  # Battles session stats
-        }
+        coords = {}
+        
+        for index in range(self.rating_slots):
+            coords[f'slot_{index + 1}'] = (self.x_coords_rating[index], 140 + offset_y)
+            
+        return coords
         
     def rating_diff_stats(self, offset_y):
-        return {
-            'winrate': (150, 190 + offset_y),  # Winrate difference stats
-            'rating': (self.center_x, 190 + offset_y),  # Rating difference stats
-            'battles': (553, 190 + offset_y),  # Battles difference stats
-        }
+        coords = {}
+        
+        for index in range(self.rating_slots):
+            coords[f'slot_{index + 1}'] = (self.x_coords_rating[index], 170 + offset_y)
+            
+        return coords
         
     def tank_stats_labels(self, offset_y):
         coords = {}
@@ -263,44 +259,54 @@ class RelativeCoordinates():
 
 
 class DiffValues():
-    def __init__(self, diff_data: SessionDiffData, stats_view: StatsViewSettings) -> None:
+    def __init__(self, diff_data: SessionDiffData, stats_view_settings: StatsViewSettings) -> None:
         """
         Initializes a DiffValues object with the given diff_data.
 
         Args:
             diff_data (SessionDiffData): The diff_data object containing the differences.
+            stats_view (StatsViewSettings): The stats_view object containing the settings.
 
         Returns:
             None
         """
+        
         self.val_normalizer = ValueNormalizer()
         self.diff_data = diff_data
-        self.stats_view = stats_view
+        self.stats_view = stats_view_settings.common_slots
+        self.rating_view = stats_view_settings.rating_slots
         self.main = {}
+        self.rating = {}
         
-        for index, (_, value) in enumerate(stats_view.slots.items()):
+        for index, (_, value) in enumerate(self.stats_view.items()):
             if value == 'empty':
                 continue
             
             stats = getattr(diff_data.main_diff, value)
             
-            if value == 'winrate' or value == 'accuracy':
+            if value in ['winrate', 'accuracy']:
                 self.main.setdefault('slot_' + str(index + 1), (self.value_add_plus(stats) + self.val_normalizer.winrate(stats)))
                 
             else:
                 self.main.setdefault('slot_' + str(index + 1), (self.value_add_plus(stats) + self.val_normalizer.adaptive(stats)))
 
-        self.rating = {
-            'winrate': self.value_add_plus(diff_data.rating_diff.winrate) + self.val_normalizer.winrate(diff_data.rating_diff.winrate),
-            'rating': self.value_add_plus(diff_data.rating_diff.rating) + self.val_normalizer.other(diff_data.rating_diff.rating),
-            'battles': self.value_add_plus(diff_data.rating_diff.battles) + self.val_normalizer.other(diff_data.rating_diff.battles)
-        }
-        
+        for index, (_, value) in enumerate(self.rating_view.items()):
+            if value == 'empty':
+                continue
+            
+            stats = getattr(diff_data.rating_diff, value)
+            
+            if value in ['winrate', 'accuracy']:
+                self.rating.setdefault('slot_' + str(index + 1), (self.value_add_plus(stats) + self.val_normalizer.winrate(stats)))
+                
+            else:
+                self.rating.setdefault('slot_' + str(index + 1), (self.value_add_plus(stats) + self.val_normalizer.adaptive(stats)))
+
     def tank_stats(self, tank_id: int | str):
         tank_id = str(tank_id)
         result = {}
         
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.items():
             stats = getattr(self.diff_data.tank_stats[tank_id], 'd_' + value)
             
             if value == 'empty':
@@ -330,29 +336,31 @@ class DiffValues():
             return ''
 
 class SessionValues():
-    def __init__(self, session_data: SessionDiffData, stats_view: StatsViewSettings) -> None:
+    def __init__(self, session_data: SessionDiffData, stats_view_settings: StatsViewSettings) -> None:
         self.val_normalizer = ValueNormalizer()
         self.session_data = session_data
-        self.stats_view = stats_view
+        self.stats_view = stats_view_settings.common_slots
+        self.rating_view = stats_view_settings.rating_slots
         self.main = {}
+        self.rating = {}
         
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.items():
             if value in ['winrate', 'accuracy']:
                 self.main[slot] = self.val_normalizer.winrate(getattr(session_data.main_session, value))
             else:
                 self.main[slot] = self.val_normalizer.adaptive(getattr(session_data.main_session, value))
 
-        self.rating = {
-            'winrate': self.val_normalizer.winrate(session_data.rating_session.winrate, True),
-            'rating': self.val_normalizer.other(session_data.rating_session.rating, True),
-            'battles': self.val_normalizer.other(session_data.rating_session.battles, True)
-        }
+        for slot, value in self.rating_view.items():
+            if value in ['winrate', 'accuracy']:
+                self.rating[slot] = self.val_normalizer.winrate(getattr(session_data.rating_session, value))
+            else:
+                self.rating[slot] = self.val_normalizer.adaptive(getattr(session_data.rating_session, value))
 
     def tank_stats(self, tank_id: int | str):
         tank_id = str(tank_id)
         tank_stats = {}
         
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.items():
             if value in ['winrate', 'accuracy']:
                 tank_stats[slot] = self.val_normalizer.winrate(getattr(self.session_data.tank_stats[tank_id], 's_' + value))
             else:
@@ -373,34 +381,29 @@ class Values():
         self.val_normalizer = ValueNormalizer()
         stats_data = data.data.statistics
         self.tank_data = data.data.tank_stats
-        self.stats_view = stats_view
+        self.stats_view = stats_view.common_slots
+        self.rating_view = stats_view.rating_slots
         self.session_diff = session_diff
-        # Define the main statistics
         self.main = {}
+        self.rating = {}
         
-        for slot, value in stats_view.slots.items():
+        for slot, value in self.stats_view.items():
             if value in ['winrate', 'accuracy']:
                 self.main[slot] = self.val_normalizer.winrate(getattr(stats_data.all, value))
             else:
                 self.main[slot] = self.val_normalizer.adaptive(getattr(stats_data.all, value))
 
         # Define the rating statistics
-        rating = 0
-        if stats_data.rating.calibration_battles_left == 0:
-            rating = stats_data.rating.rating
-        else:
-            rating = f'{abs(stats_data.rating.calibration_battles_left - 10)} / 10'
-            
-        self.rating = {
-            'winrate': self.val_normalizer.winrate(stats_data.rating.winrate),
-            'rating': self.val_normalizer.other(rating, str_bypass=True),
-            'battles': self.val_normalizer.other(stats_data.rating.battles)
-        }
+        for slot, value in self.rating_view.items():
+            if value in ['winrate', 'accuracy']:
+                self.rating[slot] = self.val_normalizer.winrate(getattr(stats_data.rating, value))
+            else:
+                self.rating[slot] = self.val_normalizer.adaptive(getattr(stats_data.rating, value))
 
     def get_tank_stats(self, tank_id: int | str):
         tank_stats = {}
         
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.items():
             if value in ['winrate', 'accuracy']:
                 tank_stats[slot] = self.val_normalizer.winrate(getattr(self.tank_data[str(tank_id)].all, value))
             else:
@@ -410,7 +413,7 @@ class Values():
 
 class StatsBlockSize:
     main_stats = 240
-    rating_stats = 260
+    rating_stats = 240
     full_tank_stats = 260
     short_tank_stats = 200
 
@@ -496,7 +499,12 @@ class LayoutDefiner:
         
         if self.widget_settings.adaptive_width and self.widget_mode:
             self.image_width = (
-                len(self.stats_view.slots.keys()) * (ImageSize.max_width // 4)
+                len(
+                    max(
+                        self.stats_view.common_slots.keys(),
+                        self.stats_view.rating_slots.keys(),
+                    )
+                ) * (ImageSize.max_width // 4)
             )
             if self.image_width < ImageSize.min_width:
                 self.image_width = ImageSize.min_width
@@ -541,7 +549,10 @@ class LayoutDefiner:
                     BlockOffsets.horizontal_indent, 
                     current_offset,
                     self.image_width - BlockOffsets.horizontal_indent,
-                    (StatsBlockSize.main_stats if first_block else StatsBlockSize.full_tank_stats) + current_offset
+                    (
+                        StatsBlockSize.main_stats if first_block \
+                            else (StatsBlockSize.full_tank_stats if not self.include_rating else StatsBlockSize.rating_stats)
+                    ) + current_offset
                 ),
                 fill=color,
                 radius=25
@@ -578,7 +589,7 @@ class ImageOutputType(Enum):
 
 @singleton
 class ImageGen():
-    leagues = Leagues()
+    leagues = LeaguesIcons()
     colors = Colors()
     pdb = PlayersDB()
     sdb = ServersDB()
@@ -617,7 +628,8 @@ class ImageGen():
             debug_label = False,
             extra: ImageGenExtraSettings = ImageGenExtraSettings(),
             output_type: ImageOutputType = ImageOutputType.bytes_io,
-            widget_mode: bool = False
+            widget_mode: bool = False,
+            force_locale: str | None = None
             ) -> BytesIO | Image.Image:
         """
         Generate the image for the given player's session stats.
@@ -634,7 +646,9 @@ class ImageGen():
         # player.widget_settings.adaptive_width = True
         # player.widget_settings.disable_bg = True
         # player.widget_settings.use_bg_for_stats_blocks = True
-        
+        if force_locale is not None:
+            self.text = Text().load(lang=force_locale)
+            
         self.player = player
         self.image_settings = player.image_settings
         self.layout_definer = LayoutDefiner(
@@ -784,7 +798,6 @@ class ImageGen():
     def draw_rating_stats_block(self, image_draw: ImageDraw.ImageDraw) -> None:
         self.draw_block_label(image_draw, self.text.for_image.rating)
         self.draw_rating_icons()
-        self.draw_rating_league()
         self.draw_rating_labels(image_draw)
         self.draw_rating_stats(image_draw)
         self.draw_rating_session_stats(image_draw)
@@ -806,7 +819,7 @@ class ImageGen():
         self.draw_short_tank_session_stats(image_draw, curr_tank)
 
     def draw_main_stats_icons(self) -> None:
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             icon: Image.Image = getattr(StatsIcons, value)
             self.image.paste(
                 icon,
@@ -815,22 +828,25 @@ class ImageGen():
             )
         
     def draw_rating_icons(self) -> None:
-        for i in self.coord.rating_stats_icons(self.current_offset, (0, 0)).keys():
-            icon: Image.Image = getattr(StatsIcons, i)
+        for slot, value in self.stats_view.rating_slots.items():
+            if value == 'rating':
+                icon = self.get_rating_icon(self.values.rating[slot])
+            else:
+                icon = getattr(StatsIcons, value)
             self.image.paste(
                 icon,
-                self.coord.rating_stats_icons(self.current_offset, icon.size)[i],
+                self.coord.rating_stats_icons(self.current_offset, icon.size)[slot],
                 icon
             )
         
     def draw_tank_stats_icons(self) -> None:
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             icon: Image.Image = getattr(StatsIcons, value)
             self.image.paste(
                 icon,
                 self.coord.tank_stats_icons(self.current_offset, icon.size)[slot],
                 icon
-        )
+            )
         
     def draw_block_label(self, img_draw: ImageDraw.ImageDraw, text: str) -> None:
         img_draw.text(
@@ -894,14 +910,14 @@ class ImageGen():
         bbox = img.textbbox(
             (self.img_size[0] // 2 - 150, self.img_size[1] // 2),
             text='DEBUG PREVIEW',
-            font=self.fonts.roboto_40
+            font=self.fonts.roboto_25
         )
-        img.rectangle(bbox, fill="grey")
+        img.rectangle(bbox, fill=(127, 127, 127, 20))
         img.text(
             (self.img_size[0] // 2 - 150, self.img_size[1] // 2),
             text='DEBUG PREVIEW',
-            font=self.fonts.roboto_40,
-            fill=Colors.red
+            font=self.fonts.roboto_25,
+            fill=(20, 200, 20, 20)
         )
         
     def draw_watermark(self):
@@ -1002,8 +1018,8 @@ class ImageGen():
                 fill=Colors.l_grey)
 
     def draw_main_labels(self, img: ImageDraw.ImageDraw):
-        coords = self.coord.main_stast_labels(self.current_offset)
-        for slot, value in self.stats_view.slots.items():
+        coords = self.coord.main_stats_labels(self.current_offset)
+        for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
                 text=getattr(self.text.for_image, value),
@@ -1015,7 +1031,7 @@ class ImageGen():
 
     def draw_main_stats(self, img: ImageDraw.ImageDraw):
         coords = self.coord.main_stats(self.current_offset)
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
                 text=self.values.main[slot],
@@ -1031,7 +1047,7 @@ class ImageGen():
 
     def draw_main_diff_stats(self, img: ImageDraw.ImageDraw):
         coords = self.coord.main_diff_stats(self.current_offset)
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
                 text=self.diff_values.main[slot],
@@ -1043,7 +1059,7 @@ class ImageGen():
     
     def draw_main_session_stats(self, img: ImageDraw.ImageDraw):
         coords = self.coord.main_session_stats(self.current_offset)
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
                 text=self.session_values.main[slot],
@@ -1059,70 +1075,61 @@ class ImageGen():
 
     def draw_rating_labels(self, img: ImageDraw.ImageDraw):
         coords = self.coord.rating_labels(self.current_offset)
-        for i in coords.keys():
+        for slot, value in self.stats_view.rating_slots.items():
+            if value == 'rating':
+                text = self._rating_label_handler()
+            else:
+                text = getattr(self.text.for_image, value)
             img.text(
-                coords[i],
-                text=getattr(self.text.for_image, i),
+                coords[slot],
+                text=text,
                 font=self.fonts.roboto_small,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
             )
-        self._rating_label_handler(img)
 
     def draw_rating_stats(self, img: ImageDraw.ImageDraw):
         coords = self.coord.rating_stats(self.current_offset)
-        for i in coords.keys():
+        
+        for slot, value in self.stats_view.rating_slots.items():
+            if value == 'rating':
+                text = f'{abs(self.data.data.statistics.rating.calibration_battles_left - 10)} / 10'
+            else:
+                text = self.values.rating[slot]
             img.text(
-                coords[i],
-                text=self.values.rating[i],
+                coords[slot],
+                text=text,
                 font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
                 fill=colorize(
-                    i,
-                    self.values.rating[i],
+                    value,
+                    self.values.rating[slot],
                     self.image_settings.stats_color,
                     rating=True
                     )
                 )
-            
+
     def draw_rating_session_stats(self, img: ImageDraw.ImageDraw):
         coords = self.coord.rating_session_stats(self.current_offset)
-        for i in coords.keys():
+        
+        for slot, value in self.stats_view.rating_slots.items():
             img.text(
-                coords[i],
-                text=self.session_values.rating[i],
+                coords[slot],
+                text=self.session_values.rating[slot],
                 font=self.fonts.roboto_25,
                 anchor='ma',
                 align='center',
                 fill=colorize(
-                    i,
-                    self.session_values.rating[i],
+                    value,
+                    self.session_values.rating[slot],
                     Colors.l_grey,
                     rating=True
                 )
             )
 
-    def draw_rating_league(self) -> None:
-        coords = self.coord.rating_league_icon(self.current_offset)
-        rt_img = self.leagues.empty
-        rating = self.data.data.statistics.rating.rating
-        calibration_left = self.data.data.statistics.rating.calibration_battles_left
-
-        if calibration_left == 0:
-            if rating >= 3000 and rating < 4000:
-                rt_img = self.leagues.gold
-            if rating >= 4000 and rating < 5000:
-                rt_img = self.leagues.platinum
-            if rating >= 5000:
-                rt_img = self.leagues.brilliant
-        elif calibration_left != 10:
-            rt_img = self.leagues.calibration
-
-        self.image.paste(rt_img, coords, rt_img)
-
-    def _rating_label_handler(self, img: ImageDraw.ImageDraw):
+    def _rating_label_handler(self):
         rating = self.data.data.statistics.rating.rating
         if self.data.data.statistics.rating.calibration_battles_left == 10:
             text = self.text.for_image.no_rating
@@ -1136,33 +1143,25 @@ class ImageGen():
             text = self.text.for_image.leagues.brilliant
         else:
             text = self.text.for_image.leagues.no_league
-
-        img.text(
-            self.coord.rating_league_label(self.current_offset),
-            text=text,
-            font=self.fonts.roboto_small,
-            anchor='ma',
-            align='center',
-            fill=Colors.blue
-        )
+        return text
 
     def draw_rating_diff_stats(self, img: ImageDraw.ImageDraw):
         coords = self.coord.rating_diff_stats(self.current_offset)
-        for i in coords.keys():
+        
+        for slot, value in self.stats_view.rating_slots.items():
             img.text(
-                coords[i],
-                text=self.diff_values.rating[i],
+                coords[slot],
+                text=self.diff_values.rating[slot],
                 font=self.fonts.roboto_medium,
                 anchor='ma',
                 align='center',
-                fill=self.value_colors(getattr(self.diff_data.rating_diff, i))
+                fill=self.value_colors(getattr(self.diff_data.rating_diff, value))
             )
-        self._rating_label_handler(img)
 
     def draw_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.tank_stats(self.current_offset)
         tank_stats = self.values.get_tank_stats(curr_tank.tank_id)
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
@@ -1179,7 +1178,7 @@ class ImageGen():
     def draw_short_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.short_tank_stats(self.current_offset)
         tank_stats = self.values.get_tank_stats(curr_tank.tank_id)
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
@@ -1195,7 +1194,7 @@ class ImageGen():
 
     def draw_short_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.short_tank_session_stats(self.current_offset)
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
                 text=self.session_values.tank_stats(curr_tank.tank_id)[slot],
@@ -1208,7 +1207,7 @@ class ImageGen():
     def draw_tank_diff_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.tank_diff_stats(self.current_offset)
         tank_stats = self.diff_values.tank_stats(curr_tank.tank_id)
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
@@ -1221,7 +1220,7 @@ class ImageGen():
     def draw_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
         coords = self.coord.tank_session_stats(self.current_offset)
         tank_stats = self.session_values.tank_stats(curr_tank.tank_id)
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
@@ -1237,7 +1236,7 @@ class ImageGen():
 
     def draw_tank_labels(self, img: ImageDraw.ImageDraw):
         coords = self.coord.tank_stats_labels(self.current_offset)
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
                 text=getattr(self.text.for_image, value),
@@ -1249,7 +1248,7 @@ class ImageGen():
             
     def draw_short_tank_labels(self, img: ImageDraw.ImageDraw):
         coords = self.coord.short_tank_stats_labels(self.current_offset)
-        for slot, value in self.stats_view.slots.items():
+        for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
                 text=getattr(self.text.for_image, value),
@@ -1280,3 +1279,15 @@ class ImageGen():
             return self.image_settings.negative_stats_color
         if value == 0:
             return Colors.grey
+        
+    def get_rating_icon(self, value: int | float) -> Image.Image:
+        if isinstance(value, str):
+            return LeaguesIcons.calibration
+        if value <= 3000:
+            return LeaguesIcons.gold
+        if value <= 4000:
+            return LeaguesIcons.platinum
+        if value <= 5000:
+            return LeaguesIcons.brilliant
+        else:
+            return LeaguesIcons.empty
