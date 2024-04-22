@@ -322,7 +322,7 @@ class Set(commands.Cog):
             'uk': Text().get('ua').cmds.session_view_settings.descr.this
         }
     )
-    async def session_view_settings(
+    async def stats_position(
         self, 
         ctx: ApplicationContext,
         slot_1: Option(
@@ -354,6 +354,7 @@ class Set(commands.Cog):
             'slot_3': slot_3,
             'slot_4': slot_4
         }
+        stats_view_settings = self.db.get_stats_settings(ctx.author.id)
         for slot, value in stats_settings.copy().items():
             if value == 'empty':
                 del stats_settings[slot]
@@ -374,7 +375,85 @@ class Set(commands.Cog):
             )
             return
                 
-        self.db.set_stats_settings(ctx.author.id, StatsViewSettings.model_validate({'slots': parsed_stats_settings}))
+        self.db.set_stats_settings(
+            ctx.author.id, StatsViewSettings.model_validate(
+                {'common_slots': parsed_stats_settings, 'rating_slots': stats_view_settings.rating_slots}
+                )
+            )
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=Text().get().cmds.session_view_settings.info.success,
+                colour='green'
+            )
+        )
+
+    @commands.slash_command(
+        description=Text().get('en').cmds.session_view_settings.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.session_view_settings.descr.this,
+            'pl': Text().get('pl').cmds.session_view_settings.descr.this,
+            'uk': Text().get('ua').cmds.session_view_settings.descr.this
+        }
+    )
+    async def stats_position_rating(
+        self, 
+        ctx: ApplicationContext,
+        slot_1: Option(
+            str,
+            choices=_config.image.available_rating_stats,
+            required=True,
+            ), # type: ignore
+        slot_2: Option(
+            str,
+            choices=_config.image.available_rating_stats,
+            required=True,
+            ), # type: ignore
+        slot_3: Option(
+            str,
+            choices=_config.image.available_rating_stats,
+            required=True,
+            ), # type: ignore
+        slot_4: Option(
+            str,
+            choices=_config.image.available_rating_stats,
+            required=True,
+            ), # type: ignore
+        ):
+        check_user(ctx)
+        Text().load_from_context(ctx)
+        stats_settings = {
+            'slot_1': slot_1,
+            'slot_2': slot_2,
+            'slot_3': slot_3,
+            'slot_4': slot_4
+        }
+        stats_view_settings = self.db.get_stats_settings(ctx.author.id)
+        for slot, value in stats_settings.copy().items():
+            if value == 'empty':
+                del stats_settings[slot]
+                continue
+            
+        parsed_stats_settings = {}
+        for index, key in enumerate(stats_settings.keys()):
+            parsed_stats_settings[f'slot_{index + 1}'] = stats_settings[key]
+        
+        if len(parsed_stats_settings) == 0:
+            await ctx.respond(
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    title=Text().get().frequent.info.warning,
+                    text=Text().get().cmds.session_view_settings.errors.empty_slots,
+                    colour='orange'
+                )
+            )
+            return
+                
+        self.db.set_stats_settings(
+            ctx.author.id, StatsViewSettings.model_validate(
+                {'rating_slots': parsed_stats_settings, 'common_slots': stats_view_settings.common_slots}
+                )
+            )
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
@@ -391,7 +470,7 @@ class Set(commands.Cog):
             'uk': Text().get('ua').cmds.session_view_settings_reset.descr.this
         }
     )
-    async def session_view_settings_reset(self, ctx: ApplicationContext):
+    async def stats_position_reset(self, ctx: ApplicationContext):
         Text().load_from_context(ctx)
         check_user(ctx)
         

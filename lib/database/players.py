@@ -1,6 +1,4 @@
-import base64
 from datetime import datetime, timedelta
-from io import BytesIO
 
 import pytz
 from bson.codec_options import CodecOptions
@@ -11,7 +9,6 @@ from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import (DBPlayer, ImageSettings,
                                         SessionSettings, StatsViewSettings, WidgetSettings)
 from lib.exceptions import database
-from lib.image.utils.resizer import resize_image
 from lib.settings.settings import Config
 
 
@@ -426,7 +423,8 @@ class PlayersDB:
     def get_stats_settings(self, member_id: int | str) -> StatsViewSettings:
         member_id = int(member_id)
         if self.check_member(member_id):
-            return StatsViewSettings.model_validate(self.collection.find_one({'id': member_id})['stats_settings'])
+            data = self.collection.find_one({'id': member_id})
+            return StatsViewSettings.model_validate(data['session_settings']['stats_view'])
         else:
             raise database.MemberNotFound(f'Member not found, id: {member_id}')
         
@@ -484,5 +482,9 @@ class PlayersDB:
             member = DBPlayer.model_validate(member)
             self.collection.update_one(
                 {'id': member.id},
-                {'$set': {'image_settings.theme': 'default'}}
+                {'$set': {'session_settings.stats_view': StatsViewSettings().model_dump()}, '$set' : {'last_stats': None}}
+            )
+            self.collection.update_one(
+                {'id': member.id},
+                {'$set': {'session_settings.stats_view': StatsViewSettings().model_dump()}}
             )

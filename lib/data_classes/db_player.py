@@ -6,11 +6,17 @@ from pydantic import BaseModel
 
 
 class StatsViewSettings(BaseModel):
-    slots: dict = {
+    common_slots: dict = {
         'slot_1' : 'winrate',
         'slot_2' : 'avg_damage',
         'slot_3' : 'battles',
         'slot_4' : 'accuracy'
+    }
+    rating_slots: dict = {
+        'slot_1' : 'winrate',
+        'slot_2' : 'avg_damage',
+        'slot_3' : 'battles',
+        'slot_4' : 'rating'
     }
 
 class WidgetSettings(BaseModel):

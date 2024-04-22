@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List
 
 from pydantic import BaseModel
 
@@ -15,18 +15,26 @@ class Session(BaseModel):
 class Autosession(BaseModel):
     ttl: int
 
-
 class Default(BaseModel):
     prefix: str
     lang: str
     available_locales: List[str]
     available_regions: List[str]
-    locale_aliases: Dict[str, str]
-
+    locale_aliases: dict = {
+        'ru': 'ru',
+        'en': 'en',
+        'pl': 'pl',
+        'uk': 'ua'
+    }
 
 class Image(BaseModel):
     default_bg_path: str
     available_stats: List[str]
+    available_rating_stats: List[str]
+
+
+class Themes(BaseModel):
+    available: List[str]
 
 
 class Internal(BaseModel):
@@ -42,7 +50,6 @@ class HelpUrls(BaseModel):
 
 class SessionWidget(BaseModel):
     url: str
-
 
 class Auth(BaseModel):
     wg_redirect_uri: str
@@ -79,18 +86,16 @@ class DsApi(BaseModel):
     urls: Urls1
 
 
-class Dump(BaseModel):
-    export_to_id: int
-    chunk_size: int     #in bytes
-    directory: str
-
-
 class Report(BaseModel):
     suggestion_channel_id: int
     bug_channel_id: int
 
-class Themes(BaseModel):
-    available: List[str]
+
+class Dump(BaseModel):
+    export_to_id: int
+    chunk_size: int
+    directory: str
+
 
 class ConfigStruct(BaseModel):
     bot_name: str
@@ -99,6 +104,7 @@ class ConfigStruct(BaseModel):
     autosession: Autosession
     default: Default
     image: Image
+    themes: Themes
     internal: Internal
     help_urls: HelpUrls
     session_widget: SessionWidget
@@ -107,4 +113,3 @@ class ConfigStruct(BaseModel):
     ds_api: DsApi
     report: Report
     dump: Dump
-    themes: Themes

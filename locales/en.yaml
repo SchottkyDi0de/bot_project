@@ -242,17 +242,17 @@ cmds:
       started: |- 
         ```py
         Session started.
-        +----------------------------------+
-        Autosession:              <is_autosession>
-        +__________________________________+
+        +--------------------------------+
+        Autosession:          <is_autosession>
+        +________________________________+
         Autosession restart time:
         <update_time> | UTC + <timezone>
-        Restart in:               <restart_in>
-        +..................................+
-        Session time:             <time>
-        Battles played:           <battles>
-        Time remaining:           <time_left>
-        +----------------------------------+
+        Restart in:           <restart_in>
+        +................................+
+        Session time:         <time>
+        Time remaining:       <time_left>
+        Battles played:       <battles>
+        +--------------------------------+
         >>> Reset session: 
         /start_session
         >>> Reset autosession:
