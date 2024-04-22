@@ -50,7 +50,7 @@ def init_app(app: FastAPI) -> None:
         
         await client.connected()
         user = _pdb.get_member(p_id)
-        stats = await _api.get_stats(user.region, user.game_id)
+        stats = await _api.get_stats(user.region, user.game_id, ignore_lock=True)
         last_stats = PlayerGlobalData.model_validate(user.last_stats)
         
         diff_battles = (
@@ -78,7 +78,7 @@ def init_app(app: FastAPI) -> None:
             .classes('mx-auto')
             
         for _ in range(10000):
-            stats = await _api.get_stats(user.region, user.game_id)
+            stats = await _api.get_stats(user.region, user.game_id, ignore_lock=True)
             diff_battles = (
                 stats.data.statistics.all.battles - last_stats.data.statistics.all.battles,
                 stats.data.statistics.rating.battles - last_stats.data.statistics.rating.battles
