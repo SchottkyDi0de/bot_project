@@ -38,7 +38,7 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
         data.data.statistics.rating.destruction_ratio = safe_divide(rating_stats.frags, rating_stats.not_survived_battles)
 
         if data.data.statistics.rating.calibration_battles_left == 0 and data.data.statistics.rating.battles != 0:
-            data.data.statistics.rating.rating = round(data.data.statistics.rating.mm_rating * 10 + 3000)
+            data.data.statistics.rating.rating = int(data.data.statistics.rating.mm_rating * 10 + 3000)
         else:
             data.data.statistics.rating.rating = 0
 
@@ -257,7 +257,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData, ze
                 'xp': r_xp,
                 'survived_battles': r_survived_battles,
                 'dropped_capture_points': r_dropped_capture_points,
-                'rating': diff_rating,
+                'rating': int(diff_rating),
                 
                 'winrate': r_diff_winrate,
                 'avg_damage': r_diff_avg_damage,
@@ -283,7 +283,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData, ze
                 'xp' : r_xp,
                 'survived_battles' : r_survived_battles,
                 'dropped_capture_points' : dropped_capture_points,
-                'rating': session_rating,
+                'rating': int(session_rating),
                 
                 'winrate': r_session_winrate,
                 'avg_damage': r_session_avg_damage,
