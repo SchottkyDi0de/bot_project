@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from discord.ext import commands
+from discord import ApplicationContext
 from discord.file import File
 
 from lib.data_classes.api.api_data import Player, PlayerGlobalData
@@ -19,8 +19,12 @@ from lib.locale.locale import Text
 
 
 class _PreviewData:
-    achievements = Achievements.model_validate({"mainGun": 100, "medalRadleyWalters": 100, 
-                                                "medalKolobanov": 100, "markOfMastery": 100, "warrior": 100})
+    achievements = Achievements.model_validate(
+        {
+            "mainGun": 100, "medalRadleyWalters": 100, 
+            "medalKolobanov": 100, "markOfMastery": 100, "warrior": 100
+        }
+    )
     clan = Clan.model_validate({
         "members_count": 50,
         "name": "BlitzHub",
@@ -147,13 +151,13 @@ class StatsPreview:
         self.pdb = PlayersDB()
         self.sdb = ServersDB()
     
-    def preview(self, ctx: commands.Context, image_settings: ImageSettings) -> (str, File):
+    def preview(self, ctx: ApplicationContext, image_settings: ImageSettings) -> tuple[str, File]:
         server_settings = self.sdb.get_server_settings(ctx)
         try:
             player_data = self.pdb.get_member(ctx.author.id)
             nickname, region, lang = player_data.nickname, player_data.region, player_data.lang
         except MemberNotFound:
-            nickname, region, lang = 'Nickname', 'ru', 'eu'
+            nickname, region, lang = 'Nickname', 'ru', 'en'
         player_global_data = _PreviewData.player_global_data(nickname, region)
         image = ImageGen().generate(ctx, player_global_data, image_settings, server_settings)
         return (Text().get(lang).cmds.image_settings.info.preview, File(image, filename='stats.png'))

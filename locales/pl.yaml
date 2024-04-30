@@ -158,7 +158,7 @@ frequent:
 
   info:
     info: Informacje
-    player_not_registred: Gracz nie jest zalogowany. Najpierw wprowadź komendę `/set_player`
+    player_not_registred: Gracz nie jest zalogowany. Najpierw wprowadź komendę </set_player:1126148623869153443>
     err_info_sent: Informacja o błędzie została wysłana do dewelopera.
     warning: Warning
 
@@ -186,7 +186,7 @@ cmds:
     errors:
       player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
     info:
-      player_not_registred: Aby wyświetlić statystyki bez wprowadzania danych, zapisz dane za pomocą opcji `/set_player`.
+      player_not_registred: Aby wyświetlić statystyki bez wprowadzania danych, zapisz dane za pomocą opcji </set_player:1126148623869153443>.
     items:
       ''
 
@@ -216,7 +216,7 @@ cmds:
     errors:
       player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
     info:
-      set_player_ok: 'Informacje o graczu zostały pomyślnie zapisane, możesz teraz użyć `/astats` do automatycznego wyświetlania statystyk na podstawie zapisanych danych.'
+      set_player_ok: 'Informacje o graczu zostały pomyślnie zapisane, możesz teraz użyć </astats:1125575592486645855> do automatycznego wyświetlania statystyk na podstawie zapisanych danych.'
     items:
       ''
 
@@ -228,7 +228,7 @@ cmds:
         lang_list: Lista języków.
         to_server: Aplikuj na serwer.
     errors:
-      player_not_registred: Aby zmienić język, należy najpierw zapisać dane za pomocą opcji `/set_player`
+      player_not_registred: Aby zmienić język, należy najpierw zapisać dane za pomocą opcji </set_player:1126148623869153443>
       permission_denied: Musisz mieć uprawnienia administratora, aby zmienić język na całym serwerze.
     info:
       set_lang_ok: Język lokalizacji został pomyślnie zmieniony.
@@ -242,7 +242,7 @@ cmds:
     errors:
       session_not_found: Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęły ponad 24 godziny od ostatniego uruchomienia sesji..
     info:
-      player_not_registred: Aby wyświetlić stan sesji, należy najpierw zapisać dane za pomocą opcji `/set_player`
+      player_not_registred: Aby wyświetlić stan sesji, należy najpierw zapisać dane za pomocą opcji </set_player:1126148623869153443>
     items:
       started: |- 
         ```py
@@ -272,10 +272,10 @@ cmds:
       sub_descr:
         button_update: Update session
     errors:
-      session_not_found: Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęły ponad 24 godziny od ostatniego uruchomienia sesji..
+      session_not_found: 'Nie ma aktywnych sesji, aby uruchomić autoseansję użyj: </start_autosession:1207032176927834143>.'
       session_not_updated: Nie wykryto żadnych zmian w statystykach, być może nie stoczyłeś żadnej bitwy lub API nie zaktualizowało danych, spróbuj ponownie później..
     info:
-      player_not_registred: Aby wyświetlić statystyki sesji, najpierw zapisz dane za pomocą  `/set_player`
+      player_not_registred: Aby wyświetlić statystyki sesji, najpierw zapisz dane za pomocą  </set_player:1126148623869153443>
     items:
       ''
 
@@ -288,8 +288,8 @@ cmds:
     errors:
       ''
     info:
-      player_not_registred: Aby rozpocząć sesję, najpierw zapisz dane za pomocą `/set_player`
-      started: Sesja jest uruchomiona. Teraz możesz rozegrać kilka bitew i uzyskać statystyki sesji za pomocą `/get_session`.
+      player_not_registred: Aby rozpocząć sesję, najpierw zapisz dane za pomocą </set_player:1126148623869153443>
+      started: Sesja jest uruchomiona. Teraz możesz rozegrać kilka bitew i uzyskać statystyki sesji za pomocą </get_session:1144323150226673734>.
     items:
       ''
 
@@ -309,8 +309,8 @@ cmds:
         00:20, 03:15, 22:40, 13:20
         The set value will be ignored.
     info:
-      player_not_registred: To start a session, first save your data using `/set_player`
-      started: Autosession started. Now you can play several battles and get session statistics using `/get_session`
+      player_not_registred: To start a session, first save your data using </set_player:1126148623869153443>
+      started: Autosession started. Now you can play several battles and get session statistics using </get_session:1144323150226673734>
     items:
       ''
       
@@ -319,11 +319,11 @@ cmds:
     descr:
       this: Change background
       sub_descr:
-        image: Upload background in PNG or JPEG format (max. 2 MB) (700 X 1350px)
+        image: Upload background in PNG or JPEG format (max. 2 MB) (800 X 1350px)
         resize_mode: Type of image resizing (if required)
         server: Set default background for this server (admin privileges required).
     errors:
-      player_not_registred: To change the background, save your data using the `/astats` command
+      player_not_registred: To change the background, save your data using the </astats:1125575592486645855> command
       permission_denied: You must have administrator rights to set the background for the server.
       file_error: The file is not a valid image.
       oversize: The file is too large (maximum 2 MB).
@@ -342,7 +342,7 @@ cmds:
         use_custom_bg: Use custom background
         colorize_stats: Statystyki kolorów
         glass_effect: Glass effect 0 - Disable (0-30)
-        blocks_bg_brightness: Block background brightness (0-100)
+        stats_blocks_transparency: Block background brightness (0-100)
         nickname_color: 'Nickname color (HEX or RGB Color)'
         clan_tag_color: 'Clan tag color (HEX or RGB Color)'
         stats_color: 'Main statistics color (HEX or RGB Color)'
@@ -358,7 +358,7 @@ cmds:
       changes_not_found: No parameter change detected, change at least one parameter.
       color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
     info:
-      set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
+      set_ok: 'Image settings applied successfully, get current settings: </image_settings_get:1190367458192801866>'
       canceled_settings_change: 'Image settings change canceled.'
       preview: 'Do you want to apply the changes? Statistics preview:'
     items:
@@ -373,7 +373,7 @@ cmds:
     errors:
       permission_denied: You must have administrator rights to modify server settings.
     info:
-      set_ok: 'Server settings applied successfully, view current settings: `/server_settings_get`'
+      set_ok: 'Server settings applied successfully, view current settings: </server_settings_get:1190367458192801868>'
     items:
       ''
 
@@ -391,7 +391,7 @@ cmds:
       use_custom_bg: Niestandardowe tło
       colorize_stats: Statystyki kolorów
       glass_effect: Efekt szkła
-      blocks_bg_opacity: Przezroczystość bloków ze statystykami
+      stats_blocks_transparency: Przezroczystość bloków ze statystykami
       nickname_color: Kolor nazwy użytkownika
       clan_tag_color: Kolor tagu klanu
       stats_color: Kolor podstawowych statystyk
@@ -592,7 +592,7 @@ cmds:
       message:
         title: 'Potwierdź swój konto'
         description: |- 
-          Aby uzyskać dostęp do specjalnych poleceń bota (np. `/lock`) 
+          Aby uzyskać dostęp do specjalnych poleceń bota (np. </set_lock:1221467304890728509>) 
           musisz zweryfikować lub zarejestrować zweryfikowany konto.
         additional_info: |-
           Jeśli już posiadasz niezatwierdzony konto, to w trakcie weryfikacji konto zostanie nadpisane! Rozpoczęte sesje zostaną wyczyszczone.
@@ -644,7 +644,7 @@ cmds:
         ```css
         body { background-color: rgba(0,0,0,0)!important; overflow: hidden }
         ```
-        Ustawienia widżetu: `/session_widget_settings`
+        Ustawienia widżetu: </session_widget_settings:1221467304450064500>
     errors: 
       ''
     items:
@@ -664,7 +664,7 @@ cmds:
       max_stats_blocks: Maksymalna ilość bloków statystyk
       max_stats_small_blocks: Maksymalna ilość małych bloków statystyk
       update_per_seconds: Czas aktualizacji w sekundach
-      stats_blocks_transparency: Przezroczystość bloków statystyk
+      background_transparency: Przezroczystość bloków statystyk
       disable_main_stats_block: Wyłącz główny blok statystyk
       use_bg_for_stats_blocks: Użyj tła dla bloków statystyk
       adaptive_width: tryb adaptacyjnej szerokości [TRYB TESTOWY]

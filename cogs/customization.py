@@ -17,12 +17,14 @@ from lib.logger.logger import get_logger
 from lib.blacklist.blacklist import check_user
 from lib.image.utils.color_validator import color_validate
 from lib.image.settings_represent import SettingsRepresent
+from lib.utils.img_to_base64 import convert_image
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
 from lib.utils.color_converter import get_tuple_from_color
 from lib.views import ViewMeta
 from lib.utils.stats_preview import StatsPreview
 from lib.settings.settings import Config
+from lib.image.themes.theme_loader import get_theme
 
 _log = get_logger(__file__, 'CogCustomizationLogger', 'logs/cog_customization.log')
 _config = Config().get()
@@ -94,16 +96,16 @@ class Customization(Cog):
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.glass_effect
                 }
             ), # type: ignore
-        blocks_bg_opacity: Option(
+        stats_blocks_transparency: Option(
             int,
             min_value=0,
             max_value=100,
             required=False,
-            description=Text().get('en').cmds.image_settings.descr.sub_descr.blocks_bg_brightness,
+            description=Text().get('en').cmds.image_settings.descr.sub_descr.stats_blocks_transparency,
             description_localizations={
-                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.blocks_bg_brightness,
-                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.blocks_bg_brightness,
-                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.blocks_bg_brightness
+                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.stats_blocks_transparency,
+                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.stats_blocks_transparency,
+                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.stats_blocks_transparency
                 }
             ), # type: ignore
         nickname_color: Option(
@@ -255,13 +257,18 @@ class Customization(Cog):
         color_error_data = []
         color_error = False
         
+        if theme != 'default' and isinstance(theme, str):
+            loaded_theme = get_theme(theme)
+            image_settings = loaded_theme.image_settings
+            self.db.set_member_image(ctx.author.id, convert_image(loaded_theme.bg))
+            
         current_settings = {
             'theme': theme,
             'use_custom_bg': use_custom_bg,
             'colorize_stats': colorize_stats,
             'glass_effect': glass_effect,
             'main_text_color': main_text_color,
-            'blocks_bg_opacity': blocks_bg_opacity,
+            'stats_blocks_transparency': stats_blocks_transparency,
             'nickname_color': nickname_color,
             'clan_tag_color': clan_tag_color,
             'stats_color': stats_color,
@@ -294,7 +301,7 @@ class Customization(Cog):
                     current_settings[key] = value
                 elif validate_result[1] == "rgb":
                     current_settings[key] = rgb_to_hex(get_tuple_from_color(value))
-            if key == 'blocks_bg_opacity':
+            if key == 'stats_blocks_transparency':
                 set_values_count += 1
                 current_settings[key] = value / 100
                     
@@ -333,17 +340,17 @@ class Customization(Cog):
             return
 
         current_image_settings = ImageSettings.model_validate(current_settings)
-        self.db.set_image_settings(ctx.author.id, current_image_settings)
         sptext, spimage = StatsPreview().preview(ctx, current_image_settings)
-        await ctx.respond(sptext, file=spimage, 
-                          view=ViewMeta(
-                              bot=self.bot, 
-                              ctx=ctx, 
-                              type='image_settings', 
-                              session_self=None, 
-                              current_settings=current_image_settings
-                              )
-                          )
+        await ctx.respond(
+            sptext, file=spimage, 
+            view=ViewMeta(
+            bot=self.bot, 
+            ctx=ctx, 
+            type='image_settings', 
+            session_self=None, 
+            current_settings=current_image_settings
+            )
+        )
 
     @commands.slash_command(
         guild_only=True, 
@@ -484,7 +491,6 @@ class Customization(Cog):
                     text=Text().get().cmds.set_background.errors.player_not_registred
                 )
             )
-
 
 def setup(bot: commands.Bot):
     bot.add_cog(Customization(bot))
