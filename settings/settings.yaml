@@ -49,7 +49,7 @@ image:
     ]
 
 themes:
-  available: ['default', 'tiger_girl']
+  available: ['default', 'tiger_girl', 'alpine']
 
 internal:
   ignore_tankopedia_failures: true
@@ -61,7 +61,7 @@ help_urls:
   pl: https://blitzhub.gitbook.io/blitz-statistics-bot/pl-docs
 
 session_widget:
-  url: 'http://<host>:<port>/bot/session_widget_app?player_id=<user_id>&lang=<lang>'
+  url: 'http://<host>:<port>/bot/session_widget_app?p_id=<user_id>&lang=<lang>'
 
 auth:
   wg_redirect_uri: 'http://<host>:<port>/bot/auth/game?region=<region>'

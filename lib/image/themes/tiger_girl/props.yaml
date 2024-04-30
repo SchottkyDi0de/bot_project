@@ -8,14 +8,15 @@ image_settings:
   disable_rating_stats: False
   disable_cache_label: False
   disable_stats_blocks: False
-  blocks_bg_opacity: 0.4
+  stats_blocks_transparency: 0.4
   glass_effect: 0
   nickname_color: '#f0f0f0'
-  clan_tag_color: '#7b4747'
+  clan_tag_color: '#7f4b4b'
   stats_color: '#cccccc'
   main_text_color: '#0088fc'
   stats_text_color: '#c67171'
   negative_stats_color: '#c01515'
   positive_stats_color: '#1eff26'
+
 bg_path: lib/image/themes/tiger_girl/bg.png
 bg: null

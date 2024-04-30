@@ -1,6 +1,4 @@
-import re
-from lib.image.utils.color_validator import color_validate, CompiledRegex
-from PIL import ImageColor
+from lib.image.utils.color_validator import color_validate
 from webcolors import hex_to_rgb
 
 def get_tuple_from_color(color: str | None) -> tuple[int, int, int] | bool:
