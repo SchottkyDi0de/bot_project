@@ -16,3 +16,4 @@ database_copy.*
 *.dat
 /dump
 model.py
+.nicegui

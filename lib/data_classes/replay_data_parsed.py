@@ -12,7 +12,7 @@ class Author(BaseModel):
     accuracy: Optional[float] = 0.0
     n_splashes: int
     n_penetrations: int
-    penertarions_percent: Optional[float] = 0.0
+    penetrations_percent: Optional[float] = 0.0
     damage_dealt: int
     account_id: int
     team_number: int

@@ -77,6 +77,7 @@ def init_app(app: FastAPI) -> None:
         )
         
         ui.image(session_image)\
+
             .classes('w-full')\
         
         
@@ -85,6 +86,7 @@ def init_app(app: FastAPI) -> None:
             last_stats = PlayerGlobalData.model_validate(user.last_stats)
             if last_stats is None:
                 return ui.label('Session not found')
+
             stats = await _api.get_stats(user.region, user.game_id, ignore_lock=True)
             diff_battles = (
                 stats.data.statistics.all.battles - last_stats.data.statistics.all.battles,

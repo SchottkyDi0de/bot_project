@@ -167,7 +167,7 @@ class EmbedReplayBuilder():
                     'shots_hit'         :   str(author_stats.info.n_hits_dealt),
                     'shots_penetrated'  :   str(author_stats.info.n_penetrations_dealt),
                     'accuracy'          :   str(round(data.author.accuracy, 2)),
-                    'penetration'       :   str(round(data.author.penertarions_percent, 2)),
+                    'penetration'       :   str(round(data.author.penetrations_percent, 2)),
                     'allies'            :   self.avg_stats_counter(data, False)+\
                                                 self.gen_players_list(data, False),
                     'enemies'           :   self.avg_stats_counter(data, True)+\

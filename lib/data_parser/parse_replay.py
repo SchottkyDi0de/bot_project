@@ -126,7 +126,7 @@ class ParseReplayData:
 
             if parsed_data.author.n_shots > 0:
                 parsed_data.author.accuracy = parsed_data.author.n_hits / parsed_data.author.n_shots * 100
-                parsed_data.author.penertarions_percent = parsed_data.author.n_penetrations / parsed_data.author.n_shots * 100
+                parsed_data.author.penetrations_percent = parsed_data.author.n_penetrations / parsed_data.author.n_shots * 100
             
             return parsed_data
             # print(json.dumps(parsed_data.model_dump(), indent=4))

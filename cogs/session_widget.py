@@ -110,7 +110,7 @@ class SessionWidget(commands.Cog):
                     'uk': Text().get('ua').cmds.session_widget_settings.items.max_stats_blocks
                 },
                 min_value=1,
-                max_value=4,
+                max_value=3,
                 required=False
             ),
             max_stats_small_blocks: Option(
