@@ -49,7 +49,7 @@ image:
     ]
 
 themes:
-  available: ['default', 'tiger_girl']
+  available: ['default', 'tiger_girl', 'alpine']
 
 internal:
   ignore_tankopedia_failures: true

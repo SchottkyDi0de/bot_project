@@ -24,8 +24,8 @@ class WidgetSettings(BaseModel):
     disable_nickname: bool = False
     max_stats_blocks: int = 3
     max_stats_small_blocks: int = 2
-    update_per_seconds: int = 60  # Seconds
-    stats_blocks_transparency: float = 0.7
+    update_time: int = 60  # Seconds
+    background_transparency: float = 0.7
     disable_main_stats_block: bool = False
     use_bg_for_stats_blocks: bool = False
     adaptive_width: bool = True
@@ -48,7 +48,7 @@ class ImageSettings(BaseModel):
     disable_rating_stats: bool = False
     disable_cache_label: bool = False
     disable_stats_blocks: bool = False
-    blocks_bg_opacity: float = 0.5
+    stats_blocks_transparency: float = 0.5
     glass_effect: int = 5
     nickname_color: str = '#f0f0f0' # Hex RGB Format #RRGGBB or #RGB
     clan_tag_color: str = '#0088fc' # Hex validator: lib.image.utils.hex_color_validator

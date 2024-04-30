@@ -4,8 +4,8 @@ from io import BytesIO
 from time import time
 from typing import Dict
 
-from discord.ext import commands
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageColor
+from discord import ApplicationContext
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import (
@@ -17,14 +17,13 @@ from lib.data_classes.locale_struct import Localization
 from lib.data_classes.session import SessionDiffData, TankSessionData
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.image.common import ValueNormalizer
+from lib.image.utils.val_normalizer import ValueNormalizer
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.flags import Flags
 from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
 from lib.image.for_image.stats_coloring import colorize
 from lib.image.for_image.watermark import Watermark
-from lib.image.themes.theme_loader import get_theme
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.utils.color_converter import get_tuple_from_color
@@ -285,10 +284,14 @@ class DiffValues():
             stats = getattr(diff_data.main_diff, value)
             
             if value in ['winrate', 'accuracy']:
-                self.main.setdefault('slot_' + str(index + 1), (self.value_add_plus(stats) + self.val_normalizer.winrate(stats)))
+                self.main.setdefault('slot_' + str(index + 1), (
+                    self.val_normalizer.value_add_plus(stats) + self.val_normalizer.winrate(stats))
+                )
                 
             else:
-                self.main.setdefault('slot_' + str(index + 1), (self.value_add_plus(stats) + self.val_normalizer.adaptive(stats)))
+                self.main.setdefault('slot_' + str(index + 1), (
+                    self.val_normalizer.value_add_plus(stats) + self.val_normalizer.adaptive(stats))
+                )
 
         for index, (_, value) in enumerate(self.rating_view.items()):
             if value == 'empty':
@@ -297,10 +300,16 @@ class DiffValues():
             stats = getattr(diff_data.rating_diff, value)
             
             if value in ['winrate', 'accuracy']:
-                self.rating.setdefault('slot_' + str(index + 1), (self.value_add_plus(stats) + self.val_normalizer.winrate(stats)))
+                self.rating.setdefault('slot_' + str(index + 1), (
+                    ValueNormalizer.value_add_plus(stats) + self.val_normalizer.winrate(stats)
+                    )
+                )
                 
             else:
-                self.rating.setdefault('slot_' + str(index + 1), (self.value_add_plus(stats) + self.val_normalizer.adaptive(stats)))
+                self.rating.setdefault('slot_' + str(index + 1), (
+                    ValueNormalizer.value_add_plus(stats) + self.val_normalizer.adaptive(stats)
+                    )
+                )
 
     def tank_stats(self, tank_id: int | str):
         tank_id = str(tank_id)
@@ -313,27 +322,12 @@ class DiffValues():
                 continue
             
             if value == 'winrate' or value == 'accuracy':
-                result[slot] = self.value_add_plus(stats) + self.val_normalizer.winrate(stats)
+                result[slot] = ValueNormalizer.value_add_plus(stats) + self.val_normalizer.winrate(stats)
             
             else:
-                result[slot] = self.value_add_plus(stats) + self.val_normalizer.adaptive(stats)
+                result[slot] = ValueNormalizer.value_add_plus(stats) + self.val_normalizer.adaptive(stats)
             
         return result
-
-    def value_add_plus(self, value: int | float) -> str:
-        """
-        Determines if the given value is positive or negative and returns the corresponding symbol.
-
-        Args:
-            value (int | float): The value to be evaluated.
-
-        Returns:
-            str: The symbol '+' if the value is positive, otherwise an empty string.
-        """
-        if round(value, 2) > 0:
-            return '+'
-        else:
-            return ''
 
 class SessionValues():
     def __init__(self, session_data: SessionDiffData, stats_view_settings: StatsViewSettings) -> None:
@@ -447,7 +441,7 @@ class LayoutDefiner:
         self.image_width = ImageSize.min_width
         self.blocks = 1
         self.small_blocks = 0
-        self.max_fullstats_blocks = widget_settings.max_stats_blocks if widget_mode else 4
+        self.max_fullstats_blocks = widget_settings.max_stats_blocks if widget_mode else 3
         self.max_short_stats_blocks = widget_settings.max_stats_small_blocks if widget_mode else 2
         self.image_settings = image_settings
         self.include_rating = False
@@ -475,6 +469,9 @@ class LayoutDefiner:
         self.include_rating = include_rating
         
         if not (self.widget_mode and self.widget_settings.disable_main_stats_block):
+            self.stack.add_block()
+            
+        if self.widget_mode and (self.widget_settings.disable_main_stats_block and tanks_count == 0):
             self.stack.add_block()
 
         if include_rating:
@@ -520,6 +517,27 @@ class LayoutDefiner:
         
     def get_blocks_count(self) -> tuple[int, int]:
         return self.blocks, self.small_blocks
+    
+    def _block_size_calculate(
+        self, 
+        current_block: int,
+        include_rating: bool,
+        widget_settings: WidgetSettings, 
+        widget_mode: bool
+        ) -> int:
+        
+        if widget_mode and widget_settings.disable_main_stats_block:
+            if current_block == 0 and include_rating:
+                return StatsBlockSize.rating_stats
+            else:
+                return StatsBlockSize.full_tank_stats
+        
+        if current_block == 0:
+            return StatsBlockSize.main_stats
+        if current_block == 1 and include_rating:
+            return StatsBlockSize.rating_stats
+        else:
+            return StatsBlockSize.full_tank_stats
 
     def create_rectangle_map(self) -> Image.Image:
         self._calculate_stats_blocks()
@@ -533,37 +551,35 @@ class LayoutDefiner:
         current_offset = BlockOffsets.first_indent
         color = (
             *get_tuple_from_color(self.widget_settings.stats_block_color),
-            int(self.widget_settings.stats_blocks_transparency * 255)
+            int(self.widget_settings.background_transparency * 255)
         )
         if not self.widget_mode or self.widget_settings.disable_bg:
             color = (255, 255, 255, 255)
-        
-        first_block = True
-
-        for _ in range(self.blocks):
-            if first_block and (self.widget_mode and self.widget_settings.disable_main_stats_block):
-                first_block = False
             
+        for block in range(self.blocks):
             drawable_layout.rounded_rectangle(
                 (
                     BlockOffsets.horizontal_indent, 
                     current_offset,
                     self.image_width - BlockOffsets.horizontal_indent,
-                    (
-                        StatsBlockSize.main_stats if first_block \
-                            else (StatsBlockSize.full_tank_stats if not self.include_rating else StatsBlockSize.rating_stats)
-                    ) + current_offset
+                    self._block_size_calculate(
+                        block,
+                        self.include_rating,
+                        self.widget_settings,
+                        self.widget_mode
+                        ) + current_offset
                 ),
                 fill=color,
                 radius=25
             )
-            if first_block:
-                current_offset += StatsBlockSize.main_stats
-            else:
-                current_offset += StatsBlockSize.full_tank_stats
-                
-            current_offset += BlockOffsets.block_indent
-            first_block = False
+            current_offset += (
+                self._block_size_calculate(
+                    block,
+                    self.include_rating,
+                    self.widget_settings,
+                    self.widget_mode
+                    )
+                ) + BlockOffsets.block_indent
          
         if self.small_blocks > 0:
             for _ in range(self.small_blocks):
@@ -621,7 +637,7 @@ class ImageGen():
             self, 
             data: PlayerGlobalData,
             diff_data: SessionDiffData,
-            ctx: commands.Context | None,
+            ctx: ApplicationContext | None,
             player: DBPlayer,
             server_settings: ServerSettings | None,
             test = False,
@@ -637,15 +653,20 @@ class ImageGen():
         Args:
             data (PlayerGlobalData): The global data of the player.
             diff_data (SessionDiffData): The diff data of the session.
+            ctx (ApplicationContext | None): The application context.
+            player (DBPlayer): The player object.
+            server_settings (ServerSettings | None): The server settings.
             test (bool): If True, the image will be displayed for testing purposes. 
+            debug_label (bool): If True, the debug label will be displayed on the image.
+            extra (ImageGenExtraSettings): The extra settings for image generation.
+            output_type (ImageOutputType): The type of output for the image.
+            widget_mode (bool): If True, the widget mode will be enabled.
+            force_locale (str | None): The forced locale for the text.
 
         Returns:
-            BytesIO: The image generated for the session stats.
+            BytesIO | Image.Image: The generated image for the session stats.
         """
-        # widget_mode = True
-        # player.widget_settings.adaptive_width = True
-        # player.widget_settings.disable_bg = True
-        # player.widget_settings.use_bg_for_stats_blocks = True
+
         if force_locale is not None:
             self.text = Text().load(lang=force_locale)
             
@@ -668,6 +689,7 @@ class ImageGen():
         self.session_values = SessionValues(diff_data, player.session_settings.stats_view)
         self.values = Values(data, diff_data, player.session_settings.stats_view)
         self.current_offset = 0
+        
         if diff_data.tank_stats is not None:
             self.tank_iterator = iter(diff_data.tank_stats)
         else: 
@@ -679,29 +701,23 @@ class ImageGen():
             server_bg = self.sdb.get_server_image(ctx.guild.id) is not None
         else:
             user_bg = self.pdb.get_member_image(player.id) is not None
-
             server_bg = False
         
         if server_settings is not None:
             allow_custom_background = server_settings.allow_custom_backgrounds
         else:
-            allow_custom_background = False
-
-        if player.image_settings.theme != 'default':
-            theme = get_theme(player.image_settings.theme)
-            self.image = center_crop(theme.bg, (ImageSize.max_width, ImageSize.max_height))
-            self.image_settings = theme.image_settings
+            allow_custom_background = True
             
-        elif player.image_settings.use_custom_bg or server_bg:
+        if player.image_settings.use_custom_bg or server_bg:
             if user_bg and allow_custom_background:
-                image_bytes = base64.b64decode(self.pdb.get_member_image(ctx.author.id))
+                image_bytes = base64.b64decode(self.pdb.get_member_image(player.id))
                 if image_bytes != None:
                     image_buffer = BytesIO(image_bytes)
                     self.image = Image.open(image_buffer)
                     self.load_image(image_buffer)
             
             elif server_bg:
-                image_bytes = base64.b64decode(self.sdb.get_server_image(ctx.guild.id))
+                image_bytes = base64.b64decode(self.sdb.get_server_image(player.id))
                 if image_bytes != None:   
                     image_buffer = BytesIO(image_bytes)
                     self.load_image(image_buffer)
@@ -725,7 +741,6 @@ class ImageGen():
         
         self.draw_background(
             self.layout_map, 
-            extra=extra, 
             widget_mode=widget_mode, 
             widget_settings=player.widget_settings   
         )
@@ -740,7 +755,7 @@ class ImageGen():
             if not self.image_settings.disable_flag:
                 self.draw_flag()
         
-        if not (widget_mode and player.widget_settings.disable_main_stats_block):
+        if not (widget_mode and (player.widget_settings.disable_main_stats_block and diff_data.tank_stats is not None)):
             self.draw_main_stats_block(img_draw)
             self.blocks -= 1
             self.current_offset += StatsBlockSize.main_stats + BlockOffsets.block_indent
@@ -769,7 +784,7 @@ class ImageGen():
             self.current_offset += StatsBlockSize.short_tank_stats + BlockOffsets.block_indent
             
         self.draw_watermark()
-            
+        
         if debug_label:
             self.draw_debug_label(img_draw)
 
@@ -833,6 +848,7 @@ class ImageGen():
                 icon = self.get_rating_icon(self.values.rating[slot])
             else:
                 icon = getattr(StatsIcons, value)
+                
             self.image.paste(
                 icon,
                 self.coord.rating_stats_icons(self.current_offset, icon.size)[slot],
@@ -852,7 +868,7 @@ class ImageGen():
         img_draw.text(
             self.coord.blocks_labels(self.current_offset),
             text,
-            font=self.fonts.roboto_small,
+            font=self.fonts.roboto_20,
             anchor='mm',
             fill=self.image_settings.main_text_color
         )
@@ -861,7 +877,7 @@ class ImageGen():
         img_draw.text(
             self.coord.blocks_labels(self.current_offset),
             f'{self.tank_type_handler(curr_tank.tank_type)} {curr_tank.tank_name} {self.tank_tier_handler(curr_tank.tank_tier)}',
-            font=self.fonts.roboto_icons,
+            font=self.fonts.roboto_25,
             anchor='mm',
             fill=self.image_settings.main_text_color
         )
@@ -869,7 +885,6 @@ class ImageGen():
     def draw_background(
             self, 
             rectangle_map: Image.Image, 
-            extra: ImageGenExtraSettings,
             widget_mode: bool,
             widget_settings: WidgetSettings
         ) -> None:
@@ -893,34 +908,51 @@ class ImageGen():
                     bg = bg.resize(rectangle_map.size)
                 
                 self.image.paste(bg, (0, 0), rectangle_map)
-                return
-            else:
-                pass
-        
-        bg = self.image.copy()
-        
-        gaussian_filter = ImageFilter.GaussianBlur(radius=self.image_settings.glass_effect)
 
-        if self.image_settings.glass_effect > 0:
-            bg = bg.filter(gaussian_filter)
-        if self.image_settings.blocks_bg_opacity > 0:
-            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_opacity)
-            bg.filter(gaussian_filter)
+            else:
+                self.image.putalpha(int(255 * abs(widget_settings.background_transparency - 1.0)))
+
+        else:
+            bg = self.image.copy()
+            
+            gaussian_filter = ImageFilter.GaussianBlur(radius=self.image_settings.glass_effect)
+
+            if self.image_settings.glass_effect > 0:
+                bg = bg.filter(gaussian_filter)
+            if self.image_settings.stats_blocks_transparency > 0:
+                bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.stats_blocks_transparency)
+                bg.filter(gaussian_filter)
 
         self.image.paste(bg, (0, 0), rectangle_map)
 
     def draw_debug_label(self, img: ImageDraw.ImageDraw) -> None:
         bbox = img.textbbox(
-            (self.img_size[0] // 2 - 150, self.img_size[1] // 2),
+            (self.img_size[0] // 2 - 100, self.img_size[1] // 2),
             text='DEBUG PREVIEW',
-            font=self.fonts.roboto_25
+            font=self.fonts.roboto_27
         )
-        img.rectangle(bbox, fill=(127, 127, 127, 20))
+        img.rectangle(bbox, fill=(127, 127, 127, 200))
         img.text(
-            (self.img_size[0] // 2 - 150, self.img_size[1] // 2),
+            (self.img_size[0] // 2 - 100, self.img_size[1] // 2),
             text='DEBUG PREVIEW',
-            font=self.fonts.roboto_25,
-            fill=(20, 200, 20, 20)
+            font=self.fonts.roboto_27,
+            fill=(20, 200, 20, 200)
+        )
+        img.text(
+            (20, self.img_size[1] - 180),
+            text=\
+                f'INFO =============\n'\
+                f'SIZE: {self.image.size}\n'\
+                f'FORMAT: {self.image.format}\n'\
+                f'LAYOUT DEFINER PROPS =============\n'\
+                f'TANKS COUNT: {sum(1 for _ in self.tank_iterator)}\n'\
+                f'BLOCKS: {self.blocks}\n'\
+                f'SMALL BLOCKS: {self.small_blocks}\n'\
+                f'SLOTS CONFIG: \n'
+                    f'{self.player.session_settings.stats_view.common_slots}\n'
+                    f'{self.player.session_settings.stats_view.rating_slots}\n',
+            align='left',
+            font=self.fonts.roboto_17
         )
         
     def draw_watermark(self):
@@ -979,11 +1011,11 @@ class ImageGen():
         if not self.data.data.clan_tag is None:
             tag = {
                 'text':     f'[{self.data.data.clan_stats.tag}]',
-                'font':     self.fonts.roboto,
+                'font':     self.fonts.roboto_30,
             }
             nickname = {
                 'text':     self.data.nickname,
-                'font':     self.fonts.roboto,
+                'font':     self.fonts.roboto_30,
             }
             
             tag_length = img.textlength(**tag) + 10
@@ -993,21 +1025,21 @@ class ImageGen():
             img.text(
                 xy=(self.img_size[0]//2 - tag_length//2, 20),
                 text=self.data.nickname,
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 fill=self.image_settings.nickname_color)
             
             img.text(
                 xy=(self.img_size[0]//2 + full_length//2 - tag_length//2, 20),
                 text=tag['text'],
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 fill=self.image_settings.clan_tag_color)
         else:
             img.text(
                 (self.img_size[0]//2, 20),
                 text=self.data.nickname,
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 fill=self.image_settings.nickname_color
             )
@@ -1016,7 +1048,7 @@ class ImageGen():
             img.text(
                 (self.img_size[0]//2, 55),
                 text=f'ID: {str(self.data.id)}',
-                font=self.fonts.roboto_small2,
+                font=self.fonts.roboto_17,
                 anchor='ma',
                 fill=Colors.l_grey)
 
@@ -1026,7 +1058,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=getattr(self.text.for_image, value),
-                font=self.fonts.roboto_small,
+                font=self.fonts.roboto_20,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -1038,7 +1070,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=self.values.main[slot],
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 align='center',
                 fill=colorize(
@@ -1054,7 +1086,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=self.diff_values.main[slot],
-                font=self.fonts.roboto_medium,
+                font=self.fonts.roboto_22,
                 anchor='ma',
                 align='center',
                 fill=self.value_colors(getattr(self.diff_data.main_diff, value))
@@ -1066,7 +1098,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=self.session_values.main[slot],
-                font=self.fonts.roboto_25,
+                font=self.fonts.roboto_27,
                 anchor='ma',
                 align='center',
                 fill=colorize(
@@ -1086,7 +1118,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=text,
-                font=self.fonts.roboto_small,
+                font=self.fonts.roboto_20,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -1096,14 +1128,14 @@ class ImageGen():
         coords = self.coord.rating_stats(self.current_offset)
         
         for slot, value in self.stats_view.rating_slots.items():
-            if value == 'rating':
+            if value == 'rating' and self.data.data.statistics.rating.calibration_battles_left != 0:
                 text = f'{abs(self.data.data.statistics.rating.calibration_battles_left - 10)} / 10'
             else:
                 text = self.values.rating[slot]
             img.text(
                 coords[slot],
                 text=text,
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 align='center',
                 fill=colorize(
@@ -1121,7 +1153,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=self.session_values.rating[slot],
-                font=self.fonts.roboto_25,
+                font=self.fonts.roboto_27,
                 anchor='ma',
                 align='center',
                 fill=colorize(
@@ -1155,7 +1187,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=self.diff_values.rating[slot],
-                font=self.fonts.roboto_medium,
+                font=self.fonts.roboto_22,
                 anchor='ma',
                 align='center',
                 fill=self.value_colors(getattr(self.diff_data.rating_diff, value))
@@ -1168,7 +1200,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 align='center',
                 fill=colorize(
@@ -1185,7 +1217,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 align='center',
                 fill=colorize(
@@ -1200,8 +1232,10 @@ class ImageGen():
         for slot, value in self.stats_view.common_slots.items():
             img.text(
                 coords[slot],
-                text=self.session_values.tank_stats(curr_tank.tank_id)[slot],
-                font=self.fonts.roboto_25,
+                text=ValueNormalizer.value_add_plus(
+                    getattr(curr_tank, f'd_{value}')
+                ) + self.session_values.tank_stats(curr_tank.tank_id)[slot],
+                font=self.fonts.roboto_22,
                 anchor='ma',
                 align='center',
                 fill=self.value_colors(getattr(curr_tank, f'd_{value}'))
@@ -1214,7 +1248,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
-                font=self.fonts.roboto_medium,
+                font=self.fonts.roboto_22,
                 anchor='ma',
                 align='center',
                 fill=self.value_colors(getattr(curr_tank, f'd_{value}'))
@@ -1227,7 +1261,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
-                font=self.fonts.roboto_25,
+                font=self.fonts.roboto_27,
                 anchor='ma',
                 align='center',
                 fill=colorize(
@@ -1243,7 +1277,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=getattr(self.text.for_image, value),
-                font=self.fonts.roboto_small,
+                font=self.fonts.roboto_20,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -1255,7 +1289,7 @@ class ImageGen():
             img.text(
                 coords[slot],
                 text=getattr(self.text.for_image, value),
-                font=self.fonts.roboto_small,
+                font=self.fonts.roboto_20,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -1283,14 +1317,16 @@ class ImageGen():
         if value == 0:
             return Colors.grey
         
-    def get_rating_icon(self, value: int | float) -> Image.Image:
-        if isinstance(value, str):
+    def get_rating_icon(self, value: int | str) -> Image.Image:
+        try:
+            value = int(value)
+        except ValueError:
             return LeaguesIcons.calibration
-        if value <= 3000:
+        if value in range(3000, 3999):
             return LeaguesIcons.gold
-        if value <= 4000:
+        elif value in range(4000, 4999):
             return LeaguesIcons.platinum
-        if value <= 5000:
+        elif value > 5000:
             return LeaguesIcons.brilliant
         else:
             return LeaguesIcons.empty

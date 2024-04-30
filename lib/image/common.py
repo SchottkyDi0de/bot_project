@@ -7,7 +7,7 @@ from enum import Enum
 from io import BytesIO
 from time import time
 
-from discord.ext.commands import Context
+from discord import ApplicationContext
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 from lib.data_classes.api.api_data import PlayerGlobalData
@@ -28,6 +28,7 @@ from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
 from lib.image.for_image.stats_coloring import colorize
 from lib.image.for_image.icons import LeaguesIcons
+from lib.image.utils.val_normalizer import ValueNormalizer
 
 _log = get_logger(__file__, 'ImageCommonLogger', 'logs/image_common.log')
 _config = Config().get()
@@ -182,108 +183,7 @@ class Coordinates():
 
             'accuracy': (620, 841),
         }
-
-
-class ValueNormalizer():
-    @staticmethod
-    def winrate(val, enable_null=False):
-        """
-        Normalizes a winrate value.
-
-        Args:
-            val (float): The winrate value to normalize.
-
-        Returns:
-            str: The normalized winrate value as a string.
-                  If val is 0, returns '—'.
-                  Otherwise, returns the winrate value formatted as '{:.2f} %'.
-        """
-        if round(val, 2) == 0:
-            if not enable_null:
-                return '—'
-            else:
-                return '0'
-
-        return '{:.2f}'.format(val) + '%'
-
-    @staticmethod
-    def ratio(val, enable_null=False):
-        """
-        Normalizes a ratio value.
-
-        Args:
-            val (float): The ratio value to normalize.
-
-        Returns:
-            str: The normalized ratio value as a string.
-                  If val is 0, returns '—'.
-                  Otherwise, returns the ratio value formatted as '{:.2f}'.
-        """
-        return ValueNormalizer.winrate(val, enable_null).replace('%', '')
-    
-    @staticmethod
-    def other(val, enable_null=False, str_bypass=False):
-        """
-        Normalizes a value based on certain conditions.
-
-        Args:
-            val (float or int): The value to normalize.
-            enable_null (bool): If True, returns '0' for zero values. Defaults to False.
-            str_bypass (bool): If True, returns the value as a string if it's a string. Defaults to False.
-
-        Returns:
-            str:
-            The normalized value as a string.
-            If val is 0 or equal to 0, returns '—' if enable_null is False, else '0'.
-            If val is a string, returns '—'.
-            If val is between 100,000 and 1,000,000, returns the value divided by 1,000
-            rounded to 2 decimal places and appended with 'K'.
-            If val is greater than or equal to 1,000,000, returns the value divided by 1,000,000
-            rounded to 2 decimal places and appended with 'M'.
-            Otherwise, returns the value as a string.
-        """
-        # Convert value to string if str_bypass is True and it's a string
-        if str_bypass and isinstance(val, str):
-            return val
-
-        # Check if value is 0 or equal to 0, return special value if enable_null is False
-        if round(val) == 0:
-            if not enable_null:
-                return '—'
-            else:
-                return '0'
-
-        # Check if value is a string, return special value
-        if isinstance(val, str):
-            return '—'
-
-        # Define the index and round the value based on certain conditions
-        index = ['K', 'M']
-        if val >= 100_000 and val < 1_000_000:
-            val = str(round(val / 1_000, 2)) + index[0]
-        elif val >= 1_000_000:
-            val = str(round(val / 1_000_000, 2)) + index[1]
-        else:
-            return str(val)
-
-        # Return the normalized value
-        return val
-    
-    @staticmethod
-    def adaptive(value):
-        '''
-        Automatically selects the value normalizer based on the type of the value.
-        args:
-            value (float or int): The value to normalize.
-        returns:
-            str: The normalized value as a string.
-        '''
-        if isinstance(value, float):
-            return ValueNormalizer.ratio(value)
-        if isinstance(value, int):
-            return ValueNormalizer.other(value)
         
-
 
 class Values():
     def __init__(self, data: PlayerGlobalData) -> None:
@@ -348,7 +248,7 @@ class ImageGen():
         self.image = center_crop(image, (ImageSize.max_width, ImageSize.max_height))
 
     def generate(self,
-                 ctx: Context | None,
+                 ctx: ApplicationContext | None,
                  data: PlayerGlobalData,
                  image_settings: ImageSettings,
                  server_settings: ServerSettings,
@@ -372,11 +272,7 @@ class ImageGen():
         server_bg = sdb.get_server_image(ctx.guild.id) is not None
         allow_bg = server_settings.allow_custom_backgrounds
         
-        if image_settings.theme != 'default':
-            theme = get_theme(image_settings.theme)
-            self.image = center_crop(theme.bg, (ImageSize.max_width, ImageSize.max_height))
-            self.image_settings = theme.image_settings
-        elif (image_settings.use_custom_bg or server_bg):
+        if (image_settings.use_custom_bg or server_bg):
             if user_bg and allow_bg and image_settings.use_custom_bg:
                 image_bytes = base64.b64decode(pdb.get_member_image(ctx.author.id))
                 if image_bytes != None:
@@ -480,7 +376,7 @@ class ImageGen():
         text_box = img_draw.textbbox(
             (self.img_size[0]//2, 20),
             text=self.data.data.name_and_tag,
-            font=self.fonts.roboto_icons,
+            font=self.fonts.roboto_25,
             anchor='ma'
         )
 
@@ -506,8 +402,8 @@ class ImageGen():
         bg = self.image.copy()
         if not self.image_settings.glass_effect == 0:
             bg = bg.filter(gaussian_filter)
-        if not self.image_settings.blocks_bg_opacity == 100:
-            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_opacity)
+        if not self.image_settings.stats_blocks_transparency == 100:
+            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.stats_blocks_transparency)
 
         self.image.paste(bg, (0, 0), background_map)
 
@@ -538,11 +434,11 @@ class ImageGen():
         if not self.data.data.clan_tag is None:
             tag = {
                 'text':     f'[{self.data.data.clan_stats.tag}]',
-                'font':     self.fonts.roboto,
+                'font':     self.fonts.roboto_30,
             }
             nickname = {
                 'text':     self.data.nickname,
-                'font':     self.fonts.roboto,
+                'font':     self.fonts.roboto_30,
             }
 
             tag_length = img.textlength(**tag) + 10
@@ -552,21 +448,21 @@ class ImageGen():
             img.text(
                 xy=(self.img_size[0]//2 - tag_length//2, 20),
                 text=self.data.nickname,
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 fill=self.image_settings.nickname_color)
 
             img.text(
                 xy=(self.img_size[0]//2 + full_length//2 - tag_length//2, 20),
                 text=tag['text'],
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 fill=self.image_settings.clan_tag_color)
         else:
             img.text(
                 (self.img_size[0]//2, 20),
                 text=self.data.nickname,
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 fill=self.image_settings.nickname_color
             )
@@ -574,7 +470,7 @@ class ImageGen():
         img.text(
             (self.img_size[0]//2, 55),
             text=f'ID: {str(self.data.id)}',
-            font=self.fonts.roboto_small2,
+            font=self.fonts.roboto_17,
             anchor='ma',
             fill=Colors.l_grey)
 
@@ -586,7 +482,7 @@ class ImageGen():
             img.text(
                 self.coord.category_labels[i],
                 text=getattr(self.text.for_image, i),
-                font=self.fonts.roboto_small,
+                font=self.fonts.roboto_20,
                 anchor='mm',
                 fill=self.image_settings.main_text_color
             )
@@ -596,7 +492,7 @@ class ImageGen():
             img.text(
                 self.coord.medals_labels[i],
                 text=getattr(self.text.for_image, i),
-                font=self.fonts.roboto_small2,
+                font=self.fonts.roboto_17,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -607,7 +503,7 @@ class ImageGen():
             img.text(
                 self.coord.common_stats_labels[i],
                 text=getattr(self.text.for_image, i),
-                font=self.fonts.roboto_small2,
+                font=self.fonts.roboto_17,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -621,7 +517,7 @@ class ImageGen():
             img.text(
                 self.coord.main_labels[i],
                 text=getattr(self.text.for_image, i),
-                font=self.fonts.roboto_small2,
+                font=self.fonts.roboto_17,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -632,7 +528,7 @@ class ImageGen():
             img.text(
                 self.coord.rating_labels[i],
                 text=getattr(self.text.for_image, i),
-                font=self.fonts.roboto_small2,
+                font=self.fonts.roboto_17,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -657,7 +553,7 @@ class ImageGen():
         img.text(
             self.coord.rating_league_label,
             text=text,
-            font=self.fonts.roboto_small2,
+            font=self.fonts.roboto_17,
             anchor='ma',
             # align='center',
             fill=self.image_settings.stats_text_color
@@ -668,7 +564,7 @@ class ImageGen():
             img.text(
                 self.coord.main_stats[i],
                 text=self.values.main[i],
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='mm',
                 fill=colorize(
                     i,
@@ -682,7 +578,7 @@ class ImageGen():
             img.text(
                 self.coord.rating_stats[i],
                 text=self.values.rating[i],
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 fill=colorize(
                     i,
@@ -697,7 +593,7 @@ class ImageGen():
             img.text(
                 self.coord.common_stats[i],
                 text=self.values.common[i],
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 fill=colorize(
                     i,
@@ -711,7 +607,7 @@ class ImageGen():
             img.text(
                 self.coord.medals_count[i],
                 text=str(getattr(self.achievements, i)),
-                font=self.fonts.roboto_small2,
+                font=self.fonts.roboto_17,
                 anchor='ma',
                 fill=self.image_settings.stats_color
             )
@@ -721,7 +617,7 @@ class ImageGen():
             img.text(
                 self.coord.main_stats_points[i],
                 text='.',
-                font=self.fonts.point,
+                font=self.fonts.roboto_100,
                 anchor='mm',
                 fill=self.point_coloring(i, getattr(self.data.data.statistics.all, i))
             )
@@ -731,7 +627,7 @@ class ImageGen():
             img.text(
                 self.coord.main_stats_points[i],
                 text='.',
-                font=self.fonts.point,
+                font=self.fonts.roboto_100,
                 anchor='mm',
                 fill=self.point_coloring(i, getattr(self.data.data.statistics.all, i))
             )
@@ -741,7 +637,7 @@ class ImageGen():
             img.text(
                 self.coord.common_stats_point[i],
                 text='.',
-                font=self.fonts.point,
+                font=self.fonts.roboto_100,
                 anchor='mm',
                 fill=self.point_coloring(
                     i, getattr(self.data.data.statistics.all, i), rating=True)

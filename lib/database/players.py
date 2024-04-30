@@ -479,12 +479,40 @@ class PlayersDB:
         
     def update_database(self):
         for member in self.collection.find():
+            self.collection.update_one(
+                {'id': member['id']},
+                {
+                    '$rename': {'image_settings.blocks_bg_opacity': 'stats_blocks_transparency'}
+                }
+            )
             member = DBPlayer.model_validate(member)
             self.collection.update_one(
                 {'id': member.id},
-                {'$set': {'session_settings.stats_view': StatsViewSettings().model_dump()}, '$set' : {'last_stats': None}}
+                {
+                    '$set': {'widget_settings.max_stats_blocks': 3}
+                }
             )
             self.collection.update_one(
                 {'id': member.id},
-                {'$set': {'session_settings.stats_view': StatsViewSettings().model_dump()}}
+                {
+                    '$set': {'image_settings.stats_blocks_transparency': member.image_settings.stats_blocks_transparency}
+                }
+            )
+            self.collection.update_one(
+                {'id': member.id},
+                {
+                    '$rename': {'widget_settings.update_per_seconds': 'widget_settings.update_time'}
+                }
+            ) 
+            self.collection.update_one(
+                {'id': member.id},
+                {
+                    '$set': {'widget_settings.update_time': 30}
+                }
+            ) # Change db structure to replace old update_per_seconds with update_time and set update_time to 30
+            self.collection.update_one(
+                {'id': member.id},
+                {'$rename': 
+                    {'session_settings.stats_blocks_transparency': 'background_transparency'}
+                }
             )

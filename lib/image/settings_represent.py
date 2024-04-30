@@ -196,7 +196,7 @@ class SettingsRepresent:
         bg = self.image.copy()
         img_draw = ImageDraw.Draw(bg)
         for index, (key, value) in enumerate(image_settings.items()):
-            if key == 'blocks_bg_opacity':
+            if key == 'stats_blocks_transparency':
                 self.img_draw.text(
                     (
                         self.offsets.rect_offset + 1, 
@@ -247,7 +247,7 @@ class SettingsRepresent:
                 )
                 gaussian_filter = ImageFilter.GaussianBlur(value)
                 bg = self.image.copy().filter(gaussian_filter)
-                bg = ImageEnhance.Brightness(bg).enhance(image_settings['blocks_bg_opacity'])
+                bg = ImageEnhance.Brightness(bg).enhance(image_settings['stats_blocks_transparency'])
                 rect_map = Image.new('RGBA', self.image.size, (0, 0, 0, 0))
                 img_draw = ImageDraw.Draw(rect_map)
                 img_draw.rounded_rectangle(

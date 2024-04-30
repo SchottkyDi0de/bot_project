@@ -137,16 +137,16 @@ class SessionWidget(commands.Cog):
                 max_value=360,
                 required=False
             ),
-            stats_blocks_transparency: Option(
+            background_transparency: Option(
                 float,
-                description=Text().get('en').cmds.session_widget_settings.items.stats_blocks_transparency,
+                description=Text().get('en').cmds.session_widget_settings.items.background_transparency,
                 description_localizations={
-                    'ru': Text().get('ru').cmds.session_widget_settings.items.stats_blocks_transparency,
-                    'pl': Text().get('pl').cmds.session_widget_settings.items.stats_blocks_transparency,
-                    'uk': Text().get('ua').cmds.session_widget_settings.items.stats_blocks_transparency
+                    'ru': Text().get('ru').cmds.session_widget_settings.items.background_transparency,
+                    'pl': Text().get('pl').cmds.session_widget_settings.items.background_transparency,
+                    'uk': Text().get('ua').cmds.session_widget_settings.items.background_transparency
                 },
                 min_value=0,
-                max_value=1,
+                max_value=100,
                 required=False
             ),
             disable_main_stats_block: Option(
@@ -200,8 +200,8 @@ class SessionWidget(commands.Cog):
             'stats_block_color': stats_block_color,
             'use_bg_for_stats_blocks': use_bg_for_stats_blocks,
             'disable_main_stats_block': disable_main_stats_block,
-            'stats_blocks_transparency': stats_blocks_transparency,
-            'update_per_seconds': update_per_seconds,
+            'background_transparency': background_transparency,
+            'update_time': update_per_seconds,
             'max_stats_small_blocks': max_stats_small_blocks,
             'max_stats_blocks': max_stats_blocks,
             'disable_nickname': disable_nickname,
@@ -225,6 +225,9 @@ class SessionWidget(commands.Cog):
                 else:
                     color_error = True
                     color_error_data.append({'param_name': key, 'value': value})
+            if key == 'background_transparency':
+                current_settings[key] = value / 100
+                set_values_count += 1
             else:
                 set_values_count += 1
                 current_settings[key] = value

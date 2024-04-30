@@ -153,7 +153,7 @@ frequent:
 
   info:
     info: Information
-    player_not_registred: The player is not logged in. First enter the command `/set_player`
+    player_not_registred: The player is not logged in. First enter the command </set_player:1126148623869153443>
     err_info_sent: Information about the error has been sent to the developer.
     warning: Warning
 
@@ -181,7 +181,7 @@ cmds:
     errors:
       player_not_found: No player with this nickname has been found.
     info:
-      player_not_registred: To display stats without entering data, save your data with `/set_player`.
+      player_not_registred: To display stats without entering data, save your data with </set_player:1126148623869153443>.
     items:
       ''
 
@@ -211,7 +211,7 @@ cmds:
     errors:
       player_not_found: No player with this nickname has been found.
     info:
-      set_player_ok: 'Player information has been successfully saved, you can now use `/astats` to automatically display statistics based on the saved data.'
+      set_player_ok: 'Player information has been successfully saved, you can now use </astats:1125575592486645855> to automatically display statistics based on the saved data.'
     items:
       ''
 
@@ -223,7 +223,7 @@ cmds:
         lang_list: List of languages.
         to_server: Apply for server.
     errors:
-      player_not_registred: To change the language, first save your data with `/set_player`
+      player_not_registred: To change the language, first save your data with </set_player:1126148623869153443>
       permission_denied: You must have administrator rights to change the language on the entire server.
     info:
       set_lang_ok: Localisation language has been successfully changed.
@@ -237,7 +237,7 @@ cmds:
     errors:
       session_not_found: No session data found, you may not have started a session or it may have been more than 24 hours since the last session started.
     info:
-      player_not_registred: To view the session status, first save your data with `/set_player`
+      player_not_registred: To view the session status, first save your data with </set_player:1126148623869153443>
     items:
       started: |- 
         ```py
@@ -267,10 +267,10 @@ cmds:
       sub_descr:
         button_update: Update session
     errors:
-      session_not_found: No session data found, you may not have started a session or it may have been more than 24 hours since the last session started.
+      session_not_found: 'No active sessions, to start auto session use: </start_autosession:1207032176927834143>.'
       session_not_updated: No change in stats detected, maybe you haven't done any fights or the API hasn't updated the data, try again later.
     info:
-      player_not_registred: To view session stats, first save your data with `/set_player`
+      player_not_registred: To view session stats, first save your data with </set_player:1126148623869153443>
     items:
       ''
 
@@ -283,8 +283,8 @@ cmds:
     errors:
       ''
     info:
-      player_not_registred: To start the session, first save your data with `/set_player`
-      started: Session is running. Now you can play some battles and get session statistics using `/get_session`.
+      player_not_registred: To start the session, first save your data with </set_player:1126148623869153443>
+      started: Session is running. Now you can play some battles and get session statistics using </get_session:1144323150226673734>.
     items:
       ''
 
@@ -304,8 +304,8 @@ cmds:
         00:20, 03:15, 22:40, 13:20
         The set value will be ignored.
     info:
-      player_not_registred: To start a session, first save your data using `/set_player`
-      started: Autosession started. Now you can play several battles and get session statistics using `/get_session`
+      player_not_registred: To start a session, first save your data using </set_player:1126148623869153443>
+      started: Autosession started. Now you can play several battles and get session statistics using </get_session:1144323150226673734>
     items:
       ''
 
@@ -314,11 +314,11 @@ cmds:
     descr:
       this: Change background
       sub_descr:
-        image: Upload background in PNG or JPEG format (max. 2 MB) (700 X 1350px)
+        image: Upload background in PNG or JPEG format (max. 2 MB) (800 X 1350px)
         server: Set default background for this server (admin privileges required).
         resize_mode: Type of image resizing (if required)
     errors:
-      player_not_registred: To change the background, save your data using the `/astats` command
+      player_not_registred: To change the background, save your data using the </astats:1125575592486645855> command
       permission_denied: You must have administrator rights to set the background for the server.
       file_error: The file is not a valid image.
       oversize: The file is too large (maximum 2 MB).
@@ -337,7 +337,7 @@ cmds:
         use_custom_bg: Use custom background
         colorize_stats: Colorize statistics
         glass_effect: Glass effect 0 - Disable (0-30)
-        blocks_bg_brightness: Block background brightness (0-100)
+        stats_blocks_transparency: Block background brightness (0-100)
         nickname_color: 'Nickname color (HEX or RGB Color)'
         clan_tag_color: 'Clan tag color (HEX or RGB Color)'
         stats_color: 'Main statistics color (HEX or RGB Color)'
@@ -353,7 +353,7 @@ cmds:
       color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
       changes_not_found: No parameter change detected, change at least one parameter.
     info:
-      set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
+      set_ok: 'Image settings applied successfully, get current settings: </image_settings_get:1190367458192801866>'
       canceled_settings_change: 'Image settings change canceled.'
       preview: 'Do you want to apply the changes? Statistics preview:'
     items:
@@ -368,7 +368,7 @@ cmds:
     errors:
       permission_denied: You must have administrator rights to modify server settings.
     info:
-      set_ok: 'Server settings applied successfully, view current settings: `/server_settings_get`'
+      set_ok: 'Server settings applied successfully, view current settings: </server_settings_get:1190367458192801868>'
     items:
       ''
 
@@ -386,7 +386,7 @@ cmds:
       use_custom_bg: Custom background
       colorize_stats: Colorize statistics
       glass_effect: Glass effect
-      blocks_bg_opacity: Statistics blocks opacity
+      stats_blocks_transparency: Statistics blocks opacity
       nickname_color: Nickname color
       clan_tag_color: Clan tag color
       stats_color: Main statistics color
@@ -586,7 +586,7 @@ cmds:
       message:
         title: 'Verify your account'
         description: |- 
-          To get access to special bot commands (for example `/lock`) 
+          To get access to special bot commands (for example </set_lock:1221467304890728509>) 
           you need to verify or register a verified account.
         additional_info: |-
           If you already have an unverified account, verification will rewrite it! Active sessions will be reset.
@@ -638,7 +638,7 @@ cmds:
         ```css
         body { background-color: rgba(0,0,0,0)!important; overflow: hidden }
         ```
-        setup widget: `/session_widget_settings`
+        setup widget: </session_widget_settings:1221467304450064500>
     errors: 
       ''
     items:
@@ -658,7 +658,7 @@ cmds:
       max_stats_blocks: Maximum number of statistics blocks
       max_stats_small_blocks: Maximum number of small statistics blocks
       update_per_seconds: Statistics update time in seconds
-      stats_blocks_transparency: Statistics blocks transparency
+      background_transparency: Statistics blocks transparency
       disable_main_stats_block: Disable main statistics block
       use_bg_for_stats_blocks: Use background for statistics blocks
       adaptive_width: Adaptive width [TEST MODE]

@@ -23,6 +23,10 @@ from lib.logger.logger import get_logger
 from lib.locale.locale import Text
 from lib.utils.nickname_handler import handle_nickname
 from lib.utils.validators import validate
+from lib.image.themes.theme_loader import get_theme
+from lib.data_classes.db_player import ImageSettings
+from lib.data_classes.themes import Theme
+from lib.utils.img_to_base64 import convert_image
 
 _log = get_logger(__file__, 'CogSetLogger', 'logs/cog_set.log')
 _config = Config().get()
@@ -215,6 +219,7 @@ class Set(commands.Cog):
                 ) # type: ignore
             ):
         check_user(ctx)
+        Text().load_from_context(ctx)
 
         if not self.db.check_member(ctx.author.id):
             await ctx.respond(
@@ -225,7 +230,6 @@ class Set(commands.Cog):
                 )
             return
         
-        Text().load_from_context(ctx)
         image: Attachment = image
         await ctx.defer()
 
@@ -272,19 +276,19 @@ class Set(commands.Cog):
                     pil_image = Image.open(buffer)
                     pil_image = pil_image.convert('RGBA')
                     pil_image = resize_image(pil_image, (800, 1350), mode=getattr(ResizeMode, resize_mode))
-                with io.BytesIO() as buffer:
-                    pil_image.save(buffer, format='PNG')
-                    self.sdb.set_server_image(
-                        base64.b64encode(buffer.getvalue()).decode(),
-                        ctx
+                
+                base64_img = convert_image(pil_image)
+                self.sdb.set_server_image(
+                    base64_img,
+                    ctx
+                )
+                await ctx.respond(
+                    embed=self.inf_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.set_background.info.set_background_ok,
+                    colour='green'
                     )
-                    await ctx.respond(
-                        embed=self.inf_msg.custom(
-                        Text().get(),
-                        text=Text().get().cmds.set_background.info.set_background_ok,
-                        colour='green'
-                        )
-                    )
+                )
             else:
                 await ctx.respond(
                     embed=self.err_msg.custom(
@@ -300,19 +304,20 @@ class Set(commands.Cog):
             pil_image = Image.open(buffer)
             pil_image = pil_image.convert('RGBA')
             pil_image = resize_image(pil_image, (800, 1350), mode=getattr(ResizeMode, resize_mode))
-        with io.BytesIO() as buffer:
-            pil_image.save(buffer, format='PNG')
-            self.db.set_member_image(
-                ctx.author.id,
-                base64.b64encode(buffer.getvalue()).decode(),
-            )
-            await ctx.respond(
-                embed=self.inf_msg.custom(
-                    Text().get(),
-                    text=Text().get().cmds.set_background.info.set_background_ok,
-                    colour='green'
-                    )
+
+        
+        base64_img = convert_image(pil_image)
+        self.db.set_member_image(
+            ctx.author.id,
+            base64_img,
+        )
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=Text().get().cmds.set_background.info.set_background_ok,
+                colour='green'
                 )
+            )
     
     @commands.slash_command(
         description=Text().get('en').cmds.session_view_settings.descr.this,
@@ -549,9 +554,9 @@ class Set(commands.Cog):
         Text().load_from_context(ctx)
         check_user(ctx)
         
-        image_settings = self.db.get_image_settings(ctx.author.id)
-        image_settings.theme = theme
-        self.db.set_image_settings(ctx.author.id, image_settings)
+        theme: Theme = get_theme(theme)
+        self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(theme.image_settings))
+        self.db.set_member_image(ctx.author.id, convert_image(theme.bg))
         
         await ctx.respond(
             embed=self.inf_msg.custom(

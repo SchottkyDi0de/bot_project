@@ -352,7 +352,7 @@ class SubDescr6(BaseModel):
     use_custom_bg: str
     colorize_stats: str
     glass_effect: str
-    blocks_bg_brightness: str
+    stats_blocks_transparency: str
     nickname_color: str
     clan_tag_color: str
     stats_color: str
@@ -432,7 +432,7 @@ class Items2(BaseModel):
     use_custom_bg: str
     colorize_stats: str
     glass_effect: str
-    blocks_bg_opacity: str
+    stats_blocks_transparency: str
     nickname_color: str
     clan_tag_color: str
     stats_color: str
@@ -686,7 +686,7 @@ class Items8(BaseModel):
     max_stats_blocks: str
     max_stats_small_blocks: str
     update_per_seconds: str
-    stats_blocks_transparency: str
+    background_transparency: str
     disable_main_stats_block: str
     use_bg_for_stats_blocks: str
     adaptive_width: str
