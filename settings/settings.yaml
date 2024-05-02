@@ -12,7 +12,7 @@ bot_name:
 
 server:
   host: 'blitzhub.eu'
-  port: 80
+  port: 443
 
 session:
   ttl: 172_800 # in seconds
@@ -61,13 +61,13 @@ help_urls:
   pl: https://blitzhub.gitbook.io/blitz-statistics-bot/pl-docs
 
 session_widget:
-  url: 'http://<host>:<port>/bot/session_widget_app?p_id=<user_id>&lang=<lang>'
+  url: 'https://<host>:<port>/bot/session_widget_app?p_id=<user_id>&lang=<lang>'
 
 auth:
-  wg_redirect_uri: 'http://<host>:<port>/bot/auth/game?region=<region>'
+  wg_redirect_uri: 'https://<host>:<port>/bot/auth/game?region=<region>'
   wg_uri: 'https://api.worldoftanks.<region>/wot/auth/login/?application_id=<app_id>&redirect_uri=<redirect_uri>'
 
-  ds_auth_redirect_url: 'http://<host>:<port>/bot/auth/discord'
+  ds_auth_redirect_url: 'https://<host>:<port>/bot/auth/discord'
   ds_auth_primary_uri: 'https://discord.com/oauth2/authorize?client_id=<client_id>&response_type=code&redirect_uri=<redirect_uri>&scope=identify'
 
 game_api:
