@@ -12,8 +12,9 @@ the_retry==0.1.1
 asynciolimiter==1.0.0
 pymongo==4.6.1
 webcolors==1.13
-pywebio==1.8.3
-fastapi==0.104.1
+fastapi==0.109.2
 uvicorn==0.23.2
 websockets==12.0
-nicegui==1.4.19
+nicegui==1.4.24
+typer==0.12.3
+dynamic-yaml==2.0.0

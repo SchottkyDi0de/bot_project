@@ -59,8 +59,6 @@ class SessionWidget(commands.Cog):
                     url = insert_data(
                         _config.session_widget.url,
                         {
-                            'host' : _config.server.host,
-                            'port' : _config.server.port,
                             'user_id' : ctx.author.id,
                             'lang' : Text().get_current_lang()
                         }
@@ -125,7 +123,7 @@ class SessionWidget(commands.Cog):
                 max_value=2,
                 required=False
             ),
-            update_per_seconds: Option(
+            update_time: Option(
                 int,
                 description=Text().get('en').cmds.session_widget_settings.items.update_per_seconds,
                 description_localizations={
@@ -133,7 +131,7 @@ class SessionWidget(commands.Cog):
                     'pl': Text().get('pl').cmds.session_widget_settings.items.update_per_seconds,
                     'uk': Text().get('ua').cmds.session_widget_settings.items.update_per_seconds
                 },
-                min_value=60,
+                min_value=30,
                 max_value=360,
                 required=False
             ),
@@ -201,7 +199,7 @@ class SessionWidget(commands.Cog):
             'use_bg_for_stats_blocks': use_bg_for_stats_blocks,
             'disable_main_stats_block': disable_main_stats_block,
             'background_transparency': background_transparency,
-            'update_time': update_per_seconds,
+            'update_time': update_time,
             'max_stats_small_blocks': max_stats_small_blocks,
             'max_stats_blocks': max_stats_blocks,
             'disable_nickname': disable_nickname,

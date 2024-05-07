@@ -15,6 +15,8 @@ from workers.db_backup_worker import DBBackupWorker
 _log = get_logger(__file__, 'MainLogger', 'logs/main.log')
 _config = Config().get()
 
+if os.name == 'posix':
+    os.system('chmod 777 lib/replay_parser/bin/parser')
 
 class App():
     def __init__(self):
