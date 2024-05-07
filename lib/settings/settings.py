@@ -2,7 +2,7 @@ import os
 import traceback
 from itertools import cycle
 
-import yaml
+import dynamic_yaml
 from dotenv import find_dotenv, load_dotenv
 
 from lib.data_classes.settings import ConfigStruct
@@ -11,6 +11,7 @@ from lib.utils.singleton_factory import singleton
 
 _log = get_logger(__file__, 'ConfigLoaderLogger', 'logs/config_loader.log')
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+_log.debug(f'Loading environment variable in {dotenv_path}')
 
 if not os.path.exists(find_dotenv()):
     _log.critical(f'Failed attempt to load environment variable in {dotenv_path}')
@@ -44,7 +45,7 @@ class Config():
     def __init__(self) -> None:
         with open('settings/settings.yaml', encoding='utf-8') as f:
             try:
-                self.yaml_dict = yaml.safe_load(f)
+                self.yaml_dict = dynamic_yaml.load(f)
                 self.cfg = ConfigStruct.model_validate(self.yaml_dict)
             except Exception:
                 _log.critical('Failed to load settings.yaml')

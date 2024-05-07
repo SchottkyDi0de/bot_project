@@ -20,16 +20,16 @@ class StatsViewSettings(BaseModel):
     }
 
 class WidgetSettings(BaseModel):
-    disable_bg: bool = True
+    disable_bg: bool = False
     disable_nickname: bool = False
-    max_stats_blocks: int = 3
-    max_stats_small_blocks: int = 2
-    update_time: int = 60  # Seconds
-    background_transparency: float = 0.7
+    max_stats_blocks: int = 1
+    max_stats_small_blocks: int = 0
+    update_time: int = 30  # Seconds
+    background_transparency: float = 0.25
     disable_main_stats_block: bool = False
-    use_bg_for_stats_blocks: bool = False
-    adaptive_width: bool = True
-    stats_block_color: str = '#000000'
+    use_bg_for_stats_blocks: bool = True
+    adaptive_width: bool = False
+    stats_block_color: str = '#bababa'
 
 class SessionSettings(BaseModel):
     is_autosession: bool = False

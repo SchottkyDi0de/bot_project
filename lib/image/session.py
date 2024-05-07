@@ -551,9 +551,9 @@ class LayoutDefiner:
         current_offset = BlockOffsets.first_indent
         color = (
             *get_tuple_from_color(self.widget_settings.stats_block_color),
-            int(self.widget_settings.background_transparency * 255)
+            int(abs(1 - self.widget_settings.background_transparency) * 255)
         )
-        if not self.widget_mode or self.widget_settings.disable_bg:
+        if not self.widget_mode:
             color = (255, 255, 255, 255)
             
         for block in range(self.blocks):

@@ -5,17 +5,26 @@
 # Example:
 #   srv_id: "server_id: <id>"
 #
-# _Zener
+# This YAML file is loaded by the Python library dynamic-yaml, 
+# which allows you to use variables in the file
+#
+# Example:
+# server:
+#   port: 8080
+#
+# message:
+#   server_running: 'server started on port {server.port}'
 
 bot_name:
   'Blitz Statistics'
 
 server:
   host: 'blitzhub.eu'
-  port: 443
+  port: '443'
+  protocol: 'https'
 
 session:
-  ttl: 172_800 # in seconds
+  ttl: 2_592_000 # in seconds
 
 autosession:
   ttl: 2_592_000 # in seconds
@@ -61,13 +70,13 @@ help_urls:
   pl: https://blitzhub.gitbook.io/blitz-statistics-bot/pl-docs
 
 session_widget:
-  url: 'https://<host>:<port>/bot/session_widget_app?p_id=<user_id>&lang=<lang>'
+  url: '{server.protocol}://{server.host}:{server.port}/bot/ui/session_widget_app?p_id=<user_id>&lang=<lang>'
 
 auth:
-  wg_redirect_uri: 'https://<host>:<port>/bot/auth/game?region=<region>'
+  wg_redirect_uri: '{server.protocol}://{server.host}:{server.port}/bot/auth/game?region=<region>'
   wg_uri: 'https://api.worldoftanks.<region>/wot/auth/login/?application_id=<app_id>&redirect_uri=<redirect_uri>'
 
-  ds_auth_redirect_url: 'https://<host>:<port>/bot/auth/discord'
+  ds_auth_redirect_url: '{server.protocol}://{server.host}:{server.port}/bot/auth/discord'
   ds_auth_primary_uri: 'https://discord.com/oauth2/authorize?client_id=<client_id>&response_type=code&redirect_uri=<redirect_uri>&scope=identify'
 
 game_api:

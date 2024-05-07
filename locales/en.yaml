@@ -542,8 +542,8 @@ cmds:
 
         Capture points:
         +---------------------------+
-        Earned:      <point_captured>
-        Seized:      <point_defended>
+        Earned:        <point_captured>
+        Seized:        <point_defended>
         +---------------------------+
 
         Shots:
