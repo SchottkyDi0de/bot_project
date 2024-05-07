@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 from time import sleep
 
 from fastapi import FastAPI
@@ -13,15 +13,15 @@ from lib.data_parser.parse_data import get_session_stats, _log as _parser_log
 from lib.settings.settings import Config
 
 _api = API()
-_config = Config().get()
 _pdb = PlayersDB()
 _img = ImageGen()
 
 _api_log.setLevel(40)
-# _image_log.setLevel(40)
+_image_log.setLevel(40)
 _parser_log.setLevel(40)
 
 def init_app(app: FastAPI) -> None:
+
     @ui.page(
         '/session_widget_app', 
         favicon='🎲', 
@@ -31,12 +31,13 @@ def init_app(app: FastAPI) -> None:
     async def session_widget_app(
             client: Client,
             p_id: Optional[int] = None, 
-            lang: Optional[str] = None, 
+            lang: Optional[str] = None,
+            bg_color: Optional[str] = None
         ) -> None:
+        print(f'bg_color: {bg_color}')
         ui.add_style(
-            'body { background-color: #3a3a3a; }',
+            f'body {{background-color: rgba{"(0,0,0,0)" if bg_color is None else bg_color};}}',
         )
-        await client.connected()
         
         if p_id is None:
             ui.label('Player id not specified')
@@ -51,6 +52,8 @@ def init_app(app: FastAPI) -> None:
         except LastStatsNotFound:
             ui.label('Session not found')
             return
+        
+        await client.connected()
         
         user = _pdb.get_member(p_id)
         stats = await _api.get_stats(user.region, user.game_id, ignore_lock=True)
@@ -77,9 +80,7 @@ def init_app(app: FastAPI) -> None:
         )
         
         ui.image(session_image)\
-
             .classes('w-full')\
-        
         
         async def check_user_stats():
             user = _pdb.get_member(p_id)
@@ -97,4 +98,4 @@ def init_app(app: FastAPI) -> None:
                 
         ui.timer(float(user.widget_settings.update_time), check_user_stats)
         
-    ui.run_with(app, mount_path='/bot', storage_secret='kFJofle04kkKc9f9d90-elk4kFKl4kFJofle04kkKc9f9d90')
+    ui.run_with(app, mount_path='/bot/ui', storage_secret='kFJofle04kkKc9f9d90-elk4kFKl4kdJofle04kkKc9f9d90')

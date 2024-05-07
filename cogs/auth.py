@@ -53,8 +53,6 @@ class Auth(commands.Cog):
                     url=insert_data(
                         _config.auth.wg_redirect_uri,
                         {
-                            'host': _config.server.host,
-                            'port': _config.server.port,
                             'region': region
                         }
                     )
