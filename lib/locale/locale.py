@@ -2,7 +2,9 @@ from typing import Dict
 
 import discord
 import yaml
+import dynamic_yaml
 from discord.commands import ApplicationContext
+
 
 from lib.data_classes.locale_struct import Localization
 from lib.database.players import PlayersDB
@@ -33,7 +35,7 @@ class Text():
             if i == 'auto':
                 continue
             with open(f'locales/{i}.yaml', encoding='utf-8') as f:
-                self.datas |= {i: Localization.model_validate(yaml.safe_load(f))}
+                self.datas |= {i: Localization.model_validate(dynamic_yaml.load(f))}
     
     def load_from_context(self, ctx: ApplicationContext) -> None:
         """

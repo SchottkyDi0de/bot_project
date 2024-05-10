@@ -144,6 +144,19 @@ gamemodes:
   burning_games: Возрождення
   unknown: Невідомий
 
+cmds_defs:
+  set_player: '</set_player:1126148623869153443>'
+  stats: '</stats:1125575592486645854>'
+  astats: '</astats:1125575592486645855>'
+  start_session: '</start_session:1131616465490022591>'
+  start_autosession: '</start_autosession:1207032176927834143>'
+  get_session: '</get_session:1144323150226673734>'
+  session_state: '</session_state:1160739497567326290>'
+  image_settings_get: '</image_settings_get:1190367458192801866>'
+  server_settings_get: '</server_settings_get:1190367458192801868>'
+  set_lock: '</set_lock:1221467304890728509>'
+  session_widget_settings: '</session_widget_settings:1221467304450064500>'
+
 frequent:
   errors:
     error: Помилка.
@@ -156,7 +169,7 @@ frequent:
 
   info:
     info: Інформація
-    player_not_registred: Гравець не зареєстрований. Спочатку введіть команду </set_player:1126148623869153443>
+    player_not_registred: 'Гравець не зареєстрований. Спочатку введіть команду {cmds_defs.set_player}'
     err_info_sent: Інформація про помилку була відправлена розробнику.
     warning: Увага
 
@@ -214,7 +227,13 @@ cmds:
     errors:
       player_not_found: Гравець з даним нікнеймом не знайдений.
     info:
-      set_player_ok: 'Інформація про гравця успішно збережена, тепер можете використовувати </astats:1125575592486645855> для автоматичного відображення статистики на основі збережених даних.'
+      set_player_ok: |- # TODO: Auto translated, need to check
+        Інформація про гравця була успішно збережена, тепер ви можете використовувати всі можливості бота.
+        - Для запитання основної статистики за аккаунтом використовуйте {cmds_defs.astats} | {cmds_defs.stats}
+        - Для початку відслідковування сесійної статистики використовуйте {cmds_defs.start_session} | {cmds_defs.start_autosession}
+        - Для отримання сесійної статистики використовуйте {cmds_defs.get_session}
+        - Для отримання інформації про стан сесії використовуйте {cmds_defs.session_state}
+        Натисніть кнопку нижче якщо хочете запустити автосесію прямо зараз.
     items:
       ''
 
@@ -272,7 +291,7 @@ cmds:
       sub_descr:
         button_update: Оновити сесію
     errors:
-      session_not_found: 'Немає запущених Сесій, запуск автоматичної сесії: </start_autosession:1207032176927834143>.' # TODO: Autotranslated 
+      session_not_found: 'Немає запущених Сесій, запуск автоматичної сесії: {cmds_defs.start_autosession}.' # TODO: Autotranslated 
       session_not_updated: Не знайдено змінення статистики, можливо ви не робили боїв або API не обновило дані, спробуйте пізніше.
     info:
       player_not_registred: Для перегляду сесійної статистики спочатку сбережить свої дані за допомоги </set_player:1126148623869153443>
@@ -289,7 +308,7 @@ cmds:
       ''
     info:
       player_not_registred: Для запуска сесії спочатку збережіть свої дані за допомогою команди </set_player:1126148623869153443>
-      started: Сесія запущена. Тепер можете зіграти декілька боїв та отримати сесійну статистику використовуючи </get_session:1144323150226673734>
+      started: 'Сесія запущена. Тепер можете зіграти декілька боїв та отримати сесійну статистику використовуючи {cmds_defs.get_session}.'
     items:
       ''
   
@@ -322,7 +341,7 @@ cmds:
         resize_mode: Type of image resizing (if required)
         server: Задати фон за замовчуванням для данного сервера (потрібні права адміністратора).
     errors:
-      player_not_registred: Для зміни фона збережіть свої дані командою </astats:1125575592486645855>
+      player_not_registred: 'Для зміни фона збережіть свої дані командою {cmds_defs.set_player}'
       permission_denied: Для встановлення фону на сервері ви повинні мати права адміністратора.
       file_error: Файл не є підходящим зображенням.
       oversize: Файл занадто великий (максимум 2 MB).
@@ -357,7 +376,7 @@ cmds:
       color_error: 'Неправильно код кольору `<param_name>`, значення: `<value>`'
       changes_not_found: Не знайдено зміни параметрів, змініть хочаб один параметр.
     info:
-      set_ok: 'Налаштування зображення успішно застосовані, отримати поточні налаштування: </image_settings_get:1190367458192801866>'
+      set_ok: 'Налаштування зображення успішно застосовані, отримати поточні налаштування: {cmds_defs.image_settings_get}'
       canceled_settings_change: 'Змінення налаштувань зображення відмінено.'
       preview: 'Ви хочете застосувати зміни? Предперегляд статистики:'
     items:
@@ -372,7 +391,7 @@ cmds:
     errors:
       permission_denied: Для змінення налаштувань сервера ви повинні мати права адміністратора.
     info:
-      set_ok: 'Налаштування зображення успішно застосовані, отримати поточні налаштування: </server_settings_get:1190367458192801868>'
+      set_ok: 'Налаштування зображення успішно застосовані, отримати поточні налаштування: {cmds_defs.image_settings_get}'
     items:
       ''
 
@@ -596,7 +615,7 @@ cmds:
       message:
         title: 'Підтвердити свій аккаунт'
         description: |- 
-          Щоб отримати доступ до спеціальних команд бота (наприклад </set_lock:1221467304890728509>) 
+          Щоб отримати доступ до спеціальних команд бота (наприклад {cmds_defs.set_lock}) 
           Ви маєте верифікувати або зареєструвати верифікований аккаунт.
         additional_info: |-
           Якщо Ви вже маєте неподтверджений аккаунт, то при верифікації аккаунт буде перезаписаний! Запущені сесії будуть скинуті.
@@ -641,14 +660,14 @@ cmds:
     descr:
       this: Запуск сесійного WEB віджета.
     info:
-      success: |- 
+      success: |-
         Ваш віджет сесійної статистики був запущений.
-        Посилання: <link>
+        Посилання: <link> 
         Налаштування CSS для коректного відображення: 
-        ```css
-        body { background-color: rgba(0,0,0,0)!important; overflow: hidden }
-        ```
-        Налаштування віджета: </session_widget_settings:1221467304450064500>
+        ```css 
+        body {{ background-color: rgba(0,0,0,0)!important; }}
+        ``` 
+        Налаштування віджета: {cmds_defs.session_widget_settings} 
     errors: 
       ''
     items:
@@ -691,3 +710,10 @@ cmds:
       success: Тема була успішно вибрана
     items:
       theme: Тема
+
+# delete player
+  delete_player: # <<< TODO: Autotranlsated
+    descr:
+      this: 'Видалити всі дані про себе'
+    info:
+      success: 'Всі ваші дані повністю видалено з бази даних'

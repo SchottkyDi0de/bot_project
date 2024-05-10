@@ -1,15 +1,16 @@
+from datetime import timedelta
 import io
-import base64
 
 from PIL import Image
-from discord import Option, Attachment
+from discord import Interaction, Option, Attachment
+from discord import ui, ButtonStyle
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
-from lib.auth.discord import DiscordOAuth
 from lib.api.async_wotb_api import API
 from lib.blacklist.blacklist import check_user
-from lib.data_classes.db_player import StatsViewSettings
+from lib.data_classes.db_player import DBPlayer, StatsViewSettings, SessionSettings
+from lib.data_classes.locale_struct import Localization
 from lib.exceptions.database import VerificationNotFound
 from lib.image.utils.resizer import resize_image, ResizeMode
 from lib.settings.settings import Config
@@ -32,11 +33,54 @@ _log = get_logger(__file__, 'CogSetLogger', 'logs/cog_set.log')
 _config = Config().get()
 
 
+class StartSession():
+    def __init__(self, text: Localization, player: DBPlayer) -> ui.View:
+        class StartSessionView(ui.View):
+            @ui.button(
+                label=text.cmds.start_autosession.descr.this,
+                style=ButtonStyle.success,
+                emoji='✅'
+            )
+            async def button_callback(self, button: ui.Button, interaction: Interaction):
+                if interaction.user.id != player.id:
+                    await interaction.response.send_message(
+                        embed=ErrorMSG().custom(
+                            locale=text,
+                            text=text.views.not_owner
+                        ),
+                        ephemeral=True
+                    )
+                    return
+                
+                session_settings = SessionSettings().model_validate({})
+                session_settings.is_autosession = True
+                session_settings.time_to_restart += timedelta(days=1)
+                PlayersDB().start_autosession(
+                    player.id,
+                    await API().get_stats(
+                        region=player.region,
+                        game_id=player.game_id
+                    ),
+                    session_settings
+                )
+                await interaction.message.delete()
+                await interaction.channel.send(
+                    embed=InfoMSG().custom(
+                        locale=text,
+                        text=text.cmds.start_autosession.info.started,
+                    ),
+                )
+                button.disabled = True
+                
+        self.view = StartSessionView()
+        
+    def get_view(self):
+        return self.view
+
 class Set(commands.Cog):
     cog_command_error = hook_exceptions(_log)
 
     def __init__(self, bot) -> None:
-        self.discord_oauth = DiscordOAuth()
         self.err_msg = ErrorMSG()
         self.inf_msg = InfoMSG()
         self.sdb = ServersDB()
@@ -46,14 +90,14 @@ class Set(commands.Cog):
         
         
     @commands.slash_command(
-            guild_only=True,
-            description=Text().get('en').cmds.set_lang.descr.this,
-            description_localizations={
-                'ru': Text().get('ru').cmds.set_lang.descr.this,
-                'pl': Text().get('pl').cmds.set_lang.descr.this,
-                'uk': Text().get('ua').cmds.set_lang.descr.this
-                }
-            )
+        guild_only=True,
+        description=Text().get('en').cmds.set_lang.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.set_lang.descr.this,
+            'pl': Text().get('pl').cmds.set_lang.descr.this,
+            'uk': Text().get('ua').cmds.set_lang.descr.this
+            }
+        )
     async def set_lang(self, ctx: ApplicationContext,
             lang: Option(
                 str,
@@ -117,7 +161,6 @@ class Set(commands.Cog):
         await ctx.defer()
         
         nickname_type = validate(nick_or_id, 'nickname')
-        
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
         player = await self.api.check_and_get_player(
@@ -125,11 +168,15 @@ class Set(commands.Cog):
             region=region,
             game_id=composite_nickname.player_id,
             discord_id=ctx.author.id
-            )
+        )
         self.db.set_member(player, override=True)
+        view = StartSession(Text().get(), player)
         _log.debug(f'Set player: {ctx.author.id} {nick_or_id} {region}')
-        await ctx.respond(embed=self.inf_msg.set_player_ok())
-
+        await ctx.respond(
+            embed=self.inf_msg.set_player_ok(),
+            view=view.get_view()
+        )
+        
     @commands.slash_command(
         guild_only=True,
         description=Text().get('en').cmds.server_settings.descr.this,
@@ -562,6 +609,37 @@ class Set(commands.Cog):
             embed=self.inf_msg.custom(
                 Text().get(),
                 text=Text().get().cmds.set_theme.info.success,
+                colour='green'
+            )
+        )
+        
+    @commands.slash_command(
+        description=Text().get('en').cmds.delete_player.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.delete_player.descr.this,
+            'pl': Text().get('pl').cmds.delete_player.descr.this,
+            'uk': Text().get('ua').cmds.delete_player.descr.this
+        }
+    )
+    async def delete_player(self, ctx: ApplicationContext):
+        Text().load_from_context(ctx)
+        check_user(ctx)
+        
+        if not self.db.check_member(ctx.author.id):
+            await ctx.respond(
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    text=Text().get().frequent.info.player_not_registred,
+                    colour='orange'
+                )
+            )
+            return
+        
+        self.db.del_member(ctx.author.id)
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=Text().get().cmds.delete_player.info.success,
                 colour='green'
             )
         )
