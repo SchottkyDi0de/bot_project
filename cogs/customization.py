@@ -342,15 +342,16 @@ class Customization(Cog):
         current_image_settings = ImageSettings.model_validate(current_settings)
         sptext, spimage = StatsPreview().preview(ctx, current_image_settings)
         await ctx.respond(
-            sptext, file=spimage, 
+            sptext, 
+            file=spimage, 
             view=ViewMeta(
-            bot=self.bot, 
-            ctx=ctx, 
-            type='image_settings', 
-            session_self=None, 
-            current_settings=current_image_settings
+                bot=self.bot, 
+                ctx=ctx, 
+                type='image_settings', 
+                session_self=None, 
+                current_settings=current_image_settings
+                )
             )
-        )
 
     @commands.slash_command(
         guild_only=True, 

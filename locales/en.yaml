@@ -141,6 +141,19 @@ gamemodes:
   burning_games: Burning Games
   unknown: Unknown
 
+cmds_defs:
+  set_player: '</set_player:1126148623869153443>'
+  stats: '</stats:1125575592486645854>'
+  astats: '</astats:1125575592486645855>'
+  start_session: '</start_session:1131616465490022591>'
+  start_autosession: '</start_autosession:1207032176927834143>'
+  get_session: '</get_session:1144323150226673734>'
+  session_state: '</session_state:1160739497567326290>'
+  image_settings_get: '</image_settings_get:1190367458192801866>'
+  server_settings_get: '</server_settings_get:1190367458192801868>'
+  set_lock: '</set_lock:1221467304890728509>'
+  session_widget_settings: '</session_widget_settings:1221467304450064500>'
+
 frequent:
   errors:
     error: Error
@@ -153,7 +166,7 @@ frequent:
 
   info:
     info: Information
-    player_not_registred: The player is not logged in. First enter the command </set_player:1126148623869153443>
+    player_not_registred: 'The player is not logged in. First enter the command {cmds_defs.set_player}'
     err_info_sent: Information about the error has been sent to the developer.
     warning: Warning
 
@@ -181,7 +194,7 @@ cmds:
     errors:
       player_not_found: No player with this nickname has been found.
     info:
-      player_not_registred: To display stats without entering data, save your data with </set_player:1126148623869153443>.
+      player_not_registred: 'To display stats without entering data, save your data with {cmds_defs.set_player}.'
     items:
       ''
 
@@ -211,7 +224,13 @@ cmds:
     errors:
       player_not_found: No player with this nickname has been found.
     info:
-      set_player_ok: 'Player information has been successfully saved, you can now use </astats:1125575592486645855> to automatically display statistics based on the saved data.'
+      set_player_ok: |-
+        Player information has been successfully saved, now you can use all the bot's features.
+        - To request main account statistics, use {cmds_defs.astats} | {cmds_defs.stats}
+        - To start tracking session statistics, use {cmds_defs.start_session} | {cmds_defs.start_autosession}
+        - To get session statistics, use {cmds_defs.get_session}
+        - To get session status information, use {cmds_defs.session_state}
+        Click the button below to start auto-session right now.
     items:
       ''
 
@@ -223,7 +242,7 @@ cmds:
         lang_list: List of languages.
         to_server: Apply for server.
     errors:
-      player_not_registred: To change the language, first save your data with </set_player:1126148623869153443>
+      player_not_registred: 'To change the language, first save your data with {cmds_defs.set_player}'
       permission_denied: You must have administrator rights to change the language on the entire server.
     info:
       set_lang_ok: Localisation language has been successfully changed.
@@ -237,7 +256,7 @@ cmds:
     errors:
       session_not_found: No session data found, you may not have started a session or it may have been more than 24 hours since the last session started.
     info:
-      player_not_registred: To view the session status, first save your data with </set_player:1126148623869153443>
+      player_not_registred: 'To view the session status, first save your data with {cmds_defs.set_player}'
     items:
       started: |- 
         ```py
@@ -267,10 +286,10 @@ cmds:
       sub_descr:
         button_update: Update session
     errors:
-      session_not_found: 'No active sessions, to start auto session use: </start_autosession:1207032176927834143>.'
+      session_not_found: 'No active sessions, to start auto session use: {cmds_defs.start_autosession}.'
       session_not_updated: No change in stats detected, maybe you haven't done any fights or the API hasn't updated the data, try again later.
     info:
-      player_not_registred: To view session stats, first save your data with </set_player:1126148623869153443>
+      player_not_registred: 'To view session stats, first save your data with {cmds_defs.set_player}'
     items:
       ''
 
@@ -283,8 +302,8 @@ cmds:
     errors:
       ''
     info:
-      player_not_registred: To start the session, first save your data with </set_player:1126148623869153443>
-      started: Session is running. Now you can play some battles and get session statistics using </get_session:1144323150226673734>.
+      player_not_registred: 'To start the session, first save your data with {cmds_defs.set_player}'
+      started: 'Session is running. Now you can play some battles and get session statistics using {cmds_defs.get_session}.'
     items:
       ''
 
@@ -304,7 +323,7 @@ cmds:
         00:20, 03:15, 22:40, 13:20
         The set value will be ignored.
     info:
-      player_not_registred: To start a session, first save your data using </set_player:1126148623869153443>
+      player_not_registred: 'To start a session, first save your data using {cmds_defs.set_player}'
       started: Autosession started. Now you can play several battles and get session statistics using </get_session:1144323150226673734>
     items:
       ''
@@ -318,7 +337,7 @@ cmds:
         server: Set default background for this server (admin privileges required).
         resize_mode: Type of image resizing (if required)
     errors:
-      player_not_registred: To change the background, save your data using the </astats:1125575592486645855> command
+      player_not_registred: 'To change the background, save your data using the {cmds_defs.set_player} command'
       permission_denied: You must have administrator rights to set the background for the server.
       file_error: The file is not a valid image.
       oversize: The file is too large (maximum 2 MB).
@@ -353,7 +372,7 @@ cmds:
       color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
       changes_not_found: No parameter change detected, change at least one parameter.
     info:
-      set_ok: 'Image settings applied successfully, get current settings: </image_settings_get:1190367458192801866>'
+      set_ok: 'Image settings applied successfully, get current settings: {cmds_defs.image_settings_get}'
       canceled_settings_change: 'Image settings change canceled.'
       preview: 'Do you want to apply the changes? Statistics preview:'
     items:
@@ -368,7 +387,7 @@ cmds:
     errors:
       permission_denied: You must have administrator rights to modify server settings.
     info:
-      set_ok: 'Server settings applied successfully, view current settings: </server_settings_get:1190367458192801868>'
+      set_ok: 'Server settings applied successfully, view current settings: {cmds_defs.server_settings_get}'
     items:
       ''
 
@@ -586,8 +605,8 @@ cmds:
       message:
         title: 'Verify your account'
         description: |- 
-          To get access to special bot commands (for example </set_lock:1221467304890728509>) 
-          you need to verify or register a verified account.
+          'To get access to special bot commands (for example {cmds_defs.set_lock})' 
+          'you need to verify or register a verified account.'
         additional_info: |-
           If you already have an unverified account, verification will rewrite it! Active sessions will be reset.
         button_lt: Lesta
@@ -631,14 +650,14 @@ cmds:
     descr:
       this: Start session Web widget.
     info:
-      success: |- 
-        Your session statistics widget has been launched.
-        Link: <link>
+      success: |
+        Your session statistics widget has been launched. 
+        Link: <link> 
         CSS settings for correct display: 
-        ```css
-        body { background-color: rgba(0,0,0,0)!important; overflow: hidden }
-        ```
-        setup widget: </session_widget_settings:1221467304450064500>
+        ```css 
+        body {{ background-color: rgba(0,0,0,0)!important }} 
+        ``` 
+        setup widget: {cmds_defs.session_widget_settings} 
     errors: 
       ''
     items:
@@ -681,3 +700,11 @@ cmds:
       success: Theme has been successfully set
     items:
       theme: Theme
+
+# delete player
+  delete_player:
+    descr:
+      this: 'Delete all data about yourself'
+    info:
+      success: 'All your data has been completely deleted from the database'
+      

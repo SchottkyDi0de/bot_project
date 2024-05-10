@@ -495,4 +495,4 @@ class PlayersDB:
                     'stats_block_color': '#000000',
                 }
             ):
-                self.set_member_widget_settings(member['id'], WidgetSettings().model_dump())
+                self.set_member_widget_settings(member['id'], WidgetSettings())
