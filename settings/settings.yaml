@@ -87,11 +87,11 @@ game_api:
     asia: 'api.wotblitz.asia'
 
   urls:
-    get_id: 
-      "https://<reg_url>/wotb/account/list/\
-      ?application_id=<app_id>\
-      &search=<nickname>\
-      &type=<search_type>"
+    get_id: >
+      https://<reg_url>/wotb/account/list/
+      ?application_id=<app_id>
+      &search=<nickname>
+      &type=<search_type>
 
     get_stats:
       "https://<reg_url>/wotb/account/info/\

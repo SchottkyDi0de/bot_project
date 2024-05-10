@@ -35,7 +35,7 @@ def init_app(app: FastAPI) -> None:
             bg_color: Optional[str] = None
         ) -> None:
         print(f'bg_color: {bg_color}')
-        ui.add_style(
+        ui.add_css(
             f'body {{background-color: rgba{"(0,0,0,0)" if bg_color is None else bg_color};}}',
         )
         
