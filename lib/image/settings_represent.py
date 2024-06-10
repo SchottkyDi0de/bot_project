@@ -151,7 +151,7 @@ class SettingsRepresent:
                     font=self.font,
                     anchor='lm',
                     align='center',
-                    fill=Colors.green if value else Colors.red
+                    fill=Colors.l_green if value else Colors.l_red
                 )
             index += 1
     
@@ -242,7 +242,7 @@ class SettingsRepresent:
                         self.offsets.rect_offset + 30,
                         self.offsets.base_offset_y + index * self.offsets.line_offset_y,
                     ),
-                    fill=Colors.green,
+                    fill=Colors.l_green,
                     width=10
                 )
                 gaussian_filter = ImageFilter.GaussianBlur(value)

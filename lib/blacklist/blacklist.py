@@ -1,9 +1,9 @@
-from discord.ext.commands import Context
+from discord import ApplicationContext
 
 from lib.exceptions.blacklist import UserBanned
 
 
-def check_user(ctx: Context):
+def check_user(ctx: ApplicationContext | int):
     """
     Checks if the user is in the block list and raises UserBanned exception if they are.
 
@@ -16,10 +16,15 @@ def check_user(ctx: Context):
     Returns:
         None
     """
-    if ctx.author.id in block_list:
-        raise UserBanned
+    if isinstance(ctx, int):
+        if ctx in block_list:
+            raise UserBanned()
+    elif isinstance(ctx, ApplicationContext):
+        if ctx.author.id in block_list:
+            raise UserBanned()
     else:
-        pass
+        raise TypeError(f'ctx must be an instance of ApplicationContext or int, not {ctx.__class__.__name__}')
+
 
 def load():
     with open('lib/blacklist/blacklist.txt', 'r') as f:

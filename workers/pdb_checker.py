@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from lib.api.async_wotb_api import API
 
+from lib.data_classes.db_player import AccountSlotsEnum, SessionStatesEnum
 from lib.database.players import PlayersDB
 from lib.logger.logger import get_logger
 
@@ -17,7 +18,7 @@ class PDBWorker:
         self.STOP_FLAG = False
         self.api = API()
 
-    def stop_worker(self):
+    def stop_workers(self):
         """
         Stop the worker.
 
@@ -32,7 +33,7 @@ class PDBWorker:
         _log.debug('WORKERS: setting STOP_WORKER_FLAG to True')
         self.STOP_FLAG = True
 
-    async def run_worker(self, *args):
+    async def run_workers(self, *args):
         """
         Asynchronously runs the worker in a loop.
 
@@ -67,35 +68,23 @@ class PDBWorker:
         Returns:
             None: This function does not return anything.
         """
-        member_ids = self.db.get_players_ids()
+        member_ids = await self.db.get_all_members_ids()
+        print(member_ids)
         for member_id in member_ids:
-            player = self.db.get_member(member_id)
-            
-            if self.db.check_member_last_stats(member_id):
-                self.db.validate_session(member_id)
-            else:
+            member = await self.db.get_member(member_id)
+            used_slots: AccountSlotsEnum = await self.db.get_all_used_slots(member=member)
+            if used_slots is None:
                 continue
             
-            session_settings = self.db.get_member_session_settings(member_id)
-            self.db.check_member_premium(member_id)
-            
-            if session_settings.is_autosession:
-                now_time = datetime.now(pytz.utc)
+            for slot in used_slots:
+                slot: AccountSlotsEnum
+                session_state = await self.db.validate_session(member=member, slot=slot)
                 
-                if now_time > (session_settings.time_to_restart - timedelta(hours=session_settings.timezone)):
-                    session_settings.time_to_restart += timedelta(days=1)
-                    try:
-                        last_stats = await self.api.get_stats(
-                            region=player.region, 
-                            game_id=player.game_id,
-                            ignore_lock=True
-                            )
-                    except Exception:
-                        _log.error(f'WORKERS: PDB worker failed to update session for {player.nickname}, id: {player.id}')
-                        _log.error(traceback.format_exc())
-                        continue
-                    else:
-                        self.db.start_autosession(member_id, last_stats, session_settings)
-                        _log.info(f'WORKERS: PDB worker updated session for {player.nickname}, id: {player.id}')
+                if session_state != SessionStatesEnum.RESTART_NEEDED:
+                    continue
                 
-            await sleep(0.05)
+                game_account = await self.db.get_game_account(slot, member=member)
+                new_last_stats = await self.api.get_stats(game_id=game_account.game_id, region=game_account.region)
+                
+                _log.info(f'Session updated for {member_id} in slot {slot.name}')
+                await self.db.update_session(slot, member_id, game_account.session_settings, new_last_stats)

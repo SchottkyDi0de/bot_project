@@ -8,6 +8,8 @@ class Colors:
     purple = (153, 137, 230)  # Represents the color purple
     orange = (205, 106, 29)  # Represents the color orange
     green = (168, 230, 137)    # Represents the color green
+    l_green = (23, 232, 17)   # Represents the color light green
+    l_red = (254, 36, 0)       # Represents the color light red
     cyan = (114, 209, 255)    # Represents the color cyan
     grey = (121, 121, 121)   # Represents the color grey
     l_grey = (200, 200, 200) # Represents the color light grey

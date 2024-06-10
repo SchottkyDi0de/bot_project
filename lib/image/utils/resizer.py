@@ -1,3 +1,4 @@
+from enum import Enum
 from PIL import Image, ImageFilter
 
 from lib.logger.logger import get_logger
@@ -5,7 +6,7 @@ from lib.logger.logger import get_logger
 _log = get_logger(__file__, 'ImageUtilsResizerLogger', 'logs/image_utils_resizer.log')
 
 
-class ResizeMode:
+class ResizeMode(Enum):
     RESIZE = 1
     CROP_OR_FILL = 2
     AUTO = 3

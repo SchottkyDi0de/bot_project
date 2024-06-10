@@ -4,7 +4,7 @@ from io import BytesIO
 
 from discord import Interaction, File
 
-from lib.image.common import ImageGen
+from lib.image.common import ImageGenCommon
 from lib.data_classes.api.api_data import PlayerGlobalData, Player as PlayerFAPI, Achievements, TankStats, Statistics
 from lib.data_classes.api.player_stats import All as AllPlayer
 from lib.data_classes.api.tanks_stats import All as AllTank
@@ -101,7 +101,7 @@ class SelectMenu:
         return int(temp[:-2])
 
     async def replay_select_callback(self, select, interaction: Interaction):
-        Text().load_from_context(self.ctx)
+        await Text().load_from_context(self.ctx)
         self.data: ParsedReplayData
         _log.debug(f"buildng data for {select.values[0]}")
 
@@ -126,7 +126,7 @@ class SelectMenu:
             _log.debug(f"get achievements for {player.info.nickname}, generate image")
 
             achievements = await self.api.get_player_achievements(player.info.region, player.account_id)
-            bin_image = ImageGen().generate(self.ctx, SelectMenu._build_global_data(player, playerres, achievements), 
+            bin_image = ImageGenCommon().generate(self.ctx, SelectMenu._build_global_data(player, playerres, achievements), 
                                             image_settings, server_settings)
         
         if need_cache:

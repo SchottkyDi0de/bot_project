@@ -8,6 +8,9 @@ from lib.embeds.common import CommonMSG
 from lib.settings.settings import Config, EnvConfig
 from lib.locale.locale import Text
 from lib.utils.string_parser import insert_data
+from lib.utils.slot_info import get_formatted_slot_info
+from lib.utils.standard_account_validate import standard_account_validate
+from lib.data_classes.db_player import AccountSlotsEnum
 
 _config = Config().get()
 _env_config = EnvConfig()
@@ -20,7 +23,6 @@ class Auth(commands.Cog):
         self.bot = bot
         self.common_msg = CommonMSG()
     
-    # TODO: add localization
     @commands.slash_command(
         description=Text().get('en').cmds.verify.descr.this,
         description_localizations={
@@ -42,9 +44,24 @@ class Auth(commands.Cog):
             },
             required=True,
             choices=_config.default.available_regions
-            ) # type: ignore
+            ),
+        account: Option(
+            int,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            choices=[x.value for x in AccountSlotsEnum],
+            required=True,
+            default=None
+            )
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
+        
+        game_account, member, slot = await standard_account_validate(ctx.user.id, account)
+        
         await ctx.respond(
             embed=self.common_msg.verify(),
             view=View(

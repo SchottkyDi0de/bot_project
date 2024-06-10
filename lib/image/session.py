@@ -4,19 +4,19 @@ from io import BytesIO
 from time import time
 from typing import Dict
 
-from discord import ApplicationContext
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import (
-    DBPlayer, ImageSettings, StatsViewSettings, WidgetSettings
+    AccountSlotsEnum, DBPlayer, GameAccount, ImageSettings, StatsViewSettings, WidgetSettings
 )
-from lib.data_classes.db_server import ServerSettings
+from lib.data_classes.db_server import DBServer
 from lib.data_classes.image import ImageGenExtraSettings
 from lib.data_classes.locale_struct import Localization
 from lib.data_classes.session import SessionDiffData, TankSessionData
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
+from lib.image.utils.b64_img_handler import base64_to_img, img_to_base64, img_to_readable_buffer
 from lib.image.utils.val_normalizer import ValueNormalizer
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.flags import Flags
@@ -34,6 +34,14 @@ from lib.image.for_image.icons import LeaguesIcons
 
 _log = get_logger(__file__, 'ImageSessionLogger', 'logs/image_session.log')
 _config = Config().get()
+
+
+class ImageGenMetaData:
+    tanks_count = 0
+    image_size = (0, 0)
+    image_format = 'RGBA'
+    blocks = 0
+    small_blocks = 0
 
 
 class BlocksStack():
@@ -598,13 +606,14 @@ class LayoutDefiner:
         return self.layout_map
     
     
-class ImageOutputType(Enum):
-    bytes_io = 0
-    pil_image = 1
+class ImageGenReturnTypes(Enum):
+    PIL_IMAGE = 1
+    BYTES_IO = 2
+    BASE64 = 3
 
 
 @singleton
-class ImageGen():
+class ImageGenSession():
     leagues = LeaguesIcons()
     colors = Colors()
     pdb = PlayersDB()
@@ -623,43 +632,61 @@ class ImageGen():
     data = None
     
     
-    def load_image(self, bytes_ot_path: str | BytesIO, return_img: bool = False) -> None:
-        image = Image.open(bytes_ot_path)
+    def _load_image(self, bytes_ot_path: str | bytes | None) -> None:
+        if bytes_ot_path is not None:
+            image = Image.open(_config.image.default_bg_path, formats=['png'])
+        else:
+            image = Image.open(bytes_ot_path, formats=['png'])
+            
         if image.mode != 'RGBA':
             image = image.convert('RGBA')
 
-        if return_img:
-            return image
-        
-        self.image = image
+        self.image = center_crop(image, (ImageSize.max_width, ImageSize.max_height))
+
+    def _load_image_by_rules(self, member: DBPlayer | None = None, server: DBServer | None = None) -> None:
+        if server is not None:
+            if not server.settings.allow_custom_backgrounds and (server.custom_background is not None):
+                self.image = base64_to_img(server.custom_background)
+                return
+            elif not server.settings.allow_custom_backgrounds:
+                self._load_image(_config.image.default_bg_path)
+                return
+            
+        if member is not None:
+            if (member.image is not None) and member.use_custom_image:
+                self.image = base64_to_img(member.image)
+                return
+                
+        self._load_image(_config.image.default_bg_path)
 
     def generate(
             self, 
             data: PlayerGlobalData,
             diff_data: SessionDiffData,
-            ctx: ApplicationContext | None,
             player: DBPlayer,
-            server_settings: ServerSettings | None,
-            test = False,
-            debug_label = False,
+            server: DBServer | None,
+            slot: AccountSlotsEnum,
+            force_image_settings: ImageSettings | None = None,
             extra: ImageGenExtraSettings = ImageGenExtraSettings(),
-            output_type: ImageOutputType = ImageOutputType.bytes_io,
+            output_type: ImageGenReturnTypes = ImageGenReturnTypes.BYTES_IO,
             widget_mode: bool = False,
+            test = False,
+            debug_label = True, # TODO: set False
             force_locale: str | None = None
-            ) -> BytesIO | Image.Image:
+            ) -> BytesIO | Image.Image | str:
         """
         Generate the image for the given player's session stats.
 
         Args:
             data (PlayerGlobalData): The global data of the player.
             diff_data (SessionDiffData): The diff data of the session.
-            ctx (ApplicationContext | None): The application context.
             player (DBPlayer): The player object.
-            server_settings (ServerSettings | None): The server settings.
+            server (DBServer | None): The server object.
+            slot: (AccountSlotsEnum): The slot of the player.
             test (bool): If True, the image will be displayed for testing purposes. 
             debug_label (bool): If True, the debug label will be displayed on the image.
             extra (ImageGenExtraSettings): The extra settings for image generation.
-            output_type (ImageOutputType): The type of output for the image.
+            output_type (ImageGenReturnTypes): The type of output for the image.
             widget_mode (bool): If True, the widget mode will be enabled.
             force_locale (str | None): The forced locale for the text.
 
@@ -669,93 +696,70 @@ class ImageGen():
 
         if force_locale is not None:
             self.text = Text().load(lang=force_locale)
-            
+        
+        
+        self.game_account: GameAccount = getattr(player.game_accounts, slot.name)
         self.player = player
-        self.image_settings = player.image_settings
+        self.image_settings = self.game_account.image_settings if force_image_settings is None else force_image_settings
+        
         self.layout_definer = LayoutDefiner(
             data=diff_data,
-            image_settings=player.image_settings,
+            image_settings=self.image_settings,
             extra=extra,
-            stats_view_settings=player.session_settings.stats_view,
-            widget_settings=player.widget_settings,
+            stats_view_settings=self.game_account.stats_view_settings,
+            widget_settings=self.game_account.widget_settings,
             widget_mode=widget_mode
             )
+        start_time = time()
         self.layout_map = self.layout_definer.create_rectangle_map()
         self.blocks, self.small_blocks = self.layout_definer.get_blocks_count()
         self.include_rating = self.layout_definer.include_rating
         self.diff_data = diff_data
         self.data = data
-        self.diff_values = DiffValues(diff_data, player.session_settings.stats_view)
-        self.session_values = SessionValues(diff_data, player.session_settings.stats_view)
-        self.values = Values(data, diff_data, player.session_settings.stats_view)
+        self.diff_values = DiffValues(diff_data, self.game_account.stats_view_settings)
+        self.session_values = SessionValues(diff_data, self.game_account.stats_view_settings)
+        self.values = Values(data, diff_data, self.game_account.stats_view_settings)
         self.current_offset = 0
+        self.metadata = ImageGenMetaData()
         
         if diff_data.tank_stats is not None:
             self.tank_iterator = iter(diff_data.tank_stats)
         else: 
             self.tank_iterator = iter([])
-        self.stats_view = player.session_settings.stats_view
-
-        if ctx is not None:
-            user_bg = self.pdb.get_member_image(ctx.author.id) is not None
-            server_bg = self.sdb.get_server_image(ctx.guild.id) is not None
-        else:
-            user_bg = self.pdb.get_member_image(player.id) is not None
-            server_bg = False
+        self.stats_view = self.game_account.stats_view_settings
         
-        if server_settings is not None:
-            allow_custom_background = server_settings.allow_custom_backgrounds
-        else:
-            allow_custom_background = True
-            
-        if player.image_settings.use_custom_bg or server_bg:
-            if user_bg and allow_custom_background:
-                image_bytes = base64.b64decode(self.pdb.get_member_image(player.id))
-                if image_bytes != None:
-                    image_buffer = BytesIO(image_bytes)
-                    self.image = Image.open(image_buffer)
-                    self.load_image(image_buffer)
-            
-            elif server_bg:
-                image_bytes = base64.b64decode(self.sdb.get_server_image(player.id))
-                if image_bytes != None:   
-                    image_buffer = BytesIO(image_bytes)
-                    self.load_image(image_buffer)
-            else:
-                self.image = Image.open('res/image/default_image/default_bg.png', formats=['png'])
+        self.metadata.tanks_count = len(diff_data.tank_stats.keys()) if diff_data.tank_stats is not None else 0
 
-                if self.image.mode != 'RGBA':
-                    self.image.convert('RGBA').save('res/image/default_image/default_bg.png')
-                    self.load_image(_config.image.default_bg_path)
-        else:
-            self.load_image(_config.image.default_bg_path)
+        self._load_image_by_rules(player, server)
+        
+        if self.image.mode != 'RGBA':
+            self.image = self.image.convert('RGBA')
 
-            if self.image.mode != 'RGBA':
-                self.image.convert('RGBA').save(_config.image.default_bg_path)
-                self.load_image()
-
+        self.metadata.image_format = self.image.format
         self.image = center_crop(self.image, self.layout_map.size)
-
-        start_time = time()
         self.img_size = self.image.size
+        self.metadata.image_size = self.img_size
         
         self.draw_background(
             self.layout_map, 
             widget_mode=widget_mode, 
-            widget_settings=player.widget_settings   
+            widget_settings=self.game_account.widget_settings   
         )
         img_draw = ImageDraw.Draw(self.image)
 
         self.text = Text().get()
-        self.coord = RelativeCoordinates(self.img_size, player.session_settings.stats_view)
+        self.coord = RelativeCoordinates(self.img_size, self.game_account.stats_view_settings)
         self.current_offset = BlockOffsets.first_indent
+        
+        self.metadata.blocks = self.blocks
+        self.metadata.small_blocks = self.small_blocks
 
-        if not (widget_mode and player.widget_settings.disable_nickname):
+        if not (widget_mode and self.game_account.widget_settings.disable_nickname):
             self.draw_nickname(img_draw)
             if not self.image_settings.disable_flag:
                 self.draw_flag()
         
-        if not (widget_mode and (player.widget_settings.disable_main_stats_block and diff_data.tank_stats is not None)):
+        if not (widget_mode and (self.game_account.widget_settings.disable_main_stats_block and diff_data.tank_stats is not None)):
             self.draw_main_stats_block(img_draw)
             self.blocks -= 1
             self.current_offset += StatsBlockSize.main_stats + BlockOffsets.block_indent
@@ -788,19 +792,23 @@ class ImageGen():
         if debug_label:
             self.draw_debug_label(img_draw)
 
+        _log.debug(f'Image generated in {round(time() - start_time, 4)} seconds')
+
         if test:
             self.image.show()
             return
         
-        if output_type == ImageOutputType.bytes_io:
-            bin_image = BytesIO()
-            self.image.save(bin_image, 'PNG')
-            bin_image.seek(0)
-            _log.debug('Image was sent in %s sec.', round(time() - start_time, 4))
-            return bin_image
+        if output_type == ImageGenReturnTypes.BYTES_IO:
+            return img_to_readable_buffer(self.image)
         
-        if output_type == ImageOutputType.pil_image:
+        elif output_type == ImageGenReturnTypes.PIL_IMAGE:
             return self.image
+        
+        elif output_type == ImageGenReturnTypes.BASE64:
+            return img_to_base64(self.image)
+
+        else:
+            raise TypeError(f'output_type must be an instance of ImageGenReturnTypes, not {output_type.__class__.__name__}')
     
     def draw_main_stats_block(self, image_draw: ImageDraw.ImageDraw) -> None:
         self.draw_block_label(image_draw, self.text.for_image.main)
@@ -939,18 +947,20 @@ class ImageGen():
             fill=(20, 200, 20, 200)
         )
         img.text(
-            (20, self.img_size[1] - 180),
+            (20, self.img_size[1] - 240),
             text=\
-                f'INFO =============\n'\
-                f'SIZE: {self.image.size}\n'\
-                f'FORMAT: {self.image.format}\n'\
-                f'LAYOUT DEFINER PROPS =============\n'\
-                f'TANKS COUNT: {sum(1 for _ in self.tank_iterator)}\n'\
-                f'BLOCKS: {self.blocks}\n'\
-                f'SMALL BLOCKS: {self.small_blocks}\n'\
+                f'INFO:\n'\
+                f'=========================\n'\
+                f'SIZE: {self.metadata.image_size}\n'\
+                f'FORMAT: {self.metadata.image_format}\n'\
+                f'LAYOUT DEFINER PROPS:\n'\
+                f'=========================\n'\
+                f'TANKS COUNT: {self.metadata.tanks_count}\n'\
+                f'BLOCKS: {self.metadata.blocks}\n'\
+                f'SMALL BLOCKS: {self.metadata.small_blocks}\n'\
                 f'SLOTS CONFIG: \n'
-                    f'{self.player.session_settings.stats_view.common_slots}\n'
-                    f'{self.player.session_settings.stats_view.rating_slots}\n',
+                    f'{self.game_account.stats_view_settings.common_slots}\n'
+                    f'{self.game_account.stats_view_settings.rating_slots}\n',
             align='left',
             font=self.fonts.roboto_17
         )
@@ -999,7 +1009,7 @@ class ImageGen():
             case 10:
                 return ' • X'
             case _:
-                _log.warning(f'Ignoring Exception: Invalid tank tier: {tier}')
+                _log.info(f'Ignoring Exception: Invalid tank tier: {tier}')
                 return ' • ?'
 
     def draw_nickname(self, img: ImageDraw.ImageDraw):
@@ -1077,7 +1087,7 @@ class ImageGen():
                     value,
                     self.values.main[slot],
                     self.image_settings.stats_color
-                    )
+                    ) if self.image_settings.colorize_stats else self.image_settings.stats_color
                 )
 
     def draw_main_diff_stats(self, img: ImageDraw.ImageDraw):
@@ -1105,7 +1115,7 @@ class ImageGen():
                     value,
                     self.session_values.main[slot],
                     Colors.l_grey
-                )
+                ) if self.image_settings.colorize_stats else self.image_settings.stats_color
             )
 
     def draw_rating_labels(self, img: ImageDraw.ImageDraw):
@@ -1143,7 +1153,7 @@ class ImageGen():
                     self.values.rating[slot],
                     self.image_settings.stats_color,
                     rating=True
-                    )
+                    ) if self.image_settings.colorize_stats else self.image_settings.stats_color
                 )
 
     def draw_rating_session_stats(self, img: ImageDraw.ImageDraw):
@@ -1161,7 +1171,7 @@ class ImageGen():
                     self.session_values.rating[slot],
                     Colors.l_grey,
                     rating=True
-                )
+                ) if self.image_settings.colorize_stats else self.image_settings.stats_color
             )
 
     def _rating_label_handler(self):
@@ -1207,7 +1217,7 @@ class ImageGen():
                     value,
                     tank_stats[slot],
                     self.image_settings.stats_color
-                )
+                ) if self.image_settings.colorize_stats else self.image_settings.stats_color
             )
     
     def draw_short_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
@@ -1224,7 +1234,7 @@ class ImageGen():
                     value,
                     tank_stats[slot],
                     self.image_settings.stats_color
-                    )
+                    ) if self.image_settings.colorize_stats else self.image_settings.stats_color
             )
 
     def draw_short_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
@@ -1268,7 +1278,7 @@ class ImageGen():
                     value,
                     tank_stats[slot],
                     Colors.l_grey
-                )
+                ) if self.image_settings.colorize_stats else self.image_settings.stats_color
             )
 
     def draw_tank_labels(self, img: ImageDraw.ImageDraw):

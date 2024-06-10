@@ -45,7 +45,7 @@ class Help(commands.Cog):
         self, 
         ctx: ApplicationContext,
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
 
         await ctx.defer()

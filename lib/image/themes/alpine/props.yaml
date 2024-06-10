@@ -1,7 +1,6 @@
 image_settings: 
     theme: 'alpine'
     colorize_stats: false
-    use_custom_bg: true
     hide_nickname: false
     hide_clan_tag: false
     disable_flag: false

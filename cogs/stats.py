@@ -1,23 +1,24 @@
-from discord import File, Option
+from discord import File, Option, Bot
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
 from lib.settings.settings import Config
-from lib.image.common import ImageGen
+from lib.image.common import ImageGenCommon
 from lib.locale.locale import Text
 from lib.api.async_wotb_api import API
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.data_classes.db_player import DBPlayer, ImageSettings
+from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, GameAccount, ImageSettings
 from lib.blacklist.blacklist import check_user
 from lib.exceptions import api, data_parser
 from lib.error_handler.common import hook_exceptions
-from lib.data_classes.db_server import ServerSettings
+from lib.data_classes.db_server import DBServer, ServerSettings
 from lib.logger.logger import get_logger
 from lib.utils.nickname_handler import handle_nickname
 from lib.utils.validators import validate
+from lib.utils.standard_account_validate import standard_account_validate
 
 _log = get_logger(__file__, 'CogStatsLogger', 'logs/cog_stats.log')
 
@@ -27,7 +28,7 @@ class Stats(commands.Cog):
 
     def __init__(self, bot) -> None:
         self.bot = bot
-        self.img_gen = ImageGen()
+        self.img_gen = ImageGenCommon()
         self.api = API()
         self.db = PlayersDB()
         self.sdb = ServersDB()
@@ -68,23 +69,14 @@ class Stats(commands.Cog):
                 required=True
             ), # type: ignore
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
         
-        image_settings = None
-        user_exist = self.db.check_member(ctx.author.id)
-        if user_exist:
-            member = self.db.get_member(ctx.author.id)
-            image_settings = self.db.get_image_settings(ctx.author.id)
-        else:
-            image_settings = ImageSettings()
-            member = None
-        
-        server_settings = self.sdb.get_server_settings(ctx)
+        member = await self.db.check_member_exists(ctx.author.id, raise_error=False, get_if_exist=True)
+        member = None if isinstance(member, bool) else member
         
         nickname_type = validate(nick_or_id, 'nickname')
-        
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
         img = await self.get_stats(
@@ -92,14 +84,16 @@ class Stats(commands.Cog):
             region=region,
             nickname=composite_nickname.nickname,
             game_id=composite_nickname.player_id,
-            image_settings=image_settings, 
-            server_settings=server_settings,
-            requested_by=member
-            )
+            requested_by=member,
+            server=self.sdb.get_server(ctx)
+        )
 
         if img is not None:
             await ctx.respond(file=File(img, 'stats.png'))
             img.close()
+        else:
+            _log.error('Image gen returned None')
+            raise RuntimeError('Image gen returned None')
 
     @commands.slash_command(
             description=Text().get('en').cmds.astats.descr.this,
@@ -110,41 +104,51 @@ class Stats(commands.Cog):
                 }
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def astats(self, ctx: ApplicationContext):
-        Text().load_from_context(ctx)
+    async def astats(
+        self, 
+        ctx: ApplicationContext,
+        account: Option(
+            int,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            required=False,
+            default=None,
+            choices=[x.value for x in AccountSlotsEnum]
+            )
+        ) -> None:
+        await Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
         
-        if not self.db.check_member(ctx.author.id):
-            await ctx.respond(embed=self.inf_msg.player_not_registred_astats())
+        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account)
+        server = self.sdb.get_server(ctx)
+        
+        img = await self.get_stats(
+            ctx,
+            region=game_account.region,
+            game_id=game_account.game_id, 
+            slot=slot,
+            server=server,
+            requested_by=member
+            )
+
+        if img is not None:
+            await ctx.respond(file=File(img, 'stats.png'))
+            img.close()
+        else:
             return
-
-        player_data = self.db.get_member(ctx.author.id)
-        if player_data is not None:
-            image_settings = self.db.get_image_settings(ctx.author.id)
-            server_settings = self.sdb.get_server_settings(ctx)
-            img = await self.get_stats(
-                ctx,
-                region=player_data.region,
-                game_id=player_data.game_id, 
-                image_settings=image_settings, 
-                server_settings=server_settings,
-                requested_by=player_data
-                )
-
-            if img is not None:
-                await ctx.respond(file=File(img, 'stats.png'))
-                img.close()
-            else:
-                return
 
     
     async def get_stats(
             self, 
             ctx: ApplicationContext, 
-            image_settings: ImageSettings, 
-            server_settings: ServerSettings,
             region: str,
+            server: DBServer | None = None,
+            slot: AccountSlotsEnum | None = None,
             game_id: int | None = None,
             nickname: str | None = None,
             requested_by: DBPlayer | None = None
@@ -169,23 +173,23 @@ class Stats(commands.Cog):
             exception = 'player_not_found'
         except* data_parser.DataParserError:
             exception = 'parser_error'
-        except* api.LockedPlayer:
+        except* api.LockedPlayer as exc:
             exception = 'locked_player'
         except* api.APIError:
             exception = 'api_error'
             
         if exception is not None:
             await ctx.respond(embed=getattr(self.err_msg, exception)())
-            return None
+            return
         else:
             img_data = self.img_gen.generate(
-                ctx=ctx, 
-                data=data, 
-                image_settings=image_settings, 
-                server_settings=server_settings
-                )
+                data=data,
+                server=server,
+                member=requested_by,
+                slot=slot
+            )
             return img_data
 
 
-def setup(bot):
+def setup(bot: Bot):
     bot.add_cog(Stats(bot))

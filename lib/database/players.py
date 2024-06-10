@@ -1,498 +1,688 @@
 from datetime import datetime, timedelta
+from asyncio import sleep
+from types import NoneType
+from typing import Literal
 
 import pytz
+import motor.motor_asyncio
 from bson.codec_options import CodecOptions
-from pymongo import MongoClient
-from pymongo.results import DeleteResult
 
 from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.data_classes.db_player import (DBPlayer, ImageSettings,
-                                        SessionSettings, StatsViewSettings, WidgetSettings)
+from lib.data_classes.db_player import (
+    DBPlayer, 
+    ImageSettings,
+    SessionSettings, 
+    StatsViewSettings, 
+    WidgetSettings,
+    GameAccount,
+    Profile,
+    SessionStatesEnum,
+    AccountSlotsEnum
+)
+from lib.data_classes.db_player_old import DBPlayerOld
 from lib.exceptions import database
+from lib.logger.logger import get_logger
 from lib.settings.settings import Config
-
+from lib.utils.singleton_factory import singleton
 
 _config = Config().get()
+_log = get_logger(__file__, 'PlayersDBLogger', 'logs/players_db.log')
 
 
+@singleton
 class PlayersDB:
     def __init__(self) -> None:
-        self.client = MongoClient('mongodb://localhost:27017/')
-        self.db = self.client['PlayersDB'].with_options(
-            codec_options=CodecOptions(tz_aware=True)
-        )
-        self.collection = self.db['players']
-        # self.update_database() # TODO: remove this after first use
+        self.client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+        self.db = self.client['PlayersDB']
+        self.collection = self.db.get_collection('players', codec_options=CodecOptions(tz_aware=True, tzinfo=pytz.utc))
+        
+    async def _multi_args_member_checker(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> DBPlayer:
+        """
+        Check if the given member ID and member object are valid and return the appropriate member object.
 
-    def set_member(self, data: DBPlayer, override: bool = False) -> bool:
-        ds_id = data.id
-        if self.check_member(ds_id) and override:
-            self.collection.update_one(
-                {'id': ds_id}, 
-                {'$set': 
-                    {
-                        'id': ds_id,
-                        'game_id': data.game_id,
-                        'nickname': data.nickname,
-                        'region': data.region,
-                        'last_stats': None,
-                        'session_settings': data.session_settings.model_dump(),
-                        'locked': data.locked,
-                        'verified': False
-                    }
-                }
-            )
-            return True
-        elif self.collection.find_one({'id': ds_id}) is None:
-            self.collection.insert_one(data.model_dump())
-            return True
-        else:
-            return False
+        Args:
+            member_id (int): The ID of the member.
+            member (DBPlayer): The member object.
+
+        Raises:
+            ValueError: If neither member ID nor member object is provided.
+
+        Returns:
+            DBPlayer: The member object if it is not None, otherwise the member object retrieved from the database using the member ID.
+
+        """
+        if (member_id is None) and (member is None):
+            raise ValueError('You must provide either id or member')
         
-    def check_member(self, member_id: int | str) -> bool:
-        member_id = int(member_id)
-        player = self.collection.find_one({'id': member_id})
-        if player is not None:
-            return True
-        else:
-            return False
+        return member if member is not None else await self.get_member(member_id)
         
-    def get_players_ids(self) -> list:
-        return [i['id'] for i in self.collection.find({})]
+    async def create_index_for_id(self):
+        """
+        Asynchronously creates an index on the 'id' field of the collection.
+
+        This function creates a unique index on the 'id' field of the collection. The index is used to improve the performance of queries that involve the 'id' field.
+
+        Parameters:
+            self (PlayersDB): The instance of the PlayersDB class.
+
+        Returns:
+            None
+            
+        Note:
+            Use one time only.
+        """
+        await self.collection.create_index({'id': 1}, unique=True)
+        
+    async def get_all_members_count(self) -> int:
+        """
+        Asynchronously retrieves the count of all documents in the collection.
+
+        This function uses the `count_documents` method of the `collection` attribute to 
+        retrieve the count of all documents in the collection. The count is obtained by 
+        passing an empty filter `{}` to the method.
+
+        Returns:
+            int: The count of all documents in the collection.
+        """
+        return await self.collection.count_documents({})
     
-    def set_member_premium(self, member_id: int | str, time_secs: int = 2592000) -> bool:
+    async def get_all_members_ids(self) -> list:
+        """
+        Asynchronously retrieves a list of all unique member IDs from the collection.
+
+        This function uses the `distinct` method of the `collection` attribute to retrieve
+        a list of all unique values for the 'id' field in the collection. The result is a
+        list of member IDs.
+
+        Returns:
+            list: A list of unique member IDs.
+        """
+        return await self.collection.distinct('id')
+    
+    async def set_member(self, slot: AccountSlotsEnum, member_id: int | str, game_account: GameAccount, slot_override: bool = False) -> None:
+        """
+        Sets a member's game account in the specified slot or creates a new member if it doesn't exist.
+
+        Args:
+            member_id (int | str): The ID of the member.
+            game_account (GameAccount): The game account to set.
+            slot (AccountSlotsEnum, optional): The slot to set the game account in. Defaults to AccountSlotsEnum.slot_1.
+            slot_override (bool, optional): Whether to override the slot if it's not empty. Defaults to False.
+
+        Raises:
+            TypeError: If the slot is not an instance of AccountSlotsEnum.
+
+        Returns:
+            None
+        """
+        if not isinstance(slot, AccountSlotsEnum):
+            raise TypeError(f'slot must be an instance of AccountSlotsEnum, not {slot.__class__.__name__}')
+        
         member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            self.collection.update_one(
-                {'id': member_id}, 
-                {'$set':
-                        {
-                        'premium': True,
-                        'premium_time': int(datetime.now().timestamp()) + time_secs
-                        }
-                    }
+        member = await self.check_member_exists(member_id=member_id, raise_error=False, get_if_exist=True)
+        
+        if not isinstance(member, bool):
+            await self.check_access_to_slot(slot, member=member)
+            slot_is_empty = await self.check_slot_empty(slot, member=member, raise_error=False)
+            if slot_is_empty or slot_override:
+                await self.collection.update_one(
+                    {'id': member_id},
+                    {'$set': {f'game_accounts.{slot.name}': game_account.model_dump()}}
                 )
+        else:
+            await self.collection.insert_one({
+                'id': member_id,
+                'lang' : None,
+                'image' : None,
+                'game_accounts':{
+                    'slot_1': game_account.model_dump(),
+                    'slot_2': None,
+                    'slot_3': None,
+                    'slot_4': None,
+                    'slot_5': None
+                },
+                'profile': Profile().model_dump(),
+                'current_game_account': AccountSlotsEnum.slot_1.name
+            })
+        
+            
+    async def get_member(self, member_id: int | str) -> DBPlayer:
+        """
+        Asynchronously retrieves a member from the database based on their ID.
+
+        Args:
+            member_id (int | str): The ID of the member to retrieve.
+
+        Returns:
+            DBPlayer: The member object if it exists in the database, None otherwise.
+        """
+        member: DBPlayer = await self.check_member_exists(member_id=member_id, get_if_exist=True)
+        return member
+    
+    async def validate_slot(self, slot: AccountSlotsEnum | None, member_id: int | str | None = None, member: DBPlayer | None = None, allow_empty: bool = False) -> AccountSlotsEnum:
+        """
+        Asynchronously validates a slot for a given member.
+
+        Args:
+            member_id (int | str | None): The ID of the member.
+            member (DBPlayer | None, optional): The member object. Defaults to None.
+            slot (AccountSlotsEnum | None, optional): The slot to validate. Defaults to None.
+            allow_empty (bool, optional): Whether to allow empty slots. Defaults to False.
+
+        Returns:
+            AccountSlotsEnum: The validated slot.
+
+        Raises:
+            database.SlotIsEmpty: If the slot is empty and allow_empty is False.
+        """
+        if slot is None:
+            return await self.get_current_game_slot(member_id=member_id, member=member)
+        
+        member = await self._multi_args_member_checker(member_id, member)
+        await self.check_access_to_slot(slot, member=member)
+        
+        empty_slot = await self.check_slot_empty(slot, member=member, raise_error=False)
+        if not allow_empty and empty_slot:
+            _log.debug(f'Member {member.id} has attempted to access empty slot {slot.name}')
+            raise database.SlotIsEmpty(f'Member {member.id} has attempted to access empty slot {slot.name}')
+        
+        
+        return slot
+    
+    async def get_game_account(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> GameAccount:
+        member = await self._multi_args_member_checker(member_id, member)
+        slot = await self.validate_slot(member=member, slot=slot)
+        game_account = getattr(member.game_accounts, slot.name)
+        if game_account is None:
+            _log.warn(f'Member {member_id} has no game account in slot {slot.name}')
+            raise database.SlotIsEmpty(f'Member {member_id} has no game account in slot {slot.name}')
+        else:
+            return game_account
+    
+    async def delete_member(self, member_id: int | str) -> None:
+        """
+        Asynchronously deletes a member from the database based on their ID.
+
+        Args:
+            member_id (int | str): The ID of the member to delete.
+
+        Returns:
+            None: This function does not return anything.
+        """
+        await self.collection.delete_one({'id': member_id})
+        
+    async def check_member_exists(self, member_id: int | str, get_if_exist: bool = False, raise_error: bool = True) -> bool | DBPlayer:
+        """
+        Asynchronously checks if a player with the given ID exists in the database.
+
+        Parameters:
+            id (int | str): The ID of the player to check.
+            get_if_exist (bool, optional): If True, returns the player object if it exists. Defaults to False.
+            raise_error (bool, optional): If True, raises a MemberNotFound exception if the player does not exist. Defaults to True.
+
+        Returns:
+            bool | DBPlayer: If get_if_exist is False, returns True if the player exists, False otherwise.
+            If get_if_exist is True, returns the player object if it exists, False otherwise.
+
+        Raises:
+            MemberNotFound: If raise_error is True and the player does not exist.
+        """
+        member_id = int(member_id)
+        result = await self.collection.find_one({'id': member_id})
+        
+        if raise_error and result is None:
+            _log.error(f'Player with id {member_id} not found')
+            raise database.MemberNotFound()
+        
+        if get_if_exist:
+            if result is not None:
+                player = DBPlayer.model_validate(result)
+                return player
+            else:
+                return False
+        else:
+            return True if result is not None else False
+    
+    async def check_access_to_slot(self, slot: AccountSlotsEnum, member_id: int | str = None, member: DBPlayer = None) -> None:
+        """
+        Check if a member has access to a specific slot.
+
+        Args:
+            slot (AccountSlotsEnum): The slot to check access for.
+            member_id (int | str, optional): The ID of the member. Defaults to None.
+            member (DBPlayer, optional): The member object. Defaults to None.
+
+        Raises:
+            database.PremiumSlotAccessAttempt: If the member is not premium and tries to access a premium slot.
+        """
+        member = await self._multi_args_member_checker(member_id, member)
+        premium = await self.check_premium(member_id, member)
+        
+        if slot.value > 2:
+            if not premium:
+                _log.info(f'Member is not premium and tried to access premium slot {slot.value}')
+                raise database.PremiumSlotAccessAttempt(f'Member is not premium and tried to access premium slot {slot.value}')
+            
+    async def check_slot_empty(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None, raise_error: bool = True) -> bool:
+        """
+        Check if the specified slot is empty for a given member.
+
+        Args:
+            slot (AccountSlotsEnum): The slot to check for emptiness.
+            member_id (int | str, optional): The ID of the member. Defaults to None.
+            member (DBPlayer, optional): The member object. Defaults to None.
+            raise_error (bool, optional): Whether to raise an exception if the slot is not empty.
+            Defaults to True.
+
+        Returns:
+            bool: True if the slot is empty, False otherwise.
+
+        Raises:
+            database.SlotIsNotEmpty: If the slot is not empty and raise_error is True.
+        """
+        member = await self._multi_args_member_checker(member_id, member)
+        
+        if getattr(member.game_accounts, slot.name) is not None:
+            if raise_error:
+                _log.warn(f'Member tried to access not empty slot {slot.value}')
+                raise database.SlotIsNotEmpty()
+            else:
+                return False
+        else:
             return True
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-
         
-    def unset_member_premium(self, member_id: int | str) -> bool:
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            self.collection.update_one(
-                {'id': member_id}, 
-                {'$set': 
-                        {
-                        'premium': False, 
-                        'premium_time': None
-                        }
-                    }
-                )
-            return True
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+    async def unset_premium(self, member_id: int | str, member: DBPlayer) -> None:
+        """
+        Unsets the premium status of a member in the database.
 
-        
-    def check_member_is_verified(self, member_id: int | str) -> bool:
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            data = self.collection.find_one({'id': member_id})
-            return data['verified']
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+        Args:
+            id (int | str): The ID of the member.
 
+        Returns:
+            None
+
+        Raises:
+            None
+
+        This function updates the 'profile.premium' and 'profile.premium_time' fields of the member with the given ID in the database. It sets 'profile.premium' to False and 'profile.premium_time' to None, effectively unsetting the premium status of the member.
+        """
+        member = await self._multi_args_member_checker(member_id, member)
+        await self.collection.update_one(
+            {'id': member.id}, 
+            {'$set': {'profile.premium': False, 'profile.premium_time': None}}
+        )
         
-    def check_member_premium(self, member_id: int | str) -> bool:
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            player = self.collection.find_one({'id': member_id})
-            premium = player['premium']
-            premium_time = player['premium_time']
-            if premium or premium_time is not None:
-                if int(datetime.now().timestamp()) < self.collection.find_one({'id': member_id})['premium_time']:
+    async def set_premium(self, member_id: int | str, end_time: datetime | None) -> None:
+        """
+        Sets the premium status of a member in the database.
+
+        Args:
+            id (int | str): The ID of the member.
+            end_time (datetime | None): The end time of the member's premium status. If None, the member will be set as premium indefinitely.
+
+        Returns:
+            None
+
+        Raises:
+            None
+
+        This function updates the 'profile.premium' and 'profile.premium_time' fields of the member with the given ID in the database. If 'end_time' is None, the member will be set as premium indefinitely. Otherwise, the member will be set as premium until the specified 'end_time'.
+        """
+        _log.info(f'Setting premium for id {member_id}, end_time: {end_time}')
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {'profile.premium': True, 'profile.premium_time': end_time}}
+        )
+        
+    async def check_premium(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> bool:
+        """
+        Check if a member is premium or not.
+
+        Args:
+            member_id (int | str): The ID of the member. If None, the member object must be provided.
+            member (DBPlayer): The member object. If None, the member_id must be provided.
+
+        Returns:
+            bool: True if the member is premium, False otherwise.
+
+        Raises:
+            ValueError: If neither member_id nor member is provided.
+
+        This function checks if a member is premium or not. It takes either a member_id or a member object as input.
+        If both are provided, the member_id is ignored. If neither is provided, a ValueError is raised.
+
+        The function first checks if the member is premium by retrieving the member object using the member_id.
+        If the member is premium, it checks if the premium_time is None. If it is None, the member is considered premium.
+        If the premium_time is not None, it checks if the current datetime is before the premium_time. If it is, the member is considered premium.
+        If the current datetime is after the premium_time, the member's premium status is unset and False is returned.
+
+        If the member is not premium, False is returned.
+        """
+        member = await self._multi_args_member_checker(member_id, member)
+        
+        premium = member.profile.premium
+        premium_time = member.profile.premium_time
+        
+        if premium:
+            if premium_time is None:
+                return True
+            else:
+                if datetime.now(pytz.utc) < premium_time:
                     return True
                 else:
-                    self.unset_member_premium(member_id)
-            else:
-                return False
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-
-        
-    def set_member_lock(self, member_id: int | str, lock: bool = True) -> bool:
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            self.collection.update_one(
-                {'id': member_id}, 
-                {'$set': 
-                        {
-                        'locked': lock
-                        }
-                    }
-                )
-            return True
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-
-        
-    def unset_member_lock(self, member_id: int | str) -> bool:
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            self.collection.update_one(
-                {'id': member_id}, 
-                {'$set': 
-                        {
-                        'locked': False
-                        }
-                    }
-                )
-            return True
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def check_member_lock(self, member_id: int | str) -> bool:
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            return self.collection.find_one({'id': member_id})['locked']
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def set_image_settings(self, member_id: int | str, settings: ImageSettings):
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            self.collection.update_one(
-                {'id': member_id}, 
-                {'$set': 
-                        {
-                        'image_settings': settings.model_dump()
-                        }
-                    }
-                )
-            return True
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def get_image_settings(self, member_id: int | str) -> ImageSettings:
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            field_exist = self.collection.find_one({'id': member_id, 'image_settings': {'$exists': True}}) is not None
-            if field_exist:
-                if self.collection.find_one({'id': member_id})['image_settings'] is not None:
-                    return ImageSettings.model_validate(self.collection.find_one({'id': member_id})['image_settings'])
-            else:
-                self.set_image_settings(member_id, ImageSettings.model_validate({}))
-                return ImageSettings.model_validate({})
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-    
-    def set_member_image(self, member_id: int | str, image: str):
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            self.collection.update_one(
-                {'id': member_id}, 
-                {'$set': 
-                        {
-                        'image': image
-                        }
-                    }
-                )
-            return True
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def get_member_image(self, member_id: int | str) -> str | None:
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            return self.collection.find_one({'id': member_id})['image']
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def del_member_image(self, member_id: int | str):
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            self.collection.update_one(
-                {'id': member_id}, 
-                {'$set': 
-                        {
-                        'image': None
-                        }
-                    }
-                )
-            return True
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def set_member_verified(self, member_id: int | str):
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            self.collection.update_one(
-                {'id': member_id},
-                {'$set': 
-                        {
-                        'verified': True
-                        }
-                    }
-                )
-            return True
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def unset_member_verified(self, member_id: int | str):
-        member_id = int(member_id)
-        member_exist = self.check_member(member_id)
-        if member_exist:
-            self.collection.update_one(
-                {'id': member_id}, 
-                {'$set': 
-                        {
-                        'verified': False
-                        }
-                    }
-                )
-            return True
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-    
-    def get_member(self, member_id: int | str) -> DBPlayer:
-        member_id = int(member_id)
-        data = self.collection.find_one({'id': member_id})
-        if data is not None:
-            del data['_id']
-            return DBPlayer.model_validate(data)
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def del_member(self, member_id: int) -> DeleteResult:
-        member_id = int(member_id)
-        return self.collection.delete_one({'id': member_id})
-    
-    def count_members(self) -> int:
-        return self.collection.count_documents({})
-    
-    def count_sessions(self) -> int:
-        return self.collection.count_documents({'last_stats': {'$ne': None}})
-        
-    def set_member_lang(self, member_id: int | str, lang: str | None) -> bool:
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            self.collection.update_one(
-                {'id': member_id}, 
-                {'$set': 
-                        {
-                        'lang': lang
-                        }
-                    }
-                )
-            return True
+                    self.unset_premium(member.id)
+                    return False
         else:
             return False
-        
-    def set_member_last_stats(self, member_id: int | str, last_stats: dict):
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            self.collection.update_one(
-                {'id': member_id}, 
-                {'$set': 
-                        {
-                        'last_stats': last_stats,
-                        }
-                    }
-                )
-            return True
-        else:
-            return False
-        
-    def get_member_session_settings(self, member_id: int | str) -> SessionSettings:
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            data = self.collection.find_one({'id': member_id})
-            return SessionSettings.model_validate(data['session_settings'])
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def set_member_session_settings(self, member_id: int | str, session_settings: SessionSettings):
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            self.collection.update_one(
-                {'id' : member_id}, {'$set' : {'session_settings' : session_settings.model_dump()}}
-            )
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
 
-    def check_member_last_stats(self, member_id: int | str) -> bool:
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            member = self.collection.find_one({'id': member_id})
-            if member['last_stats'] is not None:
-                return True  
-            else:
-                return False
+    async def get_current_game_account(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> GameAccount:
+        member = await self._multi_args_member_checker(member_id, member)
+        game_account: GameAccount | None = getattr(member.game_accounts, member.current_game_account)
+        if game_account is None:
+            _log.warn(f'Member {member.id} has no game account in slot {member.current_game_account}')
+            raise database.SlotIsEmpty(f'Member {member.id} has no game account in slot {member.current_game_account}')
         else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def start_autosession(self, member_id: int | str, last_stats: PlayerGlobalData, session_settings: SessionSettings):
-        member_id = int(member_id)
-        
-        self.set_member_last_stats(member_id, last_stats.model_dump())
-        self.set_member_session_settings(member_id, session_settings)
-        
-    def validate_session(self, member_id: int | str):
-        member_id = int(member_id)
-        if self.check_member_last_stats(member_id):
-            member_id = str(member_id)
-            session_settings = self.get_member_session_settings(member_id)
-            curr_time = datetime.now(pytz.utc)
-            end_time = session_settings.last_get
-            
-            if end_time is None:
-                return False
-                
-            if session_settings.is_autosession:
-                end_time += timedelta(seconds=_config.autosession.ttl)
-            else:
-                end_time += timedelta(seconds=_config.session.ttl)
-                
-            if curr_time > end_time:
-                self.reset_member_session(member_id)
-                return False
-            
-            return True
-        else:
-            raise database.LastStatsNotFound(f'Last stats not found, id: {member_id}')
-        
-    def reset_member_session(self, member_id: int | str):
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            self.collection.update_one(
-                {'id': member_id}, 
-                {'$set': 
-                        {
-                        'last_stats': None
-                        }
-                    }
-                )
-            self.set_member_session_settings(member_id, SessionSettings.model_validate({}))
-            return True
-        else:
-            return False
-        
-    def get_session_end_time(self, member_id: int | str) -> datetime:
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            if self.check_member_last_stats(member_id):
-                session_settings = self.get_member_session_settings(member_id)
-                if session_settings.is_autosession:
-                    return session_settings.last_get + timedelta(seconds=_config.autosession.ttl)
-                return session_settings.last_get + timedelta(seconds=_config.session.ttl)
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+            return game_account
 
+    async def get_current_game_slot(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> AccountSlotsEnum:
+        member = await self._multi_args_member_checker(member_id, member)
+        return AccountSlotsEnum[member.current_game_account]
         
-    def get_member_last_stats(self, member_id: int | str) -> PlayerGlobalData:
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            last_stats = self.collection.find_one({'id': member_id})['last_stats']
-            if last_stats is not None:
-                member = DBPlayer.model_validate(self.collection.find_one({'id': member_id}))
-                member.session_settings.last_get = int(datetime.now(pytz.utc).timestamp())
-                return PlayerGlobalData.model_validate(last_stats)
-            else:
-                raise database.LastStatsNotFound(f'Last stats not found, id: {member_id}')
-        else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def get_member_lang(self, member_id: int | str) -> str | None:
-        if self.check_member(member_id):
-            return self.collection.find_one({'id': member_id})['lang']
-        else:
+    async def start_session(self, slot: AccountSlotsEnum, member_id: int | str, last_stats: PlayerGlobalData, session_settings: SessionSettings) -> None:
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        slot = await self.validate_slot(member=member, slot=slot)
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': 
+                {
+                    f'game_accounts.{slot.name}.last_stats': last_stats.model_dump(),
+                    f'game_accounts.{slot.name}.session_settings': session_settings.model_dump(),
+                }
+            },
+        )
+    
+    async def find_account_by_params(
+            self,
+            nickname: str,
+            region: str,
+            member_id: int | str | None = None,
+            member: DBPlayer | None = None,
+        ) -> GameAccount | None:
+        member = self._multi_args_member_checker(member_id, member)
+        game_accounts = member.game_accounts
+        used_slots: list[AccountSlotsEnum] = await self.get_all_used_slots(member=member)
+        if used_slots is None:
             return None
         
-    def get_stats_settings(self, member_id: int | str) -> StatsViewSettings:
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            data = self.collection.find_one({'id': member_id})
-            return StatsViewSettings.model_validate(data['session_settings']['stats_view'])
+        for slot in used_slots:
+            if getattr(game_accounts, slot.name).nickname.lower() == nickname.lower():
+                if getattr(game_accounts, slot.name).region == region:
+                    return getattr(game_accounts, slot.name)
+        
+        return None
+        
+    async def get_session_settings(self, slot: AccountSlotsEnum, member_id: int | str, member: DBPlayer) -> SessionSettings:
+        member = await self._multi_args_member_checker(member_id, member)
+        slot = await self.validate_slot(member=member, slot=slot)
+        return getattr(member.game_accounts, slot.name).session_settings
+    
+    async def get_image_settings(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> ImageSettings:
+        member = await self._multi_args_member_checker(member_id, member)
+        slot = await self.validate_slot(member=member, slot=slot)
+        return getattr(member.game_accounts, slot.name).image_settings
+    
+    async def get_last_stats(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> PlayerGlobalData:
+        member = await self._multi_args_member_checker(member_id, member)
+        slot = await self.validate_slot(member=member, slot=slot)
+        last_stats = getattr(member.game_accounts, slot.name).last_stats
+        if last_stats is None:
+            _log.warn(f'Member {member.id} has no last stats in slot {slot.name}')
+            raise database.LastStatsNotFound(f'Member {member.id} has no last stats in slot {slot.name}')
         else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+            return PlayerGlobalData.model_validate(last_stats)
         
-    def set_stats_settings(self, member_id: int | str, stats_settings: StatsViewSettings):
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            self.collection.update_one(
-                {'id' : member_id}, {'$set' : {'session_settings.stats_view' : stats_settings.model_dump()}}
-            )
+    async def get_stats_view_settings(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> StatsViewSettings:
+        member = await self._multi_args_member_checker(member_id, member)
+        slot = await self.validate_slot(member=member, slot=slot)
+        return getattr(member.game_accounts, slot.name).stats_view_settings
+
+    async def get_widget_settings(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> WidgetSettings:
+        member = await self._multi_args_member_checker(member_id, member)
+        slot = await self.validate_slot(member=member, slot=slot)
+        return getattr(member.game_accounts, slot.name).widget_settings
+    
+    async def stop_session(self, slot: AccountSlotsEnum, member_id: int | str) -> None:
+        slot = await self.validate_slot(member_id=member_id, slot=slot)
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {f'game_accounts.{slot.name}.last_stats': None}}
+        )
+    
+    async def check_member_last_stats(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> bool:
+        member = await self._multi_args_member_checker(member_id, member)
+        slot = await self.validate_slot(member=member, slot=slot)
+        game_account: GameAccount = getattr(member.game_accounts, slot.name)
+        last_stats = game_account.last_stats
+        session_settings = game_account.session_settings
+        if last_stats is None:
+            return False
         else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
-        
-    def find_lock(self, game_id: int | str, requested_by: DBPlayer | int | None) -> bool:
-        game_id = int(game_id)
-        
-        matches = self.collection.find({'game_id': game_id})
-        
-        for data in matches:
-            data = DBPlayer.model_validate(data)
-            
-            if isinstance(requested_by, DBPlayer):
-                if data.id == requested_by.id:
-                    continue
-                
-                if data.game_id == requested_by.game_id:
-                    if requested_by.verified:
-                        continue
-            
-            elif isinstance(requested_by, int):
-                if data.game_id == requested_by:
-                    continue
-            
-            if data.locked:
+            if session_settings.last_get + timedelta(seconds=_config.session.ttl) < datetime.now(pytz.utc):
+                await self.stop_session(slot=slot, member_id=member.id)
+                return False
+            else:
                 return True
             
-    def set_member_widget_settings(self, member_id: int | str, widget_settings: WidgetSettings):
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            self.collection.update_one(
-                {'id' : member_id}, {'$set' : {'widget_settings' : widget_settings.model_dump()}}
-            )
+    async def session_restart_needed(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> bool:
+        member = await self._multi_args_member_checker(member_id)
+        slot = await self.validate_slot(member=member, slot=slot)
+        game_account: GameAccount = getattr(member.game_accounts, slot.name)
+        session_settings = game_account.session_settings
+        if not session_settings.is_autosession:
+            return False
+        elif session_settings.time_to_restart > datetime.now(pytz.utc):
             return True
         else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+            return False
         
-    def get_member_widget_settings(self, member_id: int | str) -> WidgetSettings:
-        member_id = int(member_id)
-        if self.check_member(member_id):
-            return WidgetSettings.model_validate(self.collection.find_one({'id': member_id})['widget_settings'])
+    async def validate_session(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> SessionStatesEnum:
+        member = await self._multi_args_member_checker(member_id, member)
+        last_stats = await self.check_member_last_stats(slot, member=member)
+        if not last_stats:
+            return SessionStatesEnum.NOT_STARTED
+        if await self.session_restart_needed(slot=slot, member=member):
+            return SessionStatesEnum.RESTART_NEEDED
         else:
-            raise database.MemberNotFound(f'Member not found, id: {member_id}')
+            return SessionStatesEnum.NORMAL
         
-    def update_database(self):
-        for member in self.collection.find():
-            user = self.get_member(member['id'])
-            
-            if not user.widget_settings == WidgetSettings().model_validate(
+    async def update_session(
+            self,
+            slot: AccountSlotsEnum,
+            member_id: int | str,
+            session_settings: SessionSettings,
+            last_stats: PlayerGlobalData, 
+        ) -> None:
+        member = await self._multi_args_member_checker(member_id, member)
+        curr_slot = await self.get_current_game_slot(member_id, member) if slot is None else slot
+        restart_time = session_settings.time_to_restart + timedelta(days=1)
+        session_settings.time_to_restart = restart_time
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': 
                 {
-                    'disable_bg': True,
-                    'disable_nickname': False,
-                    'max_stats_blocks': 3,
-                    'max_stats_small_blocks': 2,
-                    'update_time': 60,
-                    'background_transparency': 0.7,
-                    'disable_main_stats_block': False,
-                    'use_bg_for_stats_blocks': False,
-                    'adaptive_width': True,
-                    'stats_block_color': '#000000',
+                    f'game_accounts.{curr_slot.name}.last_stats': last_stats.model_dump(), 
+                    f'game_accounts.{curr_slot.name}.session_settings': session_settings.model_dump(),
                 }
-            ):
-                self.set_member_widget_settings(member['id'], WidgetSettings())
+            }
+        )
+        
+    async def get_all_used_slots(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> list[AccountSlotsEnum]:
+        member = await self._multi_args_member_checker(member_id, member)
+        premium_user = await self.check_premium(member_id, member)
+        slots = []
+        
+        for slot in AccountSlotsEnum:
+            if not await self.check_slot_empty(member=member, slot=slot, raise_error=False):
+                slots.append(slot)
+                
+            if slot.value > 2 and not premium_user:
+                break
+        
+        return slots
+    
+    async def get_lang(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> str | None:
+        member = await self.collection.find_one({'id': member_id})
+        return DBPlayer.model_validate(member).lang if member is not None else None
+    
+    async def set_lang(self, member_id: int | str, lang: str | None) -> None:
+        """
+        Asynchronously sets the language of a member in the database.
+
+        Args:
+            member_id (int | str): The ID of the member.
+            lang (str | None): The language to set. If None, the language field will be set to None.
+
+        Returns:
+            None: This function does not return anything.
+
+        This function updates the 'lang' field of the member with the given ID in the database. If the language is None, it sets the language field to None.
+        """
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {'lang': lang}}
+        )
+    
+    async def check_member_is_verified(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> bool:
+        member = await self._multi_args_member_checker(member_id, member)
+        slot = await self.validate_slot(member=member, slot=slot)
+        return getattr(member.game_accounts, slot.name).verified
+    
+    async def set_member_lock(self, slot: AccountSlotsEnum, member_id: int | str, lock: bool) -> None:
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        slot = await self.validate_slot(slot=slot, member=member)
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {f'game_accounts.{slot.name}.lock': lock}}
+        )
+    
+    async def set_image(self, member_id: int | str, image: str | None) -> None:
+        """
+        Asynchronously sets the image of a member in the database.
+
+        Args:
+            member_id (int | str): The ID of the member.
+            image (str | None): The image to set.
+
+        Returns:
+            None: This function does not return anything.
+
+        This function updates the 'image' field of the member with the given ID in the database. If the image is None, it sets the image field to None.
+        """
+        if not isinstance(image, (str, NoneType)):
+            raise TypeError(f'image must be either a string or None, not {image.__class__.__name__}')
+        
+        if isinstance(image, str):
+            if len(image) == 0:
+                image = None
+        
+        await self.check_member_exists(member_id)
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {'image': image}}
+        )
+        
+    async def set_stats_view_settings(self, slot: AccountSlotsEnum | None, member_id: int | str, settings: StatsViewSettings) -> None:
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        slot = await self.validate_slot(member=member, slot=slot)
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {f'game_accounts.{slot.name}.stats_view_settings': settings.model_dump()}}
+        )
+        
+    async def set_image_settings(self, slot: AccountSlotsEnum | None, member_id: int | str, settings: ImageSettings) -> None:
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        slot = await self.validate_slot(member=member, slot=slot)
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {f'game_accounts.{slot.name}.image_settings': settings.model_dump()}}
+        )
+        
+    async def get_member_image(self, member_id: int | str | None, member: DBPlayer | None) -> str | None:
+        member = await self._multi_args_member_checker(member_id, member)
+        return member.image
+    
+    async def set_session_settings(self, slot: AccountSlotsEnum, member_id: int | str, settings: SessionSettings) -> None:
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        slot = await self.validate_slot(member=member, slot=slot)
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {f'game_accounts.{slot.name}.session_settings': settings.model_dump()}}
+        )
+        
+    async def get_session_end_time(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> datetime:
+        member = await self._multi_args_member_checker(member_id, member)
+        slot = await self.validate_slot(member=member, slot=slot)
+        game_account = await self.get_game_account(slot, member=member)
+        return game_account.session_settings.last_get + timedelta(seconds=_config.session.ttl)
+    
+    async def set_widget_settings(self, slot: AccountSlotsEnum, member_id: int | str, settings: WidgetSettings) -> None:
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        slot = await self.validate_slot(member=member, slot=slot)
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {f'game_accounts.{slot.name}.widget_settings': settings.model_dump()}}
+        )
+        
+    async def set_current_account(self, member_id: int | str, slot: AccountSlotsEnum) -> None:
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        slot = await self.validate_slot(member=member, slot=slot)
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {'current_game_account': slot.name}}
+        )
+
+    async def database_update(self):
+        cursor = self.collection.find({})
+        async for member in cursor:
+            old_member = DBPlayerOld.model_validate(member)
+            
+            new_member = {
+                '_id' : member['_id'],
+                'id': old_member.id,
+                'lang' : old_member.lang,
+                'image': old_member.image,
+                'use_custom_bg': old_member.image_settings.use_custom_bg,
+                'game_accounts': {
+                    'slot_1' : {
+                        'nickname' : old_member.nickname,
+                        'game_id' : old_member.game_id,
+                        'region' : old_member.region,
+                        'last_stats' : old_member.last_stats,
+                        'session_settings' : old_member.session_settings.model_dump(),
+                        'image_settings' : old_member.image_settings.model_dump(),
+                        'widget_settings' : old_member.widget_settings.model_dump(),
+                        'stats_view_settings' : old_member.session_settings.stats_view.model_dump(),
+                        'verified' : old_member.verified,
+                        'locked' : old_member.locked,
+                    },
+                    'slot_2' : None,
+                    'slot_3' : None,
+                    'slot_4' : None,
+                    'slot_5' : None,
+                },
+                'profile': Profile.model_validate({}),
+                'current_game_account': 'slot_1',
+            }
+            try:
+                data = DBPlayer.model_validate(new_member).model_dump()
+            except ValueError:
+                new_member['game_accounts']['slot_1']['last_stats'] = None
+                data = DBPlayer.model_validate(new_member).model_dump()
+            
+            await self.collection.replace_one(
+                {'id': old_member.id},
+                replacement=data
+            )
+            
+            _log.debug(f'DB: Player {old_member.id} updated')
+            await sleep(0.01)

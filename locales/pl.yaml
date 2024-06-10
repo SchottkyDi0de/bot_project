@@ -7,6 +7,16 @@
 #   srv_id: "server_id: <id>"
 #
 # Please do not change the placeholders names when translating the file.
+#
+# This file use dynamic yaml data.
+# File allow use variables, example:
+#
+# server:
+#   srv_id: 12123434
+#
+# server_settings:
+#   srv_url: https://example.com/server/{server.srv_id}/
+#
 # _Zener
 
 for_image:
@@ -158,6 +168,8 @@ cmds_defs:
   server_settings_get: '</server_settings_get:1190367458192801868>'
   set_lock: '</set_lock:1221467304890728509>'
   session_widget_settings: '</session_widget_settings:1221467304450064500>'
+  switch_account: 'Select account'
+  premium: 'Premium access'
 
 frequent:
   errors:
@@ -168,12 +180,25 @@ frequent:
     parser_error: Błąd podczas analizowania danych.
     verify_error: Konto nie zostało zweryfikowane. Najpierw wykonaj weryfikację, aby móc użyć tej komendy.
     locked_player: Ten gracz zablokował wyświetlanie jego statystyk # <<< TODO: Auto translated need to check
+    slot_is_empty: W wybranym slotu nie ma zapisanego konta, nie można tam zapisać danych.
+    slot_not_accessed: 'Potrzebujesz dostępu premium, aby korzystać z slotów 3-5. Więcej informacji: {cmds_defs.premium}.'
 
   info:
     info: Informacje
     player_not_registred: 'Gracz nie jest zalogowany. Najpierw wprowadź komendę </set_player:1126148623869153443>'
     err_info_sent: Informacja o błędzie została wysłana do dewelopera.
     warning: Warning
+    discard_changes: Anulowano zmiany.
+    slot_info: |-
+      Informacje o koncie:
+      ```
+      - slot:       <slot_num>
+      - pseudonim:  <nickname>
+      - region:     <region>
+      ```
+    updated_at: 'Zaktualizowane o: '
+    short_slot_info: '`<nickname>[<region>] | account: <slot_num>`'
+    session_already_started: Sesja jest już uruchomiona, czy chcesz ją restartować?
 
   common:
     'yes': 'Yes'
@@ -185,6 +210,7 @@ frequent:
       h: 'h'
       m: 'm'
       s: 's'
+    slot: Slot konta
       
 views:
   not_owner: You can't use this button.
@@ -236,8 +262,9 @@ cmds:
         - Aby zapyta o statystyke sesyjna, wykorzystuj  {cmds_defs.get_session}
         - Aby zapyta o stan sesji, wykorzystuj  {cmds_defs.session_state}
         Kliknij przycisk poni ejce, aby zac  automatyczn  sesj .
-    items:
-      ''
+      slot_override: |-
+        Chcesz wybra  slot, w którym ju  zapisany jest inny gracz, czy na pewno chcesz nadpisa  te dane?
+        <slot_data>
 
 # Set lang command
   set_lang:
@@ -715,8 +742,26 @@ cmds:
       theme: Motyw
 
 # delete player
-  delete_player: # <<< TODO: Autotranlsated
+  delete_player:
     descr:
-      this: 'Usuń wszystkie dane o sobie'
+      this: Usuń wszystkie dane o sobie
     info:
-      success: 'Wszystkie dane użytkownika zostały całkowicie usunięte z bazy danych'
+      warn: Czy na pewno, że chcesz usunąć wszystkie dane o sobie? Ten czyn nie jest odwracalny!
+      success: Wszystkie dane użytkownika zostały całkowicie usunięte z bazy danych
+    items:
+      ''
+
+# switch_account
+  switch_account: # <<< TODO: Auto translated, need check
+    descr:
+      this: Przełącz konto
+    info:
+      success: |-
+        Konto zostało przełączone:
+        <old_account> -> <new_account>
+    items:
+      menu: Wybierz konto
+    errors:
+      no_slots_for_select: |-
+        Masz tylko 1 zarejestrowane konto, zarejestruj jeszcze 1, aby móc wybierać konta.
+        {cmds_defs.set_player}

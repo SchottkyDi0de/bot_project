@@ -5,7 +5,7 @@ from lib.data_classes.session import SessionDiffData, TankSessionData
 from lib.database.tankopedia import TanksDB
 from lib.exceptions import data_parser
 from lib.logger import logger
-from lib.utils.safe_divide import safe_divide
+from lib.utils.safe_divide import safe_divide, DivideReturnType
 
 _log = logger.get_logger(__file__, 'DataParserLogger', 'logs/data_parser.log')
 _tdb = TanksDB()
@@ -15,25 +15,25 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
         all_stats = data.data.statistics.all
         rating_stats = data.data.statistics.rating
 
-        data.data.statistics.all.avg_xp = all_stats.xp // all_stats.battles
-        data.data.statistics.all.avg_damage = all_stats.damage_dealt // all_stats.battles
+        data.data.statistics.all.avg_xp = safe_divide(all_stats.xp, all_stats.battles, return_type=DivideReturnType.INTEGER)
+        data.data.statistics.all.avg_damage = safe_divide(all_stats.damage_dealt, all_stats.battles, return_type=DivideReturnType.INTEGER)
         data.data.statistics.all.accuracy = safe_divide(all_stats.hits, all_stats.shots) * 100
-        data.data.statistics.all.winrate = (all_stats.wins / all_stats.battles) * 100
-        data.data.statistics.all.avg_spotted = all_stats.spotted / all_stats.battles
-        data.data.statistics.all.frags_per_battle = all_stats.frags / all_stats.battles
+        data.data.statistics.all.winrate = safe_divide(all_stats.wins, all_stats.battles) * 100
+        data.data.statistics.all.avg_spotted = safe_divide(all_stats.spotted, all_stats.battles)
+        data.data.statistics.all.frags_per_battle = safe_divide(all_stats.frags, all_stats.battles)
         data.data.statistics.all.not_survived_battles = all_stats.battles - all_stats.survived_battles
-        data.data.statistics.all.survival_ratio = (all_stats.survived_battles / all_stats.battles)
+        data.data.statistics.all.survival_ratio = safe_divide(all_stats.survived_battles, all_stats.battles)
         data.data.statistics.all.damage_ratio = safe_divide(all_stats.damage_dealt, all_stats.damage_received)
         data.data.statistics.all.destruction_ratio = safe_divide(all_stats.frags, all_stats.not_survived_battles)
         
-        data.data.statistics.rating.avg_xp = rating_stats.xp // rating_stats.battles
-        data.data.statistics.rating.avg_damage = rating_stats.damage_dealt // rating_stats.battles
+        data.data.statistics.rating.avg_xp = safe_divide(rating_stats.xp, rating_stats.battles, return_type=DivideReturnType.INTEGER)
+        data.data.statistics.rating.avg_damage = safe_divide(rating_stats.damage_dealt, rating_stats.battles, return_type=DivideReturnType.INTEGER)
         data.data.statistics.rating.accuracy = safe_divide(rating_stats.hits, rating_stats.shots) * 100
-        data.data.statistics.rating.winrate = (rating_stats.wins / rating_stats.battles) * 100
-        data.data.statistics.rating.avg_spotted = rating_stats.spotted / rating_stats.battles
-        data.data.statistics.rating.frags_per_battle = rating_stats.frags / rating_stats.battles
+        data.data.statistics.rating.winrate = safe_divide(rating_stats.wins, rating_stats.battles) * 100
+        data.data.statistics.rating.avg_spotted = safe_divide(rating_stats.spotted, rating_stats.battles)
+        data.data.statistics.rating.frags_per_battle = safe_divide(rating_stats.frags, rating_stats.battles)
         data.data.statistics.rating.not_survived_battles = rating_stats.battles - rating_stats.survived_battles
-        data.data.statistics.rating.survival_ratio = (rating_stats.survived_battles / rating_stats.battles)
+        data.data.statistics.rating.survival_ratio = safe_divide(rating_stats.survived_battles, rating_stats.battles)
         data.data.statistics.rating.damage_ratio = safe_divide(rating_stats.damage_dealt, rating_stats.damage_received)
         data.data.statistics.rating.destruction_ratio = safe_divide(rating_stats.frags, rating_stats.not_survived_battles)
 
@@ -41,12 +41,6 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
             data.data.statistics.rating.rating = int(data.data.statistics.rating.mm_rating * 10 + 3000)
         else:
             data.data.statistics.rating.rating = 0
-
-        if data.data.statistics.rating.battles != 0:
-            data.data.statistics.rating.winrate = (data.data.statistics.rating.wins / data.data.statistics.rating.battles) * 100
-            data.data.statistics.rating.accuracy = safe_divide(data.data.statistics.rating.hits, data.data.statistics.rating.shots) * 100
-        else:
-            data.data.statistics.rating.winrate = 0
             
         if data.data.clan_stats is not None:
             data.data.name_and_tag = f'{data.nickname} [{data.data.clan_stats.tag}]'
@@ -99,9 +93,28 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
         return data
     
 def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData, zero_bypass: bool = False) -> SessionDiffData:
-    '''
-    Return stats difference
-    '''
+    """
+    Calculate the session statistics difference between two PlayerGlobalData objects.
+
+    Args:
+        data_old (PlayerGlobalData): The old PlayerGlobalData object.
+        data_new (PlayerGlobalData): The new PlayerGlobalData object.
+        zero_bypass (bool, optional): Whether to bypass the check for zero battles and rating differences. Defaults to False.
+
+    Returns:
+        SessionDiffData: The SessionDiffData object containing the session statistics difference.
+
+    Raises:
+        DataParserError: If there is an error parsing the data.
+        KeyError: If a required key is missing in the data.
+
+    Notes:
+        - The function calculates the difference in various statistics between the two PlayerGlobalData objects.
+        - If the battles and rating differences are zero and zero_bypass is False, a DataParserError is raised.
+        - If zero_bypass is True and the battles and rating differences are zero, an empty SessionDiffData object is returned.
+        - The function calculates the session statistics difference for the main and rating data.
+        - The function also includes the tank stats for each session.
+    """
     try:
         diff_battles = data_new.data.statistics.all.battles - data_old.data.statistics.all.battles
         tank_stats = _generate_tank_session_dict(data_old, data_new)
@@ -174,17 +187,17 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData, ze
 
        
         session_winrate = safe_divide(wins, diff_battles, 0) * 100
-        session_avg_damage = int(safe_divide(damage_dealt, diff_battles, 0))
-        session_accuracy = safe_divide(hits, shots, 0) * 100
+        session_avg_damage = safe_divide(damage_dealt, diff_battles, return_type=DivideReturnType.INTEGER)
+        session_accuracy = safe_divide(hits, shots) * 100
         session_damage_ratio = safe_divide(damage_dealt, damage_received, 0)
         session_destruction_ratio = safe_divide(frags, (diff_battles - survived_battles), 0)
         session_frags_per_battle = safe_divide(frags, diff_battles, 0)
         session_survival_ratio = safe_divide(wins, diff_battles, 0)
         session_avg_spotted = safe_divide(n_data.all.spotted, diff_battles, 0)
 
-        session_rating = diff_mm_rating * 100 + 3000
+        session_rating = (diff_mm_rating * 100 + 3000) if diff_mm_rating > 0 else 0
         r_session_winrate = safe_divide(r_wins, r_diff_battles) * 100
-        r_session_avg_damage = int(safe_divide(r_damage_dealt, r_diff_battles))
+        r_session_avg_damage = safe_divide(r_damage_dealt, r_diff_battles, return_type=DivideReturnType.INTEGER)
         r_session_accuracy = safe_divide(r_hits, r_shots) * 100
         r_session_damage_ratio = safe_divide(r_damage_dealt, r_damage_received)
         r_session_destruction_ratio = safe_divide(r_frags, (r_diff_battles - r_survived_battles))

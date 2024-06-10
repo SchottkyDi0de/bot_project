@@ -8,23 +8,26 @@ from lib.api.async_wotb_api import API
 from lib.auth.discord import DiscordOAuth
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.data_classes.db_player import ImageSettings
+from lib.data_classes.db_player import AccountSlotsEnum, ImageSettings
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.error_handler.common import hook_exceptions
+from lib.image.session import ImageGenSession
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.blacklist.blacklist import check_user
 from lib.image.utils.color_validator import color_validate
 from lib.image.settings_represent import SettingsRepresent
-from lib.utils.img_to_base64 import convert_image
+from lib.image.utils.b64_img_handler import img_to_base64
+from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
 from lib.utils.color_converter import get_tuple_from_color
-from lib.views import ViewMeta
-from lib.utils.stats_preview import StatsPreview
 from lib.settings.settings import Config
 from lib.image.themes.theme_loader import get_theme
+from lib.data_parser.parse_data import get_session_stats
+from lib.views.alt_views import StatsPreview
+from lib.utils.slot_info import get_formatted_slot_info
 
 _log = get_logger(__file__, 'CogCustomizationLogger', 'logs/cog_customization.log')
 _config = Config().get()
@@ -63,17 +66,7 @@ class Customization(Cog):
                 'uk': Text().get('ua').cmds.set_theme.items.theme
             },
             choices=_config.themes.available
-        ), # type: ignore
-        use_custom_bg: Option(
-            bool,
-            required=False,
-            description=Text().get('en').cmds.image_settings.descr.sub_descr.use_custom_bg,
-            description_localizations={
-                'ru': Text().get('ru').cmds.image_settings.descr.sub_descr.use_custom_bg,
-                'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.use_custom_bg,
-                'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.use_custom_bg
-                }
-            ), # type: ignore
+        ),
         colorize_stats: Option(
             bool,
             required=False,
@@ -83,7 +76,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.colorize_stats,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.colorize_stats
             }
-        ), # type: ignore
+        ),
         glass_effect: Option(
             int,
             required=False,
@@ -95,7 +88,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.glass_effect,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.glass_effect
                 }
-            ), # type: ignore
+            ),
         stats_blocks_transparency: Option(
             int,
             min_value=0,
@@ -107,7 +100,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.stats_blocks_transparency,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.stats_blocks_transparency
                 }
-            ), # type: ignore
+            ),
         nickname_color: Option(
             str,
             required=False,
@@ -118,7 +111,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.nickname_color,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.nickname_color
                 }
-            ), # type: ignore
+            ),
         clan_tag_color: Option(
             str, 
             required=False,
@@ -129,7 +122,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.clan_tag_color,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.clan_tag_color
                 }
-            ), # type: ignore
+            ),
         stats_color: Option(
             str,
             required=False,
@@ -140,7 +133,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.stats_color,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.stats_color
                 }
-            ), # type: ignore
+            ),
         main_text_color: Option(
             str,
             required=False,
@@ -151,7 +144,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.main_text_color,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.main_text_color
                 }
-            ), # type: ignore
+            ),
         stats_text_color: Option(
             str,
             required=False,
@@ -162,7 +155,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.stats_text_color,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.stats_text_color
                 }
-            ), # type: ignore
+            ),
         disable_flag: Option(
             bool,
             required=False,
@@ -172,7 +165,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_flag,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_flag
                 }
-            ), # type: ignore
+            ),
         hide_nickname: Option(
             bool,
             required=False,
@@ -182,7 +175,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.hide_nickname,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.hide_nickname
                 }
-            ), # type: ignore
+            ),
         hide_clan_tag: Option(
             bool,
             required=False,
@@ -192,7 +185,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.hide_clan_tag,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.hide_clan_tag
                 }
-            ), # type: ignore
+            ),
         disable_stats_blocks: Option(
             bool,
             required=False,
@@ -202,7 +195,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_stats_blocks,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_stats_blocks
                 }
-            ), # type: ignore
+            ),
         disable_rating_stats: Option(
             bool,
             required=False,
@@ -212,7 +205,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_rating_stats,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_rating_stats
                 }
-            ), # type: ignore
+            ),
         disable_cache_label: Option(
             bool,
             required=False,
@@ -222,7 +215,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings.descr.sub_descr.disable_cache_label,
                 'uk': Text().get('ua').cmds.image_settings.descr.sub_descr.disable_cache_label
                 }
-            ), # type: ignore
+            ),
         positive_stats_color: Option(
             str,
             required=False,
@@ -233,7 +226,7 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings_get.items.positive_stats_color,
                 'uk': Text().get('ua').cmds.image_settings_get.items.positive_stats_color
                 }
-            ), # type: ignore
+            ),
         negative_stats_color: Option(
             str,
             required=False,
@@ -244,27 +237,36 @@ class Customization(Cog):
                 'pl': Text().get('pl').cmds.image_settings_get.items.negative_stats_color,
                 'uk': Text().get('ua').cmds.image_settings_get.items.negative_stats_color
                 }
-            ) # type: ignore
+            ),
+        account: Option(
+            int,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            required=False,
+            default=None,
+            choices=[x.value for x in AccountSlotsEnum]
+            )
         ):
-        Text().load_from_context(ctx)
-        check_user(ctx)
+        await Text().load_from_context(ctx)
 
-        if not self.db.check_member(ctx.author.id):
-            await ctx.respond(embed=self.inf_msg.player_not_registered())
-            return
+        game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
+        await ctx.defer()
 
-        image_settings = self.db.get_image_settings(ctx.author.id)
+        image_settings = await self.db.get_image_settings(slot=slot, member=member)
         color_error_data = []
         color_error = False
         
         if theme != 'default' and isinstance(theme, str):
             loaded_theme = get_theme(theme)
             image_settings = loaded_theme.image_settings
-            self.db.set_member_image(ctx.author.id, convert_image(loaded_theme.bg))
+            await self.db.set_image(member.id, img_to_base64(loaded_theme.bg))
             
         current_settings = {
             'theme': theme,
-            'use_custom_bg': use_custom_bg,
             'colorize_stats': colorize_stats,
             'glass_effect': glass_effect,
             'main_text_color': main_text_color,
@@ -288,9 +290,7 @@ class Customization(Cog):
             if value is None:
                 current_settings[key] = getattr(image_settings, key)
                 continue
-            else:
-                set_values_count += 1
-            if '_color' in key:
+            elif '_color' in key:
                 set_values_count += 1
                 validate_result = color_validate(value)
                 if validate_result is None:
@@ -301,9 +301,12 @@ class Customization(Cog):
                     current_settings[key] = value
                 elif validate_result[1] == "rgb":
                     current_settings[key] = rgb_to_hex(get_tuple_from_color(value))
-            if key == 'stats_blocks_transparency':
+            elif key == 'stats_blocks_transparency':
                 set_values_count += 1
                 current_settings[key] = value / 100
+            else:
+                set_values_count += 1
+                current_settings[key] = value
                     
         if set_values_count == 0:
             await ctx.respond(
@@ -336,22 +339,45 @@ class Customization(Cog):
                     colour='orange',
                 ).add_field(name='Color picker', value='[Click here](https://g.co/kgs/FwKjhNE)', inline=False)
             )
-            self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(current_settings))
+            await self.db.set_image_settings(
+                slot=slot,
+                member_id=member.id, 
+                settings=ImageSettings.model_validate(current_settings)
+            )
             return
 
         current_image_settings = ImageSettings.model_validate(current_settings)
-        sptext, spimage = StatsPreview().preview(ctx, current_image_settings)
+        
+        data = await self.api.get_stats(region=game_account.region, game_id=game_account.game_id)
+        diff_data = get_session_stats(data, data, zero_bypass=True)
+        
+        image = ImageGenSession().generate(
+            data=data, 
+            diff_data=diff_data, 
+            player=member, 
+            server=self.sdb.get_server(ctx), 
+            slot=slot,
+            force_image_settings=current_image_settings
+        )
+        
+        img_file = File(image, 'session.png')
+        image.close()
+        
+        view = StatsPreview(
+            player_id=member.id,
+            slot=slot,
+            text=Text().get(),
+            image_settings=current_image_settings
+        ).get_view()
+        
         await ctx.respond(
-            sptext, 
-            file=spimage, 
-            view=ViewMeta(
-                bot=self.bot, 
-                ctx=ctx, 
-                type='image_settings', 
-                session_self=None, 
-                current_settings=current_image_settings
-                )
-            )
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=Text().get().cmds.image_settings.info.preview
+            ),
+            file=img_file,
+            view=view
+        )
 
     @commands.slash_command(
         guild_only=True, 
@@ -363,23 +389,43 @@ class Customization(Cog):
             }
         )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def image_settings_get(self, ctx: discord.commands.ApplicationContext):
-        Text().load_from_context(ctx)
+    async def image_settings_get(
+        self, 
+        ctx: discord.commands.ApplicationContext,
+        account: Option(
+            int,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+                },
+            required=False,
+            default=None,
+            choices=[x.value for x in AccountSlotsEnum]
+            )
+        ):
+        await Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
 
-        if not self.db.check_member(ctx.author.id):
-            await ctx.respond(embed=self.inf_msg.player_not_registered())
-            return
+        game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
+        image_bytes = SettingsRepresent().draw(game_account.image_settings)
+        file = File(image_bytes, 'image_settings.png')
         
-        image_settings = self.db.get_image_settings(ctx.author.id)
         embed = self.inf_msg.custom(
             Text().get(),
             text=Text().get().cmds.image_settings_get.info.get_ok,
+            footer=get_formatted_slot_info(
+                slot=slot,
+                text=Text().get(),
+                game_account=game_account,
+                shorted=True,
+                clear_md=True
+            )
         )
-        image = File(SettingsRepresent().draw(image_settings), filename='img_settings.png')
-        await ctx.respond(embed=embed)
-        await ctx.channel.send(file=image)
+        
+        await ctx.respond(embed=embed, file=file)
             
     @commands.slash_command(
         guild_only=True,
@@ -390,19 +436,39 @@ class Customization(Cog):
             'uk': Text().get('ua').cmds.image_settings_reset.descr.this
             }
         )
-    async def image_settings_reset(self, ctx: ApplicationContext):
-        Text().load_from_context(ctx)
+    async def image_settings_reset(
+        self, 
+        ctx: ApplicationContext,
+        account: Option(
+            int,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+                },
+            required=False,
+            default=None,
+            choices=[x.value for x in AccountSlotsEnum]
+            )
+        ):
+        await Text().load_from_context(ctx)
         check_user(ctx)
 
-        if not self.db.check_member(ctx.author.id):
-            await ctx.respond(embed=self.inf_msg.player_not_registered())
-            return
-        
-        self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate({}))
+        game_account, member, slot = await standard_account_validate(slot=account, account_id=ctx.author.id)
+        await self.db.set_image_settings(slot=slot, member=member.id, settings=ImageSettings())
+    
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
-                Text().get().cmds.image_settings_reset.info.reset_ok
+                Text().get().cmds.image_settings_reset.info.reset_ok,
+                footer=get_formatted_slot_info(
+                    slot=slot,
+                    text=Text().get(),
+                    game_account=game_account,
+                    shorted=True,
+                    clear_md=True
+                    )
                 )
             )
     
@@ -418,7 +484,7 @@ class Customization(Cog):
     async def server_settings_get(self, ctx: ApplicationContext):
         check_user(ctx)
 
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         server_settings = self.sdb.get_server_settings(ctx)
         embed = self.inf_msg.custom(
             Text().get(),
@@ -454,9 +520,9 @@ class Customization(Cog):
             },
             required=False,
             default=False
-            ) # type: ignore
+            )
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
         
         if server:
@@ -476,22 +542,18 @@ class Customization(Cog):
                         text=Text().get().cmds.reset_background.errors.permission_denied
                     )
                 )
-        elif self.db.check_member(ctx.author.id):
-            self.db.del_member_image(ctx.author.id)
-            await ctx.respond(
-                embed=self.inf_msg.custom(
-                    Text().get(),
-                    text=Text().get().cmds.reset_background.info.unset_background_ok,
-                    colour='green'
-                )
+            return
+        
+        _, member, _ = await standard_account_validate(slot=None, account_id=ctx.author.id)
+                
+        await self.db.set_image(member_id=member.id, image=None)
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=Text().get().cmds.reset_background.info.unset_background_ok,
+                colour='green'
             )
-        else:
-            await ctx.respond(
-                embed=self.err_msg.custom(
-                    Text().get(),
-                    text=Text().get().cmds.set_background.errors.player_not_registred
-                )
-            )
+        )
 
 def setup(bot: commands.Bot):
     bot.add_cog(Customization(bot))

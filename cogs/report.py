@@ -40,7 +40,7 @@ class Report(Cog):
                 choices=["bug_report", "suggestion"]
             )
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
 
         await ctx.send_modal(ViewMeta(self.bot, ctx, 'report', report_type={"bug_report": "b", "suggestion": "s"}[report_type]))
@@ -48,5 +48,5 @@ class Report(Cog):
         
 
     
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(Report(bot))

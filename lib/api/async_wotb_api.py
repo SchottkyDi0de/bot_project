@@ -17,7 +17,7 @@ from lib.data_classes.api.player_achievements import Achievements
 from lib.data_classes.api.player_clan_stats import ClanStats
 from lib.data_classes.api.player_stats import PlayerStats
 from lib.data_classes.api.tanks_stats import TankStats
-from lib.data_classes.db_player import DBPlayer
+from lib.data_classes.db_player import DBPlayer, GameAccount
 from lib.database.players import PlayersDB
 from lib.data_parser.parse_data import get_normalized_data
 from lib.exceptions import api as api_exceptions
@@ -273,8 +273,7 @@ class API:
             discord_id: int, 
             nickname: str | None = None, 
             game_id: int | None = None,
-            requested_by: DBPlayer | None = None
-        ) -> DBPlayer | None:
+        ) -> GameAccount:
         """
         Check a player's information.
 
@@ -287,7 +286,7 @@ class API:
             SourceNotAvailable: If the source is not available.
 
         Returns:
-            dict | None: The player's information or None if the player is not found.
+            GameAccount: The player's information or None if the player is not found.
         """
         url_get_id = (
             f'https://{self._get_url_by_reg(region)}/wotb/account/list/'
@@ -332,13 +331,12 @@ class API:
                         data = data['data'][[*data['data'].keys()][0]]
                     except KeyError:
                         ...
-                    db_player = {
-                            'nickname': data['nickname'],
-                            'game_id': int(data['account_id']),
-                            'region': region,
-                            'id': discord_id,
-                        }
-                    return DBPlayer.model_validate(db_player)
+                    game_account = {
+                        'nickname': data['nickname'],
+                        'game_id': int(data['account_id']),
+                        'region': region,
+                    }
+                    return GameAccount.model_validate(game_account)
             
     def done_callback(self, task: asyncio.Task):
         pass
@@ -392,9 +390,9 @@ class API:
             cached_data = self.cache.get((str(player['account_id']), region))
             if cached_data is not None:
                 data = PlayerGlobalData.model_validate(cached_data)
-                if not ignore_lock:
-                    if self.pdb.find_lock(player['account_id'], requested_by):
-                        raise api_exceptions.LockedPlayer()
+                # if not ignore_lock:
+                #     if self.pdb.find_lock(player['account_id'], requested_by):
+                #         raise api_exceptions.LockedPlayer()
                 data.from_cache = True
                 return get_normalized_data(data)
             else:
@@ -519,9 +517,9 @@ class API:
                 }
             )
             
-            if not ignore_lock:
-                if self.pdb.find_lock(game_id, requested_by):
-                    raise api_exceptions.LockedPlayer()
+            # if not ignore_lock:
+            #     if self.pdb.find_lock(game_id, requested_by):
+            #         raise api_exceptions.LockedPlayer()
             
             async with self.session.get(url_get_stats, verify_ssl=False) as response:
                 data = await self.response_handler(response, check_data=True, check_battles=True)

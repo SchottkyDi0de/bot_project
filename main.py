@@ -1,16 +1,21 @@
 import os
 from asyncio import TaskGroup
+# from time import time
 
+# import aiohttp
 from discord import Intents, Activity, Status, ActivityType
 from discord.ext import commands
 
 from lib.api import async_wotb_api
 from lib.database import tankopedia
+from lib.database.players import PlayersDB
 from lib.logger.logger import get_logger
 from lib.exceptions.api import APIError
 from lib.settings.settings import Config, EnvConfig
 from workers.pdb_checker import PDBWorker
 from workers.db_backup_worker import DBBackupWorker
+
+from server_ping import ping
 
 _log = get_logger(__file__, 'MainLogger', 'logs/main.log')
 _config = Config().get()
@@ -26,8 +31,8 @@ class App():
         self.bot = commands.Bot(intents=self.intents, command_prefix=_config.default.prefix)
         self.bot.remove_command('help')
         self.workers = [
-                self.pbd_worker.run_worker,
-                self.backup.run_worker
+                # self.pbd_worker.run_workers,
+                # self.backup.run_worker
             ]
 
         self.extension_names = [
@@ -55,6 +60,7 @@ class App():
 
             tp = tankopedia.TanksDB()
             api = async_wotb_api.API()
+            # await PlayersDB().database_update()
 
             tp.set_tankopedia(await self.retrieve_tankopedia(api))
             _log.debug('Tankopedia set successful\nBot started: %s', self.bot.user)
@@ -67,9 +73,9 @@ class App():
                 status=Status.online
             )
             await self.run_workers()
-
+        
         self.load_extension(self.extension_names)
-        self.bot.run(EnvConfig.DISCORD_TOKEN)
+        self.bot.run(EnvConfig.DISCORD_TOKEN_DEV)
 
     @staticmethod
     async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:

@@ -7,6 +7,16 @@
 #   srv_id: "server_id: <id>"
 #
 # Please do not change the placeholders names when translating the file.
+#
+# This file use dynamic yaml data.
+# File allow use variables, example:
+#
+# server:
+#   srv_id: 12123434
+#
+# server_settings:
+#   srv_url: https://example.com/server/{server.srv_id}/
+#
 # _Zener
 
 for_image:
@@ -39,9 +49,7 @@ for_image:
     gold: GOLD
     platinum: PLATINUM
     brilliant: BRILLIANT
-    no_league: |-
-      NO
-      LEAGUE
+    no_league: NO LEAGUE
     calibration: CALIBRATION
   total: TOTAL
   frags_per_battle: |-
@@ -153,6 +161,8 @@ cmds_defs:
   server_settings_get: '</server_settings_get:1190367458192801868>'
   set_lock: '</set_lock:1221467304890728509>'
   session_widget_settings: '</session_widget_settings:1221467304450064500>'
+  switch_account: 'Select account'
+  premium: 'Premium access'
 
 frequent:
   errors:
@@ -163,12 +173,25 @@ frequent:
     parser_error: Error when parsing data.
     verify_error: Account not verified. First, you need to go through verification to use this command.
     locked_player: This player has blocked viewing their statistics.
+    slot_is_empty: The slot you specified does not have a saved account, you cannot save any data to it.
+    slot_not_accessed: 'You need premium access to use slots 3-5. More information: {cmds_defs.premium}.'
 
   info:
     info: Information
     player_not_registred: 'The player is not logged in. First enter the command {cmds_defs.set_player}'
     err_info_sent: Information about the error has been sent to the developer.
     warning: Warning
+    discard_changes: You canceled the changes.
+    slot_info: |-
+      Account info:
+      ```
+      - slot:      <slot_num>
+      - nickname:  <nickname>
+      - region:    <region>
+      ```
+    updated_at: 'Updated at: '
+    short_slot_info: '`<nickname>[<region>] | account: <slot_num>`'
+    session_already_started: Session is already running, would you like to restart it?
 
   common:
     'yes': 'Yes'
@@ -180,6 +203,7 @@ frequent:
       h: 'h'
       m: 'm'
       s: 's'
+    slot: Account slot
       
 views:
   not_owner: You can't use this button.
@@ -226,13 +250,15 @@ cmds:
     info:
       set_player_ok: |-
         Player information has been successfully saved, now you can use all the bot's features.
+        - To switch accounts, use {cmds_defs.switch_account}
         - To request main account statistics, use {cmds_defs.astats} | {cmds_defs.stats}
         - To start tracking session statistics, use {cmds_defs.start_session} | {cmds_defs.start_autosession}
         - To get session statistics, use {cmds_defs.get_session}
         - To get session status information, use {cmds_defs.session_state}
         Click the button below to start auto-session right now.
-    items:
-      ''
+      slot_override: |-
+        The slot you selected already has account information written to it, are you sure you want to overwrite it?
+        <slot_data>
 
 # Set lang command
   set_lang:
@@ -706,5 +732,22 @@ cmds:
     descr:
       this: 'Delete all data about yourself'
     info:
+      warn: 'Are you sure you want to delete all your data? This action is not reversible!'
       success: 'All your data has been completely deleted from the database'
-      
+    items:
+      ''
+
+# switch_account
+  switch_account:
+    descr:
+      this: Switch account
+    info:
+      success: |-
+        Account has been switched:
+        <old_account> -> <new_account>
+    items:
+      menu: Select account
+    errors:
+      no_slots_for_select: |-
+        You have only 1 account registered, please register 1 more account to be able to select accounts.
+        {cmds_defs.set_player}

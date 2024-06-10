@@ -29,8 +29,11 @@ session:
 autosession:
   ttl: 2_592_000 # in seconds
 
+account:
+  inactive_ttl: 7_776_000 # in seconds (90 days)
+
 default:
-  prefix : '!'  # deprecated
+  prefix : '!'  # deprecated | unused
   lang: 'en'
   available_locales: ['ru', 'en', 'pl', 'ua', 'auto']
   available_regions: ['ru', 'eu', 'na', 'asia']
@@ -70,7 +73,7 @@ help_urls:
   pl: https://blitzhub.gitbook.io/blitz-statistics-bot/pl-docs
 
 session_widget:
-  url: '{server.protocol}://{server.host}:{server.port}/bot/ui/session_widget_app?p_id=<user_id>&lang=<lang>'
+  url: '{server.protocol}://{server.host}:{server.port}/bot/ui/session_widget_app?p_id=<user_id>&lang=<lang>&slot=<slot>'
 
 auth:
   wg_redirect_uri: '{server.protocol}://{server.host}:{server.port}/bot/auth/game?region=<region>'
@@ -126,6 +129,6 @@ report:
   bug_channel_id: 1214204057477054464
 
 dump:
-  export_to_id: 766019191836639273
+  export_to_id: 1243198882180235344
   chunk_size: 24_117_248  #in bytes(now is 23 MB)
   directory: dump

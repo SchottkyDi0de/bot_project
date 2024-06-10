@@ -49,6 +49,21 @@ def hook_exceptions(_log: Logger) -> Coroutine:
                 )
             elif isinstance(error, database.VerificationNotFound):
                 embed = inf_msg.member_not_verified()
+            elif isinstance(error, database.SlotIsEmpty):
+                embed = inf_msg.custom(
+                    locale=Text().get(),
+                    title=Text().get().frequent.info.warning,
+                    text=Text().get().frequent.errors.slot_is_empty,
+                    colour='orange'
+                )
+            elif isinstance(error, database.PremiumSlotAccessAttempt):
+                embed = inf_msg.custom(
+                    locale=Text().get(),
+                    colour='orange',
+                    text=Text().get().frequent.errors.slot_not_accessed,
+                )
+            elif isinstance(error, database.MemberNotFound):
+                embed = inf_msg.player_not_registered()
             else:
                 embed = err_msg.unknown_error()
         elif isinstance(error, data_parser.DataParserError):

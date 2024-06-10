@@ -41,7 +41,7 @@ class CogReplayParser(commands.Cog):
                 'uk': Text().get('ua').cmds.parse_replay.descr.this
             }
         )
-    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.cooldown(1, 15, commands.BucketType.user)
     async def parse_replay(self,
                     ctx: ApplicationContext,
                     replay: Option(
@@ -73,7 +73,7 @@ class CogReplayParser(commands.Cog):
                         default='embed',
                     ),
                 ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
         
@@ -101,5 +101,5 @@ class CogReplayParser(commands.Cog):
                     )
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(CogReplayParser(bot))

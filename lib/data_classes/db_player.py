@@ -1,8 +1,11 @@
-from datetime import datetime
-from typing import Any
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, List, Literal, Optional, TypeAlias
 
 import pytz
 from pydantic import BaseModel
+
+from lib.data_classes.api.api_data import PlayerGlobalData
 
 
 class StatsViewSettings(BaseModel):
@@ -19,29 +22,17 @@ class StatsViewSettings(BaseModel):
         'slot_4' : 'rating'
     }
 
-class WidgetSettings(BaseModel):
-    disable_bg: bool = False
-    disable_nickname: bool = False
-    max_stats_blocks: int = 1
-    max_stats_small_blocks: int = 0
-    update_time: int = 30  # Seconds
-    background_transparency: float = 0.25
-    disable_main_stats_block: bool = False
-    use_bg_for_stats_blocks: bool = True
-    adaptive_width: bool = False
-    stats_block_color: str = '#bababa'
 
 class SessionSettings(BaseModel):
-    is_autosession: bool = False
-    last_get: datetime = datetime.now(pytz.utc)  # UTC Time of last session get (Date object)
-    timezone: int = 0  # Hours add to UTC (Simple timezone represent)
-    time_to_restart: datetime = datetime.now(pytz.utc).replace(hour=0, minute=0, second=0) # Date object
-    stats_view: StatsViewSettings = StatsViewSettings()
+    is_autosession: Optional[bool] = None
+    last_get: datetime = datetime.now(pytz.utc)
+    timezone: int = 0
+    time_to_restart: datetime = datetime.now(pytz.utc) + timedelta(days=1)
+
 
 class ImageSettings(BaseModel):
     theme: str = 'default'
     colorize_stats: bool = True
-    use_custom_bg: bool = True
     hide_nickname: bool = False
     hide_clan_tag: bool = False
     disable_flag: bool = False
@@ -50,15 +41,41 @@ class ImageSettings(BaseModel):
     disable_stats_blocks: bool = False
     stats_blocks_transparency: float = 0.5
     glass_effect: int = 5
-    nickname_color: str = '#f0f0f0' # Hex RGB Format #RRGGBB or #RGB
-    clan_tag_color: str = '#0088fc' # Hex validator: lib.image.utils.hex_color_validator
+    nickname_color: str = '#f0f0f0'  # Hex RGB Format #RRGGBB or #RGB
+    clan_tag_color: str = '#0088fc'  # Hex validator: lib.image.utils.hex_color_validator
     stats_color: str = '#f0f0f0'
     main_text_color: str = '#0088fc'
     stats_text_color: str = '#0088fc'
     negative_stats_color: str = '#c01515'
     positive_stats_color: str = '#1eff26'
-    
-    
+
+
+class WidgetSettings(BaseModel):
+    disable_bg: bool = False
+    disable_nickname: bool = False
+    max_stats_blocks: int = 1
+    max_stats_small_blocks: int = 0
+    update_time: int = 30  # Seconds
+    background_transparency: float = 0.5
+    disable_main_stats_block: bool = False
+    use_bg_for_stats_blocks: bool = True
+    adaptive_width: bool = False
+    stats_block_color: str = '#f0f0f0'
+
+
+class GameAccount(BaseModel):
+    nickname: str
+    game_id: int
+    region: str
+    last_stats: Optional[PlayerGlobalData] = None
+    session_settings: SessionSettings = SessionSettings()
+    image_settings: ImageSettings = ImageSettings()
+    widget_settings: WidgetSettings = WidgetSettings()
+    stats_view_settings: StatsViewSettings = StatsViewSettings()
+    verified: bool = False
+    locked: bool = False
+
+
 def set_widget_settings(**kwargs) -> WidgetSettings:
     '''
     Setup widget settings from kwargs
@@ -75,19 +92,45 @@ def set_image_settings(**kwargs) -> ImageSettings:
     return ImageSettings(**{k: v for k, v in kwargs.items() if v is not None})
 
 
+class AccountSlotsEnum(Enum):
+    slot_1 = 1
+    slot_2 = 2
+    slot_3 = 3
+    slot_4 = 4
+    slot_5 = 5
+
+
+class SessionStatesEnum(Enum):
+    NORMAL = 0
+    RESTART_NEEDED = 1
+    NOT_STARTED = 2
+    EXPIRED = 3
+
+
+class GameAccounts(BaseModel):
+    slot_1: Optional[GameAccount] = None
+    slot_2: Optional[GameAccount] = None
+    slot_3: Optional[GameAccount] = None
+    slot_4: Optional[GameAccount] = None
+    slot_5: Optional[GameAccount] = None
+
+class UsedCommand(BaseModel):
+    name: str
+    last_used: datetime
+
+class Profile(BaseModel):
+    premium: bool = False
+    premium_time: Optional[datetime] = None
+    badges: List[str] = []
+    used_commands: List[UsedCommand] = []
+    level_exp: int = 0
+    last_activity: datetime = datetime.now(pytz.utc)
+
 class DBPlayer(BaseModel):
-    _id: Any | None = None
     id: int
-    game_id: int
-    nickname: str
-    region: str
-    premium: bool | None = None
-    premium_time: int | None = None
-    lang: str | None = None
-    last_stats: dict[str, Any] | None = None
-    image: str | None = None
-    locked: bool = False
-    verified: bool = False
-    image_settings: ImageSettings = ImageSettings()
-    session_settings: SessionSettings = SessionSettings()
-    widget_settings: WidgetSettings = WidgetSettings()
+    lang: Optional[str] = None
+    image: Optional[str] = None
+    use_custom_image: bool = True
+    game_accounts: GameAccounts
+    profile: Profile
+    current_game_account: str = AccountSlotsEnum.slot_1.name

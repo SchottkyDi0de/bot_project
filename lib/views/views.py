@@ -102,7 +102,7 @@ class InitObject:
 class ViewMeta(type):
     def __new__(cls, bot: commands.Bot, ctx: ApplicationContext, type: Literal['image_settings', 'session', 'replay', 'report'], *,
                 session_self: Session=None, current_settings: ImageSettings=None, report_type: Literal['b', 's']=None, replay_data: ParsedReplayData=None):
-        Text().load_from_context(ctx)
+        # Text().load_from_context(ctx)
         _log.debug(f"Starting building view for {type}")
 
         if type in ['image_settings', 'session']:
