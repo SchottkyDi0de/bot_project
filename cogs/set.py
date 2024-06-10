@@ -166,9 +166,9 @@ class Set(commands.Cog):
                 )
                 return
         
-        await self.db.set_member(slot=AccountSlotsEnum[slot], member_id=ctx.author.id, game_account=game_account, slot_override=True)
+        await self.db.set_member(slot=AccountSlotsEnum(slot), member_id=ctx.author.id, game_account=game_account, slot_override=True)
         view = StartSession(Text().get(), ctx.author.id, slot, game_account)
-        _log.info(f'Set player: {ctx.author.id} {nick_or_id} {region} | slot: {AccountSlotsEnum[slot].name}')
+        _log.info(f'Set player: {ctx.author.id} {nick_or_id} {region} | slot: {AccountSlotsEnum(slot).name}')
         await ctx.respond(
             embed=self.inf_msg.set_player_ok(),
             view=view.get_view()
@@ -767,6 +767,7 @@ class Set(commands.Cog):
                     colour='orange'
                 )
             )
+            return
         
         available_slots.remove(slot)
         choices: list[SelectOption] = []
