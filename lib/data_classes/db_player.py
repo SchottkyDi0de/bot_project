@@ -116,7 +116,7 @@ class GameAccounts(BaseModel):
 
 class UsedCommand(BaseModel):
     name: str
-    last_used: datetime
+    last_used: datetime = datetime.now(pytz.utc)
 
 class Profile(BaseModel):
     premium: bool = False
@@ -125,6 +125,7 @@ class Profile(BaseModel):
     used_commands: List[UsedCommand] = []
     level_exp: int = 0
     last_activity: datetime = datetime.now(pytz.utc)
+    commands_counter: int = 0
 
 class DBPlayer(BaseModel):
     id: int

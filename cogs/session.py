@@ -2,17 +2,15 @@ from datetime import datetime, timedelta
 import traceback
 import pytz
 
-from discord import File, Option, Embed
+from discord import File, Option
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
 from lib.utils.slot_info import get_formatted_slot_info
 from lib.api.async_wotb_api import API
 from lib.blacklist.blacklist import check_user
-from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, GameAccount, SessionStatesEnum
-from lib.data_classes.db_server import DBServer
+from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, UsedCommand
 from lib.data_parser.parse_data import get_session_stats
-from lib.exceptions import database
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.embeds.errors import ErrorMSG
@@ -26,7 +24,6 @@ from lib.utils.validators import validate
 from lib.utils.bool_to_text import bool_handler
 from lib.utils.time_converter import TimeConverter
 from lib.utils.string_parser import insert_data
-from lib.views import ViewMeta
 from lib.views.alt_views import UpdateSession
 
 
@@ -127,11 +124,10 @@ class Session(commands.Cog):
             )
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
         await ctx.defer()
         
         game_account, member, account_slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
-        
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         valid_time = validate(restart_time, 'time')
         now_time = datetime.now(tz=pytz.utc).replace(hour=0, minute=0, second=0)
         
@@ -224,6 +220,7 @@ class Session(commands.Cog):
         await ctx.defer()
         
         game_account, member, account_slot = await standard_account_validate(ctx.author.id, account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         
         last_stats = await self.api.get_stats(
             game_id=game_account.game_id,
@@ -284,6 +281,7 @@ class Session(commands.Cog):
         await ctx.defer()
         
         game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         server = self.sdb.get_server(ctx)
         
         embed = self.inf_msg.custom(
@@ -342,6 +340,7 @@ class Session(commands.Cog):
         await ctx.defer()
         
         game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         
         if isinstance(member, bool):
             await ctx.respond(
@@ -357,7 +356,7 @@ class Session(commands.Cog):
         now_time = datetime.now(pytz.utc)
         session_settings = game_account.session_settings
         
-        time_format = f'%H:' \
+        time_format =   f'%H:' \
                         f'%M'
         long_time_format = f'%D{Text().get().frequent.common.time_units.d} | ' \
                         f'%H:' \

@@ -435,7 +435,7 @@ cmds:
       use_custom_bg: Пользовательский фон
       colorize_stats: Цветная статистика
       glass_effect: Эффект стекла
-      stats_blocks_transparency: Непрозрачность блоков со статистикой
+      stats_blocks_transparency: Прозрачность блоков со статистикой
       nickname_color: Цвет ника игрока
       clan_tag_color: Цвет клан-тега
       stats_color: Цвет основных статистик
@@ -449,7 +449,6 @@ cmds:
       disable_stats_blocks: Скрыть блоки со статистикой
       disable_rating_stats: Скрыть рейтинговую статистику
       disable_cache_label: Скрыть иконку кэша
-
       stats_blocks_disabled: Отрисовка блоков со статистикой отключена
 
   image_settings_reset:
@@ -532,7 +531,8 @@ cmds:
       send_ok_dm: Помощь была отправлена вам в ЛС.
     items:
       help: Помощь
-  
+
+# parse_replay command
   parse_replay:
     descr:
       this: Показать информацию о реплее.
@@ -555,22 +555,24 @@ cmds:
         draw: Ничья
         # When localizing, use an editor with a monospaced font 
         # and align placeholders relative to each other
-        # I recomended VS Code or Sublime Text with monospaced font
+        # I recommended VS Code or Sublime Text with monospaced font
         # _Zener
       formenu: |-
-        Никнейм: `<nickname>`
         ```py
-        Название танка: <tank_name>
-        Урона нанесено: <damage>
-        Урон с помощью игрока: <spotted>
-        Чистый опыт: <xp>
-        Уничтожено танков: <frags>
-        Заблокировано урона: <blocked>
-        Сделано выстрелов: <shots>
-        Выстрелов попало: <shots_hit>
-        Пробитий: <shots_penetrated>
-        Точность: <accuracy>
-        Коэффициент пробитий: <penetration_ratio>
+        танк:        | <tank_name>
+        Чистый опыт  | <xp>
+
+        эффективность
+        --------------------------------
+        Урона нанесено....... | <damage>
+        Урон с помощью....... | <spotted>
+        Уничтожено танков.... | <frags>
+        Заблокировано урона.. | <blocked>
+        Сделано выстрелов.... | <shots>
+        Выстрелов попало..... | <shots_hit>
+        Пробитий............. | <shots_penetrated>
+        Точность............. | <accuracy>
+        Процент пробитий..... | <penetration_ratio>
         ```
       description: |-
         ```py
@@ -639,13 +641,13 @@ cmds:
       message:
         title: 'Подтвердите свой аккаунт'
         description: |-
-          'Чтобы получить доступ к специальным командам бота (например {cmds_defs.set_lock})'
-          'вы должны верифицировать или зарегистрировать верифицированный аккаунт.'
-        additional_info: |-
-          Если вы уже имеете неподтверждённый аккаунт то при верификации аккаунт будет перезаписан! Запущенные сессии будут сброшены.
+          Чтобы получить доступ к специальным командам бота (например {cmds_defs.set_lock})
+          вы должны верифицировать (подтвердить факт управления) аккаунтом.
         button_lt: Lesta
         button_wg: WG
       check_dm: Проверьте личные сообщения, ссылка для верификации была отправлена.
+    info:
+      already_verified: Эта учетная запись уже верифицирована. Повторная верификация не требуется.
 
 # Lock command
   set_lock:

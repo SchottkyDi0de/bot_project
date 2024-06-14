@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 from asyncio import sleep
+from random import randint
 from types import NoneType
 from typing import Literal
 
+from motor import MotorCursor
 import pytz
 import motor.motor_asyncio
 from bson.codec_options import CodecOptions
@@ -17,12 +19,14 @@ from lib.data_classes.db_player import (
     GameAccount,
     Profile,
     SessionStatesEnum,
-    AccountSlotsEnum
+    AccountSlotsEnum,
+    UsedCommand,
 )
 from lib.data_classes.db_player_old import DBPlayerOld
 from lib.exceptions import database
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
+from lib.utils.calculate_exp import exp_calc
 from lib.utils.singleton_factory import singleton
 
 _config = Config().get()
@@ -35,7 +39,7 @@ class PlayersDB:
         self.client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
         self.db = self.client['PlayersDB']
         self.collection = self.db.get_collection('players', codec_options=CodecOptions(tz_aware=True, tzinfo=pytz.utc))
-        
+    
     async def _multi_args_member_checker(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> DBPlayer:
         """
         Check if the given member ID and member object are valid and return the appropriate member object.
@@ -86,7 +90,20 @@ class PlayersDB:
         """
         return await self.collection.count_documents({})
     
-    async def get_all_members_ids(self) -> list:
+    async def count_sessions(self) -> int:
+        sessions = 0
+        cursor = self.collection.find({})
+
+        while cursor.alive:
+            member = DBPlayer.model_validate(await cursor.next())
+            all_slots = await self.get_all_used_slots(member=member)
+            for slot in all_slots:
+                if await self.check_member_last_stats(member=member, slot=slot):
+                    sessions += 1
+        
+        return sessions
+
+    async def get_all_members_ids(self) -> list[int]:
         """
         Asynchronously retrieves a list of all unique member IDs from the collection.
 
@@ -291,7 +308,7 @@ class PlayersDB:
         else:
             return True
         
-    async def unset_premium(self, member_id: int | str, member: DBPlayer) -> None:
+    async def unset_premium(self, member_id: int | str) -> None:
         """
         Unsets the premium status of a member in the database.
 
@@ -306,7 +323,11 @@ class PlayersDB:
 
         This function updates the 'profile.premium' and 'profile.premium_time' fields of the member with the given ID in the database. It sets 'profile.premium' to False and 'profile.premium_time' to None, effectively unsetting the premium status of the member.
         """
-        member = await self._multi_args_member_checker(member_id, member)
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        curr_slot = await self.get_current_game_slot(member=member)
+        if curr_slot.value > 2:
+            await self.set_current_account(member_id=member.id, slot=AccountSlotsEnum.slot_1)
+        
         await self.collection.update_one(
             {'id': member.id}, 
             {'$set': {'profile.premium': False, 'profile.premium_time': None}}
@@ -329,6 +350,7 @@ class PlayersDB:
         This function updates the 'profile.premium' and 'profile.premium_time' fields of the member with the given ID in the database. If 'end_time' is None, the member will be set as premium indefinitely. Otherwise, the member will be set as premium until the specified 'end_time'.
         """
         _log.info(f'Setting premium for id {member_id}, end_time: {end_time}')
+        end_time = datetime.now(pytz.utc) + timedelta(days=14) if end_time is None else end_time
         await self.collection.update_one(
             {'id': member_id},
             {'$set': {'profile.premium': True, 'profile.premium_time': end_time}}
@@ -370,6 +392,7 @@ class PlayersDB:
                 if datetime.now(pytz.utc) < premium_time:
                     return True
                 else:
+                    _log.debug(f'Unset premium for member {member.id}')
                     self.unset_premium(member.id)
                     return False
         else:
@@ -474,7 +497,7 @@ class PlayersDB:
                 return True
             
     async def session_restart_needed(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> bool:
-        member = await self._multi_args_member_checker(member_id)
+        member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
         game_account: GameAccount = getattr(member.game_accounts, slot.name)
         session_settings = game_account.session_settings
@@ -502,7 +525,7 @@ class PlayersDB:
             session_settings: SessionSettings,
             last_stats: PlayerGlobalData, 
         ) -> None:
-        member = await self._multi_args_member_checker(member_id, member)
+        member = await self._multi_args_member_checker(member_id, None)
         curr_slot = await self.get_current_game_slot(member_id, member) if slot is None else slot
         restart_time = session_settings.time_to_restart + timedelta(days=1)
         session_settings.time_to_restart = restart_time
@@ -571,7 +594,7 @@ class PlayersDB:
 
         Args:
             member_id (int | str): The ID of the member.
-            image (str | None): The image to set.
+            image (str | None): Base64 encoded image. If None, the image field will be set to None.
 
         Returns:
             None: This function does not return anything.
@@ -640,11 +663,65 @@ class PlayersDB:
             {'id': member_id},
             {'$set': {'current_game_account': slot.name}}
         )
+        
+    async def set_verification(self, member_id: int | str, slot: AccountSlotsEnum, verified: bool) -> None:
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        slot = await self.validate_slot(member=member, slot=slot)
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {f'game_accounts.{slot.name}.verified': verified}}
+        )
+        
+    async def set_last_activity(self, member_id: int | str, time: datetime = datetime.now(pytz.utc)) -> None:
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {'profile.last_activity': time}}
+        )
+    
+    async def get_last_activity(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> datetime:
+        member = await self._multi_args_member_checker(member_id, member)
+        return member.profile.last_activity
+        
+    async def get_analytics(self, member_id: int | str | None = None, member: DBPlayer | None = None, raw: bool = False) -> list[UsedCommand] | list[dict]:
+        member = await self._multi_args_member_checker(member_id, member)
+        if len(member.profile.used_commands) == 0:
+            return []
+        
+        if raw:
+            return [UsedCommand.model_dump(used_command) for used_command in member.profile.used_commands]
+    
+        return member.profile.used_commands
+        
+    async def set_analytics(self, analytics: UsedCommand, member: DBPlayer | None = None, member_id: int | str | None = None) -> None:
+        member = await self._multi_args_member_checker(member_id, member)
+        used_commands: list[dict] = await self.get_analytics(member=member, raw=True)
+        
+        if len(used_commands) >= 10:
+            used_commands.pop(0)
+            
+        used_commands.append(analytics.model_dump())
+        last_activity = datetime.now(pytz.utc)
+        
+        level_exp = exp_calc(analytics.name)
+        
+        await self.collection.update_one(
+            {'id': member.id},
+            {'$set': {
+                'profile.used_commands': used_commands, 
+                'profile.last_activity': last_activity,
+                'profile.commands_counter' : member.profile.commands_counter + 1,
+                'profile.xp' : member.profile.level_exp + level_exp
+                }
+            }
+        )
 
     async def database_update(self):
         cursor = self.collection.find({})
         async for member in cursor:
-            old_member = DBPlayerOld.model_validate(member)
+            try:
+                old_member = DBPlayerOld.model_validate(member)
+            except Exception:
+                continue
             
             new_member = {
                 '_id' : member['_id'],

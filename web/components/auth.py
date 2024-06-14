@@ -8,11 +8,12 @@ from nicegui import ui, Client
 from lib.api.async_discord_api import DiscordApi
 from lib.api.async_wotb_api import API
 from lib.auth.discord import DiscordOAuth
-from lib.data_classes.db_player import DBPlayer
+from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer
 from lib.database.players import PlayersDB
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config, EnvConfig
 from lib.utils.string_parser import insert_data
+from lib.utils.standard_account_validate import standard_account_validate
 
 _log = get_logger(__file__, 'AuthServerLogger', 'logs/auth.log')
 _config = Config().get()
@@ -27,8 +28,10 @@ def init_app(app: FastAPI) -> None:
     async def game(
         region: Optional[str] = None,
         status: Optional[str] = None, 
-        account_id: Optional[str] = None, 
-        nickname: Optional[str] = None
+        account_id: Optional[int] = None,
+        requested_by: Optional[int] = None,
+        nickname: Optional[str] = None,
+        slot_n: Optional[int] = None
         ):
         if region is not None and status is None:
             region = _api._reg_normalizer(region)
@@ -42,6 +45,8 @@ def init_app(app: FastAPI) -> None:
                             _config.auth.wg_redirect_uri,
                             {
                                 'region' : region,
+                                'requested_by': requested_by,
+                                'slot' : slot_n
                             }
                         )
                     }    
@@ -51,9 +56,16 @@ def init_app(app: FastAPI) -> None:
                 key='region',
                 value=region
             )
+            response.set_cookie(
+                key='requested_by',
+                value=requested_by
+            )
+            response.set_cookie(
+                key='slot_n',
+                value=str(slot_n)
+            )
             return response
         else:
-            print(region, status, account_id, nickname)
             if status == 'ok':
                 response = RedirectResponse(
                     insert_data(
@@ -79,34 +91,45 @@ def init_app(app: FastAPI) -> None:
                     value = nickname,
                 )
                 return response
+            else:
+                return JSONResponse({'Error' : 'Unknown status in url'}, status_code=400)
     
     @app.get('/bot/auth/discord', include_in_schema=False)
     async def discord(
         code: str = None, 
         nickname: Optional[str] = Cookie(None), 
         account_id: Optional[int] = Cookie(None),
+        requested_by: Optional[int] = Cookie(None),
+        slot_n: Optional[int] = Cookie(None),
         region: Optional[str] = Cookie(None),
         ):
 
-        _log.debug(f'Region: {region}')
+        _log.info(f'Requested by {requested_by}, account_id: {account_id}, nickname: {nickname}, slot_n: {slot_n}, region: {region}')
         if region not in _config.default.available_regions:
             return JSONResponse({'Error' : 'Unknown region in url'}, status_code=400)
+        
+        try:
+            game_account, member, slot = await standard_account_validate(
+                account_id=requested_by,
+                slot=AccountSlotsEnum(slot_n),
+            )
+        except Exception:
+            return JSONResponse({'Error' : 'Account validation failed'}, status_code=400)
         
         access_token = await _auth.exchange_code(code)
         user_data = await _ds_api.get_user_data(access_token)
         
+        if int(user_data['id']) != requested_by:
+            return JSONResponse({'Error' : 'Access denied, account id mismatch'}, status_code=400)
+        
+        if game_account.game_id != account_id:
+            return JSONResponse({'Error' : 'Access denied, game id mismatch'}, status_code=400)
+        
+        await _pdb.set_verification(member_id=member.id, slot=slot, verified=True)
+        
         response = RedirectResponse(
             f'/bot/ui/register_success?user_name={user_data["username"]}&global_name={user_data["global_name"]}&nickname={nickname}'
         )
-        
-        player = DBPlayer(
-            id=user_data['id'],
-            game_id=account_id,
-            nickname=nickname,
-            region=region,
-        )
-        _pdb.set_member(player, override=True)
-        _pdb.set_member_verified(user_data['id'])
         
         return response
     

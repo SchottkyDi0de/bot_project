@@ -14,6 +14,7 @@ from lib.exceptions.api import APIError
 from lib.settings.settings import Config, EnvConfig
 from workers.pdb_checker import PDBWorker
 from workers.db_backup_worker import DBBackupWorker
+from workers.premium_worker import UpdatePremiumWorker
 
 from server_ping import ping
 
@@ -26,13 +27,15 @@ if os.name == 'posix':
 class App():
     def __init__(self):
         self.backup = DBBackupWorker()
+        self.update_premium = UpdatePremiumWorker()
         self.intents = Intents.default()
         self.pbd_worker = PDBWorker()
         self.bot = commands.Bot(intents=self.intents, command_prefix=_config.default.prefix)
         self.bot.remove_command('help')
         self.workers = [
-                # self.pbd_worker.run_workers,
-                # self.backup.run_worker
+                self.pbd_worker.run_worker,
+                # self.backup.run_worker,
+                # self.update_premium.run_worker
             ]
 
         self.extension_names = [
@@ -95,4 +98,3 @@ class App():
 if __name__ == '__main__':
     app = App()
     app.main()
-

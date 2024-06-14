@@ -5,7 +5,7 @@ from discord.commands import ApplicationContext
 from webcolors import rgb_to_hex
 
 from lib.blacklist.blacklist import check_user
-from lib.data_classes.db_player import AccountSlotsEnum, WidgetSettings, set_widget_settings
+from lib.data_classes.db_player import AccountSlotsEnum, UsedCommand, WidgetSettings
 from lib.database.players import PlayersDB
 from lib.embeds.info import InfoMSG
 from lib.error_handler.common import hook_exceptions
@@ -15,7 +15,7 @@ from lib.settings.settings import Config
 from lib.utils.color_converter import get_tuple_from_color
 from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.string_parser import insert_data
-from lib.exceptions.database import MemberNotFound, LastStatsNotFound
+from lib.exceptions.database import LastStatsNotFound
 from lib.image.utils.color_validator import color_validate
 from lib.utils.slot_info import get_formatted_slot_info
 
@@ -58,16 +58,25 @@ class SessionWidget(commands.Cog):
         check_user(ctx)
         
         game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
+        await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         session = await self.pdb.check_member_last_stats(slot=slot, member=member)
         
         if not session:
             raise LastStatsNotFound(f'Member {member.id} has no last stats in slot {slot.name}')
         
         _log.debug(f'Sending session widget to {member.id} in slot {slot.name}...')
+        url = insert_data(
+            _config.session_widget.url,
+            {
+                'user_id' : member.id,
+                'lang' : Text().get_current_lang(),
+                'slot' : slot.value
+            }
+        )
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
-                text=Text().get().cmds.session_widget.info.success,
+                text=insert_data(Text().get().cmds.session_widget.info.success, {'link': url}),
                 colour='green',
                 footer=get_formatted_slot_info(
                     slot=slot,
@@ -79,15 +88,8 @@ class SessionWidget(commands.Cog):
             ),
             view=View(
                 Button(
-                    label = Text().get().cmds.session_widget.items.btn,
-                    url = insert_data(
-                        _config.session_widget.url,
-                        {
-                            'user_id' : member.id,
-                            'lang' : Text().get_current_lang(),
-                            'slot' : slot.value
-                        }
-                    )
+                    label=Text().get().cmds.session_widget.items.btn,
+                    url=url
                 )
             ),
             ephemeral=True
@@ -228,6 +230,7 @@ class SessionWidget(commands.Cog):
         await Text().load_from_context(ctx)
         
         game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
+        await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         widget_settings = await self.pdb.get_widget_settings(slot=slot, member=member)
         
         current_settings = {
@@ -343,7 +346,7 @@ class SessionWidget(commands.Cog):
         await Text().load_from_context(ctx)
         
         game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
-        
+        await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)        
         await self.pdb.set_widget_settings(slot=slot, member_id=ctx.author.id, settings=WidgetSettings())
         
         await ctx.respond(

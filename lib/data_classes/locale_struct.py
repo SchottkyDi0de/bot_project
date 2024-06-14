@@ -625,7 +625,6 @@ class Cooldown(BaseModel):
 class Message(BaseModel):
     title: str
     description: str
-    additional_info: str
     button_lt: str
     button_wg: str
 
@@ -636,9 +635,14 @@ class Items6(BaseModel):
     check_dm: str
 
 
+class Info19(BaseModel):
+    already_verified: str
+
+
 class Verify(BaseModel):
     descr: Descr19
     items: Items6
+    info: Info19
 
 
 class SubDescr11(BaseModel):
@@ -650,14 +654,14 @@ class Descr21(BaseModel):
     sub_descr: SubDescr11
 
 
-class Info19(BaseModel):
+class Info20(BaseModel):
     set_true: str
     set_false: str
 
 
 class SetLock(BaseModel):
     descr: Descr21
-    info: Info19
+    info: Info20
     items: str
 
 
@@ -665,7 +669,7 @@ class Descr22(BaseModel):
     this: str
 
 
-class Info20(BaseModel):
+class Info21(BaseModel):
     success: str
 
 
@@ -675,14 +679,14 @@ class Errors13(BaseModel):
 
 class SessionViewSettings(BaseModel):
     descr: Descr22
-    info: Info20
+    info: Info21
     errors: Errors13
     items: str
 
 
 class SessionViewSettingsReset(BaseModel):
     descr: Descr22
-    info: Info20
+    info: Info21
     items: str
 
 
@@ -692,7 +696,7 @@ class Items7(BaseModel):
 
 class SessionWidget(BaseModel):
     descr: Descr22
-    info: Info20
+    info: Info21
     errors: str
     items: Items7
 
@@ -716,14 +720,14 @@ class Items8(BaseModel):
 
 class SessionWidgetSettings(BaseModel):
     descr: Descr22
-    info: Info20
+    info: Info21
     errors: Errors14
     items: Items8
 
 
 class SessionWidgetSettingsReset(BaseModel):
     descr: Descr22
-    info: Info20
+    info: Info21
     items: str
 
 
@@ -733,22 +737,22 @@ class Items9(BaseModel):
 
 class SetTheme(BaseModel):
     descr: Descr22
-    info: Info20
+    info: Info21
     items: Items9
 
 
-class Info26(BaseModel):
+class Info27(BaseModel):
     warn: str
     success: str
 
 
 class DeletePlayer(BaseModel):
     descr: Descr22
-    info: Info26
+    info: Info27
     items: str
 
 
-class Info27(BaseModel):
+class Info28(BaseModel):
     success: str
 
 
@@ -762,7 +766,7 @@ class Errors15(BaseModel):
 
 class SwitchAccount(BaseModel):
     descr: Descr22
-    info: Info27
+    info: Info28
     items: Items10
     errors: Errors15
 

@@ -13,7 +13,7 @@ from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.string_parser import insert_data
 from lib.views.alt_views import DeleteAccountConfirmation, StartSession, SlotOverride, SwitchAccount
 from lib.blacklist.blacklist import check_user
-from lib.data_classes.db_player import StatsViewSettings, AccountSlotsEnum
+from lib.data_classes.db_player import StatsViewSettings, AccountSlotsEnum, UsedCommand
 from lib.exceptions.database import VerificationNotFound
 from lib.image.utils.resizer import resize_image, ResizeMode
 from lib.settings.settings import Config
@@ -146,6 +146,7 @@ class Set(commands.Cog):
         )
         member = await self.db.check_member_exists(member_id=ctx.author.id, raise_error=False, get_if_exist=True)
         if not isinstance(member, bool):
+            await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
             if not await self.db.check_slot_empty(slot, member=member, raise_error=False):
                 view = SlotOverride(Text().get(), game_account, ctx.author.id, slot)
                 await ctx.respond(
@@ -199,6 +200,10 @@ class Set(commands.Cog):
         ):
         await Text().load_from_context(ctx)
         check_user(ctx)
+        
+        member = await self.db.check_member_exists(member_id=ctx.author.id, raise_error=False, get_if_exist=True)
+        if not isinstance(member, bool):
+            await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
 
         if ctx.author.guild_permissions.administrator:
             settings = self.sdb.get_server_settings(ctx)
@@ -269,8 +274,10 @@ class Set(commands.Cog):
             ):
         check_user(ctx)
         await Text().load_from_context(ctx)
+        
+        member = await self.db.check_member_exists(member_id=ctx.author.id, raise_error=False, get_if_exist=True)
 
-        if not await self.db.check_member_exists(ctx.author.id, raise_error=False):
+        if not isinstance(member, bool):
             await ctx.respond(
                 embed=self.err_msg.custom(
                     Text().get(),
@@ -279,6 +286,7 @@ class Set(commands.Cog):
             )
             return
         
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         image: Attachment = image
         await ctx.defer()
 
@@ -403,7 +411,6 @@ class Set(commands.Cog):
             default=None
             ),
         ):
-        check_user(ctx)
         await Text().load_from_context(ctx)
         stats_settings = {
             'slot_1': slot_1,
@@ -412,6 +419,7 @@ class Set(commands.Cog):
             'slot_4': slot_4
         }
         game_account, member, account_slot = await standard_account_validate(account_id=ctx.user.id, slot=account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         stats_view_settings = game_account.stats_view_settings
         
         for slot, value in stats_settings.copy().items():
@@ -501,10 +509,10 @@ class Set(commands.Cog):
             default=None
             ),
         ):
-        check_user(ctx)
         await Text().load_from_context(ctx)
         
         game_account, member, account_slot = await standard_account_validate(ctx.user.id, account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         stats_view_settings = game_account.stats_view_settings
         
         stats_settings = {
@@ -590,6 +598,7 @@ class Set(commands.Cog):
         check_user(ctx)
         
         _, member, account_slot = await standard_account_validate(ctx.user.id, account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         
         await self.db.set_stats_view_settings(slot=account_slot, member_id=member.id, settings=StatsViewSettings())
         await ctx.respond(
@@ -644,8 +653,10 @@ class Set(commands.Cog):
         await Text().load_from_context(ctx)
         check_user(ctx)
         
-        game_account, member, account_slot = await standard_account_validate(ctx.user.id, account, check_verified=True)
+        _, member, account_slot = await standard_account_validate(ctx.user.id, account, check_verified=True)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         await self.db.set_member_lock(slot=account_slot, member_id=member.id, lock=lock)
+        
         
         text = Text().get().cmds.set_lock.info
         await ctx.respond(
@@ -702,9 +713,11 @@ class Set(commands.Cog):
         
         theme: Theme = get_theme(theme)
         game_account, member, slot = await standard_account_validate(ctx.user.id, account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         await self.db.set_image_settings(
             slot=slot, member_id=member.id, settings=theme.image_settings
         )
+        await self.db.set_image(member_id=member.id, image=img_to_base64(theme.bg))
         
         await ctx.respond(
             embed=self.inf_msg.custom(
@@ -758,6 +771,7 @@ class Set(commands.Cog):
         
         game_account, member, slot = await standard_account_validate(account_id=ctx.user.id, slot=None)
         available_slots = await self.db.get_all_used_slots(member=member)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         
         if len(available_slots) == 1:
             await ctx.respond(

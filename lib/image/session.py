@@ -671,27 +671,31 @@ class ImageGenSession():
             output_type: ImageGenReturnTypes = ImageGenReturnTypes.BYTES_IO,
             widget_mode: bool = False,
             test = False,
-            debug_label = True, # TODO: set False
+            debug_label = False,
             force_locale: str | None = None
             ) -> BytesIO | Image.Image | str:
         """
-        Generate the image for the given player's session stats.
+        Generates an image based on the provided data and settings.
 
         Args:
-            data (PlayerGlobalData): The global data of the player.
-            diff_data (SessionDiffData): The diff data of the session.
+            data (PlayerGlobalData): The global player data.
+            diff_data (SessionDiffData): The session diff data.
             player (DBPlayer): The player object.
-            server (DBServer | None): The server object.
-            slot: (AccountSlotsEnum): The slot of the player.
-            test (bool): If True, the image will be displayed for testing purposes. 
-            debug_label (bool): If True, the debug label will be displayed on the image.
-            extra (ImageGenExtraSettings): The extra settings for image generation.
-            output_type (ImageGenReturnTypes): The type of output for the image.
-            widget_mode (bool): If True, the widget mode will be enabled.
-            force_locale (str | None): The forced locale for the text.
+            server (DBServer | None): The server object or None.
+            slot (AccountSlotsEnum): The account slot enum.
+            force_image_settings (ImageSettings | None, optional): The image settings to force. Defaults to None.
+            extra (ImageGenExtraSettings, optional): The extra image generation settings. Defaults to ImageGenExtraSettings().
+            output_type (ImageGenReturnTypes, optional): The type of output to generate. Defaults to ImageGenReturnTypes.BYTES_IO.
+            widget_mode (bool, optional): Whether to generate the image in widget mode. Defaults to False.
+            test (bool, optional): Whether to test the image generation. Defaults to False.
+            debug_label (bool, optional): Whether to generate the debug label. Defaults to True.
+            force_locale (str | None, optional): The locale to force. Defaults to None.
 
         Returns:
-            BytesIO | Image.Image: The generated image for the session stats.
+            BytesIO | Image.Image | str: The generated image in the specified output type.
+
+        Raises:
+            TypeError: If the output_type is not an instance of ImageGenReturnTypes.
         """
 
         if force_locale is not None:

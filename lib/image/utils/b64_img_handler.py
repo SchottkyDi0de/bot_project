@@ -3,7 +3,7 @@ from io import BytesIO
 from os import PathLike
 
 from PIL import Image
-from discord import Attachment
+from discord import Attachment, File
 
 from lib.data_classes.themes import FakeImage
 
@@ -92,6 +92,12 @@ def base64_to_img(base64_string: str) -> Image.Image:
     return image
 
 
+def base64_to_ds_file(base64_string: str, filename: str) -> File:
+    with BytesIO(base64.b64decode(base64_string)) as buffer:
+        buffer.seek(0)
+        return File(buffer, filename=filename)
+
+
 def img_to_readable_buffer(image: Image.Image) -> BytesIO:
     if not isinstance(image, Image.Image):
         raise TypeError(f'image must be an instance of PIL.Image.Image, not {image.__class__.__name__}')
@@ -101,3 +107,7 @@ def img_to_readable_buffer(image: Image.Image) -> BytesIO:
     buffer.seek(0)
     
     return buffer
+
+def readable_buffer_to_base64(buffer: BytesIO) -> str:
+    b64 = base64.b64encode(buffer.getvalue()).decode()
+    return b64

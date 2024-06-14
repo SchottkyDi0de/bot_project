@@ -95,7 +95,14 @@ class Dump(BaseModel):
     export_to_id: int
     chunk_size: int
     directory: str
+    
+    
+class PassedServer(BaseModel):
+    premium_roles: List[int]
+    id: int
 
+class Premium(BaseModel):
+    passed_server: PassedServer
 
 class ConfigStruct(BaseModel):
     bot_name: str
@@ -113,3 +120,4 @@ class ConfigStruct(BaseModel):
     ds_api: DsApi
     report: Report
     dump: Dump
+    premium: Premium

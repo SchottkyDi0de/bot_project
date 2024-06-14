@@ -33,7 +33,7 @@ class PDBWorker:
         _log.debug('WORKERS: setting STOP_WORKER_FLAG to True')
         self.STOP_FLAG = True
 
-    async def run_workers(self, *args):
+    async def run_worker(self, *args):
         """
         Asynchronously runs the worker in a loop.
 
@@ -69,11 +69,11 @@ class PDBWorker:
             None: This function does not return anything.
         """
         member_ids = await self.db.get_all_members_ids()
-        print(member_ids)
+
         for member_id in member_ids:
             member = await self.db.get_member(member_id)
             used_slots: AccountSlotsEnum = await self.db.get_all_used_slots(member=member)
-            if used_slots is None:
+            if len(used_slots) == 0 or used_slots is None:
                 continue
             
             for slot in used_slots:
@@ -88,3 +88,4 @@ class PDBWorker:
                 
                 _log.info(f'Session updated for {member_id} in slot {slot.name}')
                 await self.db.update_session(slot, member_id, game_account.session_settings, new_last_stats)
+                await sleep(0.1)

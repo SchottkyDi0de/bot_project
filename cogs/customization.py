@@ -8,7 +8,7 @@ from lib.api.async_wotb_api import API
 from lib.auth.discord import DiscordOAuth
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.data_classes.db_player import AccountSlotsEnum, ImageSettings
+from lib.data_classes.db_player import AccountSlotsEnum, ImageSettings, UsedCommand
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.error_handler.common import hook_exceptions
@@ -56,17 +56,6 @@ class Customization(Cog):
     async def image_settings(
         self,
         ctx: ApplicationContext,
-        theme: Option(
-            str,
-            required=False,
-            description=Text().get('en').cmds.set_theme.items.theme,
-            description_localizations={
-                'ru': Text().get('ru').cmds.set_theme.items.theme,
-                'pl': Text().get('pl').cmds.set_theme.items.theme,
-                'uk': Text().get('ua').cmds.set_theme.items.theme
-            },
-            choices=_config.themes.available
-        ),
         colorize_stats: Option(
             bool,
             required=False,
@@ -254,19 +243,15 @@ class Customization(Cog):
         await Text().load_from_context(ctx)
 
         game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         await ctx.defer()
 
         image_settings = await self.db.get_image_settings(slot=slot, member=member)
         color_error_data = []
         color_error = False
         
-        if theme != 'default' and isinstance(theme, str):
-            loaded_theme = get_theme(theme)
-            image_settings = loaded_theme.image_settings
-            await self.db.set_image(member.id, img_to_base64(loaded_theme.bg))
-            
         current_settings = {
-            'theme': theme,
+            'theme': 'custom',
             'colorize_stats': colorize_stats,
             'glass_effect': glass_effect,
             'main_text_color': main_text_color,
@@ -406,10 +391,10 @@ class Customization(Cog):
             )
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
         await ctx.defer()
 
         game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         image_bytes = SettingsRepresent().draw(game_account.image_settings)
         file = File(image_bytes, 'image_settings.png')
         
@@ -456,7 +441,8 @@ class Customization(Cog):
         check_user(ctx)
 
         game_account, member, slot = await standard_account_validate(slot=account, account_id=ctx.author.id)
-        await self.db.set_image_settings(slot=slot, member=member.id, settings=ImageSettings())
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        await self.db.set_image_settings(slot=slot, member_id=member.id, settings=ImageSettings())
     
         await ctx.respond(
             embed=self.inf_msg.custom(
@@ -485,6 +471,10 @@ class Customization(Cog):
         check_user(ctx)
 
         await Text().load_from_context(ctx)
+        member = await self.db.check_member_exists(member_id=ctx.author.id, raise_error=False, get_if_exist=True)
+        if not isinstance(member, bool):
+            await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+            
         server_settings = self.sdb.get_server_settings(ctx)
         embed = self.inf_msg.custom(
             Text().get(),
@@ -545,6 +535,7 @@ class Customization(Cog):
             return
         
         _, member, _ = await standard_account_validate(slot=None, account_id=ctx.author.id)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
                 
         await self.db.set_image(member_id=member.id, image=None)
         await ctx.respond(

@@ -10,7 +10,7 @@ from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, GameAccount, ImageSettings
+from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, UsedCommand
 from lib.blacklist.blacklist import check_user
 from lib.exceptions import api, data_parser
 from lib.error_handler.common import hook_exceptions
@@ -76,6 +76,9 @@ class Stats(commands.Cog):
         member = await self.db.check_member_exists(ctx.author.id, raise_error=False, get_if_exist=True)
         member = None if isinstance(member, bool) else member
         
+        if member is not None:
+            await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        
         nickname_type = validate(nick_or_id, 'nickname')
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
@@ -126,6 +129,7 @@ class Stats(commands.Cog):
         
         game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account)
         server = self.sdb.get_server(ctx)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         
         img = await self.get_stats(
             ctx,

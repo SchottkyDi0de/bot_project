@@ -431,7 +431,7 @@ cmds:
       use_custom_bg: Custom background
       colorize_stats: Colorize statistics
       glass_effect: Glass effect
-      stats_blocks_transparency: Statistics blocks opacity
+      stats_blocks_transparency: Statistics blocks transparency
       nickname_color: Nickname color
       clan_tag_color: Clan tag color
       stats_color: Main statistics color
@@ -552,19 +552,21 @@ cmds:
         # and align placeholders relative to each other
         # I recommended VS Code or Sublime Text with monospaced font
       formenu: |-
-        Nickname: `<nickname>`
         ```py
-        Tank name: <tank_name>
-        Damage: <damage>
-        Spotted: <spotted>
-        XP: <xp>
-        Frags: <frags>
-        Blocked: <blocked>
-        Shots: <shots>
-        Shots hit: <shots_hit>
-        Penetrations: <shots_penetrated>
-        Accuracy: <accuracy>
-        Penetration ratio: <penetration_ratio>
+        Tank:     | <tank_name>
+        Pure exp  | <xp>
+
+        efficiency
+        --------------------------------
+        Damage dealt....... | <damage>
+        Assistance damage.. | <spotted>
+        Tanks destroyed.... | <frags>
+        Damage blocked..... | <blocked>
+        Shots made......... | <shots>
+        Shots hit.......... | <shots_hit>
+        Penetrations....... | <shots_penetrated>
+        Accuracy........... | <accuracy>
+        Penetration rate... | <penetration_ratio>
         ```
       description: |-
         ```py
@@ -631,13 +633,13 @@ cmds:
       message:
         title: 'Verify your account'
         description: |- 
-          'To get access to special bot commands (for example {cmds_defs.set_lock})' 
-          'you need to verify or register a verified account.'
-        additional_info: |-
-          If you already have an unverified account, verification will rewrite it! Active sessions will be reset.
+          To access special bot commands (e.g. {cmds_defs.set_lock})
+          you must verify your account.
         button_lt: Lesta
         button_wg: WG
       check_dm: Check your private messages, verification link has been sent.
+    info:
+      already_verified: This account is already verified. No need to verify again.
 
 # Lock command
   set_lock:

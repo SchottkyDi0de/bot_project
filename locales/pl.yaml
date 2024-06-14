@@ -563,20 +563,22 @@ cmds:
         # When localizing, use an editor with a monospaced font 
         # and align placeholders relative to each other
         # I recomended VS Code or Sublime Text with monospaced font
-      formenu: |-
-        Nickname: `<nickname>`
+      formenu: |- # TODO: Auto translated, need to check
         ```py
-        Tank name: <tank_name>
-        Damage: <damage>
-        Spotted: <spotted>
-        XP: <xp>
-        Frags: <frags>
-        Blocked: <blocked>
-        Shots: <shots>
-        Shots hit: <shots_hit>
-        Penetrations: <shots_penetrated>
-        Accuracy: <accuracy>
-        Penetration ratio: <penetration_ratio>
+        czołg:               | <tank_name>
+        Czyste doświadczenie | <xp>
+
+        efektywność
+        --------------------------------
+        Zadane obrażenia......  | <damage>
+        Wykrytych przeciwników  | <spotted>
+        Zniszczonych czołgów..  | <frags>
+        Zablokowanych obrażeń.  | <blocked>
+        Oddanych strzałów.....  | <shots>
+        Trafionych strzałów...  | <shots_hit>
+        Penetracji............  | <shots_penetrated>
+        Celność...............  | <accuracy>
+        Procent penetracji ...  | <penetration_ratio>
         ```
       description: |-
         ```py
@@ -625,7 +627,7 @@ cmds:
         Nick:              WR:  Btls:
         ==================+====+=====
         <enemies>
-
+        ```
 # TODO: Need to translate
 # Cooldown for commands
   cooldown:
@@ -645,13 +647,13 @@ cmds:
       message:
         title: 'Potwierdź swój konto'
         description: |- 
-          'Aby uzyskać dostęp do specjalnych poleceń bota (np. {cmds_defs.set_lock})'
-          'musisz zweryfikować lub zarejestrować zweryfikowany konto.'
-        additional_info: |-
-          Jeśli już posiadasz niezatwierdzony konto, to w trakcie weryfikacji konto zostanie nadpisane! Rozpoczęte sesje zostaną wyczyszczone.
+          Aby uzyskać dostęp do specjalnych poleceń bota (np. {cmds_defs.set_lock}') 
+          musisz potwierdzić swoje konto.
         button_lt: Lesta
         button_wg: WG
       check_dm: Sprawdź prywatne wiadomości, link do weryfikacji został wysłany.
+    info:
+      already_verified: Konto to jest już weryfikowane. Brak potrzeby weryfikować ponownie.
 
 # Lock command
   set_lock:

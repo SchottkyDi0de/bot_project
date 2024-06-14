@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import Any
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
@@ -31,7 +32,7 @@ class SettingsRepresent:
         self.img_draw = None
         
     def draw(self, image_settings: ImageSettings) -> BytesIO:
-        self.image = Image.new('RGBA', (700, 950), (40, 40, 40, 255))
+        self.image = Image.new('RGBA', (700, 1010), (40, 40, 40, 255))
         self.img_draw = ImageDraw.Draw(self.image)
         
         self.draw_text(self.img_draw, image_settings)
@@ -58,7 +59,7 @@ class SettingsRepresent:
                 self.offsets.rect_offset - self.offsets.base_offset,
                 0,
                 self.offsets.rect_offset - self.offsets.base_offset,
-                1000
+                1010
             ),
             fill=Colors.blue,
             width=2
@@ -113,7 +114,7 @@ class SettingsRepresent:
             )
             
     def draw_color_represent(self, img_draw: ImageDraw.ImageDraw, image_settings: ImageSettings):
-        image_settings: dict = image_settings.model_dump()
+        image_settings: dict[str, str] = image_settings.model_dump()
         for index, (key, value) in enumerate(image_settings.items()):
             if '_color' in key:
                 img_draw.rounded_rectangle(

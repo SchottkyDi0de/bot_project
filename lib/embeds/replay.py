@@ -1,5 +1,4 @@
-from discord import Embed
-from discord.ext.commands import Context
+from discord import ApplicationContext, Embed
 
 from lib.data_classes.replay_data_parsed import (ParsedReplayData,
                                                  PlayerResult, Statistics)
@@ -10,6 +9,7 @@ from lib.logger.logger import get_logger
 from lib.utils.string_parser import insert_data
 
 _log = get_logger(__file__, 'EmbedReplayBuilder', 'logs/embed_replay.log')
+
 
 class EmbedReplayBuilder():
     def __init__(self):
@@ -132,7 +132,7 @@ class EmbedReplayBuilder():
         
         return players_str
 
-    def build_embed(self, ctx: Context, data: ParsedReplayData) -> Embed:
+    def build_embed(self, ctx: ApplicationContext, data: ParsedReplayData) -> Embed:
         author_id = data.author.account_id
 
         for player_result in data.player_results:

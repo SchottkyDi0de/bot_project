@@ -19,18 +19,18 @@ bot_name:
   'Blitz Statistics'
 
 server:
-  host: 'blitzhub.eu'
-  port: '443'
-  protocol: 'https'
+  host: '127.0.0.1'
+  port: '8000'
+  protocol: 'http'
 
 session:
-  ttl: 2_592_000 # in seconds
+  ttl: 3_888_000 # in seconds - 45 days
 
 autosession:
-  ttl: 2_592_000 # in seconds
+  ttl: 3_888_000 # in seconds - 45 days
 
 account:
-  inactive_ttl: 7_776_000 # in seconds (90 days)
+  inactive_ttl: 15_552_000 # in seconds (180 days)
 
 default:
   prefix : '!'  # deprecated | unused
@@ -73,11 +73,11 @@ help_urls:
   pl: https://blitzhub.gitbook.io/blitz-statistics-bot/pl-docs
 
 session_widget:
-  url: '{server.protocol}://{server.host}:{server.port}/bot/ui/session_widget_app?p_id=<user_id>&lang=<lang>&slot=<slot>'
+  url: '{server.protocol}://{server.host}:{server.port}/bot/ui/session_widget_app?p_id=<user_id>&lang=<lang>&slot_n=<slot>'
 
 auth:
-  wg_redirect_uri: '{server.protocol}://{server.host}:{server.port}/bot/auth/game?region=<region>'
-  wg_uri: 'https://api.worldoftanks.<region>/wot/auth/login/?application_id=<app_id>&redirect_uri=<redirect_uri>'
+  wg_redirect_uri: '{server.protocol}://{server.host}:{server.port}/bot/auth/game?region=<region>&requested_by=<requested_by>&slot_n=<slot>'
+  wg_uri: 'https://api.worldoftanks.<region>/wot/auth/login/?application_id=<app_id>&redirect_uri=<redirect_uri>&display=popup'
 
   ds_auth_redirect_url: '{server.protocol}://{server.host}:{server.port}/bot/auth/discord'
   ds_auth_primary_uri: 'https://discord.com/oauth2/authorize?client_id=<client_id>&response_type=code&redirect_uri=<redirect_uri>&scope=identify'
@@ -132,3 +132,15 @@ dump:
   export_to_id: 1243198882180235344
   chunk_size: 24_117_248  #in bytes(now is 23 MB)
   directory: dump
+
+premium:
+  passed_server: 
+    id: 1004871731799933019 # Support server RU
+    premium_roles: [
+      1149629590235525140, #dev
+      1149630277040226356, #admin
+      1231328253898260570, #tester
+      1149671086724755527, #beta_tester
+      1202636715450175578, #boosty
+      1174701169763946577  #server_booster
+    ]

@@ -268,6 +268,7 @@ class ImageGenCommon():
         if member is not None:
             if (member.image is not None) and member.use_custom_image:
                 self.image = base64_to_img(member.image)
+                return
                 
         self._load_image(_config.image.default_bg_path)
 
@@ -279,10 +280,15 @@ class ImageGenCommon():
             member: DBPlayer | None = None,
             slot: AccountSlotsEnum | None = None,
             debug_label: bool = False,
+            force_locale: str | None = None,
             return_image: ImageGenReturnTypes = ImageGenReturnTypes.BYTES_IO
         ) -> BytesIO | str | Image.Image:
 
-        self.text = Text().get()
+        if force_locale is not None:
+            self.text = Text().get(force_locale)
+        else:
+            self.text = Text().get()
+            
         start_time = time()
         
         if member is not None and slot is not None:

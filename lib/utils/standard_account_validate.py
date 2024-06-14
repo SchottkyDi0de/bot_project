@@ -2,10 +2,8 @@ from discord import Option, SlashCommandOptionType
 from lib.data_classes.db_player import AccountSlotsEnum
 from lib.database.players import PlayersDB
 from lib.blacklist.blacklist import check_user
-from lib.data_classes.db_player import DBPlayer, AccountSlotsEnum, GameAccount
-
-from lib.exceptions.database import *
-from lib.exceptions.blacklist import UserBanned
+from lib.data_classes.db_player import DBPlayer, GameAccount
+from lib.exceptions.database import MemberNotFound, MemberNotVerified, PremiumNotFound
 
 
 async def standard_account_validate(

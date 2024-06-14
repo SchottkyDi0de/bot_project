@@ -29,7 +29,7 @@ class TanksDB():
             try:
                 return self.cdb['data'][id]
             except KeyError:
-                _log.debug(f'Tank with id {id} not found')
+                _log.info(f'Tank with id {id} not found')
                 raise TankNotFoundInTankopedia()
         
     def safe_get_tank_by_id(self, id: str | int) -> dict | None:
