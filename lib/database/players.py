@@ -393,7 +393,7 @@ class PlayersDB:
                     return True
                 else:
                     _log.debug(f'Unset premium for member {member.id}')
-                    self.unset_premium(member.id)
+                    await self.unset_premium(member.id)
                     return False
         else:
             return False
