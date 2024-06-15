@@ -1,11 +1,20 @@
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, List, Literal, Optional, TypeAlias
+from typing import List, Optional
 
 import pytz
 from pydantic import BaseModel
 
 from lib.data_classes.api.api_data import PlayerGlobalData
+
+class BadgesEnum(Enum):
+    dev = 'dev'
+    verified = 'verified'
+    streamer = 'streamer'
+    tester = 'tester'
+    theme_creator = 'theme_creator'
+    bug_hunter = 'bug_hunter'
+    active_user = 'active_user'
 
 
 class StatsViewSettings(BaseModel):

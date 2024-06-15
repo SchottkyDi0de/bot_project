@@ -1,10 +1,7 @@
 from datetime import datetime, timedelta
 from asyncio import sleep
-from random import randint
 from types import NoneType
-from typing import Literal
 
-from motor import MotorCursor
 import pytz
 import motor.motor_asyncio
 from bson.codec_options import CodecOptions
@@ -26,7 +23,7 @@ from lib.data_classes.db_player_old import DBPlayerOld
 from lib.exceptions import database
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
-from lib.utils.calculate_exp import exp_calc
+from lib.utils.calculate_exp import exp_add
 from lib.utils.singleton_factory import singleton
 
 _config = Config().get()
@@ -352,7 +349,7 @@ class PlayersDB:
         _log.info(f'Setting premium for id {member_id}, end_time: {end_time}')
         end_time = datetime.now(pytz.utc) + timedelta(days=14) if end_time is None else end_time
         await self.collection.update_one(
-            {'id': member_id},
+            {'id': int(member_id)},
             {'$set': {'profile.premium': True, 'profile.premium_time': end_time}}
         )
         
@@ -554,7 +551,7 @@ class PlayersDB:
         return slots
     
     async def get_lang(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> str | None:
-        member = await self.collection.find_one({'id': member_id})
+        member = await self._multi_args_member_checker(member_id, member)
         return DBPlayer.model_validate(member).lang if member is not None else None
     
     async def set_lang(self, member_id: int | str, lang: str | None) -> None:
@@ -571,7 +568,7 @@ class PlayersDB:
         This function updates the 'lang' field of the member with the given ID in the database. If the language is None, it sets the language field to None.
         """
         await self.collection.update_one(
-            {'id': member_id},
+            {'id': int(member_id)},
             {'$set': {'lang': lang}}
         )
     
@@ -584,7 +581,7 @@ class PlayersDB:
         member = await self.check_member_exists(member_id, get_if_exist=True)
         slot = await self.validate_slot(slot=slot, member=member)
         await self.collection.update_one(
-            {'id': member_id},
+            {'id': member.id},
             {'$set': {f'game_accounts.{slot.name}.lock': lock}}
         )
     
@@ -608,9 +605,9 @@ class PlayersDB:
             if len(image) == 0:
                 image = None
         
-        await self.check_member_exists(member_id)
+        member = await self.check_member_exists(member_id, get_if_exist=True)
         await self.collection.update_one(
-            {'id': member_id},
+            {'id': member.id},
             {'$set': {'image': image}}
         )
         
@@ -618,7 +615,7 @@ class PlayersDB:
         member = await self.check_member_exists(member_id, get_if_exist=True)
         slot = await self.validate_slot(member=member, slot=slot)
         await self.collection.update_one(
-            {'id': member_id},
+            {'id': member.id},
             {'$set': {f'game_accounts.{slot.name}.stats_view_settings': settings.model_dump()}}
         )
         
@@ -626,7 +623,7 @@ class PlayersDB:
         member = await self.check_member_exists(member_id, get_if_exist=True)
         slot = await self.validate_slot(member=member, slot=slot)
         await self.collection.update_one(
-            {'id': member_id},
+            {'id': member.id},
             {'$set': {f'game_accounts.{slot.name}.image_settings': settings.model_dump()}}
         )
         
@@ -638,7 +635,7 @@ class PlayersDB:
         member = await self.check_member_exists(member_id, get_if_exist=True)
         slot = await self.validate_slot(member=member, slot=slot)
         await self.collection.update_one(
-            {'id': member_id},
+            {'id': member.id},
             {'$set': {f'game_accounts.{slot.name}.session_settings': settings.model_dump()}}
         )
         
@@ -652,7 +649,7 @@ class PlayersDB:
         member = await self.check_member_exists(member_id, get_if_exist=True)
         slot = await self.validate_slot(member=member, slot=slot)
         await self.collection.update_one(
-            {'id': member_id},
+            {'id': member.id},
             {'$set': {f'game_accounts.{slot.name}.widget_settings': settings.model_dump()}}
         )
         
@@ -660,7 +657,7 @@ class PlayersDB:
         member = await self.check_member_exists(member_id, get_if_exist=True)
         slot = await self.validate_slot(member=member, slot=slot)
         await self.collection.update_one(
-            {'id': member_id},
+            {'id': member.id},
             {'$set': {'current_game_account': slot.name}}
         )
         
@@ -668,8 +665,18 @@ class PlayersDB:
         member = await self.check_member_exists(member_id, get_if_exist=True)
         slot = await self.validate_slot(member=member, slot=slot)
         await self.collection.update_one(
-            {'id': member_id},
+            {'id': int(member_id)},
             {'$set': {f'game_accounts.{slot.name}.verified': verified}}
+        )
+        
+    async def get_member_exp(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> int:
+        member = await self._multi_args_member_checker(member_id, member)
+        return member.profile.level_exp
+    
+    async def set_member_exp(self, member_id: int | str, exp: int) -> None:
+        await self.collection.update_one(
+            {'id': int(member_id)},
+            {'$set': {'profile.level_exp': exp}}
         )
         
     async def set_last_activity(self, member_id: int | str, time: datetime = datetime.now(pytz.utc)) -> None:
@@ -695,6 +702,10 @@ class PlayersDB:
     async def set_analytics(self, analytics: UsedCommand, member: DBPlayer | None = None, member_id: int | str | None = None) -> None:
         member = await self._multi_args_member_checker(member_id, member)
         used_commands: list[dict] = await self.get_analytics(member=member, raw=True)
+        if (datetime.now(pytz.utc) - member.profile.last_activity) > timedelta(seconds=10):
+            level_exp = exp_add(analytics.name)
+        else:
+            level_exp = 1
         
         if len(used_commands) >= 10:
             used_commands.pop(0)
@@ -702,15 +713,13 @@ class PlayersDB:
         used_commands.append(analytics.model_dump())
         last_activity = datetime.now(pytz.utc)
         
-        level_exp = exp_calc(analytics.name)
-        
         await self.collection.update_one(
             {'id': member.id},
             {'$set': {
                 'profile.used_commands': used_commands, 
                 'profile.last_activity': last_activity,
                 'profile.commands_counter' : member.profile.commands_counter + 1,
-                'profile.xp' : member.profile.level_exp + level_exp
+                'profile.level_exp' : member.profile.level_exp + level_exp
                 }
             }
         )
