@@ -4,7 +4,7 @@ from random import randint
 INITIAL_LEVEL_EXP = 40
 
 
-class LevelInfo():
+class LevelInfo:
     def __init__(self, level: int, rem_exp: int, next_exp: int):
         self.level = level
         self.rem_exp = rem_exp

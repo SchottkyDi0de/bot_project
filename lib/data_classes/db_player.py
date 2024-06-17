@@ -15,6 +15,9 @@ class BadgesEnum(Enum):
     theme_creator = 'theme_creator'
     bug_hunter = 'bug_hunter'
     active_user = 'active_user'
+    translator = 'translator'
+    admin = 'admin'
+    docs_contributor = 'docs_contributor'
 
 
 class StatsViewSettings(BaseModel):
