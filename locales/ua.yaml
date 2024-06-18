@@ -762,3 +762,17 @@ cmds:
       no_slots_for_select: |-
         У вас зареєстровано лише 1 обліковий запис, щоб з'явилася можливість вибору облікових записів зареєструйте ще 1 
         {cmds_defs.set_player}
+
+# profile
+  profile:
+    descr:
+      this: Профіль користувача
+    items:
+      profile: Профіль
+      level: 'Рівень: '
+      exp: 'Досвід: '
+      last_commands: 'Останні команди:'
+      last_activity: 'Остання активність:'
+      commands_counter: 'Всього команд використано:'
+      accounts_info: 'Інформація про облікові записи:'
+      badges: 'Значки профілю'

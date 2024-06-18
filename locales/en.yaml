@@ -753,3 +753,17 @@ cmds:
       no_slots_for_select: |-
         You have only 1 account registered, please register 1 more account to be able to select accounts.
         {cmds_defs.set_player}
+
+# profile
+  profile:
+    descr:
+      this: User profile
+    items:
+      profile: Profile
+      level: 'Level:'
+      exp: 'Experience:'
+      last_commands: 'Last commands:'
+      last_activity: 'Last activity:'
+      commands_counter: 'Total commands used:'
+      accounts_info: 'Accounts information:'
+      badges: Profile badges

@@ -767,3 +767,17 @@ cmds:
       no_slots_for_select: |-
         Masz tylko 1 zarejestrowane konto, zarejestruj jeszcze 1, aby móc wybierać konta.
         {cmds_defs.set_player}
+
+# profile
+  profile:
+    descr:
+      this: Profil użytkownika
+    items:
+      profile: Profil
+      level: 'Poziom:'
+      exp: 'Dostęp doświadczenia:'
+      last_commands: 'Ostatnie polecenia:'
+      last_activity: 'Ostatnia aktywność:'
+      commands_counter: 'Całkowita liczba wykorzystanych poleceń:'
+      accounts_info: 'Informacje o kontach:'
+      badges: 'Odznaki profilowe'

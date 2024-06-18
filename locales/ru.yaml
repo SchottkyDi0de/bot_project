@@ -761,3 +761,17 @@ cmds:
       no_slots_for_select: |-
         У вас зарегистрирован только 1 аккаунт, чтобы появилась возможность выбора аккаунтов зарегистрируйте ещё 1 
         {cmds_defs.set_player}
+
+# profile
+  profile:
+    descr:
+      this: Профиль пользователя
+    items:
+      profile: Профиль
+      level: 'Уровень:'
+      exp: 'Опыт: '
+      last_commands: 'Последние команды:'
+      last_activity: 'Последняя активность:'
+      commands_counter: 'Всего команд использовано:'
+      accounts_info: 'Информация о аккаунтах:'
+      badges: 'Значки профиля'

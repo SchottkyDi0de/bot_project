@@ -1,4 +1,3 @@
-import base64
 from enum import Enum
 from io import BytesIO
 from time import time
@@ -1022,7 +1021,7 @@ class ImageGenSession():
         if self.image_settings.hide_clan_tag:
             self.data.data.clan_tag = None
             
-        if not self.data.data.clan_tag is None:
+        if self.data.data.clan_tag is not None:
             tag = {
                 'text':     f'[{self.data.data.clan_stats.tag}]',
                 'font':     self.fonts.roboto_30,
@@ -1100,7 +1099,7 @@ class ImageGenSession():
             img.text(
                 coords[slot],
                 text=self.diff_values.main[slot],
-                font=self.fonts.roboto_22,
+                font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
                 fill=self.value_colors(getattr(self.diff_data.main_diff, value))
@@ -1201,7 +1200,7 @@ class ImageGenSession():
             img.text(
                 coords[slot],
                 text=self.diff_values.rating[slot],
-                font=self.fonts.roboto_22,
+                font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
                 fill=self.value_colors(getattr(self.diff_data.rating_diff, value))
@@ -1249,7 +1248,7 @@ class ImageGenSession():
                 text=ValueNormalizer.value_add_plus(
                     getattr(curr_tank, f'd_{value}')
                 ) + self.session_values.tank_stats(curr_tank.tank_id)[slot],
-                font=self.fonts.roboto_22,
+                font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
                 fill=self.value_colors(getattr(curr_tank, f'd_{value}'))
@@ -1262,7 +1261,7 @@ class ImageGenSession():
             img.text(
                 coords[slot],
                 text=tank_stats[slot],
-                font=self.fonts.roboto_22,
+                font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
                 fill=self.value_colors(getattr(curr_tank, f'd_{value}'))
@@ -1321,7 +1320,7 @@ class ImageGenSession():
                 self.image.paste(self.flags.china, (10, 10), self.flags.china)
 
     def value_colors(self, value: int | float) -> tuple:
-        if type(value) is str:
+        if not isinstance(value, (int, float)):
             return Colors.grey
         value = round(value, 2)
         if value > 0:

@@ -60,13 +60,15 @@ def get_level(exp: int) -> LevelInfo:
     next_level_exp = INITIAL_LEVEL_EXP
 
     if exp >= 2_000_000:
-        return 50, 0, 0
+        return LevelInfo(level=50, rem_exp=0, next_exp=0)
 
     while True:
         if exp >= next_level_exp:
             exp -= next_level_exp
             curr_level += 1
-            next_level_exp = int((next_level_exp * 0.2) + next_level_exp)
+            next_level_exp = int(
+                round(((next_level_exp * 0.2) + next_level_exp) / 10) * 10
+            )
         else:
             break
 

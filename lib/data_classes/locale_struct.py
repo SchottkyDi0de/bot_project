@@ -771,6 +771,22 @@ class SwitchAccount(BaseModel):
     errors: Errors15
 
 
+class Items11(BaseModel):
+    profile: str
+    level: str
+    exp: str
+    last_commands: str
+    last_activity: str
+    commands_counter: str
+    accounts_info: str
+    badges: str
+
+
+class Profile(BaseModel):
+    descr: Descr22
+    items: Items11
+
+
 class Cmds(BaseModel):
     astats: Astats
     stats: Stats
@@ -802,6 +818,7 @@ class Cmds(BaseModel):
     set_theme: SetTheme
     delete_player: DeletePlayer
     switch_account: SwitchAccount
+    profile: Profile
 
 
 class Localization(BaseModel):

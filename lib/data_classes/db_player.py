@@ -18,7 +18,7 @@ class BadgesEnum(Enum):
     translator = 'translator'
     admin = 'admin'
     docs_contributor = 'docs_contributor'
-
+    premium = 'premium'
 
 class StatsViewSettings(BaseModel):
     common_slots: dict = {
