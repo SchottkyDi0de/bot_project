@@ -776,8 +776,11 @@ cmds:
       profile: Profil
       level: 'Poziom:'
       exp: 'Dostęp doświadczenia:'
-      last_commands: 'Ostatnie polecenia:'
+      last_commands: 'Ostatnie polecenia'
       last_activity: 'Ostatnia aktywność:'
       commands_counter: 'Całkowita liczba wykorzystanych poleceń:'
       accounts_info: 'Informacje o kontach:'
       badges: 'Odznaki profilowe'
+      command_name: 'Nazwa polecenia'
+      last_used_time: 'min. temu'
+      num: 'numer'

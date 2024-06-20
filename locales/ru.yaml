@@ -770,8 +770,11 @@ cmds:
       profile: Профиль
       level: 'Уровень:'
       exp: 'Опыт: '
-      last_commands: 'Последние команды:'
+      last_commands: 'Последние команды'
       last_activity: 'Последняя активность:'
       commands_counter: 'Всего команд использовано:'
       accounts_info: 'Информация о аккаунтах:'
       badges: 'Значки профиля'
+      command_name: 'Название команды'
+      last_used_time: 'мин. назад'
+      num: 'номер'

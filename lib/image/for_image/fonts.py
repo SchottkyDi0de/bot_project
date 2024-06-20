@@ -14,6 +14,8 @@ class Fonts():
     roboto_medium = ImageFont.truetype('res/fonts/OFL-Licensed/RobotoCondensed-Medium.ttf', size=16)
     """The Roboto-medium font with a size of 16."""
     
+    roboto_mono = ImageFont.truetype('res/fonts/OFL-Licensed/RobotoMono-Medium.ttf', size=16)
+    
     anca_coder = ImageFont.truetype('res/fonts/Anca-Coder_bold.ttf', size=18)
     """The Anca Coder font with a size of 18."""
     

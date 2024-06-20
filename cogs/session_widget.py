@@ -103,7 +103,7 @@ class SessionWidget(commands.Cog):
             'uk': Text().get('ua').cmds.session_widget_settings.descr.this
         }
     )
-    async def session_widget_settings(
+    async def widget_settings(
             self, 
             ctx: ApplicationContext,
             disable_bg: Option(
@@ -327,7 +327,7 @@ class SessionWidget(commands.Cog):
             'uk': Text().get('ua').cmds.session_widget_settings_reset.descr.this
         }
     )
-    async def session_widget_settings_reset(
+    async def widget_settings_reset(
         self, 
         ctx: ApplicationContext,
         account: Option(

@@ -780,6 +780,9 @@ class Items11(BaseModel):
     commands_counter: str
     accounts_info: str
     badges: str
+    command_name: str
+    last_used_time: str
+    num: str
 
 
 class Profile(BaseModel):

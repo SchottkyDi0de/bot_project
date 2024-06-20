@@ -5,7 +5,9 @@ class TimeConverter:
     @staticmethod
     def formatted_from_secs(
             seconds: int, 
-            format: str = '%D - %H:%M:%S') -> str:
+            format: str = '%D - %H:%M:%S',
+            day_limit: int = 180
+            ) -> str:
         """
         Converts a given number of seconds to a formatted time string.
 
@@ -24,6 +26,9 @@ class TimeConverter:
         h, m = divmod(m, 60)
         d, h = divmod(h, 24)
 
+        if d > day_limit:
+            s, m, h, d = 0, 0, 0, 180
+        
         time_str = format
 
         for i in format.split('%'):

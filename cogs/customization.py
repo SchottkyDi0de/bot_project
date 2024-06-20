@@ -18,13 +18,11 @@ from lib.logger.logger import get_logger
 from lib.blacklist.blacklist import check_user
 from lib.image.utils.color_validator import color_validate
 from lib.image.settings_represent import SettingsRepresent
-from lib.image.utils.b64_img_handler import img_to_base64
 from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
 from lib.utils.color_converter import get_tuple_from_color
 from lib.settings.settings import Config
-from lib.image.themes.theme_loader import get_theme
 from lib.data_parser.parse_data import get_session_stats
 from lib.views.alt_views import StatsPreview
 from lib.utils.slot_info import get_formatted_slot_info

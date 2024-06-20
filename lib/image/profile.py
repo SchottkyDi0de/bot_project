@@ -1,9 +1,11 @@
+from datetime import datetime, timedelta
 from pprint import pprint
 from time import time
 
 import numpy
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 from discord import ApplicationContext
+import pytz
 
 from lib.data_classes.db_player import DBPlayer
 from lib.data_classes.locale_struct import Localization
@@ -75,13 +77,43 @@ class Coords:
         progressbar_box[0], badges_box[3] + blocks_indent_y,
         ProfileImage.center_x - blocks_indent_y, progressbar_box[1] - blocks_indent_y
     ) # (x0, y0, x1, y1)
+    commands_stats_line = (
+        command_stats_box[0] + text_padding,
+        command_stats_box[1] + pb_x_offset + text_padding,
+        command_stats_box[2] - text_padding,
+        command_stats_box[1] + pb_x_offset + text_padding
+    )    
+    
     command_stats_main_text = (
         command_stats_box[3] // 2,
         command_stats_box[1] + text_padding
     )
-    commands_list_text = (
+    
+    command_stats_sub_text_num = (
+        command_stats_box[0] + text_padding,
+        commands_stats_line[1] - 2
+    )
+    command_stats_sub_text_name = (
+        command_stats_box[3] // 2,
+        commands_stats_line[1] - 2
+    )
+    command_stats_sub_text_time = (
+        command_stats_box[3] - text_padding * 3,
+        commands_stats_line[1] - 2
+    )
+    
+    commands_list_nums = (
+        command_stats_box[0] + text_padding,
+        command_stats_main_text[1] + pb_x_offset
+    )
+    commands_list_commands = (
         command_stats_main_text[0],
-        command_stats_main_text[1] + 15
+        command_stats_main_text[1] + pb_x_offset
+    )
+    commands_list_times = (
+        command_stats_box[3] - text_padding * 2,
+        command_stats_main_text[1] + pb_x_offset,
+        
     )
 
 
@@ -197,37 +229,95 @@ class ProfileImageGen:
         
         
     def draw_command_stats(self) -> None:
-        text = []
+        nums, commands, times = [], [], []
         for index, command in enumerate(self.member.profile.used_commands[::-1]):
-            if index == 9:
-                text.append(f'{index + 1}: {command.name}')
-                break
+            time = timedelta(
+                seconds=datetime.now(pytz.utc).timestamp() - command.last_used.timestamp()
+            ).total_seconds() // 60
+            time = round(time)
+            if time > 999:
+                time = '> 999'
+            
+            if isinstance(time, int):
+                time = str(time)
+                
+            nums.append(f'{index + 1}:')
+            commands.append(command.name)
+            times.append(f'{time}')
 
-            text.append(f'{index + 1}:  {command.name}')
-
-        counter = len(text)
+        counter = len(nums)
         if counter < 10:
             for count in range(counter, 11):
-                if count == 10:
-                    text.append(f'{count}: ...N/A...')
-                    break
-                
-                text.append(f'{count}:  ...N/A...')
+                nums.append(f'{count}:')
+                commands.append('__N/A__')
+                times.append('__N/A__')
             
         self.img_draw.text(
             Coords.command_stats_main_text,
             text=self.text.cmds.profile.items.last_commands,
             fill=Colors.l_grey,
             font=Fonts.roboto_medium,
-            anchor='mt'
+            anchor='mt',
+            align='center'
         )
         
         self.img_draw.text(
-            Coords.commands_list_text,
-            text='\n'.join(text),
+            Coords.commands_list_nums,
+            text='\n'.join(nums),
             fill=Colors.l_grey,
-            font=Fonts.anca_coder.font_variant(size=25),
-            anchor='ma'
+            font=Fonts.roboto_mono.font_variant(size=21),
+            anchor='la'
+        )
+        
+        self.img_draw.text(
+            Coords.commands_list_commands,
+            text='\n'.join(commands),
+            fill=Colors.l_grey,
+            font=Fonts.roboto_mono.font_variant(size=21),
+            anchor='ma',
+            align='center'
+        )
+        
+        self.img_draw.text(
+            Coords.commands_list_times,
+            text='\n'.join(times),
+            fill=Colors.l_grey,
+            font=Fonts.roboto_mono.font_variant(size=21),
+            anchor='ra',
+            align='right'
+        )
+        
+        self.img_draw.text(
+            Coords.command_stats_sub_text_num,
+            text=self.text.cmds.profile.items.num,
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium.font_variant(size=15),
+            anchor='lb',
+            align='left'
+        )
+        
+        self.img_draw.text(
+            Coords.command_stats_sub_text_name,
+            text=self.text.cmds.profile.items.command_name,
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium.font_variant(size=15),
+            anchor='mb',
+            align='center'
+        )
+                
+        self.img_draw.text(
+            Coords.command_stats_sub_text_time,
+            text=self.text.cmds.profile.items.last_used_time,
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium.font_variant(size=15),
+            anchor='rb',
+            align='right'
+        )
+        
+        self.img_draw.line(
+            Coords.commands_stats_line,
+            fill=self.img_opposite_color,
+            width=2
         )
         
     def draw_user_name(self) -> None:
