@@ -783,6 +783,11 @@ class Items11(BaseModel):
     command_name: str
     last_used_time: str
     num: str
+    account: str
+    session: str
+    others: str
+    premium: str
+    premium_time: str
 
 
 class Profile(BaseModel):

@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from pprint import pprint
 from time import time
 
 import numpy
@@ -7,7 +6,8 @@ from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 from discord import ApplicationContext
 import pytz
 
-from lib.data_classes.db_player import DBPlayer
+from lib.data_classes.api.api_data import PlayerGlobalData
+from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, GameAccount
 from lib.data_classes.locale_struct import Localization
 from lib.image.utils.b64_img_handler import img_to_base64
 from lib.utils.calculate_exp import get_level
@@ -15,6 +15,9 @@ from lib.utils.singleton_factory import singleton
 from lib.locale.locale import Text
 from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.colors import Colors
+from lib.image.for_image.stats_coloring import colorize
+from lib.utils.bool_to_text import bool_handler
+from lib.utils.safe_divide import safe_divide
 
 
 class ProfileImage:
@@ -85,7 +88,7 @@ class Coords:
     )    
     
     command_stats_main_text = (
-        command_stats_box[3] // 2,
+        command_stats_box[3] // 2 + 18,
         command_stats_box[1] + text_padding
     )
     
@@ -94,7 +97,7 @@ class Coords:
         commands_stats_line[1] - 2
     )
     command_stats_sub_text_name = (
-        command_stats_box[3] // 2,
+        command_stats_main_text[0],
         commands_stats_line[1] - 2
     )
     command_stats_sub_text_time = (
@@ -104,16 +107,102 @@ class Coords:
     
     commands_list_nums = (
         command_stats_box[0] + text_padding,
-        command_stats_main_text[1] + pb_x_offset
+        command_stats_main_text[1] + pb_x_offset + text_padding
     )
     commands_list_commands = (
         command_stats_main_text[0],
-        command_stats_main_text[1] + pb_x_offset
+        command_stats_main_text[1] + pb_x_offset + text_padding
     )
     commands_list_times = (
-        command_stats_box[3] - text_padding * 2,
-        command_stats_main_text[1] + pb_x_offset,
+        command_stats_box[3] - text_padding * 3,
+        command_stats_main_text[1] + pb_x_offset + text_padding
         
+    )
+    
+    accounts_block = (
+        command_stats_box[2] + blocks_indent_y,
+        command_stats_box[1],
+        progressbar_box[2],
+        command_stats_box[3] - 130
+    )
+    accounts_line = (
+        accounts_block[0] + text_padding,
+        accounts_block[1] + pb_x_offset + text_padding,
+        accounts_block[2] - text_padding,
+        accounts_block[1] + pb_x_offset + text_padding
+    ) 
+    
+    accounts_nums = (
+        accounts_block[0] + text_padding,
+        commands_list_nums[1]
+    )
+    accounts_list = (
+        accounts_block[2] - text_padding,
+        accounts_nums[1]
+    )
+    account_main_text = (
+        ProfileImage.width - command_stats_main_text[0],
+        accounts_block[1] + text_padding
+    )
+    account_sub_text_num = (
+        accounts_block[0] + text_padding,
+        command_stats_sub_text_num[1]
+    )
+    account_sub_text_name = (
+        accounts_block[2] - text_padding,
+        command_stats_sub_text_num[1]
+    )
+    
+    other_stats_block = (
+        accounts_block[0],
+        accounts_block[3] + blocks_indent_y,
+        progressbar_box[2],
+        command_stats_box[3]
+    )
+    
+    other_main_text = (
+        account_main_text[0],
+        other_stats_block[1] + text_padding
+    )
+    
+    other_line = (
+        other_stats_block[0] + text_padding,
+        other_stats_block[1] + text_padding * 4,
+        other_stats_block[2] - text_padding,
+        other_stats_block[1] + text_padding * 4
+    )
+
+    other_premium_text = (
+        other_stats_block[0] + text_padding,
+        other_line[1] + text_padding * 2
+    )
+    other_premium_data = (
+        other_stats_block[2] - text_padding,
+        other_premium_text[1]
+    )
+    other_premium_expired_at_text = (
+        other_premium_text[0],
+        other_premium_text[1] + text_padding * 4.5
+    )
+    other_premium_expired_at_data = (
+        other_premium_data[0],
+        other_premium_data[1] + text_padding * 4.5
+    )
+    other_exp_text = (
+        other_premium_expired_at_text[0],
+        other_premium_expired_at_text[1] + text_padding * 4.5
+    )
+    other_exp_data = (
+        other_premium_expired_at_data[0],
+        other_premium_expired_at_data[1] + text_padding * 4.5
+    )
+    other_commands_used_text = (
+        other_exp_text[0],
+        other_exp_text[1] + text_padding * 4.5
+    )
+    other_commands_used_data = (
+        other_exp_data[0],
+        other_exp_data[1] + text_padding * 4.5
     )
 
 
@@ -189,7 +278,9 @@ class ProfileImageGen:
         self.draw_user_name()
         self.draw_badges()
         
-        self.draw_command_stats()
+        self.draw_command_info()
+        self.draw_accounts_info()
+        self.draw_other_info()
         
         self.draw_progress_bar()
         self.draw_level_text()
@@ -220,6 +311,16 @@ class ProfileImageGen:
             radius=8,
             fill=(0, 0, 0)
         )
+        drawable_layout.rounded_rectangle(
+            Coords.accounts_block,
+            radius=8,
+            fill=(0, 0, 0)
+        )
+        drawable_layout.rounded_rectangle(
+            Coords.other_stats_block,
+            radius=8,
+            fill=(0, 0, 0)
+        )
         
         img_filter = ImageFilter.GaussianBlur(10)
         bg = self.img.copy()
@@ -227,8 +328,7 @@ class ProfileImageGen:
         bg = bg.filter(img_filter)
         self.img.paste(bg, (0, 0), layout)
         
-        
-    def draw_command_stats(self) -> None:
+    def draw_command_info(self) -> None:
         nums, commands, times = [], [], []
         for index, command in enumerate(self.member.profile.used_commands[::-1]):
             time = timedelta(
@@ -236,7 +336,7 @@ class ProfileImageGen:
             ).total_seconds() // 60
             time = round(time)
             if time > 999:
-                time = '> 999'
+                time = '999+'
             
             if isinstance(time, int):
                 time = str(time)
@@ -247,10 +347,10 @@ class ProfileImageGen:
 
         counter = len(nums)
         if counter < 10:
-            for count in range(counter, 11):
-                nums.append(f'{count}:')
-                commands.append('__N/A__')
-                times.append('__N/A__')
+            for count in range(counter, 10):
+                nums.append(f'{count + 1}:')
+                commands.append('|------------|')
+                times.append('-/-')
             
         self.img_draw.text(
             Coords.command_stats_main_text,
@@ -265,7 +365,7 @@ class ProfileImageGen:
             Coords.commands_list_nums,
             text='\n'.join(nums),
             fill=Colors.l_grey,
-            font=Fonts.roboto_mono.font_variant(size=21),
+            font=Fonts.roboto_mono.font_variant(size=20),
             anchor='la'
         )
         
@@ -273,7 +373,7 @@ class ProfileImageGen:
             Coords.commands_list_commands,
             text='\n'.join(commands),
             fill=Colors.l_grey,
-            font=Fonts.roboto_mono.font_variant(size=21),
+            font=Fonts.roboto_mono.font_variant(size=20),
             anchor='ma',
             align='center'
         )
@@ -282,7 +382,7 @@ class ProfileImageGen:
             Coords.commands_list_times,
             text='\n'.join(times),
             fill=Colors.l_grey,
-            font=Fonts.roboto_mono.font_variant(size=21),
+            font=Fonts.roboto_mono.font_variant(size=20),
             anchor='ra',
             align='right'
         )
@@ -318,6 +418,198 @@ class ProfileImageGen:
             Coords.commands_stats_line,
             fill=self.img_opposite_color,
             width=2
+        )
+        
+    def draw_accounts_info(self) -> None:
+        nums, accounts, sessions = [], [], []
+        
+        for account in AccountSlotsEnum:
+            nums.append(f'{account.value}:')
+            
+            game_account: GameAccount | None = getattr(self.member.game_accounts, account.name)
+            if game_account is None:
+                if account.value > 2 and not self.member.profile.premium:
+                    accounts.append('[------LOCKED-----]')
+                    sessions.append(False)
+                    continue
+
+                accounts.append('[-| /set_player |-]')
+                sessions.append(False)
+                continue
+            
+            accounts.append(
+                f'{game_account.nickname} | {game_account.region.upper()}'
+            )
+            sessions.append(True)
+        
+        self.img_draw.line(
+            Coords.accounts_line,
+            fill=self.img_opposite_color,
+            width=2
+        )
+        
+        text_box = self.img_draw.textbbox(
+            Coords.accounts_nums,
+            text=accounts[0],
+            font=Fonts.roboto_mono.font_variant(size=20),
+            anchor='ma',
+            align='center'
+        )
+        offset = 0
+        
+        for slot in AccountSlotsEnum:
+            game_account: GameAccount | None = getattr(self.member.game_accounts, slot.name)
+            last_stats: PlayerGlobalData | None = game_account.last_stats if game_account is not None else None
+            
+            
+            self.img_draw.text(
+                (
+                    Coords.accounts_list[0],
+                    Coords.accounts_list[1] + offset
+                ),
+                text=accounts[slot.value - 1],
+                fill=colorize(
+                    'winrate',
+                    last_stats.data.statistics.all.winrate if \
+                        last_stats is not None else None,
+                    Colors.l_grey
+                ),
+                font=Fonts.roboto_mono.font_variant(size=20),
+                anchor='ra',
+                align='right'
+            )
+            
+            offset += (text_box[3] - text_box[1]) + 6
+        
+        self.img_draw.text(
+            Coords.accounts_nums,
+            text='\n'.join(nums),
+            fill=Colors.l_grey,
+            font=Fonts.roboto_mono.font_variant(size=20),
+            anchor='la',
+            align='left'
+        )
+        
+        self.img_draw.text(
+            Coords.account_main_text,
+            text=self.text.cmds.profile.items.accounts_info,
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium,
+            anchor='mt',
+            align='center'
+        )
+        self.img_draw.text(
+            Coords.account_sub_text_num,
+            text=self.text.cmds.profile.items.num,
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium,
+            anchor='lb',
+            align='left'
+        )
+        self.img_draw.text(
+            Coords.account_sub_text_name,
+            text=self.text.cmds.profile.items.account,
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium,
+            anchor='rb',
+            align='right'
+        )
+        
+    def draw_other_info(self) -> None:
+        self.img_draw.text(
+            Coords.other_main_text,
+            text=self.text.cmds.profile.items.others,
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium,
+            anchor='mt',
+            align='center'
+        )
+        
+        self.img_draw.line(
+            Coords.other_line,
+            fill=self.img_opposite_color,
+            width=2
+        )
+        
+        self.img_draw.text(
+            Coords.other_premium_text,
+            text=self.text.cmds.profile.items.premium,
+            fill=Colors.l_grey if not self.member.profile.premium else Colors.yellow,
+            font=Fonts.roboto_medium.font_variant(size=22),
+            anchor='lt',
+            align='left'
+        )
+        
+        self.img_draw.text(
+            Coords.other_premium_data,
+            text=bool_handler(self.member.profile.premium).lower(),
+            fill=Colors.l_grey if not self.member.profile.premium else Colors.yellow,
+            font=Fonts.roboto_medium.font_variant(size=22),
+            anchor='rt',
+            align='right'
+        )
+        
+        self.img_draw.text(
+            Coords.other_premium_expired_at_text,
+            text=self.text.cmds.profile.items.premium_time,
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium.font_variant(size=22),
+            anchor='lt',
+            align='left'
+        )
+        
+        premium_time: datetime | None = self.member.profile.premium_time
+        if premium_time is None:
+            premium_time = '---- '
+            
+        else:
+            premium_time = (datetime.now(pytz.utc) - premium_time).days
+            if premium_time > 365:
+                premium_time = '---- '
+            
+        self.img_draw.text(
+            Coords.other_premium_expired_at_data,
+            text=f'{premium_time} {self.text.frequent.common.time_units.d}',
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium.font_variant(size=22),
+            anchor='rt',
+            align='right'
+        )
+        
+        self.img_draw.text(
+            Coords.other_exp_text,
+            text=self.text.cmds.profile.items.exp,
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium.font_variant(size=22),
+            anchor='lt',
+            align='left'
+        )
+        
+        self.img_draw.text(
+            Coords.other_exp_data,
+            text=str(self.member.profile.level_exp),
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium.font_variant(size=22),
+            anchor='rt',
+            align='right'
+        )
+        
+        self.img_draw.text(
+            Coords.other_commands_used_text,
+            text=self.text.cmds.profile.items.commands_counter,
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium.font_variant(size=22),
+            anchor='lt',
+            align='left'
+        )
+        
+        self.img_draw.text(
+            Coords.other_commands_used_data,
+            text=str(self.member.profile.commands_counter),
+            fill=Colors.l_grey,
+            font=Fonts.roboto_medium.font_variant(size=22),
+            anchor='rt',
+            align='right'
         )
         
     def draw_user_name(self) -> None:
@@ -365,7 +657,7 @@ class ProfileImageGen:
             width=2
         )
         level = get_level(self.member.profile.level_exp)
-        bar_fill = level.rem_exp / level.next_exp
+        bar_fill = safe_divide(level.rem_exp, level.next_exp)
         
         bar_width = int(ProgressBar.width * bar_fill)
         drawable_bar.rectangle(

@@ -764,18 +764,23 @@ cmds:
         {cmds_defs.set_player}
 
 # profile
-  profile:
+  profile: # <<< TODO: Autotranlsated
     descr:
       this: Профіль користувача
     items:
       profile: Профіль
       level: 'Рівень: '
-      exp: 'Досвід: '
+      exp: 'досвід: '
       last_commands: 'Останні команди'
       last_activity: 'Остання активність:'
-      commands_counter: 'Всього команд використано:'
-      accounts_info: 'Інформація про облікові записи:'
+      commands_counter: 'команд використано:'
+      accounts_info: 'Інформація про облікові записи'
       badges: 'Значки профілю'
-      command_name: 'Назва команди'
+      command_name: 'назва команди'
       last_used_time: 'хв. тому'
       num: 'номер'
+      account: 'обліковий запис'
+      session: 'сесія'
+      others: 'Інше'
+      premium: 'premium:'
+      premium_time: 'закінчиться через:'

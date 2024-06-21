@@ -769,18 +769,23 @@ cmds:
         {cmds_defs.set_player}
 
 # profile
-  profile:
+  profile: # <<< TODO: Autotranlsated
     descr:
       this: Profil użytkownika
     items:
       profile: Profil
       level: 'Poziom:'
-      exp: 'Dostęp doświadczenia:'
+      exp: 'ekspertyza:'
       last_commands: 'Ostatnie polecenia'
       last_activity: 'Ostatnia aktywność:'
-      commands_counter: 'Całkowita liczba wykorzystanych poleceń:'
-      accounts_info: 'Informacje o kontach:'
+      commands_counter: 'wykorzystanych zespołów:'
+      accounts_info: 'Informacje o kontach'
       badges: 'Odznaki profilowe'
-      command_name: 'Nazwa polecenia'
+      command_name: 'nazwa polecenia'
       last_used_time: 'min. temu'
       num: 'numer'
+      account: 'konto'
+      session: 'sesja'
+      others: Różne
+      premium: 'premium:'
+      premium_time: 'wygasa za:'

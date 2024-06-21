@@ -24,20 +24,27 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
             >>> colorize('battles', 10000, rating=True)
             (116, 30, 169)
         """
+        if not isinstance(stats_type, str):
+            return default_color
+        
         stats_type = stats_type.replace('r_', '')
         stats_type = stats_type.replace('d_', '')
         stats_type = stats_type.replace('s_', '')
+        
+        if not isinstance(stats_value, (int, float, str)):
+            return default_color
 
         val = stats_value
-        val = val if val != '-' else 0
-        val = val.replace('-', '')
-        val = val.replace('+', '')
-        val = val.replace('%', '')
-        try:
-            val = float(val)
-        except ValueError:
-            val = -1
         
+        if isinstance(val, str):
+            val = val.replace('-', '')
+            val = val.replace('+', '')
+            val = val.replace('%', '')
+            try:
+                val = float(val)
+            except ValueError:
+                val = -1
+
         if val == -1:
             return default_color
         

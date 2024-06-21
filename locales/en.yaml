@@ -761,12 +761,17 @@ cmds:
     items:
       profile: Profile
       level: 'Level:'
-      exp: 'Experience:'
+      exp: 'experience:'
       last_commands: 'Last commands'
       last_activity: 'Last activity:'
-      commands_counter: 'Total commands used:'
-      accounts_info: 'Accounts information:'
+      commands_counter: 'commands used:'
+      accounts_info: 'Accounts information'
       badges: Profile badges
-      command_name: 'Command name'
+      command_name: 'command name'
       last_used_time: 'min. ago.'
       num: 'number'
+      account: 'account'
+      session: 'session'
+      others: Others
+      premium: 'premium:'
+      premium_time: 'expires in:'

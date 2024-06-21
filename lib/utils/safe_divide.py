@@ -31,7 +31,7 @@ def safe_divide(dividend: float | int, divisor: float | int, default: int | floa
     res = dividend / divisor if divisor != 0  else default
     
     if return_type == DivideReturnType.INTEGER:
-        return int(res)
+        return round(res)
     elif return_type == DivideReturnType.STRING:
         return str(res)
     elif return_type == DivideReturnType.FLOAT:
