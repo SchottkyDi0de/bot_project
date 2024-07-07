@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from discord import Attachment, ButtonStyle, Interaction, File, SelectOption
+from discord import ButtonStyle, Interaction, File, SelectOption
 from discord.ext import commands
 from lib.data_classes.db_server import DBServer
 from lib.data_classes.replay_data_parsed import ParsedReplayData
@@ -17,7 +17,7 @@ from lib.embeds.info import InfoMSG
 from lib.embeds.errors import ErrorMSG
 from lib.error_handler.interactions import hook_exceptions
 from lib.image.session import ImageGenSession
-from lib.image.common import ImageGenCommon, ImageGenReturnTypes
+from lib.image.common import ImageGenCommon
 from lib.logger.logger import get_logger
 from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.slot_info import get_formatted_slot_info
@@ -27,7 +27,7 @@ from lib.database.tankopedia import TanksDB
 from lib.utils.replay_player_info import formatted_player_info
 from discord.utils import escape_markdown
 from lib.utils.safe_divide import safe_divide
-from lib.image.utils.b64_img_handler import img_to_base64, base64_to_ds_file, readable_buffer_to_base64
+from lib.image.utils.b64_img_handler import base64_to_ds_file, readable_buffer_to_base64
 
 _log = get_logger(__file__, 'AltViewsLogger', 'logs/alt_views.log')
 

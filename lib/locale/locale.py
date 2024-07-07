@@ -1,12 +1,9 @@
 from typing import Dict
 
 import discord
-import yaml
 import dynamic_yaml
 from discord.commands import ApplicationContext
-from asgiref.sync import async_to_sync
 
-from lib.data_classes.db_player import DBPlayer
 from lib.data_classes.locale_struct import Localization
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
@@ -95,7 +92,7 @@ class Text():
             Localization: The loaded language data.
         """
         if lang not in _config.default.available_locales:
-            lang = _config.default.lang
+            lang = self.default_lang
         if lang is None:
             lang = self.default_lang
             

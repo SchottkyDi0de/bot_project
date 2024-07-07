@@ -37,7 +37,7 @@ default:
   lang: 'en'
   available_locales: ['ru', 'en', 'pl', 'ua', 'auto']
   available_regions: ['ru', 'eu', 'na', 'asia']
-  locale_aliases: {ru: 'ru', en: 'en', pl: 'pl', uk: 'ua'}
+  locale_aliases: {ru: 'ru', en: 'en', pl: 'pl', uk: 'ua', en-GB: 'en', en-US: 'en'}
 
 image:
   default_bg_path: 'res/image/default_image/default_bg.png'

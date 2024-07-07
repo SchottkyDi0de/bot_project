@@ -25,7 +25,7 @@ def attachment_to_base64(attachment: Attachment) -> str:
     buffer.close()
     return base_64_img
 
-def attachment_to_img(attachment_bytes: bytes) -> Image.Image:
+def attachment_to_img(attachment_bytes: bytes, content_type: str | None) -> Image.Image:
     """
     Converts an attachment.read() bytes to an image.
     
@@ -37,7 +37,9 @@ def attachment_to_img(attachment_bytes: bytes) -> Image.Image:
     """
     with BytesIO(attachment_bytes) as buffer:
         buffer.seek(0)
-        image = Image.open(buffer, formats=['PNG']).copy()
+        image = Image.open(buffer, formats=['PNG' if content_type == 'image/png' else 'JPEG']).copy()
+        if image.mode != 'RGBA':
+            image = image.convert('RGBA')
 
     return image
 

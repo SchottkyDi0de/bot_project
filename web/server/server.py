@@ -1,14 +1,14 @@
-import traceback
-from typing import Annotated
+from datetime import datetime, timedelta
+from typing import Annotated, Dict, List
 
 from fastapi import FastAPI, Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import pytz
 from lib.data_classes.db_player import DBPlayer
 from lib.data_classes.internal_api.err_response import ErrorResponse
 from lib.data_classes.internal_api.inf_response import InfoResponse
 from lib.database.players import PlayersDB
-from lib.data_classes.internal_api.restart_session import SessionState
 from lib.internal_api.responses import ErrorResponses, InfoResponses
 from lib.logger.logger import get_logger
 from lib.settings.settings import EnvConfig
@@ -32,6 +32,13 @@ class PremiumUsers(BaseModel):
 class AllSessions(BaseModel):
     count: int
 
+class Badges(BaseModel):
+    data: Dict[int, List[str]]
+    
+class SetPremium(BaseModel):
+    user: int
+    time: int
+    premium: bool
 
 class Server:
     
@@ -95,6 +102,56 @@ class Server:
         await InternalDB().set_actual_premium_users(premium_users.data)
         return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
     
+    @app.post('/bot/api/set_badges', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        200: {'model' : InfoResponse, 'description' : 'Badges updated'}
+        }
+    )
+    async def set_badges(api_key: Annotated[str, Header()], badges: Badges) -> InfoResponse | ErrorResponse:
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        for member_id, badges_list in badges.data.items():
+            member = await _pdb.check_member_exists(member_id, get_if_exist=True, raise_error=False)
+            if isinstance(member, DBPlayer):
+                await _pdb.set_badges(member_id, badges_list)
+                _log.info(f'Badges updated for {member_id}')
+
+        return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+    
+    @app.post('/bot/api/remove_badges', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        200: {'model' : InfoResponse, 'description' : 'Badges removed'}
+        }
+    )
+    async def remove_badges(api_key: Annotated[str, Header()], badges: Badges) -> InfoResponse | ErrorResponse:
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        for member_id, badges_list in badges.data.items():
+            member = await _pdb.check_member_exists(member_id, get_if_exist=True, raise_error=False)
+            if isinstance(member, DBPlayer):
+                await _pdb.remove_badges(member_id, badges_list)
+                _log.info(f'Badges removed for {member_id}')
+
+        return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+    
+    @app.post('/bot/api/set_premium', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        200: {'model' : InfoResponse, 'description' : 'Premium updated'}
+        }
+    )
+    async def set_premium(api_key: Annotated[str, Header()], set_premium: SetPremium) -> InfoResponse | ErrorResponse:
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        if set_premium.premium:
+            await _pdb.set_premium(set_premium.user, datetime.now(pytz.utc) + timedelta(seconds=set_premium.time))
+            return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+        else:
+            await _pdb.unset_premium(set_premium.user)
+            return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+
 def run():
     session_widget.init_app(app)
     auth.init_app(app)

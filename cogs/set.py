@@ -1,9 +1,5 @@
-from datetime import timedelta
-import io
-
-from PIL import Image
-from discord import Interaction, Option, Attachment, SelectOption
-from discord import ui, ButtonStyle
+from PIL import UnidentifiedImageError
+from discord import Option, Attachment, SelectOption
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
@@ -14,7 +10,6 @@ from lib.utils.string_parser import insert_data
 from lib.views.alt_views import DeleteAccountConfirmation, StartSession, SlotOverride, SwitchAccount
 from lib.blacklist.blacklist import check_user
 from lib.data_classes.db_player import StatsViewSettings, AccountSlotsEnum, UsedCommand
-from lib.exceptions.database import VerificationNotFound
 from lib.image.utils.resizer import resize_image, ResizeMode
 from lib.settings.settings import Config
 from lib.database.players import PlayersDB
@@ -28,7 +23,6 @@ from lib.locale.locale import Text
 from lib.utils.nickname_handler import handle_nickname
 from lib.utils.validators import validate
 from lib.image.themes.theme_loader import get_theme
-from lib.data_classes.db_player import ImageSettings
 from lib.data_classes.themes import Theme
 from lib.image.utils.b64_img_handler import img_to_base64, attachment_to_img
 
@@ -277,7 +271,7 @@ class Set(commands.Cog):
         
         member = await self.db.check_member_exists(member_id=ctx.author.id, raise_error=False, get_if_exist=True)
 
-        if not isinstance(member, bool):
+        if isinstance(member, bool):
             await ctx.respond(
                 embed=self.err_msg.custom(
                     Text().get(),
@@ -290,7 +284,7 @@ class Set(commands.Cog):
         image: Attachment = image
         await ctx.defer()
 
-        if image.content_type not in ['image/png', 'image/jpeg']:
+        if image.content_type not in ['image/png', 'image/jpeg', 'image/jpg']:
             await ctx.respond(
                 embed=self.err_msg.custom(
                     Text().get(),
@@ -328,7 +322,7 @@ class Set(commands.Cog):
 
         if server:
             if ctx.author.guild_permissions.administrator:
-                pil_image = attachment_to_img(await image.read())
+                pil_image = attachment_to_img(await image.read(), image.content_type)
                 pil_image = resize_image(pil_image.convert('RGBA'), (800, 1350), mode=ResizeMode[resize_mode])
                 
                 base64_img = img_to_base64(pil_image)
@@ -353,7 +347,17 @@ class Set(commands.Cog):
                 
             return
 
-        pil_image = attachment_to_img(await image.read())
+        try:
+            pil_image = attachment_to_img(await image.read(), image.content_type)
+        except UnidentifiedImageError:
+            await ctx.respond(
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.set_background.errors.file_error
+                )
+            )
+            return
+
         pil_image = resize_image(pil_image.convert('RGBA'), (800, 1350), mode=ResizeMode[resize_mode])
         
         base64_img = img_to_base64(pil_image)

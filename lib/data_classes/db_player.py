@@ -8,17 +8,18 @@ from pydantic import BaseModel
 from lib.data_classes.api.api_data import PlayerGlobalData
 
 class BadgesEnum(Enum):
-    dev = 'dev'
-    verified = 'verified'
-    streamer = 'streamer'
-    tester = 'tester'
-    theme_creator = 'theme_creator'
-    bug_hunter = 'bug_hunter'
-    active_user = 'active_user'
-    translator = 'translator'
-    admin = 'admin'
-    docs_contributor = 'docs_contributor'
-    premium = 'premium'
+    premium = 0
+    verified = 1
+    active_user = 2
+    streamer = 3
+    theme_creator = 4
+    docs_contributor = 5
+    translator = 6
+    beta_tester = 7
+    tester = 8
+    bug_hunter = 9
+    admin = 10
+    dev = 11
 
 class StatsViewSettings(BaseModel):
     common_slots: dict = {

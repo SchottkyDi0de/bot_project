@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from asyncio import sleep
+# from pprint import pprint
 from types import NoneType
 
 import pytz
@@ -8,6 +9,7 @@ from bson.codec_options import CodecOptions
 
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import (
+    BadgesEnum,
     DBPlayer, 
     ImageSettings,
     SessionSettings, 
@@ -25,6 +27,7 @@ from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.calculate_exp import exp_add
 from lib.utils.singleton_factory import singleton
+from lib.utils.validate_badges import validate_badge
 
 _config = Config().get()
 _log = get_logger(__file__, 'PlayersDBLogger', 'logs/players_db.log')
@@ -37,7 +40,7 @@ class PlayersDB:
         self.db = self.client['PlayersDB']
         self.collection = self.db.get_collection('players', codec_options=CodecOptions(tz_aware=True, tzinfo=pytz.utc))
     
-    async def _multi_args_member_checker(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> DBPlayer:
+    async def _multi_args_member_checker(self, member_id: int | str | None = None, member: DBPlayer | None = None, raise_error: bool = True) -> DBPlayer:
         """
         Check if the given member ID and member object are valid and return the appropriate member object.
 
@@ -55,7 +58,14 @@ class PlayersDB:
         if (member_id is None) and (member is None):
             raise ValueError('You must provide either id or member')
         
-        return member if member is not None else await self.get_member(member_id)
+        if member is None:
+            member = await self.get_member(member_id, raise_error=raise_error)
+            if isinstance(member, bool):
+                return None
+            else:
+                return member
+        else:
+            return member
         
     async def create_index_for_id(self):
         """
@@ -160,7 +170,7 @@ class PlayersDB:
             })
         
             
-    async def get_member(self, member_id: int | str) -> DBPlayer:
+    async def get_member(self, member_id: int | str, raise_error: bool = True) -> DBPlayer | bool:
         """
         Asynchronously retrieves a member from the database based on their ID.
 
@@ -170,10 +180,16 @@ class PlayersDB:
         Returns:
             DBPlayer: The member object if it exists in the database, None otherwise.
         """
-        member: DBPlayer = await self.check_member_exists(member_id=member_id, get_if_exist=True)
+        member: DBPlayer = await self.check_member_exists(member_id=member_id, get_if_exist=True, raise_error=raise_error)
         return member
     
-    async def validate_slot(self, slot: AccountSlotsEnum | None, member_id: int | str | None = None, member: DBPlayer | None = None, allow_empty: bool = False) -> AccountSlotsEnum:
+    async def validate_slot(
+        self, 
+        slot: AccountSlotsEnum | None, 
+        member_id: int | str | None = None, 
+        member: DBPlayer | None = None, 
+        allow_empty: bool = False,
+        ) -> AccountSlotsEnum:
         """
         Asynchronously validates a slot for a given member.
 
@@ -199,7 +215,6 @@ class PlayersDB:
         if not allow_empty and empty_slot:
             _log.debug(f'Member {member.id} has attempted to access empty slot {slot.name}')
             raise database.SlotIsEmpty(f'Member {member.id} has attempted to access empty slot {slot.name}')
-        
         
         return slot
     
@@ -244,7 +259,7 @@ class PlayersDB:
         member_id = int(member_id)
         result = await self.collection.find_one({'id': member_id})
         
-        if raise_error and result is None:
+        if raise_error and (result is None):
             _log.error(f'Player with id {member_id} not found')
             raise database.MemberNotFound()
         
@@ -257,7 +272,12 @@ class PlayersDB:
         else:
             return True if result is not None else False
     
-    async def check_access_to_slot(self, slot: AccountSlotsEnum, member_id: int | str = None, member: DBPlayer = None) -> None:
+    async def check_access_to_slot(
+        self, 
+        slot: AccountSlotsEnum, 
+        member_id: int | str = None, 
+        member: DBPlayer = None,
+        auto_set_if_locked: bool = False) -> None:
         """
         Check if a member has access to a specific slot.
 
@@ -273,9 +293,13 @@ class PlayersDB:
         premium = await self.check_premium(member_id, member)
         
         if slot.value > 2:
-            if not premium:
+            if not premium and auto_set_if_locked:
+                await self.set_current_account(member_id=member.id, slot=AccountSlotsEnum.slot_1, validate=False)
+            elif not premium and not auto_set_if_locked:
                 _log.info(f'Member is not premium and tried to access premium slot {slot.value}')
                 raise database.PremiumSlotAccessAttempt(f'Member is not premium and tried to access premium slot {slot.value}')
+            else:
+                pass
             
     async def check_slot_empty(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None, raise_error: bool = True) -> bool:
         """
@@ -323,7 +347,7 @@ class PlayersDB:
         member = await self.check_member_exists(member_id, get_if_exist=True)
         curr_slot = await self.get_current_game_slot(member=member)
         if curr_slot.value > 2:
-            await self.set_current_account(member_id=member.id, slot=AccountSlotsEnum.slot_1)
+            await self.set_current_account(member_id=member.id, slot=AccountSlotsEnum.slot_1, validate=False)
         
         await self.collection.update_one(
             {'id': member.id}, 
@@ -500,7 +524,7 @@ class PlayersDB:
         session_settings = game_account.session_settings
         if not session_settings.is_autosession:
             return False
-        elif session_settings.time_to_restart > datetime.now(pytz.utc):
+        elif session_settings.time_to_restart < datetime.now(pytz.utc):
             return True
         else:
             return False
@@ -551,7 +575,7 @@ class PlayersDB:
         return slots
     
     async def get_lang(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> str | None:
-        member = await self._multi_args_member_checker(member_id, member)
+        member = await self._multi_args_member_checker(member_id, member, raise_error=False)
         return DBPlayer.model_validate(member).lang if member is not None else None
     
     async def set_lang(self, member_id: int | str, lang: str | None) -> None:
@@ -653,9 +677,9 @@ class PlayersDB:
             {'$set': {f'game_accounts.{slot.name}.widget_settings': settings.model_dump()}}
         )
         
-    async def set_current_account(self, member_id: int | str, slot: AccountSlotsEnum) -> None:
+    async def set_current_account(self, member_id: int | str, slot: AccountSlotsEnum, validate: bool = True) -> None:
         member = await self.check_member_exists(member_id, get_if_exist=True)
-        slot = await self.validate_slot(member=member, slot=slot)
+        slot = await self.validate_slot(member=member, slot=slot) if validate else slot
         await self.collection.update_one(
             {'id': member.id},
             {'$set': {'current_game_account': slot.name}}
@@ -722,6 +746,55 @@ class PlayersDB:
                 'profile.level_exp' : member.profile.level_exp + level_exp
                 }
             }
+        )
+        
+    async def set_badges(self, member_id: int | str, badges: list[str]) -> None:
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        validated_badges = [validate_badge(badge) for badge in badges if validate_badge(badge) is not None]
+        validated_badges = set(
+            [*member.profile.badges, *[badge.name for badge in validated_badges]]
+        )
+        if len(validated_badges) == 0:
+            _log.warn(f'Badges {badges} are not valid')
+            return
+        
+        await self.collection.update_one(
+            {'id': member.id},
+            {'$set': {'profile.badges': list(validated_badges)}}
+        )
+        
+    async def get_badges(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> list[str]:
+        member = await self._multi_args_member_checker(member_id, member)
+        return member.profile.badges
+    
+    async def remove_badges(self, member_id: int | str, badges: list[str]) -> None:
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        await self.collection.update_one(
+            {'id': member.id},
+            {'$pull': {'profile.badges': {'$in': badges}}}
+        )
+    
+    async def check_badges(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> None:
+        member = await self._multi_args_member_checker(member_id, member)
+        for badge in member.profile.badges:
+            badge_validated = validate_badge(badge)
+            if badge_validated is None:
+                member.profile.badges.remove(badge)
+                
+        await self.collection.update_one(
+            {'id': member.id},
+            {'$set': {'profile.badges': member.profile.badges}}
+        )
+        
+    async def remove_badge(self, member_id: int | str, badge: str | BadgesEnum) -> None:
+        member = await self.check_member_exists(member_id, get_if_exist=True)
+        
+        if isinstance(badge, BadgesEnum):
+            badge = badge.name
+            
+        await self.collection.update_one(
+            {'id': member.id},
+            {'$pull': {'profile.badges': badge}}
         )
 
     async def database_update(self):

@@ -18,6 +18,7 @@ from lib.image.for_image.colors import Colors
 from lib.image.for_image.stats_coloring import colorize
 from lib.utils.bool_to_text import bool_handler
 from lib.utils.safe_divide import safe_divide
+from lib.utils.validate_badges import sort_badges
 
 
 class ProfileImage:
@@ -226,13 +227,14 @@ class Badges:
     tester = Image.open('res/image/profile/badges/tester.png', formats=['png'])
     beta_tester = Image.open('res/image/profile/badges/beta_tester.png', formats=['png'])
     streamer = Image.open('res/image/profile/badges/streamer.png', formats=['png'])
-    administrator = Image.open('res/image/profile/badges/administrator.png', formats=['png'])
+    admin = Image.open('res/image/profile/badges/administrator.png', formats=['png'])
     docs_contributor = Image.open('res/image/profile/badges/docs_contributor.png', formats=['png'])
     translator = Image.open('res/image/profile/badges/translator_v2.png', formats=['png'])
     theme_creator = Image.open('res/image/profile/badges/theme_creator.png', formats=['png'])
     dev = Image.open('res/image/profile/badges/dev.png', formats=['png'])
     premium = Image.open('res/image/profile/badges/premium_v2.png', formats=['png'])
     verified = Image.open('res/image/profile/badges/verified.png', formats=['png'])
+    bug_hunter = Image.open('res/image/profile/badges/bug_hunter.png', formats=['png'])
     
     badge_size = (32, 32)
     badge_indent = 5
@@ -241,13 +243,14 @@ class Badges:
     tester.thumbnail(badge_size)
     beta_tester.thumbnail(badge_size)
     streamer.thumbnail(badge_size)
-    administrator.thumbnail(badge_size)
+    admin.thumbnail(badge_size)
     docs_contributor.thumbnail(badge_size)
     translator.thumbnail(badge_size)
     theme_creator.thumbnail(badge_size)
     dev.thumbnail(badge_size)
     premium.thumbnail(badge_size)
     verified.thumbnail(badge_size)
+    bug_hunter.thumbnail(badge_size)
 
 
 class Fades:
@@ -263,13 +266,12 @@ class ProfileImageGen:
         self.img: Image.Image = None
         self.img_draw: ImageDraw.ImageDraw = None
         self.member: DBPlayer = None
-        self.ctx: ApplicationContext = None
         self.opposite_bg_brightness = 0.5
         
-    def generate(self, member: DBPlayer, ctx: ApplicationContext) -> str:
+    def generate(self, member: DBPlayer, username: str) -> str:
         s_time = time()
         self.member = member
-        self.ctx = ctx
+        self.username = username
         self.text = Text().get()
         self.draw_background()
         self.draw_layout_map()
@@ -429,7 +431,7 @@ class ProfileImageGen:
             game_account: GameAccount | None = getattr(self.member.game_accounts, account.name)
             if game_account is None:
                 if account.value > 2 and not self.member.profile.premium:
-                    accounts.append('[------LOCKED-----]')
+                    accounts.append('[-----/premium----]')
                     sessions.append(False)
                     continue
 
@@ -559,17 +561,24 @@ class ProfileImageGen:
         )
         
         premium_time: datetime | None = self.member.profile.premium_time
+        expired_at = 0 if premium_time is None else (premium_time - datetime.now(pytz.utc)).days
         if premium_time is None:
-            premium_time = '---- '
-            
+            text = '---- '
         else:
-            premium_time = (datetime.now(pytz.utc) - premium_time).days
-            if premium_time > 365:
-                premium_time = '---- '
+            if expired_at > 365:
+                text = '---- '
             
+            if expired_at == 0:
+                premium_time = (premium_time - datetime.now(pytz.utc)).seconds // 3600
+                text = f'{premium_time} {self.text.frequent.common.time_units.h}'
+                
+            else:
+                premium_time = (premium_time - datetime.now(pytz.utc)).days
+                text = f'{premium_time} {self.text.frequent.common.time_units.d}'
+
         self.img_draw.text(
             Coords.other_premium_expired_at_data,
-            text=f'{premium_time} {self.text.frequent.common.time_units.d}',
+            text=text,
             fill=Colors.l_grey,
             font=Fonts.roboto_medium.font_variant(size=22),
             anchor='rt',
@@ -613,7 +622,7 @@ class ProfileImageGen:
         )
         
     def draw_user_name(self) -> None:
-        text = f'{self.ctx.author.display_name}'
+        text = f'{self.username}'
         self.img_draw.text(
             Coords.nickname_text,
             text=text,
@@ -623,7 +632,7 @@ class ProfileImageGen:
         )
         
     def draw_badges(self) -> None:
-        badges = ['dev', 'tester', 'beta_tester', 'administrator', 'docs_contributor', 'translator', 'theme_creator', 'active_user', 'streamer', 'premium', 'verified']
+        badges = sort_badges(self.member.profile.badges)
         all_badges_size = len(badges) * (Badges.badge_size[0] + Badges.badge_indent)
         canvas = Image.new('RGBA', (all_badges_size, Badges.badge_size[1]))
         offset = 0

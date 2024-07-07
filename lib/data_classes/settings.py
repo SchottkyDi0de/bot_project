@@ -23,6 +23,8 @@ class Default(BaseModel):
     locale_aliases: dict = {
         'ru': 'ru',
         'en': 'en',
+        'en-US' : 'en',
+        'en-GB' : 'en',
         'pl': 'pl',
         'uk': 'ua'
     }
@@ -103,6 +105,9 @@ class PassedServer(BaseModel):
 
 class Premium(BaseModel):
     passed_server: PassedServer
+    
+class Account(BaseModel):
+    inactive_ttl: int
 
 class ConfigStruct(BaseModel):
     bot_name: str
@@ -121,3 +126,4 @@ class ConfigStruct(BaseModel):
     report: Report
     dump: Dump
     premium: Premium
+    account: Account
