@@ -59,7 +59,7 @@ async def standard_account_validate(
         raise TypeError(f'Unsupported slot type: {slot.__class__.__name__}')
     
     member = await PlayersDB().check_member_exists(account_id, get_if_exist=True)
-    slot = await PlayersDB().validate_slot(slot=slot, member=member, allow_empty=allow_empty_slot)
+    slot = await PlayersDB().validate_slot(slot=slot, member=member, empty_allowed=allow_empty_slot)
     game_account: GameAccount = getattr(member.game_accounts, slot.name)
     
     if not isinstance(member, DBPlayer):

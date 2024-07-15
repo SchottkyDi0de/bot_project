@@ -2,7 +2,9 @@ from datetime import datetime, timedelta
 from asyncio import sleep
 # from pprint import pprint
 from types import NoneType
+from typing import Literal
 
+from discord import ApplicationContext
 import pytz
 import motor.motor_asyncio
 from bson.codec_options import CodecOptions
@@ -10,7 +12,9 @@ from bson.codec_options import CodecOptions
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.db_player import (
     BadgesEnum,
-    DBPlayer, 
+    DBPlayer,
+    HookStats,
+    HookStatsTriggers, 
     ImageSettings,
     SessionSettings, 
     StatsViewSettings, 
@@ -20,6 +24,7 @@ from lib.data_classes.db_player import (
     SessionStatesEnum,
     AccountSlotsEnum,
     UsedCommand,
+    SlotAccessState
 )
 from lib.data_classes.db_player_old import DBPlayerOld
 from lib.exceptions import database
@@ -183,41 +188,75 @@ class PlayersDB:
         member: DBPlayer = await self.check_member_exists(member_id=member_id, get_if_exist=True, raise_error=raise_error)
         return member
     
+    async def get_slot_state(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> SlotAccessState:
+        member = await self._multi_args_member_checker(member_id, member)
+        
+        if slot is None:
+            slot = await self.get_current_game_slot(member=member)
+            
+        if not isinstance(slot, AccountSlotsEnum):
+            _log.warning(f'slot must be an instance of AccountSlotsEnum, not {slot.__class__.__name__}')
+            return SlotAccessState.invalid_slot
+        
+        if slot.value > 2 and not member.profile.premium:
+            return SlotAccessState.locked_slot
+        
+        try:
+            slot_data = getattr(member.game_accounts, slot.name)
+        except AttributeError:
+            return SlotAccessState.empty_slot
+        else:
+            if slot_data is None:
+                return SlotAccessState.empty_slot
+        
+            return SlotAccessState.used_slot
+    
+    def get_slot_state_sync(self, slot: AccountSlotsEnum, member: DBPlayer) -> SlotAccessState:
+        if not isinstance(slot, AccountSlotsEnum):
+            _log.warning(f'slot must be an instance of AccountSlotsEnum, not {slot.__class__.__name__}')
+            return SlotAccessState.invalid_slot
+        
+        if slot.value > 2 and not member.profile.premium:
+            return SlotAccessState.locked_slot
+        
+        try:
+            slot_data = getattr(member.game_accounts, slot.name)
+        except AttributeError:
+            return SlotAccessState.empty_slot
+        else:
+            if slot_data is None:
+                return SlotAccessState.empty_slot
+        
+            return SlotAccessState.used_slot
+        
+        
     async def validate_slot(
         self, 
         slot: AccountSlotsEnum | None, 
         member_id: int | str | None = None, 
-        member: DBPlayer | None = None, 
-        allow_empty: bool = False,
+        member: DBPlayer | None = None,
+        set_if_locked: bool = False,
+        empty_allowed: bool = False
         ) -> AccountSlotsEnum:
-        """
-        Asynchronously validates a slot for a given member.
-
-        Args:
-            member_id (int | str | None): The ID of the member.
-            member (DBPlayer | None, optional): The member object. Defaults to None.
-            slot (AccountSlotsEnum | None, optional): The slot to validate. Defaults to None.
-            allow_empty (bool, optional): Whether to allow empty slots. Defaults to False.
-
-        Returns:
-            AccountSlotsEnum: The validated slot.
-
-        Raises:
-            database.SlotIsEmpty: If the slot is empty and allow_empty is False.
-        """
-        if slot is None:
-            return await self.get_current_game_slot(member_id=member_id, member=member)
         
-        member = await self._multi_args_member_checker(member_id, member)
-        await self.check_access_to_slot(slot, member=member)
+        if not isinstance(slot, AccountSlotsEnum):
+            raise TypeError(f'slot must be an instance of AccountSlotsEnum, not {slot.__class__.__name__}')
         
-        empty_slot = await self.check_slot_empty(slot, member=member, raise_error=False)
-        if not allow_empty and empty_slot:
-            _log.debug(f'Member {member.id} has attempted to access empty slot {slot.name}')
-            raise database.SlotIsEmpty(f'Member {member.id} has attempted to access empty slot {slot.name}')
+        slot_state = await self.get_slot_state(slot=slot, member_id=member_id, member=member)
+        if slot_state == SlotAccessState.invalid_slot:
+            raise ValueError(f'Invalid slot {slot}')
+        elif slot_state == SlotAccessState.locked_slot and not set_if_locked:
+            raise database.PremiumSlotAccessAttempt
+        elif slot_state == SlotAccessState.locked_slot and set_if_locked:
+            await self.set_current_account(member_id=member.id, slot=AccountSlotsEnum.slot_1)
+            return AccountSlotsEnum.slot_1
+        elif slot_state == SlotAccessState.empty_slot and not empty_allowed:
+            raise database.SlotIsEmpty
+        elif slot_state == SlotAccessState.used_slot and empty_allowed:
+            raise database.SlotIsNotEmpty
+        else:
+            return slot
         
-        return slot
-    
     async def get_game_account(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> GameAccount:
         member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
@@ -502,7 +541,7 @@ class PlayersDB:
             {'$set': {f'game_accounts.{slot.name}.last_stats': None}}
         )
     
-    async def check_member_last_stats(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> bool:
+    async def check_member_last_stats(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None, premium_bypass: bool = False) -> bool:
         member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
         game_account: GameAccount = getattr(member.game_accounts, slot.name)
@@ -529,12 +568,12 @@ class PlayersDB:
         else:
             return False
         
-    async def validate_session(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> SessionStatesEnum:
+    async def validate_session(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None, premium_bypass: bool = False) -> SessionStatesEnum:
         member = await self._multi_args_member_checker(member_id, member)
-        last_stats = await self.check_member_last_stats(slot, member=member)
+        last_stats = await self.check_member_last_stats(slot, member=member, premium_bypass=premium_bypass)
         if not last_stats:
             return SessionStatesEnum.NOT_STARTED
-        if await self.session_restart_needed(slot=slot, member=member):
+        elif await self.session_restart_needed(slot=slot, member=member):
             return SessionStatesEnum.RESTART_NEEDED
         else:
             return SessionStatesEnum.NORMAL
@@ -565,13 +604,13 @@ class PlayersDB:
         premium_user = await self.check_premium(member_id, member)
         slots = []
         
-        for slot in AccountSlotsEnum:
-            if not await self.check_slot_empty(member=member, slot=slot, raise_error=False):
-                slots.append(slot)
-                
-            if slot.value > 2 and not premium_user:
+        for iter_slot in AccountSlotsEnum:
+            if iter_slot.value > 2 and not premium_user:
                 break
-        
+            
+            if not await self.check_slot_empty(member=member, slot=iter_slot, raise_error=False):
+                slots.append(iter_slot)
+                
         return slots
     
     async def get_lang(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> str | None:
@@ -796,6 +835,23 @@ class PlayersDB:
             {'id': member.id},
             {'$pull': {'profile.badges': badge}}
         )
+        
+    async def disable_stats_hook(self, member_id: int | str, slot: AccountSlotsEnum) -> None:
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {f'game_accounts.{slot.name}.hook_stats.active': False}}
+        )
+
+    async def setup_stats_hook(
+        self, 
+        member_id: int | str, 
+        slot: AccountSlotsEnum,
+        hook: HookStats,
+    ) -> None:
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {f'game_accounts.{slot.name}.hook_stats': hook.model_dump()}}
+        )
 
     async def database_update(self):
         cursor = self.collection.find({})
@@ -823,6 +879,7 @@ class PlayersDB:
                         'stats_view_settings' : old_member.session_settings.stats_view.model_dump(),
                         'verified' : old_member.verified,
                         'locked' : old_member.locked,
+                        'hook_stats' : HookStats(),
                     },
                     'slot_2' : None,
                     'slot_3' : None,

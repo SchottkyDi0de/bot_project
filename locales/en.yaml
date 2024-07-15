@@ -97,6 +97,9 @@ for_image:
   damage_received: |-
     DAMAGE
     RECEIVED
+  leaderboard_position: |-
+    RANKING
+    POSITION
   hits: HITS
   frags: FRAGS
   losses: DEFEATS
@@ -775,3 +778,49 @@ cmds:
       others: Others
       premium: 'premium:'
       premium_time: 'expires in:'
+
+# hook_stats
+  hook_stats:
+    descr:
+      this: Hook for statistics change
+      sub_descr:
+        stats_name: Statistic name
+        stats_type: Type of statistics
+        trigger: Condition of triggering
+        target_value: Target value (+- 10 Mln.)
+    info:
+      success: |- 
+        Hook has been set successfully!
+        Bot will notify you in this channel when the hook is triggered.
+        Condition: `<watch_for> <stats_name> <trigger> <value>`
+        The hook will be automatically disabled in 48 hours.
+        Your statistics is checked every 200 seconds.
+      triggered: |-
+        The trigger has been triggered, the state of the statistics:
+        `<watch_for> <stats_name> <target_stats> <trigger> <value>`
+    warns:
+      another_active_hook: |-
+        You already have an active hook.
+        Creating a new hook will overwrite the old one, are you sure you want to continue?
+        Information about the active hook:
+        Condition: `<watch_for> <stats_name> <trigger> <value>`
+        Will be disabled in: <end_time>
+    errors:
+      value_out_of_range: Target value is out of the range (+- 10 Mln.)
+    items:
+      btn_override: Override
+      btn_cancel: Cancel
+
+# hook_state
+  hook_state:
+    descr:
+      this: Hook state
+    info:
+      active: |-
+        Hook is active.
+        Condition: `<watch_for> <stats_name> <trigger> <value>`
+        Will be disabled in: <end_time>
+      inactive: Hook is not active.
+    items:
+      btn_stop: Disable
+

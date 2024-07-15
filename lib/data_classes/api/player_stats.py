@@ -8,6 +8,7 @@ class Meta(BaseModel):
 
 
 class Rating(BaseModel):
+    
     spotted: int
     calibration_battles_left: int
     hits: int
@@ -42,6 +43,7 @@ class Rating(BaseModel):
     survival_ratio: Optional[float] = None
     damage_ratio: Optional[float] = None
     destruction_ratio: Optional[float] = None
+    leaderboard_position: Optional[int] = None
 
 
 class All(BaseModel):

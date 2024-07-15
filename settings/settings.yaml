@@ -57,7 +57,7 @@ image:
     damage_dealt, damage_received, shots,
     xp, survived_battles, dropped_capture_points,
     damage_ratio, destruction_ratio, frags_per_battle,
-    avg_spotted, survival_ratio, rating, empty
+    avg_spotted, survival_ratio, rating, leaderboard_position, empty
     ]
 
 themes:

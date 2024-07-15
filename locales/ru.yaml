@@ -100,6 +100,9 @@ for_image:
   damage_received: |-
     ПОЛУЧЕНО
     УРОНА
+  leaderboard_position: |-
+    МЕСТО В 
+    РЕЙТИНГЕ
   hits: ПОПАДАНИЯ
   frags: УНИЧТОЖЕНО
   losses: ПОРАЖЕНИЯ
@@ -783,3 +786,48 @@ cmds:
       others: Разное
       premium: 'премиум:'
       premium_time: 'закончится через:'
+
+# hook_stats
+  hook_stats:
+    descr:
+      this: Хук на изменение статистики
+      sub_descr:
+        stats_name: Название статистики
+        stats_type: Тип статистики
+        trigger: Условие срабатывания
+        target_value: Целевое значение (+- 10 Млн.)
+    info:
+      success: |- 
+        Хук установлен успешно!
+        Бот оповестит вас в этом канале при срабатывании триггера.
+        Условие: `<watch_for> <stats_name> <trigger> <value>`
+        Через 48 часов хук будет автоматически отключен.
+        Ваша статистика проверяется раз в 200 секунд.
+      triggered: |-
+        Триггер сработал, состояние статистики:
+        `<watch_for> <stats_name> <target_stats> <trigger> <value>`
+    warns:
+      another_active_hook: |-
+        У вас уже есть активный хук.
+        Создание нового хука перезапишет старый, вы уверены что хотите продолжить?
+        информация о активном хуке:
+        Условие: `<watch_for> <stats_name> <trigger> <value>`
+        Отключится через: <end_time>
+    errors:
+      value_out_of_range: Целевое значение вышло за пределы диапазона (+- 10 Млн.)
+    items:
+      btn_override: Перезаписать
+      btn_cancel: Отмена
+
+# hook_state
+  hook_state:
+    descr:
+      this: Состояние хука
+    info:
+      active: |-
+        Хук активен.
+        Условие: `<watch_for> <stats_name> <trigger> <value>`
+        До отключения: <end_time>
+      inactive: Хук не активен.
+    items:
+      btn_stop: Отключить

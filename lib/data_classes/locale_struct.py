@@ -45,6 +45,7 @@ class ForImage(BaseModel):
     dropped_capture_points: str
     capture_points: str
     damage_received: str
+    leaderboard_position: str
     hits: str
     frags: str
     losses: str
@@ -795,6 +796,63 @@ class Profile(BaseModel):
     items: Items11
 
 
+class SubDescr12(BaseModel):
+    stats_name: str
+    stats_type: str
+    trigger: str
+    target_value: str
+
+
+class Descr31(BaseModel):
+    this: str
+    sub_descr: SubDescr12
+
+
+class Info29(BaseModel):
+    success: str
+    triggered: str
+
+
+class Warns(BaseModel):
+    another_active_hook: str
+
+
+class Errors16(BaseModel):
+    value_out_of_range: str
+
+
+class Items12(BaseModel):
+    btn_override: str
+    btn_cancel: str
+
+
+class HookStats(BaseModel):
+    descr: Descr31
+    info: Info29
+    warns: Warns
+    errors: Errors16
+    items: Items12
+
+
+class Descr32(BaseModel):
+    this: str
+
+
+class Info30(BaseModel):
+    active: str
+    inactive: str
+
+
+class Items13(BaseModel):
+    btn_stop: str
+
+
+class HookState(BaseModel):
+    descr: Descr32
+    info: Info30
+    items: Items13
+
+
 class Cmds(BaseModel):
     astats: Astats
     stats: Stats
@@ -827,6 +885,8 @@ class Cmds(BaseModel):
     delete_player: DeletePlayer
     switch_account: SwitchAccount
     profile: Profile
+    hook_stats: HookStats
+    hook_state: HookState
 
 
 class Localization(BaseModel):

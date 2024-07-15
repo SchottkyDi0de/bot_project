@@ -137,5 +137,17 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
                 return Colors.cyan
             else:
                 return Colors.purple
+            
+        elif stats_type == 'leaderboard_position':
+            if val <= 500:
+                return Colors.green
+            elif val <= 100:
+                return Colors.cyan
+            elif val <= 20:
+                return Colors.purple
+            elif val == 1:
+                return Colors.gold
+            else:
+                return Colors.grey
         else:
             return default_color

@@ -721,7 +721,7 @@ class ImageGenSession():
         self.data = data
         self.diff_values = DiffValues(diff_data, self.game_account.stats_view_settings)
         self.session_values = SessionValues(diff_data, self.game_account.stats_view_settings)
-        self.values = Values(data, diff_data, self.game_account.stats_view_settings)
+        self.values = Values(self.game_account.last_stats, diff_data, self.game_account.stats_view_settings)
         self.current_offset = 0
         self.metadata = ImageGenMetaData()
         
@@ -986,7 +986,7 @@ class ImageGenSession():
             case 'AT-SPG':
                 return 'ﬁ • '
             case _:
-                _log.warning(f'Ignoring Exception: Invalid tank type: {tank_type}')
+                _log.info(f'Ignoring Exception: Invalid tank type: {tank_type}')
                 return '� • ' 
             
     def tank_tier_handler(self, tier: int):
@@ -1203,7 +1203,10 @@ class ImageGenSession():
                 font=self.fonts.roboto,
                 anchor='ma',
                 align='center',
-                fill=self.value_colors(getattr(self.diff_data.rating_diff, value))
+                fill=self.value_colors(
+                    getattr(self.diff_data.rating_diff, value), 
+                    reverse=True if value == 'leaderboard_position' else False
+                )
             )
 
     def draw_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
@@ -1319,14 +1322,14 @@ class ImageGenSession():
             case 'asia':
                 self.image.paste(self.flags.china, (10, 10), self.flags.china)
 
-    def value_colors(self, value: int | float) -> tuple:
+    def value_colors(self, value: int | float, reverse: bool = False) -> tuple:
         if not isinstance(value, (int, float)):
             return Colors.grey
         value = round(value, 2)
         if value > 0:
-            return self.image_settings.positive_stats_color
+            return self.image_settings.positive_stats_color if not reverse else self.image_settings.negative_stats_color
         if value < 0:
-            return self.image_settings.negative_stats_color
+            return self.image_settings.negative_stats_color if not reverse else self.image_settings.positive_stats_color
         if value == 0:
             return Colors.grey
         

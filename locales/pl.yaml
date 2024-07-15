@@ -106,6 +106,9 @@ for_image:
   frags: |-  # TODO: Auto translated, need to check
     ZNISZCZENIA
     NA BITWĘ
+  leaderboard_position: |- # TODO: Auto translate, need check
+    POZYCJA
+    RANKINGOWA
   losses: DEFEATS # TODO: Need translate
   wins: WINS # TODO: Need translate
 
@@ -789,3 +792,61 @@ cmds:
       others: Różne
       premium: 'premium:'
       premium_time: 'wygasa za:'
+
+# hook_stats
+  hook_stats:
+    descr:
+      this: # TODO: Auto translated
+        Wyzwalacz na zmianę statystyki
+      sub_descr:
+        stats_name: # TODO: Auto translated
+          Nazwa statystyki
+        stats_type: # TODO: Auto translated
+          Typ statystyki
+        trigger: # TODO: Auto translated
+          Warunek wyzwalania
+        target_value: # TODO: Auto translated
+          Wartość docelowa (+- 10 Mln.)
+    info:
+      success: |- # TODO: Auto translated
+        Wyzwalacz został ustawiony pomyślnie!
+        Bot ostrzeży Cię w tym kanale przy wyzwoleniu wyzwalacza.
+        Warunek: `<watch_for> <stats_name> <trigger> <value>`
+        Do wyłączenia w ciągu 48 godzin.
+        Twoje statystyki będą sprawdzane co 200 sekund.
+      triggered: |- # <<< TODO: Auto translated
+        Trigger został wywołany, stan statystyki:
+        `<watch_for> <stats_name> <target_stats> <trigger> <value>`
+    warns:
+      another_active_hook: |- # TODO: Auto translated
+        Masz już aktywny wyzwalacz.
+        Tworzenie nowego wyzwalacza spowoduje zastąpienie starego.
+        Jesteś pewien że chcesz kontynuować?
+        Informacje o aktywnym wyzwalaczu:
+        Warunek: `<watch_for> <stats_name> <trigger> <value>`
+        Wyłączenie za: <end_time>
+    errors:
+      value_out_of_range: # TODO: Auto translated
+        Wartość docelowa przeszła poza zakres (+- 10 Mln.)
+    items:
+      btn_override: # TODO: Auto translated
+        Zastąp
+      btn_cancel: # TODO: Auto translated
+        Anuluj
+
+# hook_state
+  hook_state:
+    descr:
+      this: # TODO: Auto translated
+        Stan wyzwalacza
+    info:
+      active: |- # TODO: Auto translated
+        Wyzwalacz jest aktywny.
+        Warunek: `<watch_for> <stats_name> <trigger> <value>`
+        Do wyłączenia: <end_time>
+      inactive: # TODO: Auto translated
+        Wyzwalacz nie jest aktywny.
+    items:
+      btn_stop: # TODO: Auto translated
+        Wyłącz
+

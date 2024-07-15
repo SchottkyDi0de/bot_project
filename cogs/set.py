@@ -565,7 +565,7 @@ class Set(commands.Cog):
                 text=Text().get().cmds.session_view_settings.info.success,
                 colour='green',
                 footer=get_formatted_slot_info(
-                    slot=account,
+                    slot=account_slot,
                     text=Text().get(),
                     game_account=await self.db.get_game_account(slot=account_slot, member_id=member.id),
                     shorted=True,

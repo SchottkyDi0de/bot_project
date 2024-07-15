@@ -11,7 +11,7 @@ from cacheout import FIFOCache
 
 from lib.api.async_wotb_api import API
 from lib.data_classes.locale_struct import Localization
-from lib.data_classes.db_player import AccountSlotsEnum, GameAccount, ImageSettings, SessionSettings
+from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, GameAccount, HookStats, HookStatsTriggers, ImageSettings, SessionSettings
 from lib.database.players import PlayersDB
 from lib.embeds.info import InfoMSG
 from lib.embeds.errors import ErrorMSG
@@ -432,7 +432,7 @@ class SwitchAccount:
         
 
 class ReplayParser:
-    def __init__(self, text: Localization, member: DBServer, choices: list[SelectOption], replay_data: ParsedReplayData, region: str):
+    def __init__(self, text: Localization, member: DBPlayer, choices: list[SelectOption], replay_data: ParsedReplayData, region: str):
         class ReplayParserView(ui.View):
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
@@ -553,6 +553,148 @@ class ReplayParser:
                 await select_callback()
         
         self.view = ReplayParserView(timeout=720, disable_on_timeout=True)
+        
+    def get_view(self) -> ui.View:
+        return self.view
 
+
+class HookOverride:
+    def __init__(self, text: Localization, member: DBPlayer, game_account: GameAccount, slot: AccountSlotsEnum, hook: HookStats):
+        class HookOverrideView(ui.View):
+            @ui.button(
+                label=text.cmds.hook_stats.items.btn_override,
+                style=ButtonStyle.green,
+                emoji='✔️'
+            )
+            async def button_accept(self, button: ui.Button, interaction: Interaction):
+                @hook_exceptions(interaction=interaction, logger=_log)
+                async def accept_button_callback():
+                    if interaction.user.id != member.id:
+                        await interaction.response.send_message(
+                            embed=ErrorMSG().custom(
+                                locale=text,
+                                text=text.views.not_owner
+                            ),
+                            ephemeral=True
+                        )
+                        return
+                    
+                    await PlayersDB().setup_stats_hook(
+                        member_id=member.id,
+                        slot=slot,
+                        hook=hook
+                    )
+                    await interaction.response.edit_message(
+                        embed=InfoMSG().custom(
+                            locale=text,
+                            colour='green',
+                            text=insert_data(
+                                text.cmds.hook_stats.info.success,
+                                {
+                                    'stats_name' : hook.stats_name,
+                                    'trigger' : HookStatsTriggers[hook.trigger].value,
+                                    'value' : round(hook.target_value, 4),
+                                    'watch_for' : hook.watch_for
+                                }
+                            ),
+                            footer=get_formatted_slot_info(
+                                slot=slot,
+                                text=text,
+                                game_account=game_account,
+                                shorted=True,
+                                clear_md=True
+                            )
+                        ),
+                        view=None
+                    )
+                    
+                await accept_button_callback()
+                
+            @ui.button(
+                label=text.cmds.hook_stats.items.btn_cancel,
+                style=ButtonStyle.red,
+                emoji='✖️'
+            )
+            async def button_decline(self, button: ui.Button, interaction: Interaction):
+                @hook_exceptions(interaction=interaction, logger=_log)
+                async def decline_button_callback():
+                    if interaction.user.id != member.id:
+                        await interaction.response.send_message(
+                            embed=ErrorMSG().custom(
+                                locale=text,
+                                text=text.views.not_owner
+                            ),
+                            ephemeral=True
+                        )
+                        return
+                    
+                    await interaction.response.edit_message(
+                        embed=InfoMSG().custom(
+                            locale=text,
+                            colour='red',
+                            text=text.frequent.info.discard_changes,
+                            footer=get_formatted_slot_info(
+                                slot=slot,
+                                text=text,
+                                game_account=game_account,
+                                shorted=True,
+                                clear_md=True
+                            )
+                        ),
+                        view=None
+                    )
+            
+                await decline_button_callback()
+        
+        self.view = HookOverrideView(timeout=720, disable_on_timeout=True)
+    
+    def get_view(self) -> ui.View:
+        return self.view
+
+class HookDisable:
+    def __init__(self, text: Localization, member: DBPlayer, slot: AccountSlotsEnum, game_account: GameAccount):
+        class HookDisableView(ui.View):
+            @ui.button(
+                label=text.cmds.hook_state.items.btn_stop,
+                style=ButtonStyle.red,
+                emoji='✖️'
+            )
+            async def button_disable(self, button: ui.Button, interaction: Interaction):
+                @hook_exceptions(interaction=interaction, logger=_log)
+                async def accept_button_callback():
+                    if interaction.user.id != member.id:
+                        await interaction.response.send_message(
+                            embed=ErrorMSG().custom(
+                                locale=text,
+                                text=text.views.not_owner
+                            ),
+                            ephemeral=True
+                        )
+                        return
+                    
+                    await PlayersDB().disable_stats_hook(
+                        member_id=member.id,
+                        slot=slot
+                    )
+                    
+                    await interaction.response.edit_message(
+                        embed=InfoMSG().custom(
+                            locale=text,
+                            text=text.cmds.hook_state.info.inactive,
+                            footer=get_formatted_slot_info(
+                                slot=slot,
+                                text=text,
+                                game_account=game_account,
+                                shorted=True,
+                                clear_md=True
+                                )
+                            ),
+                        view=None
+                        )
+                
+                await accept_button_callback()
+                
+        self.view = HookDisableView(timeout=720, disable_on_timeout=True)
+        
     def get_view(self) -> ui.View:
         return self.view

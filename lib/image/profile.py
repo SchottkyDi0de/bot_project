@@ -6,8 +6,9 @@ from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 from discord import ApplicationContext
 import pytz
 
+from lib.database.players import PlayersDB
 from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, GameAccount
+from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, GameAccount, SlotAccessState
 from lib.data_classes.locale_struct import Localization
 from lib.image.utils.b64_img_handler import img_to_base64
 from lib.utils.calculate_exp import get_level
@@ -462,7 +463,19 @@ class ProfileImageGen:
         for slot in AccountSlotsEnum:
             game_account: GameAccount | None = getattr(self.member.game_accounts, slot.name)
             last_stats: PlayerGlobalData | None = game_account.last_stats if game_account is not None else None
+            slot_state = PlayersDB().get_slot_state_sync(slot=slot, member=self.member)
             
+            color = Colors.l_grey
+            
+            if slot_state == SlotAccessState.used_slot and last_stats is not None:
+                color = colorize(
+                    'winrate',
+                    last_stats.data.statistics.all.winrate,
+                    Colors.l_grey
+                )
+                
+            else:
+                color = Colors.grey
             
             self.img_draw.text(
                 (
@@ -470,12 +483,7 @@ class ProfileImageGen:
                     Coords.accounts_list[1] + offset
                 ),
                 text=accounts[slot.value - 1],
-                fill=colorize(
-                    'winrate',
-                    last_stats.data.statistics.all.winrate if \
-                        last_stats is not None else None,
-                    Colors.l_grey
-                ),
+                fill=color,
                 font=Fonts.roboto_mono.font_variant(size=20),
                 anchor='ra',
                 align='right'

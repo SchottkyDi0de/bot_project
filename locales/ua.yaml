@@ -100,6 +100,9 @@ for_image:
   damage_received: |- # TODO: Auto translate, need check
     ОТРИМАНО
     УРОНУ
+  leaderboard_position: |- # TODO: Auto translate, need check
+    МІСЦЯ В 
+    РЕЙТИНГА
   hits: ПОПАДАНЬ # TODO: Auto translate, need check
   frags: ЗНИЩЕНО # TODO: Auto translate, need check
   losses: DEFEATS # TODO: Need translate
@@ -764,7 +767,7 @@ cmds:
         {cmds_defs.set_player}
 
 # profile
-  profile: # <<< TODO: Autotranlsated
+  profile: # <<< TODO: Autotranlsated all
     descr:
       this: Профіль користувача
     items:
@@ -784,3 +787,49 @@ cmds:
       others: 'Інше'
       premium: 'premium:'
       premium_time: 'закінчиться через:'
+
+# hook_stats
+  hook_stats:
+    descr:
+      this: Хук на зміну статистики # <<< TODO: Auto translated
+      sub_descr:
+        stats_name: Назва статистики # <<< TODO: Auto translated
+        stats_type: Тип статистики # <<< TODO: Auto translated
+        trigger: Умовня спрацювання # <<< TODO: Auto translated
+        target_value: Мета значення (+- 10 Млн.) # <<< TODO: Auto translated
+    info:
+      success: |- # <<< TODO: Auto translated
+        Хук встановлено успішно!
+        Бот повідомить вас у цьому каналі при спрацюванні хука.
+        Умовня: `<watch_for> <stats_name> <trigger> <value>`
+        Через 48 години хук буде автоматично вимкнено.
+        Ваша статистика перевіряється раз за 200 секунд.
+      triggered: |- # <<< TODO: Auto translated
+        Триггер сработав, стан статистики:
+        `<watch_for> <stats_name> <target_stats> <trigger> <value>`
+    warns:
+      another_active_hook: |- # <<< TODO: Auto translated
+        У вас вже є активний хук.
+        Створення нового хука перезапише старий, ви впевнені що хочете продовжити?
+        інформація про активний хук:
+        Умовня: `<watch_for> <stats_name> <trigger> <value>`
+        Зупиниться через: <end_time>
+    errors:
+      value_out_of_range: Мета значення вийшло за межі діапазону (+- 10 Млн.) # <<< TODO: Auto translated
+    items:
+      btn_override: Перезаписати # <<< TODO: Auto translated
+      btn_cancel: Скасувати # <<< TODO: Auto translated
+
+# hook_state
+  hook_state:
+    descr:
+      this: Стан хука # <<< TODO: Auto translated
+    info:
+      active: |- # <<< TODO: Auto translated
+        Хук активний.
+        Умовня: `<watch_for> <stats_name> <trigger> <value>`
+        До відключення: <end_time>
+      inactive: Хук не активний. # <<< TODO: Auto translated
+    items:
+      btn_stop: Вимкнути # <<< TODO: Auto translated
+

@@ -9,13 +9,15 @@ import aiohttp
 import pytz
 from aiohttp import client_exceptions
 from asynciolimiter import Limiter
-from cacheout import FIFOCache
+from cacheout import FIFOCache, Cache
 from the_retry import retry
+from pydantic import ValidationError
 
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.api.player_achievements import Achievements
 from lib.data_classes.api.player_clan_stats import ClanStats
 from lib.data_classes.api.player_stats import PlayerStats
+from lib.data_classes.api.rating_leaderboard import RatingLeaderboardAPIResponse
 from lib.data_classes.api.tanks_stats import TankStats
 from lib.data_classes.db_player import DBPlayer, GameAccount
 from lib.database.players import PlayersDB
@@ -38,6 +40,7 @@ class API:
         self._players_stats = []
         self.start_time = 0
         self.rate_limiter = Limiter(19)
+        self.rating_leaderboard_num_cache = Cache(ttl=210)
         self.cache = FIFOCache(maxsize=100, ttl=60)
         self.pdb = PlayersDB()
 
@@ -101,15 +104,15 @@ class API:
         if check_data_status:
             if data['status'] != 'ok':
                 if data['error']['message'] == 'REQUEST_LIMIT_EXCEEDED':
-                    _log.warning(f'Ignoring Exception caused by API: Request Limit Exceeded')
+                    _log.warning('Ignoring Exception caused by API: Request Limit Exceeded')
                     raise api_exceptions.RequestsLimitExceeded('Rate Limit Exceeded')
                 
                 elif data['error']['message'] == 'INVALID_SEARCH':
-                    _log.error(f'Exception caused by API: Invalid Search')
+                    _log.error('Exception caused by API: Invalid Search')
                     raise api_exceptions.UncorrectName('Uncorrect nickname')
                 
                 elif data['error']['message'] == 'SOURCE_NOT_AVAILABLE':
-                    _log.error(f'Exception caused by API: Source Not Available')
+                    _log.error('Exception caused by API: Source Not Available')
                     raise api_exceptions.APISourceNotAvailable()
                     
                 _log.error(f'Error get data, bad response status: {data}')
@@ -119,12 +122,12 @@ class API:
             if data['meta']['count'] == 0:
                 raise api_exceptions.NoPlayersFound('No players found')
             
-            if data['data'] == None or data['data'] == []:
+            if data['data'] is None or data['data'] == []:
                 _log.error(
                     f'API Returned empty `data` section'
                     f'Data: {data}'
                 )
-                raise api_exceptions.EmptyDataError(f'API Returned empty `data` section')
+                raise api_exceptions.EmptyDataError('API Returned empty `data` section')
             
             if isinstance(data['data'], list):
                 if len(data['data']) == 0:
@@ -404,13 +407,13 @@ class API:
             self.get_player_stats,
             self.get_player_clan_stats,
             self.get_player_achievements,
-            self.get_player_tanks_stats
+            self.get_player_tanks_stats,
         ]
         task_names = [
             'get_player_stats',
             'get_player_clan_stats',
             'get_player_achievements',
-            'get_player_tanks_stats'
+            'get_player_tanks_stats',
         ]
 
         default_params = {"account_id": player['account_id'], "region": region}
@@ -607,6 +610,7 @@ class API:
         data = PlayerStats.model_validate(data)
 
         self.player_stats['statistics'] = data.data.statistics
+        await self.get_rating_leaderboard_num(region, account_id)
 
     @retry(
             expected_exception=(
@@ -737,3 +741,26 @@ class API:
             tanks_stats[str(tank['tank_id'])] = TankStats.model_validate(tank)
             
         self.player_stats['tank_stats'] = tanks_stats
+
+    async def get_rating_leaderboard_num(self, region: int | str, account_id: int | str) -> None:
+        if region not in ["eu", "asia", "na"]:
+            self.player_stats['statistics'].rating.leaderboard_position = 0
+            return
+        
+        account_id = int(account_id)
+
+        if (account_id, region) in self.rating_leaderboard_num_cache:
+            return self.rating_leaderboard_num_cache.get((account_id, region))
+
+        url = f"https://{region}.wotblitz.com/eu/api/rating-leaderboards/user/{account_id}"
+
+        async with self.session.get(url) as response:
+            response_data = await response.json()
+            try:
+                data = RatingLeaderboardAPIResponse.model_validate(response_data)
+                self.rating_leaderboard_num_cache.set((account_id, region), data)
+                self.player_stats['statistics'].rating.leaderboard_position = data.number if data.number is not None else 0
+            except ValidationError:
+                _log.warn(f"RatingLeaderboardAPI: {traceback.format_exc()}")
+                _log.warn(f"RatingLeaderboardAPI: error while validating model, response data:\n{response_data}")
+                self.player_stats['statistics'].rating.leaderboard_position = 0

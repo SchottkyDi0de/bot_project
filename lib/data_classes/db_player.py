@@ -1,11 +1,27 @@
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 import pytz
 from pydantic import BaseModel
 
 from lib.data_classes.api.api_data import PlayerGlobalData
+
+
+class HookStatsTriggers(Enum):
+    MORE_THAN = '>'
+    MORE_OR_EQUAL = '>='
+    LESS_THAN = '<'
+    LESS_OR_EQUAL = '<='
+    EQUAL_FOR = '=='
+    NON_EQUAL = '!='
+    
+
+class HookWatchFor(Enum):
+    MAIN = 'main'
+    SESSION = 'session'
+    DIFF = 'diff'
+
 
 class BadgesEnum(Enum):
     premium = 0
@@ -20,6 +36,12 @@ class BadgesEnum(Enum):
     bug_hunter = 9
     admin = 10
     dev = 11
+
+class SlotAccessState(Enum):
+    empty_slot = 0
+    used_slot = 1
+    locked_slot = 2
+    invalid_slot = 3
 
 class StatsViewSettings(BaseModel):
     common_slots: dict = {
@@ -76,6 +98,22 @@ class WidgetSettings(BaseModel):
     stats_block_color: str = '#f0f0f0'
 
 
+class HookStats(BaseModel):
+    active: bool = False
+    stats_name: Optional[str] = None  # config.image -> available_stats or available_rating_stats accepted
+    stats_type: Optional[Literal['common', 'rating']] = None
+    trigger: Optional[str] = None
+    check_interval: int = 200
+    end_time: datetime = datetime.now(pytz.utc) + timedelta(days=1)
+    target_value: int | float | None = None
+    hook_target_member_id: Optional[int] = None
+    hook_target_channel_id: Optional[int] = None
+    hook_target_guild_id: Optional[int] = None
+    watch_for: Literal['main', 'session', 'diff'] = 'main'
+    try_dm_if_failure: bool = True
+    lang: Optional[str] = None
+
+
 class GameAccount(BaseModel):
     nickname: str
     game_id: int
@@ -87,6 +125,7 @@ class GameAccount(BaseModel):
     stats_view_settings: StatsViewSettings = StatsViewSettings()
     verified: bool = False
     locked: bool = False
+    hook_stats: HookStats = HookStats()
 
 
 def set_widget_settings(**kwargs) -> WidgetSettings:

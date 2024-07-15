@@ -23,3 +23,4 @@ class StatsColors:
     green = Colors.green
     cyan = Colors.cyan
     purple = Colors.purple
+    gold = Colors.yellow
