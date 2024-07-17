@@ -171,8 +171,8 @@ cmds_defs:
   server_settings_get: '</server_settings_get:1190367458192801868>'
   set_lock: '</set_lock:1221467304890728509>'
   session_widget_settings: '</session_widget_settings:1221467304450064500>'
-  switch_account: 'Select account'
-  premium: 'Premium access'
+  switch_account: '`/switch_account`'
+  premium: '`/premium`'
 
 frequent:
   errors:
@@ -185,6 +185,7 @@ frequent:
     locked_player: Ten gracz zablokował wyświetlanie jego statystyk # <<< TODO: Auto translated need to check
     slot_is_empty: W wybranym slotu nie ma zapisanego konta, nie można tam zapisać danych.
     slot_not_accessed: 'Potrzebujesz dostępu premium, aby korzystać z slotów 3-5. Więcej informacji: {cmds_defs.premium}.'
+    premium_not_found: 'Aby korzystać z tej komendy, a także uzyskać dostęp do innych funkcji, musisz posiadać dostęp premium. Więcej informacji: {cmds_defs.premium}'
 
   info:
     info: Informacje
@@ -850,3 +851,33 @@ cmds:
       btn_stop: # TODO: Auto translated
         Wyłącz
 
+# premium
+  premium:
+    descr:
+      this: Konto premium # TODO: Auto translated
+    items:
+      btn_boosty: Boosty
+      btn_da: Donation Alerts
+      main_msg_title: Konto premium # TODO: Auto translated
+    info:
+      main_message: |- # TODO: Auto translated
+        # Mo esz sprawdzi  status swojego konta premium za pomoc polecenia `/profile`
+        ### Konto premium daje dost p do dodatkowych funkcji w naszym bocie i dost p do ekskluzywnych polece )
+        ## Dodatkowe funkcje:
+        - Mo esz przechowywa  do 5 niezale nych kont w bocie
+        - Mo esz korzysta  z wyzwalaczy statystyk (`/hook_stats`)
+        - Otrzymujesz specjalny znaczek w swoim profilu w bocie (`/profile`)
+        - Otrzymujesz ekskluzywny dost p do kana u tester w i  po aczenie z deweloperami w dowolnym momencie
+        - Otrzymujesz podziękowanie od dewelopera)
+        ## Jak uzyska  konto premium?
+        ***Istnieje 5 sposob w uzyskania konta premium w bocie:***
+        1 - By  administratorem / moderator / testerem na tym serwerze
+        2 - By  streamer i korzysta  z naszego widgetu
+        3 - Da  boost serwerowi wsparcia
+        4 - Subskrybujesz si  na nasz Boosty
+        5 - Dokonujesz darowizny za pomoc  Donation Alerts
+        ## Przyznawanie statusu premium:
+        **Sposoby 1-4:** *Automatycznie w ci gu 5 minut*
+        **Spos b 5:** *Tryb r czny, sprawdzaj do 1 dnia.*
+
+        -# Please note that any purchases are voluntary donations, the product is provided "as is" and does not give any guarantees of operability! Refunds are not possible!

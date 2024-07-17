@@ -1,14 +1,16 @@
+import asyncio
 import traceback
 
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.session import SessionDiffData, TankSessionData
-from lib.database.tankopedia import TanksDB
+from lib.data_classes.tankopedia import Tank
+from lib.database.tankopedia import TankopediaDB
 from lib.exceptions import data_parser
 from lib.logger import logger
 from lib.utils.safe_divide import safe_divide, DivideReturnType
 
 _log = logger.get_logger(__file__, 'DataParserLogger', 'logs/data_parser.log')
-_tdb = TanksDB()
+_tdb = TankopediaDB()
 
 def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
     try:
@@ -352,12 +354,12 @@ def _generate_tank_session_dict(data_old: PlayerGlobalData, data_new: PlayerGlob
     
     for tank_id in diff_tank_id:
         tank_id = str(tank_id)
-        db_tank = _tdb.safe_get_tank_by_id(tank_id)
+        db_tank = TankopediaDB().get_tank_by_id_sync(tank_id, data_new.region)
         
         if db_tank is not None:
-            tank_name = db_tank['name']
-            tank_tier = db_tank['tier']
-            tank_type = db_tank['type']
+            tank_name = db_tank.name
+            tank_tier = db_tank.tier
+            tank_type = db_tank.type
         else:
             tank_type = ''
             tank_name = 'Unknown'

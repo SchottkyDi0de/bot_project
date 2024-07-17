@@ -20,6 +20,7 @@ from lib.data_classes.api.player_stats import PlayerStats
 from lib.data_classes.api.rating_leaderboard import RatingLeaderboardAPIResponse
 from lib.data_classes.api.tanks_stats import TankStats
 from lib.data_classes.db_player import DBPlayer, GameAccount
+from lib.data_classes.tankopedia import Tank
 from lib.database.players import PlayersDB
 from lib.data_parser.parse_data import get_normalized_data
 from lib.exceptions import api as api_exceptions
@@ -235,7 +236,7 @@ class API:
         attempts=3,
         on_exception=retry_callback
     )
-    async def get_tankopedia(self, region: str = 'ru') -> dict:
+    async def get_tankopedia(self, region: str) -> list[Tank]:
         """
         Get tankopedia data.
 
@@ -257,7 +258,22 @@ class API:
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url_get_tankopedia, verify_ssl=False) as response:
-                    return await self.response_handler(response, False)
+                    data = await self.response_handler(response, False)
+                    tanks = []
+                    for key, value in data['data'].items():
+                        tanks.append(
+                            Tank.model_validate(
+                                {
+                                    'id': int(key),
+                                    'name' : value['name'],
+                                    'tier': value['tier'],
+                                    'type': value['type'],
+                                }
+                            )
+                        )
+                    
+                    return tanks
+                        
 
         except client_exceptions.ClientConnectionError as e:
             raise api_exceptions.APIError('Client Exception Occurred') from e

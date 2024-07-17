@@ -81,7 +81,8 @@ class PDBWorker:
         member_ids = await self.db.get_all_members_ids()
 
         for member_id in member_ids:
-            premium_members = await InternalDB().get_actual_premium_users()
+            # premium_members = await InternalDB().get_actual_premium_users()
+            premium_members = member_ids
             member = await self.db.get_member(member_id)
             
             if member_id in premium_members:
@@ -153,11 +154,10 @@ class PDBWorker:
                                     )
                                 )
                             )
-                            
                                     
-                    if hook.end_time < datetime.now(pytz.utc):
-                        _log.info(f'Closing hook for {member_id} in slot {slot.name} - hook expired')
-                        await self.db.disable_stats_hook(member_id, slot)
+                        if hook.end_time < datetime.now(pytz.utc):
+                            _log.info(f'Closing hook for {member_id} in slot {slot.name} - hook expired')
+                            await self.db.disable_stats_hook(member_id, slot)
                 
                 if session_state != SessionStatesEnum.RESTART_NEEDED:
                     continue

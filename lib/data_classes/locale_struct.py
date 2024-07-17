@@ -127,6 +127,7 @@ class Errors(BaseModel):
     locked_player: str
     slot_is_empty: str
     slot_not_accessed: str
+    premium_not_found: str
 
 
 class Info(BaseModel):
@@ -853,6 +854,22 @@ class HookState(BaseModel):
     items: Items13
 
 
+class Items14(BaseModel):
+    btn_boosty: str
+    btn_da: str
+    main_msg_title: str
+
+
+class Info31(BaseModel):
+    main_message: str
+
+
+class Premium(BaseModel):
+    descr: Descr32
+    items: Items14
+    info: Info31
+
+
 class Cmds(BaseModel):
     astats: Astats
     stats: Stats
@@ -887,6 +904,7 @@ class Cmds(BaseModel):
     profile: Profile
     hook_stats: HookStats
     hook_state: HookState
+    premium: Premium
 
 
 class Localization(BaseModel):

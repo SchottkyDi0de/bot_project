@@ -164,8 +164,8 @@ cmds_defs:
   server_settings_get: '</server_settings_get:1190367458192801868>'
   set_lock: '</set_lock:1221467304890728509>'
   session_widget_settings: '</session_widget_settings:1221467304450064500>'
-  switch_account: 'Select account'
-  premium: 'Premium access'
+  switch_account: '`/switch_account`'
+  premium: '`/premium`'
 
 frequent:
   errors:
@@ -178,6 +178,7 @@ frequent:
     locked_player: This player has blocked viewing their statistics.
     slot_is_empty: The slot you specified does not have a saved account, you cannot save any data to it.
     slot_not_accessed: 'You need premium access to use slots 3-5. More information: {cmds_defs.premium}.'
+    premium_not_found: 'To use this command and get access to other features, you need premium access. More information: {cmds_defs.premium}'
 
   info:
     info: Information
@@ -824,3 +825,33 @@ cmds:
     items:
       btn_stop: Disable
 
+# premium
+  premium:
+    descr:
+      this: Premium
+    items:
+      btn_boosty: Boosty
+      btn_da: Donation Alerts
+      main_msg_title: Premium account
+    info:
+      main_message: |-
+        # You can check the status of your premium account by using the `/profile` command
+        ### A premium account gives you additional features in our bot and access to exclusive commands. It also helps us to beautifully design our server if you get a premium account through server boost or to pay for hosting if you subscribe to `Boosty` or `Donation Alerts`
+        ## Additional features:
+        - Store up to 5 independent accounts in the bot
+        - Use statistics triggers (`/hook_stats`)
+        - Get a special badge in your profile inside the bot (`/profile`)
+        - Get exclusive access to the tester's channel and access to the test bot at any time. You'll also get a direct connection with the developers.
+        - Get gratitude from the developer)
+        ## How to get?
+        ***There are 5 ways to get a premium account in the bot:***
+        1 - Be an admin / moderator / tester on this server
+        2 - Be a streamer and use our widget.
+        3 - Give a boost to the support server
+        4 - Subscribe to our Boosty
+        5 - Donate through Donation Alerts
+        ## Premium status assignment:
+        **Ways from 1 to 4:** *Automatically within 5 minutes*
+        **Way 5:** *Manual mode, check up to 1 day.*
+
+        -# Please note that any purchases are voluntary donations, the product is provided "as is" and does not give any guarantees of operability! Refunds are not possible!

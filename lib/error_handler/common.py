@@ -64,6 +64,12 @@ def hook_exceptions(_log: Logger) -> Coroutine:
                 )
             elif isinstance(error, database.MemberNotFound):
                 embed = inf_msg.player_not_registered()
+            elif isinstance(error, database.PremiumNotFound):
+                embed = inf_msg.custom(
+                    locale=Text().get(),
+                    text=Text().get().frequent.errors.premium_not_found,
+                    colour='orange',
+                )
             else:
                 embed = err_msg.unknown_error()
         elif isinstance(error, data_parser.DataParserError):

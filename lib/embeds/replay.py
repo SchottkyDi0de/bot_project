@@ -2,7 +2,7 @@ from discord import ApplicationContext, Embed
 
 from lib.data_classes.replay_data_parsed import (ParsedReplayData,
                                                  PlayerResult, Statistics)
-from lib.database.tankopedia import TanksDB
+from lib.database.tankopedia import TankopediaDB
 from lib.exceptions.database import TankNotFoundInTankopedia
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
@@ -15,11 +15,11 @@ class EmbedReplayBuilder():
     def __init__(self):
         self.embed = None
         self.text = Text().get()
-        self.tanks_db = TanksDB()
+        self.tanks_db = TankopediaDB()
 
     def get_tank_name(self, tank_id: int) -> str:
         try:
-            tank = self.tanks_db.get_tank_by_id(tank_id)
+            tank = self.tanks_db.get_tank_by_id_sync(tank_id)
         except TankNotFoundInTankopedia:
             _log.debug(f'Tank with id {tank_id} not found')
             return 'Unknown'
@@ -28,7 +28,7 @@ class EmbedReplayBuilder():
         
     def get_tank_tier(self, tank_id: int) -> str:
         try:
-            tank = self.tanks_db.get_tank_by_id(tank_id)
+            tank = self.tanks_db.get_tank_by_id_sync(tank_id)
         except TankNotFoundInTankopedia:
             _log.debug(f'Tank with id {tank_id} not found')
             return '?'

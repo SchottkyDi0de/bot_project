@@ -379,6 +379,9 @@ class Values():
             data (PlayerGlobalData): The player's global data.
             tank_index (int): The index of the tank in the tankopedia_db list.
         """
+        if data is None or session_diff is None:
+            raise ValueError('Both data and session_diff must be provided.')
+         
         self.val_normalizer = ValueNormalizer()
         stats_data = data.data.statistics
         self.tank_data = data.data.tank_stats
@@ -721,7 +724,7 @@ class ImageGenSession():
         self.data = data
         self.diff_values = DiffValues(diff_data, self.game_account.stats_view_settings)
         self.session_values = SessionValues(diff_data, self.game_account.stats_view_settings)
-        self.values = Values(self.game_account.last_stats, diff_data, self.game_account.stats_view_settings)
+        self.values = Values(data, diff_data, self.game_account.stats_view_settings)
         self.current_offset = 0
         self.metadata = ImageGenMetaData()
         
@@ -986,7 +989,6 @@ class ImageGenSession():
             case 'AT-SPG':
                 return 'ﬁ • '
             case _:
-                _log.info(f'Ignoring Exception: Invalid tank type: {tank_type}')
                 return '� • ' 
             
     def tank_tier_handler(self, tier: int):
@@ -1012,7 +1014,6 @@ class ImageGenSession():
             case 10:
                 return ' • X'
             case _:
-                _log.info(f'Ignoring Exception: Invalid tank tier: {tier}')
                 return ' • ?'
 
     def draw_nickname(self, img: ImageDraw.ImageDraw):
@@ -1147,7 +1148,7 @@ class ImageGenSession():
                 text = self.values.rating[slot]
             img.text(
                 coords[slot],
-                text=text,
+                text=str(text),
                 font=self.fonts.roboto_30,
                 anchor='ma',
                 align='center',

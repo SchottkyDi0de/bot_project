@@ -3,7 +3,7 @@ from lib.data_classes.db_player import AccountSlotsEnum
 from lib.database.players import PlayersDB
 from lib.blacklist.blacklist import check_user
 from lib.data_classes.db_player import DBPlayer, GameAccount
-from lib.exceptions.database import MemberNotFound, MemberNotVerified, PremiumNotFound
+from lib.exceptions.database import LastStatsNotFound, MemberNotFound, MemberNotVerified, PremiumNotFound
 
 
 async def standard_account_validate(
@@ -12,6 +12,7 @@ async def standard_account_validate(
     check_premium: bool = False, 
     check_verified: bool = False,
     check_banned: bool = True,
+    check_active_session: bool = False,
     allow_empty_slot: bool = False
     ) -> tuple[GameAccount, DBPlayer, AccountSlotsEnum]:
     """
@@ -74,6 +75,10 @@ async def standard_account_validate(
         verified = await PlayersDB().check_member_is_verified(slot=slot, member=member)
         if not verified:
             raise MemberNotVerified()
+    
+    if check_active_session:
+        if not PlayersDB().check_member_last_stats(member=member, slot=slot):
+            raise LastStatsNotFound()
     
     if check_banned:
         check_user(account_id)

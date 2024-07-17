@@ -2,9 +2,7 @@ from datetime import datetime, timedelta
 from asyncio import sleep
 # from pprint import pprint
 from types import NoneType
-from typing import Literal
 
-from discord import ApplicationContext
 import pytz
 import motor.motor_asyncio
 from bson.codec_options import CodecOptions
@@ -14,7 +12,6 @@ from lib.data_classes.db_player import (
     BadgesEnum,
     DBPlayer,
     HookStats,
-    HookStatsTriggers, 
     ImageSettings,
     SessionSettings, 
     StatsViewSettings, 

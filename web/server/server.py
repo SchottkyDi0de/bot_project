@@ -1,14 +1,16 @@
 from datetime import datetime, timedelta
-from typing import Annotated, Dict, List
+from typing import Annotated, Dict, List, Literal
 
 from fastapi import FastAPI, Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import pytz
 from lib.data_classes.db_player import DBPlayer
+from lib.data_classes.tankopedia import Tank
 from lib.data_classes.internal_api.err_response import ErrorResponse
 from lib.data_classes.internal_api.inf_response import InfoResponse
 from lib.database.players import PlayersDB
+from lib.database.tankopedia import TankopediaDB
 from lib.internal_api.responses import ErrorResponses, InfoResponses
 from lib.logger.logger import get_logger
 from lib.settings.settings import EnvConfig
@@ -17,11 +19,22 @@ from web.components import auth
 from lib.database.internal import InternalDB
 
 _pdb = PlayersDB()
+_tdb = TankopediaDB()
 _env_config = EnvConfig()
 _log = get_logger(__file__, 'ServerLogger', 'logs/server.log')
 
+app = FastAPI(docs_url='/bot/api/docs', redoc_url='/bot/api/redoc', openapi_url='/bot/api/openapi.json')
 
-app = FastAPI(docs_url='/bot/api/docs')
+
+class AddTankopediaData(BaseModel):
+    region: Literal['ru', 'eu']
+    data: Tank
+
+
+class RemoveTankopediaData(BaseModel):
+    region: Literal['ru', 'eu']
+    tank_id: int
+
 
 class AllUsers(BaseModel):
     count: int
@@ -151,6 +164,30 @@ class Server:
         else:
             await _pdb.unset_premium(set_premium.user)
             return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+    
+    @app.post('/bot/api/set_tank', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        200: {'model' : InfoResponse, 'description' : 'Tankopedia updated'}
+        }
+    )
+    async def set_tank(api_key: Annotated[str, Header()], data: AddTankopediaData):
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        await _tdb.set_tank(tank=data.data, region=data.region)
+        return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+    
+    @app.delete('/bot/api/del_tank', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        200: {'model' : InfoResponse, 'description' : 'Tankopedia deleted'}
+        }
+    )
+    async def delete_tank(api_key: Annotated[str, Header()], data: RemoveTankopediaData):
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        await _tdb.del_tank(tank_id=data.tank_id, region=data.region)
+        return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
 
 def run():
     session_widget.init_app(app)

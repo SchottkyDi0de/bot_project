@@ -60,7 +60,7 @@ class Session(commands.Cog):
         diff_stats = get_session_stats(last_stats, stats)
         
         image = ImageGenSession().generate(
-            data=stats,
+            data=game_account.last_stats,
             diff_data=diff_stats,
             player=member,
             server=server,

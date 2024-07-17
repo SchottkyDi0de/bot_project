@@ -19,17 +19,19 @@ from lib.error_handler.interactions import hook_exceptions
 from lib.image.session import ImageGenSession
 from lib.image.common import ImageGenCommon
 from lib.logger.logger import get_logger
+from lib.settings.settings import Config
 from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.slot_info import get_formatted_slot_info
 from lib.locale.locale import Text
 from lib.utils.string_parser import insert_data
-from lib.database.tankopedia import TanksDB
+from lib.database.tankopedia import TankopediaDB
 from lib.utils.replay_player_info import formatted_player_info
 from discord.utils import escape_markdown
 from lib.utils.safe_divide import safe_divide
 from lib.image.utils.b64_img_handler import base64_to_ds_file, readable_buffer_to_base64
 
 _log = get_logger(__file__, 'AltViewsLogger', 'logs/alt_views.log')
+_config = Config().get()
 
 
 class StartSession():
@@ -499,7 +501,7 @@ class ReplayParser:
                     data = await API().get_stats(region=region, game_id=selected_player.info.account_id)
                     
                     stats_image = ImageGenCommon().generate(data=data)
-                    player_tank = TanksDB().safe_get_tank_by_id(selected_player.info.tank_id)
+                    player_tank = await TankopediaDB().get_tank_by_id(selected_player.info.tank_id, region=region)
                     
                     file_name = f"{selected_player.info.account_id}_{selected_player.player_info.nickname}.png"
                     
@@ -695,6 +697,29 @@ class HookDisable:
                 await accept_button_callback()
                 
         self.view = HookDisableView(timeout=720, disable_on_timeout=True)
+
+    def get_view(self) -> ui.View:
+        return self.view
+
+
+class PremiumButtons():
+    def __init__(self, text: Localization):
+        btn_boosty = ui.Button(
+            style=ButtonStyle.link,
+            label=text.cmds.premium.items.btn_boosty,
+            url=_config.premium.pay_links.boosty
+        )
+        btn_da = ui.Button(
+            style=ButtonStyle.link,
+            label=text.cmds.premium.items.btn_da,
+            url=_config.premium.pay_links.da
+        )
+        class PremiumView(ui.View):
+            pass
         
+        self.view = PremiumView()
+        self.view.add_item(btn_boosty)
+        self.view.add_item(btn_da)
+
     def get_view(self) -> ui.View:
         return self.view

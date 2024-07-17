@@ -102,10 +102,15 @@ class Dump(BaseModel):
 class PassedServer(BaseModel):
     premium_roles: List[int]
     id: int
+    
+class PayLinks(BaseModel):
+    da: str
+    boosty: str
 
 class Premium(BaseModel):
     passed_server: PassedServer
-    
+    pay_links: PayLinks
+
 class Account(BaseModel):
     inactive_ttl: int
 

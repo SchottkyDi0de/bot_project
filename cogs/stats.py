@@ -231,7 +231,7 @@ class Stats(commands.Cog):
         check_user(ctx)
         await ctx.defer()
 
-        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account)
+        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account, check_premium=True)
         await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         old_hook = game_account.hook_stats
         
@@ -239,6 +239,157 @@ class Stats(commands.Cog):
             active=True,
             stats_name=stats_name,
             stats_type='common',
+            trigger=HookStatsTriggers[trigger].name,
+            target_value=target_value,
+            end_time=datetime.now(pytz.utc) + timedelta(days=2),
+            hook_target_member_id=member.id,
+            hook_target_channel_id=ctx.channel.id,
+            hook_target_guild_id=ctx.guild.id,
+            watch_for=watch_for,
+            lang=Text().get_current_lang(),
+        )
+        
+        if old_hook.active:
+            view = HookOverride(
+                text=Text().get(),
+                member=member,
+                game_account=game_account,
+                slot=slot,
+                hook=hook
+            ).get_view()
+            await ctx.respond(
+                embed=InfoMSG().custom(
+                    locale=Text().get(),
+                    text=insert_data(
+                        Text().get().cmds.hook_stats.warns.another_active_hook,
+                        {
+                            'stats_name' : old_hook.stats_name,
+                            'trigger' : HookStatsTriggers[old_hook.trigger].value,
+                            'value' : round(old_hook.target_value, 4),
+                            'watch_for' : old_hook.watch_for,
+                            'end_time' : f'<t:{int(old_hook.end_time.timestamp())}:R>'
+                        }
+                    ),
+                    footer=get_formatted_slot_info(
+                        slot, 
+                        text=Text().get(),
+                        game_account=game_account,
+                        shorted=True,
+                        clear_md=True
+                    )
+                ),
+                view=view
+            )
+            return
+        
+        await self.db.setup_stats_hook(
+            member_id=member.id,
+            slot=slot,
+            hook=hook
+        )
+        await ctx.respond(
+            embed=InfoMSG().custom(
+                locale=Text().get(),
+                text=insert_data(
+                    Text().get().cmds.hook_stats.info.success,
+                    {
+                        'stats_name' : hook.stats_name,
+                        'trigger' : HookStatsTriggers[hook.trigger].value,
+                        'value' : round(hook.target_value, 4),
+                        'watch_for' : watch_for
+                    }
+                ),
+                footer=get_formatted_slot_info(
+                    slot, 
+                    text=Text().get(),
+                    game_account=game_account,
+                    shorted=True,
+                    clear_md=True
+                )
+            )
+        )
+        
+    @commands.slash_command(
+        description=Text().get('en').cmds.hook_stats.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.hook_stats.descr.this,
+            'pl': Text().get('pl').cmds.hook_stats.descr.this,
+            'uk': Text().get('ua').cmds.hook_stats.descr.this
+        }
+    )
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    async def hook_stats_rating(
+        self, 
+        ctx: ApplicationContext, 
+        stats_name: Option(
+            str,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.stats_name,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.stats_name,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.stats_name,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.stats_name
+            },
+            required=True,
+            choices=[stats for stats in _config.image.available_rating_stats],
+        ),
+        trigger: Option(
+            str,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.trigger,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.trigger,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.trigger,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.trigger
+            },
+            required=True,
+            choices=[x.name for x in HookStatsTriggers],
+        ),
+        target_value: Option(
+            float,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.target_value,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.target_value,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.target_value,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.target_value
+            },
+            min_value=-10_000_000_000,
+            max_value=10_000_000_000,
+            required=True
+        ),
+        watch_for: Option(
+            str,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.stats_type,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.stats_type,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.stats_type,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.stats_type
+            },
+            required=True,
+            choices=[x.value for x in HookWatchFor],
+        ),
+        account: Option(
+            int,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            required=False,
+            default=None,
+            choices=[x.value for x in AccountSlotsEnum]),
+        ) -> None:
+        await Text().load_from_context(ctx)
+        check_user(ctx)
+        await ctx.defer()
+
+        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account, check_premium=True)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        old_hook = game_account.hook_stats
+        
+        hook = HookStats(
+            active=True,
+            stats_name=stats_name,
+            stats_type='rating',
             trigger=HookStatsTriggers[trigger].name,
             target_value=target_value,
             end_time=datetime.now(pytz.utc) + timedelta(days=2),
@@ -386,6 +537,8 @@ class Stats(commands.Cog):
                 )
             )
         )
+        
+
     
     async def get_stats(
             self, 
