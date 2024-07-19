@@ -1,4 +1,6 @@
+from datetime import datetime
 from discord import Colour, Embed, File
+import pytz
 
 from lib.data_classes.locale_struct import Localization
 from lib.locale.locale import Text
@@ -125,7 +127,9 @@ class InfoMSG:
             title: str = None,
             footer: str = None,
             image: File = None,
-            colour: str = 'blurple'
+            colour: str = 'blurple',
+            timestamp: bool = False,
+            fields: list[dict] = None
         ) -> Embed:
     
         colour = getattr(Colour, colour)
@@ -133,12 +137,17 @@ class InfoMSG:
             title=title if title is not None else locale.frequent.info.info,
             description=text,
             colour=colour(),
+            timestamp=None if not timestamp else datetime.now(pytz.utc)
         )
         
         if footer is not None:
             embed.set_footer(text=footer)
         if image is not None:
             embed.set_image(url=image)
+        if fields is not None:
+            for field in fields:
+                embed.add_field(name=field['name'], value=field['value'], inline=field.get('inline', False))
+
         return embed
     
         

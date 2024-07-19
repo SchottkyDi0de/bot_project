@@ -27,3 +27,15 @@ class AutosessionNotFound(DatabaseError):
 
 class VerificationNotFound(DatabaseError):
     pass
+
+class PremiumSlotAccessAttempt(DatabaseError):
+    pass
+
+class PremiumNotFound(DatabaseError):
+    pass
+
+class SlotIsNotEmpty(DatabaseError):
+    pass
+
+class SlotIsEmpty(DatabaseError):
+    pass

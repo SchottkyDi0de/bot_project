@@ -5,7 +5,7 @@ from discord.commands import ApplicationContext
 from webcolors import rgb_to_hex
 
 from lib.blacklist.blacklist import check_user
-from lib.data_classes.db_player import WidgetSettings, set_widget_settings
+from lib.data_classes.db_player import AccountSlotsEnum, UsedCommand, WidgetSettings
 from lib.database.players import PlayersDB
 from lib.embeds.info import InfoMSG
 from lib.error_handler.common import hook_exceptions
@@ -13,9 +13,11 @@ from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.color_converter import get_tuple_from_color
+from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.string_parser import insert_data
-from lib.exceptions.database import MemberNotFound, LastStatsNotFound
+from lib.exceptions.database import LastStatsNotFound
 from lib.image.utils.color_validator import color_validate
+from lib.utils.slot_info import get_formatted_slot_info
 
 _config = Config().get()
 _log = get_logger(__file__, 'SessionWidgetLogger', 'logs/session_widget.log')
@@ -36,33 +38,58 @@ class SessionWidget(commands.Cog):
             'uk': Text().get('ua').cmds.session_widget.descr.this
         }
     )
-    async def session_widget(self, ctx: ApplicationContext):
-        Text().load_from_context(ctx)
+    async def session_widget(
+        self, 
+        ctx: ApplicationContext,
+        account: Option(
+            int,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            required=False,
+            default=None,
+            choices=[x.value for x in AccountSlotsEnum]
+            )
+        ):
+        await Text().load_from_context(ctx)
         check_user(ctx)
         
-        if not self.pdb.check_member(ctx.author.id):
-            raise MemberNotFound
+        game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
+        await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        session = await self.pdb.check_member_last_stats(slot=slot, member=member)
         
-        if not self.pdb.check_member_last_stats(ctx.author.id):
-            raise LastStatsNotFound
+        if not session:
+            raise LastStatsNotFound(f'Member {member.id} has no last stats in slot {slot.name}')
         
-        _log.debug(f'Sending session widget to {ctx.author.id}')
+        _log.debug(f'Sending session widget to {member.id} in slot {slot.name}...')
+        url = insert_data(
+            _config.session_widget.url,
+            {
+                'user_id' : member.id,
+                'lang' : Text().get_current_lang(),
+                'slot' : slot.value
+            }
+        )
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
-                text=Text().get().cmds.session_widget.info.success,
-                colour='green'
+                text=insert_data(Text().get().cmds.session_widget.info.success, {'link': url}),
+                colour='green',
+                footer=get_formatted_slot_info(
+                    slot=slot,
+                    text=Text().get(),
+                    game_account=game_account,
+                    shorted=True,
+                    clear_md=True
+                )
             ),
             view=View(
                 Button(
-                    label = Text().get().cmds.session_widget.items.btn,
-                    url = insert_data(
-                        _config.session_widget.url,
-                        {
-                            'user_id' : ctx.author.id,
-                            'lang' : Text().get_current_lang()
-                        }
-                    )
+                    label=Text().get().cmds.session_widget.items.btn,
+                    url=url
                 )
             ),
             ephemeral=True
@@ -76,7 +103,7 @@ class SessionWidget(commands.Cog):
             'uk': Text().get('ua').cmds.session_widget_settings.descr.this
         }
     )
-    async def session_widget_settings(
+    async def widget_settings(
             self, 
             ctx: ApplicationContext,
             disable_bg: Option(
@@ -186,12 +213,25 @@ class SessionWidget(commands.Cog):
                     'uk': Text().get('ua').cmds.session_widget_settings.items.stats_block_color
                 },
                 required=False
+            ),
+            account: Option(
+                int,
+                description=Text().get('en').frequent.common.slot,
+                description_localizations={
+                    'ru': Text().get('ru').frequent.common.slot,
+                    'pl': Text().get('pl').frequent.common.slot,
+                    'uk': Text().get('ua').frequent.common.slot
+                },
+                required=False,
+                default=None,
+                choices=[x.value for x in AccountSlotsEnum]
             )
         ):
-        Text().load_from_context(ctx)
-        check_user(ctx)
+        await Text().load_from_context(ctx)
         
-        widget_settings = self.pdb.get_member_widget_settings(ctx.author.id)
+        game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
+        await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        widget_settings = await self.pdb.get_widget_settings(slot=slot, member=member)
         
         current_settings = {
             'adaptive_width': adaptive_width,
@@ -259,12 +299,23 @@ class SessionWidget(commands.Cog):
             )
             return
         
-        self.pdb.set_member_widget_settings(ctx.author.id, WidgetSettings.model_validate(current_settings))
+        await self.pdb.set_widget_settings(
+            slot=slot, 
+            member_id=member.id, 
+            settings=WidgetSettings().model_validate(current_settings)
+        )
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
                 text=Text().get().cmds.session_widget_settings.info.success,
-                colour='green'
+                colour='green',
+                footer=get_formatted_slot_info(
+                    slot=slot,
+                    text=Text().get(),
+                    game_account=game_account,
+                    shorted=True,
+                    clear_md=True
+                )
             )
         )
     
@@ -276,17 +327,40 @@ class SessionWidget(commands.Cog):
             'uk': Text().get('ua').cmds.session_widget_settings_reset.descr.this
         }
     )
-    async def session_widget_settings_reset(self, ctx: ApplicationContext):
-        Text().load_from_context(ctx)
-        check_user(ctx)
+    async def widget_settings_reset(
+        self, 
+        ctx: ApplicationContext,
+        account: Option(
+            int,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            required=False,
+            default=None,
+            choices=[x.value for x in AccountSlotsEnum]
+        )
+        ):
+        await Text().load_from_context(ctx)
         
-        self.pdb.set_member_widget_settings(ctx.author.id, WidgetSettings())
+        game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
+        await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)        
+        await self.pdb.set_widget_settings(slot=slot, member_id=ctx.author.id, settings=WidgetSettings())
         
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
                 text=Text().get().cmds.session_widget_settings_reset.info.success,
-                colour='green'
+                colour='green',
+                footer=get_formatted_slot_info(
+                    slot=slot,
+                    text=Text().get(),
+                    game_account=game_account,
+                    shorted=True,
+                    clear_md=True
+                )
             )
         )
 

@@ -14,7 +14,7 @@ from lib.data_classes.db_player import ImageSettings
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.exceptions.database import MemberNotFound
-from lib.image.common import ImageGen
+from lib.image.common import ImageGenCommon
 from lib.locale.locale import Text
 
 
@@ -159,5 +159,5 @@ class StatsPreview:
         except MemberNotFound:
             nickname, region, lang = 'Nickname', 'ru', 'en'
         player_global_data = _PreviewData.player_global_data(nickname, region)
-        image = ImageGen().generate(ctx, player_global_data, image_settings, server_settings)
+        image = ImageGenCommon().generate(ctx, player_global_data, image_settings, server_settings)
         return (Text().get(lang).cmds.image_settings.info.preview, File(image, filename='stats.png'))

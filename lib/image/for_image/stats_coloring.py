@@ -1,3 +1,4 @@
+from lib.data_classes.db_player import ImageSettings
 from lib.image.for_image.colors import StatsColors as Colors
 
 def colorize(stats_type: str, stats_value: str | float | int, default_color: tuple[int], rating: bool = False) -> tuple | None:
@@ -23,20 +24,27 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
             >>> colorize('battles', 10000, rating=True)
             (116, 30, 169)
         """
+        if not isinstance(stats_type, str):
+            return default_color
+        
         stats_type = stats_type.replace('r_', '')
         stats_type = stats_type.replace('d_', '')
         stats_type = stats_type.replace('s_', '')
+        
+        if not isinstance(stats_value, (int, float, str)):
+            return default_color
 
         val = stats_value
-        val = val if val != '-' else 0
-        val = val.replace('-', '')
-        val = val.replace('+', '')
-        val = val.replace('%', '')
-        try:
-            val = float(val)
-        except ValueError:
-            val = -1
         
+        if isinstance(val, str):
+            val = val.replace('-', '')
+            val = val.replace('+', '')
+            val = val.replace('%', '')
+            try:
+                val = float(val)
+            except ValueError:
+                val = -1
+
         if val == -1:
             return default_color
         
@@ -129,5 +137,17 @@ def colorize(stats_type: str, stats_value: str | float | int, default_color: tup
                 return Colors.cyan
             else:
                 return Colors.purple
+            
+        elif stats_type == 'leaderboard_position':
+            if val <= 500:
+                return Colors.green
+            elif val <= 100:
+                return Colors.cyan
+            elif val <= 20:
+                return Colors.purple
+            elif val == 1:
+                return Colors.gold
+            else:
+                return Colors.grey
         else:
             return default_color

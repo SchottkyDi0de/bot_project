@@ -1,16 +1,22 @@
 import os
 from asyncio import TaskGroup
+from pprint import pprint
+# from time import time
 
+# import aiohttp
 from discord import Intents, Activity, Status, ActivityType
 from discord.ext import commands
 
 from lib.api import async_wotb_api
-from lib.database import tankopedia
+from lib.data_classes.tankopedia import Tank
+from lib.database.players import PlayersDB
+from lib.database.tankopedia import TankopediaDB
 from lib.logger.logger import get_logger
 from lib.exceptions.api import APIError
 from lib.settings.settings import Config, EnvConfig
 from workers.pdb_checker import PDBWorker
 from workers.db_backup_worker import DBBackupWorker
+
 
 _log = get_logger(__file__, 'MainLogger', 'logs/main.log')
 _config = Config().get()
@@ -27,7 +33,7 @@ class App():
         self.bot.remove_command('help')
         self.workers = [
                 self.pbd_worker.run_worker,
-                self.backup.run_worker
+                # self.backup.run_worker,
             ]
 
         self.extension_names = [
@@ -53,10 +59,10 @@ class App():
         async def on_ready():
             _log.info('Bot started: %s', self.bot.user)
 
-            tp = tankopedia.TanksDB()
             api = async_wotb_api.API()
+            await PlayersDB().database_update()
 
-            tp.set_tankopedia(await self.retrieve_tankopedia(api))
+            await self.retrieve_tankopedia(api)
             _log.debug('Tankopedia set successful\nBot started: %s', self.bot.user)
             
             await self.bot.change_presence(
@@ -67,26 +73,29 @@ class App():
                 status=Status.online
             )
             await self.run_workers()
-
+        
         self.load_extension(self.extension_names)
-        self.bot.run(EnvConfig.DISCORD_TOKEN)
+        self.bot.run(EnvConfig.DISCORD_TOKEN_DEV)
 
     @staticmethod
     async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:
         tankopedia_server_list = ['eu', 'ru']
-        for i in tankopedia_server_list:
+        fail_counter = 0
+        for region in tankopedia_server_list:
             try:
-                return await api.get_tankopedia(i)
+                data = await api.get_tankopedia(region=region)
             except APIError:
-                _log.warning('Failed to get tankopedia data, trying next server...')
-
-        if not _config.internal.ignore_tankopedia_failures:
-            _log.critical('Failed to get tankopedia data')
+                _log.error(f'Failed to get tankopedia data in {region}, trying next server...')
+                fail_counter += 1
+            else:
+                await TankopediaDB().set_tanks(tanks=data, region=region)
+                _log.info(f'Successfully got tankopedia data in {region}')
+                
+        if fail_counter == len(tankopedia_server_list) and not _config.internal.ignore_tankopedia_failures:
+            _log.fatal('Failed to get tankopedia data in all servers')
             quit(1)
-        
-        _log.info('Failed to get tankopedia data, ignoring...')
+
 
 if __name__ == '__main__':
     app = App()
     app.main()
-

@@ -1,17 +1,15 @@
-from datetime import timedelta
-import io
-
-from PIL import Image
-from discord import Interaction, Option, Attachment
-from discord import ui, ButtonStyle
+from PIL import UnidentifiedImageError
+from discord import Option, Attachment, SelectOption
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
 from lib.api.async_wotb_api import API
+from lib.utils.slot_info import get_formatted_slot_info
+from lib.utils.standard_account_validate import standard_account_validate
+from lib.utils.string_parser import insert_data
+from lib.views.alt_views import DeleteAccountConfirmation, StartSession, SlotOverride, SwitchAccount
 from lib.blacklist.blacklist import check_user
-from lib.data_classes.db_player import DBPlayer, StatsViewSettings, SessionSettings
-from lib.data_classes.locale_struct import Localization
-from lib.exceptions.database import VerificationNotFound
+from lib.data_classes.db_player import StatsViewSettings, AccountSlotsEnum, UsedCommand
 from lib.image.utils.resizer import resize_image, ResizeMode
 from lib.settings.settings import Config
 from lib.database.players import PlayersDB
@@ -25,57 +23,12 @@ from lib.locale.locale import Text
 from lib.utils.nickname_handler import handle_nickname
 from lib.utils.validators import validate
 from lib.image.themes.theme_loader import get_theme
-from lib.data_classes.db_player import ImageSettings
 from lib.data_classes.themes import Theme
-from lib.utils.img_to_base64 import convert_image
+from lib.image.utils.b64_img_handler import img_to_base64, attachment_to_img
 
 _log = get_logger(__file__, 'CogSetLogger', 'logs/cog_set.log')
 _config = Config().get()
 
-
-class StartSession():
-    def __init__(self, text: Localization, player: DBPlayer) -> ui.View:
-        class StartSessionView(ui.View):
-            @ui.button(
-                label=text.cmds.start_autosession.descr.this,
-                style=ButtonStyle.success,
-                emoji='✅'
-            )
-            async def button_callback(self, button: ui.Button, interaction: Interaction):
-                if interaction.user.id != player.id:
-                    await interaction.response.send_message(
-                        embed=ErrorMSG().custom(
-                            locale=text,
-                            text=text.views.not_owner
-                        ),
-                        ephemeral=True
-                    )
-                    return
-                
-                session_settings = SessionSettings().model_validate({})
-                session_settings.is_autosession = True
-                session_settings.time_to_restart += timedelta(days=1)
-                PlayersDB().start_autosession(
-                    player.id,
-                    await API().get_stats(
-                        region=player.region,
-                        game_id=player.game_id
-                    ),
-                    session_settings
-                )
-                await interaction.message.delete()
-                await interaction.channel.send(
-                    embed=InfoMSG().custom(
-                        locale=text,
-                        text=text.cmds.start_autosession.info.started,
-                    ),
-                )
-                button.disabled = True
-                
-        self.view = StartSessionView()
-        
-    def get_view(self):
-        return self.view
 
 class Set(commands.Cog):
     cog_command_error = hook_exceptions(_log)
@@ -109,19 +62,22 @@ class Set(commands.Cog):
                 },
                 choices=_config.default.available_locales,
                 required=True
-            ), # type: ignore
+            ),
         ):
+        await Text().load_from_context(ctx)
+        await self.db.check_member_exists(ctx.author.id)
         check_user(ctx)
         
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
 
         lang = None if lang == 'auto' else lang
-        if self.db.set_member_lang(ctx.author.id, lang):
-            Text().load_from_context(ctx)
-        else:
-            await ctx.respond(embed=self.err_msg.set_lang_unregistered())
-            return
+        await self.db.set_lang(ctx.author.id, lang)
         
+        if lang is None:
+            await Text().load_from_context(ctx)
+        else:
+            Text().load(lang)
+            
         await ctx.respond(embed=self.inf_msg.set_lang_ok())
         
     @commands.slash_command(
@@ -133,7 +89,8 @@ class Set(commands.Cog):
             'uk': Text().get('ua').cmds.set_player.descr.this
             }
         )
-    async def set_player(self, ctx: ApplicationContext, 
+    async def set_player(self,
+            ctx: ApplicationContext, 
             nick_or_id: Option(
                 str,
                 description=Text().get('en').cmds.set_player.descr.sub_descr.nickname,
@@ -143,7 +100,7 @@ class Set(commands.Cog):
                     'uk': Text().get('ua').cmds.set_player.descr.sub_descr.nickname
                 },
                 required=True
-            ), # type: ignore
+            ),
             region: Option(
                 str,
                 description=Text().get('en').cmds.set_player.descr.sub_descr.region,
@@ -154,24 +111,59 @@ class Set(commands.Cog):
                 },
                 choices=_config.default.available_regions,
                 required=True
-            ) # type: ignore
+            ),
+            slot: Option(
+                int,
+                description=Text().get('en').frequent.common.slot,
+                description_localizations={
+                    'ru': Text().get('ru').frequent.common.slot,
+                    'pl': Text().get('pl').frequent.common.slot,
+                    'uk': Text().get('ua').frequent.common.slot
+                },
+                choices=[x.value for x in AccountSlotsEnum],
+                required=True,
+            )
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
         
+        slot = AccountSlotsEnum(int(slot))
         nickname_type = validate(nick_or_id, 'nickname')
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
-        player = await self.api.check_and_get_player(
+        game_account = await self.api.check_and_get_player(
             nickname=composite_nickname.nickname,
             region=region,
             game_id=composite_nickname.player_id,
             discord_id=ctx.author.id
         )
-        self.db.set_member(player, override=True)
-        view = StartSession(Text().get(), player)
-        _log.debug(f'Set player: {ctx.author.id} {nick_or_id} {region}')
+        member = await self.db.check_member_exists(member_id=ctx.author.id, raise_error=False, get_if_exist=True)
+        if not isinstance(member, bool):
+            await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+            if not await self.db.check_slot_empty(slot, member=member, raise_error=False):
+                view = SlotOverride(Text().get(), game_account, ctx.author.id, slot)
+                await ctx.respond(
+                    embed=self.inf_msg.custom(
+                        Text().get(),
+                        text=insert_data(
+                            Text().get().cmds.set_player.info.slot_override,
+                            {'slot_data': get_formatted_slot_info(
+                                slot, 
+                                Text().get(), 
+                                await self.db.get_game_account(slot=slot, member=member)
+                                )
+                            }
+                        ),
+                        colour='orange'
+                    ),
+                    view=view.get_view()
+                )
+                return
+        
+        await self.db.set_member(slot=AccountSlotsEnum(slot), member_id=ctx.author.id, game_account=game_account, slot_override=True)
+        view = StartSession(Text().get(), ctx.author.id, slot, game_account)
+        _log.info(f'Set player: {ctx.author.id} {nick_or_id} {region} | slot: {AccountSlotsEnum(slot).name}')
         await ctx.respond(
             embed=self.inf_msg.set_player_ok(),
             view=view.get_view()
@@ -198,10 +190,14 @@ class Set(commands.Cog):
                     'uk': Text().get('ua').cmds.server_settings.descr.sub_descr.allow_custom_backgrounds
                 },
                 required=False,
-            ) # type: ignore
+            )
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
+        
+        member = await self.db.check_member_exists(member_id=ctx.author.id, raise_error=False, get_if_exist=True)
+        if not isinstance(member, bool):
+            await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
 
         if ctx.author.guild_permissions.administrator:
             settings = self.sdb.get_server_settings(ctx)
@@ -246,7 +242,7 @@ class Set(commands.Cog):
                     'uk': Text().get('ua').cmds.set_background.descr.sub_descr.image
                     },
                 required=True
-                ), # type: ignore
+                ),
             server: Option(
                 bool,
                 description=Text().get('en').cmds.set_background.descr.sub_descr.server,
@@ -256,31 +252,39 @@ class Set(commands.Cog):
                     'uk': Text().get('ua').cmds.set_background.descr.sub_descr.server
                     },
                 required=False
-                ), # type: ignore
+                ),
             resize_mode: Option(
                 str, 
-                description='Test resize mode',
+                description=Text().get('en').cmds.set_background.descr.sub_descr.resize_mode,
+                description_localizations={
+                    'ru': Text().get('ru').cmds.set_background.descr.sub_descr.resize_mode,
+                    'pl': Text().get('pl').cmds.set_background.descr.sub_descr.resize_mode,
+                    'uk': Text().get('ua').cmds.set_background.descr.sub_descr.resize_mode
+                },
                 required=False,
-                default='AUTO',
-                choices=['AUTO', 'RESIZE', 'CROP_OR_FILL'],
-                ) # type: ignore
+                default=ResizeMode.AUTO.name,
+                choices=[x.name for x in ResizeMode],
+                )
             ):
         check_user(ctx)
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
+        
+        member = await self.db.check_member_exists(member_id=ctx.author.id, raise_error=False, get_if_exist=True)
 
-        if not self.db.check_member(ctx.author.id):
+        if isinstance(member, bool):
             await ctx.respond(
-                    embed=self.err_msg.custom(
-                        Text().get(),
-                        text=Text().get().cmds.set_background.errors.player_not_registred
-                    )
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.set_background.errors.player_not_registred
                 )
+            )
             return
         
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         image: Attachment = image
         await ctx.defer()
 
-        if image.content_type not in ['image/png', 'image/jpeg']:
+        if image.content_type not in ['image/png', 'image/jpeg', 'image/jpg']:
             await ctx.respond(
                 embed=self.err_msg.custom(
                     Text().get(),
@@ -318,13 +322,10 @@ class Set(commands.Cog):
 
         if server:
             if ctx.author.guild_permissions.administrator:
-                with io.BytesIO() as buffer:
-                    await image.save(buffer)
-                    pil_image = Image.open(buffer)
-                    pil_image = pil_image.convert('RGBA')
-                    pil_image = resize_image(pil_image, (800, 1350), mode=getattr(ResizeMode, resize_mode))
+                pil_image = attachment_to_img(await image.read(), image.content_type)
+                pil_image = resize_image(pil_image.convert('RGBA'), (800, 1350), mode=ResizeMode[resize_mode])
                 
-                base64_img = convert_image(pil_image)
+                base64_img = img_to_base64(pil_image)
                 self.sdb.set_server_image(
                     base64_img,
                     ctx
@@ -346,18 +347,22 @@ class Set(commands.Cog):
                 
             return
 
-        with io.BytesIO() as buffer:
-            await image.save(buffer)
-            pil_image = Image.open(buffer)
-            pil_image = pil_image.convert('RGBA')
-            pil_image = resize_image(pil_image, (800, 1350), mode=getattr(ResizeMode, resize_mode))
+        try:
+            pil_image = attachment_to_img(await image.read(), image.content_type)
+        except UnidentifiedImageError:
+            await ctx.respond(
+                embed=self.err_msg.custom(
+                    Text().get(),
+                    text=Text().get().cmds.set_background.errors.file_error
+                )
+            )
+            return
 
+        pil_image = resize_image(pil_image.convert('RGBA'), (800, 1350), mode=ResizeMode[resize_mode])
         
-        base64_img = convert_image(pil_image)
-        self.db.set_member_image(
-            ctx.author.id,
-            base64_img,
-        )
+        base64_img = img_to_base64(pil_image)
+        await self.db.set_image(ctx.author.id, base64_img)
+        
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
@@ -375,44 +380,59 @@ class Set(commands.Cog):
         }
     )
     async def stats_position(
-        self, 
+        self,
         ctx: ApplicationContext,
         slot_1: Option(
             str,
             choices=_config.image.available_stats,
             required=True,
-            ), # type: ignore
+            ),
         slot_2: Option(
             str,
             choices=_config.image.available_stats,
             required=True,
-            ), # type: ignore
+            ),
         slot_3: Option(
             str,
             choices=_config.image.available_stats,
             required=True,
-            ), # type: ignore
+            ),
         slot_4: Option(
             str,
             choices=_config.image.available_stats,
             required=True,
-            ), # type: ignore
+            ),
+        account: Option(
+            int,
+            description=Text().get().frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            choices=[x.value for x in AccountSlotsEnum],
+            required=False,
+            default=None
+            ),
         ):
-        check_user(ctx)
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         stats_settings = {
             'slot_1': slot_1,
             'slot_2': slot_2,
             'slot_3': slot_3,
             'slot_4': slot_4
         }
-        stats_view_settings = self.db.get_stats_settings(ctx.author.id)
+        game_account, member, account_slot = await standard_account_validate(account_id=ctx.user.id, slot=account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        stats_view_settings = game_account.stats_view_settings
+        
         for slot, value in stats_settings.copy().items():
             if value == 'empty':
                 del stats_settings[slot]
                 continue
-            
+        
         parsed_stats_settings = {}
+        
         for index, key in enumerate(stats_settings.keys()):
             parsed_stats_settings[f'slot_{index + 1}'] = stats_settings[key]
         
@@ -427,8 +447,10 @@ class Set(commands.Cog):
             )
             return
                 
-        self.db.set_stats_settings(
-            ctx.author.id, StatsViewSettings.model_validate(
+        await self.db.set_stats_view_settings(
+            slot=account_slot,
+            member_id=member.id,
+            settings=StatsViewSettings.model_validate(
                 {'common_slots': parsed_stats_settings, 'rating_slots': stats_view_settings.rating_slots}
                 )
             )
@@ -436,7 +458,14 @@ class Set(commands.Cog):
             embed=self.inf_msg.custom(
                 Text().get(),
                 text=Text().get().cmds.session_view_settings.info.success,
-                colour='green'
+                colour='green',
+                footer=get_formatted_slot_info(
+                    slot=account_slot,
+                    text=Text().get(),
+                    game_account=await self.db.get_game_account(slot=account_slot, member_id=member.id),
+                    shorted=True,
+                    clear_md=True
+                )
             )
         )
 
@@ -455,32 +484,47 @@ class Set(commands.Cog):
             str,
             choices=_config.image.available_rating_stats,
             required=True,
-            ), # type: ignore
+            ),
         slot_2: Option(
             str,
             choices=_config.image.available_rating_stats,
             required=True,
-            ), # type: ignore
+            ),
         slot_3: Option(
             str,
             choices=_config.image.available_rating_stats,
             required=True,
-            ), # type: ignore
+            ),
         slot_4: Option(
             str,
             choices=_config.image.available_rating_stats,
             required=True,
-            ), # type: ignore
+            ),
+        account: Option(
+            int,
+            description=Text().get().frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            choices=[x.value for x in AccountSlotsEnum],
+            required=False,
+            default=None
+            ),
         ):
-        check_user(ctx)
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
+        
+        game_account, member, account_slot = await standard_account_validate(ctx.user.id, account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        stats_view_settings = game_account.stats_view_settings
+        
         stats_settings = {
             'slot_1': slot_1,
             'slot_2': slot_2,
             'slot_3': slot_3,
             'slot_4': slot_4
         }
-        stats_view_settings = self.db.get_stats_settings(ctx.author.id)
         for slot, value in stats_settings.copy().items():
             if value == 'empty':
                 del stats_settings[slot]
@@ -496,21 +540,37 @@ class Set(commands.Cog):
                     Text().get(),
                     title=Text().get().frequent.info.warning,
                     text=Text().get().cmds.session_view_settings.errors.empty_slots,
-                    colour='orange'
+                    colour='orange',
+                    footer=get_formatted_slot_info(
+                        slot=account,
+                        text=Text().get(),
+                        game_account=await self.db.get_game_account(slot=account, member_id=ctx.user.id),
+                        shorted=True,
+                        clear_md=True
+                    )
                 )
             )
             return
                 
-        self.db.set_stats_settings(
-            ctx.author.id, StatsViewSettings.model_validate(
+        await self.db.set_stats_view_settings(
+            slot=account_slot,
+            member_id=member.id,
+            settings=StatsViewSettings.model_validate(
                 {'rating_slots': parsed_stats_settings, 'common_slots': stats_view_settings.common_slots}
-                )
-            )
+            ),
+        ),
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
                 text=Text().get().cmds.session_view_settings.info.success,
-                colour='green'
+                colour='green',
+                footer=get_formatted_slot_info(
+                    slot=account_slot,
+                    text=Text().get(),
+                    game_account=await self.db.get_game_account(slot=account_slot, member_id=member.id),
+                    shorted=True,
+                    clear_md=True
+                )
             )
         )
         
@@ -522,16 +582,41 @@ class Set(commands.Cog):
             'uk': Text().get('ua').cmds.session_view_settings_reset.descr.this
         }
     )
-    async def stats_position_reset(self, ctx: ApplicationContext):
-        Text().load_from_context(ctx)
+    async def stats_position_reset(
+        self, 
+        ctx: ApplicationContext,
+        account: Option(
+            int,
+            description=Text().get().frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            choices=[x.value for x in AccountSlotsEnum],
+            required=False,
+            default=None
+            ),
+        ):
+        await Text().load_from_context(ctx)
         check_user(ctx)
         
-        self.db.set_stats_settings(ctx.author.id, StatsViewSettings())
+        _, member, account_slot = await standard_account_validate(ctx.user.id, account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        
+        await self.db.set_stats_view_settings(slot=account_slot, member_id=member.id, settings=StatsViewSettings())
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
                 text=Text().get().cmds.session_view_settings_reset.info.success,
-                colour='green'
+                colour='green',
+                footer=get_formatted_slot_info(
+                    slot=account,
+                    text=Text().get(),
+                    game_account=await self.db.get_game_account(slot=account_slot, member_id=member.id),
+                    shorted=True,
+                    clear_md=True
+                )
             )
         )
 
@@ -555,24 +640,41 @@ class Set(commands.Cog):
                 'uk': Text().get('ua').cmds.set_lock.descr.sub_descr.lock
             },
             required=True
-            ) # type: ignore
+            ),
+        account: Option(
+            int,
+            description=Text().get().frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            choices=[x.value for x in AccountSlotsEnum],
+            required=False,
+            default=None
+            ),
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
         
-        verify_member = self.db.check_member_is_verified(ctx.author.id)
+        _, member, account_slot = await standard_account_validate(ctx.user.id, account, check_verified=True)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        await self.db.set_member_lock(slot=account_slot, member_id=member.id, lock=lock)
         
-        if verify_member:
-            self.db.set_member_lock(ctx.author.id, lock)
-        else:
-            raise VerificationNotFound()
         
         text = Text().get().cmds.set_lock.info
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
                 text=text.set_true if lock else text.set_false,
-                colour='green'
+                colour='green',
+                footer=get_formatted_slot_info(
+                    slot=account,
+                    text=Text().get(),
+                    game_account=await self.db.get_game_account(slot=account_slot, member_id=member.id),
+                    shorted=True,
+                    clear_md=True
+                )
             )
         )
     
@@ -596,20 +698,43 @@ class Set(commands.Cog):
                 'uk': Text().get('ua').cmds.set_theme.items.theme
             },
             choices=_config.themes.available
-            ) # type: ignore
+            ),
+        account: Option(
+            int,
+            description=Text().get().frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            choices=[x.value for x in AccountSlotsEnum],
+            required=False,
+            default=None
+            ),
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
         
         theme: Theme = get_theme(theme)
-        self.db.set_image_settings(ctx.author.id, ImageSettings.model_validate(theme.image_settings))
-        self.db.set_member_image(ctx.author.id, convert_image(theme.bg))
+        game_account, member, slot = await standard_account_validate(ctx.user.id, account)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        await self.db.set_image_settings(
+            slot=slot, member_id=member.id, settings=theme.image_settings
+        )
+        await self.db.set_image(member_id=member.id, image=img_to_base64(theme.bg))
         
         await ctx.respond(
             embed=self.inf_msg.custom(
                 Text().get(),
                 text=Text().get().cmds.set_theme.info.success,
-                colour='green'
+                colour='green',
+                footer=get_formatted_slot_info(
+                    slot=slot,
+                    text=Text().get(),
+                    game_account=game_account,
+                    shorted=True,
+                    clear_md=True
+                )
             )
         )
         
@@ -622,27 +747,75 @@ class Set(commands.Cog):
         }
     )
     async def delete_player(self, ctx: ApplicationContext):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
         
-        if not self.db.check_member(ctx.author.id):
+        await self.db.check_member_exists(ctx.author.id)
+        
+        view = DeleteAccountConfirmation(Text().get(), ctx.author.id).get_view()
+        await ctx.respond(
+            embed=self.inf_msg.custom(
+                Text().get(),
+                text=Text().get().cmds.delete_player.info.warn,
+                colour='red'
+            ),
+            view=view
+        )
+    
+    @commands.slash_command(
+        description=Text().get('en').cmds.switch_account.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.switch_account.descr.this,
+            'pl': Text().get('pl').cmds.switch_account.descr.this,
+            'uk': Text().get('ua').cmds.switch_account.descr.this
+        }
+    )
+    async def switch_account(self, ctx: ApplicationContext):
+        await Text().load_from_context(ctx)
+        
+        game_account, member, slot = await standard_account_validate(account_id=ctx.user.id, slot=None)
+        available_slots = await self.db.get_all_used_slots(member=member)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        
+        if len(available_slots) == 1:
             await ctx.respond(
-                embed=self.err_msg.custom(
+                embed=self.inf_msg.custom(
                     Text().get(),
-                    text=Text().get().frequent.info.player_not_registred,
+                    text=Text().get().cmds.switch_account.errors.no_slots_for_select,
                     colour='orange'
                 )
             )
             return
         
-        self.db.del_member(ctx.author.id)
-        await ctx.respond(
-            embed=self.inf_msg.custom(
-                Text().get(),
-                text=Text().get().cmds.delete_player.info.success,
-                colour='green'
+        available_slots.remove(slot)
+        choices: list[SelectOption] = []
+        for expected_slot in available_slots:
+            choices.append(
+                SelectOption(
+                label=get_formatted_slot_info(
+                    expected_slot, 
+                    text=Text().get(),
+                    game_account=await PlayersDB().get_game_account(slot=expected_slot, member=member),
+                    shorted=True,
+                    clear_md=True
+                    ),
+                value=expected_slot.name
+                )
             )
+        
+        embed = self.inf_msg.custom(
+            Text().get(),
+            title='',
+            text=get_formatted_slot_info(
+                slot=slot,
+                text=Text().get(),
+                game_account=game_account,
+            ),
+            colour='orange'
         )
+        view = SwitchAccount(text=Text().get(), member=member, choices=choices, slot=slot).get_view()
+        
+        await ctx.respond(view=view, embed=embed)
 
 def setup(bot: commands.Bot):
     bot.add_cog(Set(bot))

@@ -1,7 +1,7 @@
-from discord.ext.commands import Context
+from discord import ApplicationContext
 from pymongo import MongoClient
 
-from lib.data_classes.db_server import ServerSettings
+from lib.data_classes.db_server import DBServer, ServerSettings
 from lib.utils.singleton_factory import singleton
 
 
@@ -57,7 +57,7 @@ class ServersDB():
         if self.check_server(server_id):
             self.collection.delete_one({'id': int(server_id)})
         
-    def set_server_image(self, base64_image: str, ctx: Context):
+    def set_server_image(self, base64_image: str, ctx: ApplicationContext):
         server_id = str(ctx.guild.id)
         if self.check_server(server_id):
             self.collection.update_one(
@@ -93,7 +93,7 @@ class ServersDB():
         else:
             return False
         
-    def set_server_settings(self, ctx: Context, settings: ServerSettings) -> None:
+    def set_server_settings(self, ctx: ApplicationContext, settings: ServerSettings) -> None:
         server_id = str(ctx.guild.id)
         if self.check_server(server_id):
             self.collection.update_one(
@@ -107,7 +107,7 @@ class ServersDB():
                 {'$set': {'settings': settings.model_dump()}}
             )
             
-    def get_server_settings(self, ctx: Context) -> ServerSettings:
+    def get_server_settings(self, ctx: ApplicationContext) -> ServerSettings:
         server_id = str(ctx.guild.id)
         if self.check_server(server_id):
             data =  self.collection.find_one({'id': int(server_id)})['settings']
@@ -120,3 +120,10 @@ class ServersDB():
             self.set_new_server(server_id, ctx.guild.name)
             self.set_server_settings(ctx, ServerSettings.model_validate({}))
             return ServerSettings.model_validate({})
+        
+    def get_server(self, ctx: ApplicationContext) -> DBServer | None:
+        res = self.collection.find_one({'id': ctx.guild.id})
+        if res is not None:
+            return DBServer.model_validate(res)
+        else:
+            return None

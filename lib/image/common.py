@@ -7,18 +7,16 @@ from enum import Enum
 from io import BytesIO
 from time import time
 
-from discord import ApplicationContext
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.data_classes.db_player import ImageSettings
-from lib.data_classes.db_server import ServerSettings
-from lib.database.players import PlayersDB
-from lib.database.servers import ServersDB
+from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, GameAccount, ImageSettings
+from lib.data_classes.db_server import DBServer
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
 from lib.image.for_image.medals import Medals
+from lib.image.utils.b64_img_handler import img_to_base64, base64_to_img, img_to_readable_buffer
 from lib.image.themes.theme_loader import get_theme
 from lib.image.for_image.watermark import Watermark
 from lib.image.utils.resizer import center_crop
@@ -219,10 +217,17 @@ class Values():
 class ImageSize:
     max_height: int = 1300
     max_width: int = 700
+    
+
+class ImageGenReturnTypes(Enum):
+    PIL_IMAGE = 1
+    BYTES_IO = 2
+    BASE64 = 3
 
 
 @singleton
-class ImageGen():
+class ImageGenCommon():
+    image_settings = ImageSettings()
     text = None
     fonts = Fonts()
     leagues = LeaguesIcons()
@@ -240,63 +245,66 @@ class ImageGen():
     medals = Medals()
     background_rectangles_map = BackgroundRectangleMap()
     
-    def load_image(self, bytes_ot_path: str | BytesIO) -> None:
-        image = Image.open(bytes_ot_path)
+    def _load_image(self, bytes_ot_path: str | bytes | None) -> None:
+        if bytes_ot_path is not None:
+            image = Image.open(_config.image.default_bg_path, formats=['png'])
+        else:
+            image = Image.open(bytes_ot_path, formats=['png'])
+            
         if image.mode != 'RGBA':
             image = image.convert('RGBA')
 
         self.image = center_crop(image, (ImageSize.max_width, ImageSize.max_height))
 
-    def generate(self,
-                 ctx: ApplicationContext | None,
-                 data: PlayerGlobalData,
-                 image_settings: ImageSettings,
-                 server_settings: ServerSettings,
-                 debug_label: bool = False,
-                 ) -> BytesIO:
+    def _load_image_by_rules(self, member: DBPlayer | None = None, server: DBServer | None = None) -> None:
+        if server is not None:
+            if not server.settings.allow_custom_backgrounds and server.custom_background is not None:
+                self.image = base64_to_img(server.custom_background)
+                return
+            elif not server.settings.allow_custom_backgrounds:
+                self._load_image(_config.image.default_bg_path)
+                return
+            
+        if member is not None:
+            if (member.image is not None) and member.use_custom_image:
+                self.image = base64_to_img(member.image)
+                return
+                
+        self._load_image(_config.image.default_bg_path)
 
-        self.text = Text().get()
+
+    def generate(
+            self,
+            data: PlayerGlobalData,
+            server: DBServer | None = None,
+            member: DBPlayer | None = None,
+            slot: AccountSlotsEnum | None = None,
+            debug_label: bool = False,
+            force_locale: str | None = None,
+            return_image: ImageGenReturnTypes = ImageGenReturnTypes.BYTES_IO
+        ) -> BytesIO | str | Image.Image:
+
+        if force_locale is not None:
+            self.text = Text().get(force_locale)
+        else:
+            self.text = Text().get()
+            
         start_time = time()
-        pdb = PlayersDB()
-        sdb = ServersDB()
-        self.image_settings = image_settings
+        
+        if member is not None and slot is not None:
+            game_account: GameAccount = getattr(member.game_accounts, slot.name)
+            image_settings = game_account.image_settings
+        else:
+            image_settings = ImageSettings()
 
-        bin_image = None
+        self.image_settings = image_settings
         self.data = data
         self.values = Values(data)
         self.stat_all = data.data.statistics.all
         self.stat_rating = data.data.statistics.rating
         self.achievements = data.data.achievements
         
-        user_bg = pdb.get_member_image(ctx.author.id) is not None
-        server_bg = sdb.get_server_image(ctx.guild.id) is not None
-        allow_bg = server_settings.allow_custom_backgrounds
-        
-        if (image_settings.use_custom_bg or server_bg):
-            if user_bg and allow_bg and image_settings.use_custom_bg:
-                image_bytes = base64.b64decode(pdb.get_member_image(ctx.author.id))
-                if image_bytes != None:
-                    image_buffer = BytesIO(image_bytes)
-                    self.load_image(image_buffer)
-
-            elif server_bg:
-                image_bytes = base64.b64decode(sdb.get_server_image(ctx.guild.id))
-                if image_bytes != None:
-                    image_buffer = BytesIO(image_bytes)
-                    self.load_image(image_buffer)
-            else:
-                self.load_image(_config.image.default_bg_path)
-
-                if self.image.mode != 'RGBA':
-                    self.image.convert('RGBA').save(_config.image.default_bg_path)
-                    self.load_image(_config.image.default_bg_path)
-        else:
-            self.load_image(_config.image.default_bg_path)
-
-            if self.image.mode != 'RGBA':
-                self.image.convert('RGBA').save('res/image/default_image/default_bg.png')
-                self.load_image(_config.image.default_bg_path)
-
+        self._load_image_by_rules(member=member, server=server)
         self.image = self.image.crop((0, 50, 700, 1300))
         self.img_size = self.image.size
         self.coord = Coordinates(self.img_size)
@@ -337,12 +345,15 @@ class ImageGen():
         # self.draw_rating_points(img_draw)
         # self.draw_common_points(img_draw)
 
-        bin_image = BytesIO()
-        self.image.save(bin_image, 'PNG')
-        bin_image.seek(0)
-        _log.debug('Image was sent in %s sec.', round(time() - start_time, 4))
-
-        return bin_image
+        _log.debug(f'Generate common image time: {round(time() - start_time, 4)} sec.')
+        if return_image == ImageGenReturnTypes.PIL_IMAGE:
+            return self.image
+        elif return_image == ImageGenReturnTypes.BASE64:
+            return img_to_base64(self.image)
+        elif return_image == ImageGenReturnTypes.BYTES_IO:
+            return img_to_readable_buffer(self.image)
+        else:
+            raise TypeError(f'return_image must be an instance of ImageGenReturnTypes enum, not {return_image.__class__.__name__}')
 
     def draw_stats_icons(self) -> None:
         for coord_item in IconsCoords:

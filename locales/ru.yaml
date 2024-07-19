@@ -7,6 +7,16 @@
 #   srv_id: "server_id: <id>"
 #
 # Please do not change the placeholders names when translating the file.
+#
+# This file use dynamic yaml data.
+# File contain variables, example:
+#
+# server:
+#   srv_id: 12123434
+#
+# server_settings:
+#   srv_url: https://example.com/server/{server.srv_id}/
+#
 # _Zener
 
 for_image:
@@ -39,9 +49,7 @@ for_image:
     gold: ЗОЛОТО
     platinum: ПЛАТИНА
     brilliant: БРИЛЛИАНТ
-    no_league: |-
-      НЕТ
-      ЛИГИ
+    no_league: НЕТ ЛИГИ
     calibration: КАЛИБРОВКА
   total: ОБЩИЕ
   frags_per_battle: |-
@@ -92,6 +100,9 @@ for_image:
   damage_received: |-
     ПОЛУЧЕНО
     УРОНА
+  leaderboard_position: |-
+    МЕСТО В 
+    РЕЙТИНГЕ
   hits: ПОПАДАНИЯ
   frags: УНИЧТОЖЕНО
   losses: ПОРАЖЕНИЯ
@@ -156,6 +167,8 @@ cmds_defs:
   server_settings_get: '</server_settings_get:1190367458192801868>'
   set_lock: '</set_lock:1221467304890728509>'
   session_widget_settings: '</session_widget_settings:1221467304450064500>'
+  switch_account: '`/switch_account`'
+  premium: '`/premium`'
 
 frequent:
   errors:
@@ -166,12 +179,26 @@ frequent:
     parser_error: Ошибка обработки данных.
     verify_error: Аккаунт не верифицирован. Сначала пройдите верификацию для того что-бы использовать эту команду.
     locked_player: Этот игрок запретил просмотр своей статистики.
+    slot_is_empty: В выбранном слоте нет сохранённых данных аккаунта, вы не можете использовать его для записи данных.
+    slot_not_accessed: 'для использования слотов 3-5 вам необходим премиум доступ. Больше информации: {cmds_defs.premium}'
+    premium_not_found: 'Для использования этой команды а также получения ряда других возможностей вам необходим премиум доступ. Подробнее: {cmds_defs.premium}'
 
   info:
     info: Информация
     player_not_registred: 'Игрок не зарегистрирован. Сначала введите команду {cmds_defs.set_player}'
     err_info_sent: Информация об ошибке была отправлена разработчику.
     warning: Внимание
+    discard_changes: Вы отменили изменения.
+    slot_info: |-
+      Информация о аккаунте:
+      ```
+      - слот:     <slot_num>
+      - никнейм:  <nickname>
+      - регион:   <region>
+      ```
+    updated_at: 'Обновлено: '
+    short_slot_info: '`<nickname> [<region>] | аккаунт: <slot_num>`'
+    session_already_started: Сессия уже запущена, желаете её перезапустить?
 
   common:
     nickname: Никнейм
@@ -183,6 +210,7 @@ frequent:
       h: 'ч'
       m: 'м'
       s: 'с'
+    slot: Слот аккаунта
 
 views:
   not_owner: Вы не можете использовать эту кнопку.
@@ -234,8 +262,9 @@ cmds:
         - Для получения сессионой статистики используйте {cmds_defs.get_session}
         - Для получения информации о статусе сессии используйте {cmds_defs.session_state}
         Нажмите кнопку ниже если желаете запустить автосессию прямо сейчас.
-    items:
-      ''
+      slot_override: |-
+        В этот слот уже записана информация о игроке, вы уверены что хотите перезаписать её?
+        <slot_data>
 
 # Set lang command
   set_lang:
@@ -410,7 +439,7 @@ cmds:
       use_custom_bg: Пользовательский фон
       colorize_stats: Цветная статистика
       glass_effect: Эффект стекла
-      stats_blocks_transparency: Непрозрачность блоков со статистикой
+      stats_blocks_transparency: Прозрачность блоков со статистикой
       nickname_color: Цвет ника игрока
       clan_tag_color: Цвет клан-тега
       stats_color: Цвет основных статистик
@@ -424,7 +453,6 @@ cmds:
       disable_stats_blocks: Скрыть блоки со статистикой
       disable_rating_stats: Скрыть рейтинговую статистику
       disable_cache_label: Скрыть иконку кэша
-
       stats_blocks_disabled: Отрисовка блоков со статистикой отключена
 
   image_settings_reset:
@@ -507,7 +535,8 @@ cmds:
       send_ok_dm: Помощь была отправлена вам в ЛС.
     items:
       help: Помощь
-  
+
+# parse_replay command
   parse_replay:
     descr:
       this: Показать информацию о реплее.
@@ -530,22 +559,24 @@ cmds:
         draw: Ничья
         # When localizing, use an editor with a monospaced font 
         # and align placeholders relative to each other
-        # I recomended VS Code or Sublime Text with monospaced font
+        # I recommended VS Code or Sublime Text with monospaced font
         # _Zener
       formenu: |-
-        Никнейм: `<nickname>`
         ```py
-        Название танка: <tank_name>
-        Урона нанесено: <damage>
-        Урон с помощью игрока: <spotted>
-        Чистый опыт: <xp>
-        Уничтожено танков: <frags>
-        Заблокировано урона: <blocked>
-        Сделано выстрелов: <shots>
-        Выстрелов попало: <shots_hit>
-        Пробитий: <shots_penetrated>
-        Точность: <accuracy>
-        Коэффициент пробитий: <penetration_ratio>
+        танк:        | <tank_name>
+        Чистый опыт  | <xp>
+
+        эффективность
+        --------------------------------
+        Урона нанесено....... | <damage>
+        Урон с помощью....... | <spotted>
+        Уничтожено танков.... | <frags>
+        Заблокировано урона.. | <blocked>
+        Сделано выстрелов.... | <shots>
+        Выстрелов попало..... | <shots_hit>
+        Пробитий............. | <shots_penetrated>
+        Точность............. | <accuracy>
+        Процент пробитий..... | <penetration_ratio>
         ```
       description: |-
         ```py
@@ -614,13 +645,13 @@ cmds:
       message:
         title: 'Подтвердите свой аккаунт'
         description: |-
-          'Чтобы получить доступ к специальным командам бота (например {cmds_defs.set_lock})'
-          'вы должны верифицировать или зарегистрировать верифицированный аккаунт.'
-        additional_info: |-
-          Если вы уже имеете неподтверждённый аккаунт то при верификации аккаунт будет перезаписан! Запущенные сессии будут сброшены.
+          Чтобы получить доступ к специальным командам бота (например {cmds_defs.set_lock})
+          вы должны верифицировать (подтвердить факт управления) аккаунтом.
         button_lt: Lesta
         button_wg: WG
       check_dm: Проверьте личные сообщения, ссылка для верификации была отправлена.
+    info:
+      already_verified: Эта учетная запись уже верифицирована. Повторная верификация не требуется.
 
 # Lock command
   set_lock:
@@ -715,4 +746,120 @@ cmds:
     descr:
       this: 'Удалять все данные о себе'
     info:
+      warn: 'Вы уверены что хотите удалить все данные о себе? Это действие необратимо!'
       success: 'Все данные о вас были полностью удалены из базы данных'
+    items:
+      ''
+
+# switch_account
+  switch_account:
+    descr:
+      this: Сменить аккаунт
+    info:
+      success: |-
+        Аккаунт успешно изменен:
+        <old_account> -> <new_account>
+    items:
+      menu: Выберите аккаунт
+    errors:
+      no_slots_for_select: |-
+        У вас зарегистрирован только 1 аккаунт, чтобы появилась возможность выбора аккаунтов зарегистрируйте ещё 1 
+        {cmds_defs.set_player}
+
+# profile
+  profile:
+    descr:
+      this: Профиль пользователя
+    items:
+      profile: Профиль
+      level: 'Уровень:'
+      exp: 'опыт: '
+      last_commands: 'Последние команды'
+      last_activity: 'Последняя активность:'
+      commands_counter: 'команд использовано:'
+      accounts_info: 'Информация о аккаунтах'
+      badges: 'Значки профиля'
+      command_name: 'название команды'
+      last_used_time: 'мин. назад'
+      num: 'номер'
+      account: 'аккаунт'
+      session: 'сессия'
+      others: Разное
+      premium: 'премиум:'
+      premium_time: 'закончится через:'
+
+# hook_stats
+  hook_stats:
+    descr:
+      this: Хук на изменение статистики
+      sub_descr:
+        stats_name: Название статистики
+        stats_type: Тип статистики
+        trigger: Условие срабатывания
+        target_value: Целевое значение (+- 10 Млн.)
+    info:
+      success: |- 
+        Хук установлен успешно!
+        Бот оповестит вас в этом канале при срабатывании триггера.
+        Условие: `<watch_for> <stats_name> <trigger> <value>`
+        Через 48 часов хук будет автоматически отключен.
+        Ваша статистика проверяется раз в 200 секунд.
+      triggered: |-
+        Триггер сработал, состояние статистики:
+        `<watch_for> <stats_name> <target_stats> <trigger> <value>`
+    warns:
+      another_active_hook: |-
+        У вас уже есть активный хук.
+        Создание нового хука перезапишет старый, вы уверены что хотите продолжить?
+        информация о активном хуке:
+        Условие: `<watch_for> <stats_name> <trigger> <value>`
+        Отключится через: <end_time>
+    errors:
+      value_out_of_range: Целевое значение вышло за пределы диапазона (+- 10 Млн.)
+    items:
+      btn_override: Перезаписать
+      btn_cancel: Отмена
+
+# hook_state
+  hook_state:
+    descr:
+      this: Состояние хука
+    info:
+      active: |-
+        Хук активен.
+        Условие: `<watch_for> <stats_name> <trigger> <value>`
+        До отключения: <end_time>
+      inactive: Хук не активен.
+    items:
+      btn_stop: Отключить
+
+# premium
+  premium:
+    descr:
+      this: Премиум
+    items:
+      btn_boosty: Boosty
+      btn_da: Donation Alerts
+      main_msg_title: Премиум аккаунт
+    info:
+      main_message: |-
+        # Узнать статус премиума можно по команде `/profile`
+        ### Премиум аккаунт предоставляет вам дополнительные возможности в нашем боте и доступ к эксклюзивным командам. Так же позволяет нам красиво оформить сервер в случае получения премиума через буст сервера или оплачивать хостинг в случае подписки на `Boosty` или `Donation Alerts`
+        ## Дополнительные возможности:
+        - Сохранение до 5 независимых аккаунтов в боте
+        - Использование триггеров статистики (`/hook_stats`)
+        - Особый бейдж в профиле внутри бота (`/profile`)
+        - Эксклюзивный доступ к каналу тестеров и доступу в тестовом боту в любое время. Так же прямая связь с разработчиками.
+        - Получение благодарности от разработчика)
+        ## Как получить?
+        ***Есть 5 способов получить премиум статус в боте:***
+        1 - Стать админом / модератором / тестировщиком на данном сервере
+        2 - Быть стримером и использовать наш виджет.
+        3 - Дать буст серверу поддержки
+        4 - Подписаться на наш Boosty
+        5 - Задонатить через Donation Alerts
+        ## Начисление премиум статуса:
+        **Способы с 1 по 4:** *Автоматически в течении 5 минут*
+        **Способ 5:** *Ручной режим, проверка до 1 дня.*
+
+        -# Учтите что любые покупки это добровольные пожертвования, продукт предоставляется "как есть" и не даёт гарантий работоспособности! Возврат денежных средств невозможен!

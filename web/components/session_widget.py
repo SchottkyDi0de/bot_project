@@ -5,16 +5,18 @@ from fastapi import FastAPI
 from nicegui import ui, Client, run
 
 from lib.database.players import PlayersDB
-from lib.exceptions.database import LastStatsNotFound
+from lib.exceptions.database import *
 from lib.api.async_wotb_api import API, _log as _api_log
 from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.image.session import ImageGen, ImageOutputType, _log as _image_log
+from lib.image.session import ImageGenSession, ImageGenReturnTypes, _log as _image_log
 from lib.data_parser.parse_data import get_session_stats, _log as _parser_log
 from lib.settings.settings import Config
+from lib.data_classes.db_player import AccountSlotsEnum
+from lib.utils.standard_account_validate import standard_account_validate
 
 _api = API()
 _pdb = PlayersDB()
-_img = ImageGen()
+_img = ImageGenSession()
 
 _api_log.setLevel(40)
 _image_log.setLevel(40)
@@ -30,34 +32,38 @@ def init_app(app: FastAPI) -> None:
     )
     async def session_widget_app(
             client: Client,
-            p_id: Optional[int] = None, 
+            p_id: int, 
+            slot_n: int,
             lang: Optional[str] = None,
-            bg_color: Optional[str] = None
+            bg_color: Optional[str] = None,
         ) -> None:
-        print(f'bg_color: {bg_color}')
+        body_css = f'body {{background-color: rgba{"(100,100,100,1)" if bg_color is None else bg_color}}}'
         ui.add_css(
-            f'body {{background-color: rgba{"(0,0,0,0)" if bg_color is None else bg_color};}}',
+            body_css
         )
         
-        if p_id is None:
-            ui.label('Player id not specified')
-            return
-        
-        if not _pdb.check_member(p_id):
+        try:
+            game_account, member, slot = await standard_account_validate(account_id=p_id, slot=AccountSlotsEnum(slot_n))
+        except MemberNotFound:
             ui.label('Player not found')
+            return
+        except SlotIsEmpty:
+            ui.label('No data in specified slot')
+            return
+        except PremiumSlotAccessAttempt:
+            ui.label('Premium not found for access to specified slot')
             return
         
         try:
-            _pdb.check_member_last_stats(p_id)
+            await _pdb.check_member_last_stats(slot=slot, member=member)
         except LastStatsNotFound:
             ui.label('Session not found')
             return
         
         await client.connected()
-        
-        user = _pdb.get_member(p_id)
-        stats = await _api.get_stats(user.region, user.game_id, ignore_lock=True)
-        last_stats = PlayerGlobalData.model_validate(user.last_stats)
+
+        stats = await _api.get_stats(game_account.region, game_account.game_id, ignore_lock=True)
+        last_stats = PlayerGlobalData.model_validate(game_account.last_stats)
         
         diff_battles = (
             stats.data.statistics.all.battles - last_stats.data.statistics.all.battles,
@@ -68,27 +74,25 @@ def init_app(app: FastAPI) -> None:
         session_data = get_session_stats(last_stats, stats, zero_bypass=True)
 
         session_image = _img.generate(
-            stats, 
-            session_data, 
-            ctx=None, 
-            server_settings=None, 
-            player=user, 
-            widget_mode=True,
-            output_type=ImageOutputType.pil_image,
+            data=stats,
+            diff_data=session_data,
+            player=member,
+            slot=slot,
             force_locale=lang,
-            debug_label=False
+            widget_mode=True,
+            server=None,
+            output_type=ImageGenReturnTypes.PIL_IMAGE
         )
-        
+            
         ui.image(session_image)\
             .classes('w-full')\
         
         async def check_user_stats():
-            user = _pdb.get_member(p_id)
-            last_stats = PlayerGlobalData.model_validate(user.last_stats)
+            last_stats = PlayerGlobalData.model_validate(game_account.last_stats)
             if last_stats is None:
                 return ui.label('Session not found')
 
-            stats = await _api.get_stats(user.region, user.game_id, ignore_lock=True)
+            stats = await _api.get_stats(game_account.region, game_account.game_id, ignore_lock=True)
             diff_battles = (
                 stats.data.statistics.all.battles - last_stats.data.statistics.all.battles,
                 stats.data.statistics.rating.battles - last_stats.data.statistics.rating.battles
@@ -96,6 +100,7 @@ def init_app(app: FastAPI) -> None:
             if diff_battles != last_diff_battles:
                 ui.run_javascript('window.location.reload()')
                 
-        ui.timer(float(user.widget_settings.update_time), check_user_stats)
+        ui.timer(float(game_account.widget_settings.update_time), check_user_stats)
         
     ui.run_with(app, mount_path='/bot/ui', storage_secret='kFJofle04kkKc9f9d90-elk4kFKl4kdJofle04kkKc9f9d90')
+

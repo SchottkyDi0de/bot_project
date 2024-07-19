@@ -36,8 +36,7 @@ class Info(BaseModel):
     team: int
     clan_tag: Optional[str]
     avatar: Avatar
-
-    region: str = None
+    region: Optional[str] = None
 
 
 class Player(BaseModel):
@@ -134,7 +133,7 @@ class Rating(BaseModel):
     survived_battles: int
     dropped_capture_points: int
     max_xp: Optional[int] = None
-    max_xp_tanx_id: Optional[int] = None
+    max_xp_tank_id: Optional[int] = None
 
     rating: Optional[float] = None
     winrate: Optional[float] = None

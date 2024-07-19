@@ -63,7 +63,7 @@ class ReplayParser:
         if auto_clear:
             os.remove(replay_path)
         
-        print(b'"winner_team_number": null' in stdout)
+        # print(b'"winner_team_number": null' in stdout) # DEBUG
 
         return ReplayData.model_validate_json(stdout)
 

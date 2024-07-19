@@ -123,6 +123,7 @@ class RatingDiff(BaseModel):
     frags_per_battle: float = 0.0
     survival_ratio: float = 0.0
     avg_spotted: float = 0.0
+    leaderboard_position: int = 0
 
 
 class RatingSession(BaseModel):
@@ -148,6 +149,7 @@ class RatingSession(BaseModel):
     frags_per_battle: float = 0.0
     survival_ratio: float = 0.0
     avg_spotted: float = 0.0
+    leaderboard_position: int = 0
     
 
 class SessionDiffData(BaseModel):

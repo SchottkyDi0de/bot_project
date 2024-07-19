@@ -1,7 +1,6 @@
 image_settings:
   theme: 'tiger_girl'
   colorize_stats: False
-  use_custom_bg: True
   hide_nickname: False
   hide_clan_tag: False
   disable_flag: False

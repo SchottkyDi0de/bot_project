@@ -1,33 +1,46 @@
-from discord import File, Option
+from datetime import datetime, timedelta
+from discord import File, Option, Bot
 from discord.ext import commands
 from discord.commands import ApplicationContext
+import pytz
 
 from lib.settings.settings import Config
-from lib.image.common import ImageGen
+from lib.image.common import ImageGenCommon
 from lib.locale.locale import Text
 from lib.api.async_wotb_api import API
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.data_classes.db_player import DBPlayer, ImageSettings
+from lib.data_classes.db_player import (
+    AccountSlotsEnum, 
+    DBPlayer, 
+    HookStats, 
+    HookStatsTriggers, 
+    UsedCommand, 
+    HookWatchFor
+)
 from lib.blacklist.blacklist import check_user
 from lib.exceptions import api, data_parser
 from lib.error_handler.common import hook_exceptions
-from lib.data_classes.db_server import ServerSettings
+from lib.data_classes.db_server import DBServer
 from lib.logger.logger import get_logger
 from lib.utils.nickname_handler import handle_nickname
+from lib.utils.slot_info import get_formatted_slot_info
+from lib.utils.string_parser import insert_data
 from lib.utils.validators import validate
+from lib.utils.standard_account_validate import standard_account_validate
+from lib.views.alt_views import HookOverride, HookDisable
 
 _log = get_logger(__file__, 'CogStatsLogger', 'logs/cog_stats.log')
-
+_config = Config().get()
 
 class Stats(commands.Cog):
     cog_command_error = hook_exceptions(_log)
 
     def __init__(self, bot) -> None:
         self.bot = bot
-        self.img_gen = ImageGen()
+        self.img_gen = ImageGenCommon()
         self.api = API()
         self.db = PlayersDB()
         self.sdb = ServersDB()
@@ -68,23 +81,17 @@ class Stats(commands.Cog):
                 required=True
             ), # type: ignore
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
         
-        image_settings = None
-        user_exist = self.db.check_member(ctx.author.id)
-        if user_exist:
-            member = self.db.get_member(ctx.author.id)
-            image_settings = self.db.get_image_settings(ctx.author.id)
-        else:
-            image_settings = ImageSettings()
-            member = None
+        member = await self.db.check_member_exists(ctx.author.id, raise_error=False, get_if_exist=True)
+        member = None if isinstance(member, bool) else member
         
-        server_settings = self.sdb.get_server_settings(ctx)
+        if member is not None:
+            await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         
         nickname_type = validate(nick_or_id, 'nickname')
-        
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
         img = await self.get_stats(
@@ -92,14 +99,16 @@ class Stats(commands.Cog):
             region=region,
             nickname=composite_nickname.nickname,
             game_id=composite_nickname.player_id,
-            image_settings=image_settings, 
-            server_settings=server_settings,
-            requested_by=member
-            )
+            requested_by=member,
+            server=self.sdb.get_server(ctx)
+        )
 
         if img is not None:
             await ctx.respond(file=File(img, 'stats.png'))
             img.close()
+        else:
+            _log.error('Image gen returned None')
+            raise RuntimeError('Image gen returned None')
 
     @commands.slash_command(
             description=Text().get('en').cmds.astats.descr.this,
@@ -110,41 +119,433 @@ class Stats(commands.Cog):
                 }
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def astats(self, ctx: ApplicationContext):
-        Text().load_from_context(ctx)
+    async def astats(
+        self, 
+        ctx: ApplicationContext,
+        account: Option(
+            int,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            required=False,
+            default=None,
+            choices=[x.value for x in AccountSlotsEnum]
+            )
+        ) -> None:
+        await Text().load_from_context(ctx)
         check_user(ctx)
         await ctx.defer()
         
-        if not self.db.check_member(ctx.author.id):
-            await ctx.respond(embed=self.inf_msg.player_not_registred_astats())
+        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account)
+        server = self.sdb.get_server(ctx)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        
+        img = await self.get_stats(
+            ctx,
+            region=game_account.region,
+            game_id=game_account.game_id, 
+            slot=slot,
+            server=server,
+            requested_by=member
+            )
+
+        if img is not None:
+            await ctx.respond(file=File(img, 'stats.png'))
+            img.close()
+        else:
             return
+    
+    @commands.slash_command(
+        description=Text().get('en').cmds.hook_stats.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.hook_stats.descr.this,
+            'pl': Text().get('pl').cmds.hook_stats.descr.this,
+            'uk': Text().get('ua').cmds.hook_stats.descr.this
+        }
+    )
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    async def hook_stats(
+        self, 
+        ctx: ApplicationContext, 
+        stats_name: Option(
+            str,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.stats_name,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.stats_name,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.stats_name,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.stats_name
+            },
+            required=True,
+            choices=[stats for stats in _config.image.available_stats],
+        ),
+        trigger: Option(
+            str,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.trigger,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.trigger,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.trigger,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.trigger
+            },
+            required=True,
+            choices=[x.name for x in HookStatsTriggers],
+        ),
+        target_value: Option(
+            float,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.target_value,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.target_value,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.target_value,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.target_value
+            },
+            min_value=-10_000_000_000,
+            max_value=10_000_000_000,
+            required=True
+        ),
+        watch_for: Option(
+            str,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.stats_type,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.stats_type,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.stats_type,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.stats_type
+            },
+            required=True,
+            choices=[x.value for x in HookWatchFor],
+        ),
+        account: Option(
+            int,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            required=False,
+            default=None,
+            choices=[x.value for x in AccountSlotsEnum]),
+        ) -> None:
+        await Text().load_from_context(ctx)
+        check_user(ctx)
+        await ctx.defer()
 
-        player_data = self.db.get_member(ctx.author.id)
-        if player_data is not None:
-            image_settings = self.db.get_image_settings(ctx.author.id)
-            server_settings = self.sdb.get_server_settings(ctx)
-            img = await self.get_stats(
-                ctx,
-                region=player_data.region,
-                game_id=player_data.game_id, 
-                image_settings=image_settings, 
-                server_settings=server_settings,
-                requested_by=player_data
+        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account, check_premium=True)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        old_hook = game_account.hook_stats
+        
+        hook = HookStats(
+            active=True,
+            stats_name=stats_name,
+            stats_type='common',
+            trigger=HookStatsTriggers[trigger].name,
+            target_value=target_value,
+            end_time=datetime.now(pytz.utc) + timedelta(days=2),
+            hook_target_member_id=member.id,
+            hook_target_channel_id=ctx.channel.id,
+            hook_target_guild_id=ctx.guild.id,
+            watch_for=watch_for,
+            lang=Text().get_current_lang(),
+        )
+        
+        if old_hook.active:
+            view = HookOverride(
+                text=Text().get(),
+                member=member,
+                game_account=game_account,
+                slot=slot,
+                hook=hook
+            ).get_view()
+            await ctx.respond(
+                embed=InfoMSG().custom(
+                    locale=Text().get(),
+                    text=insert_data(
+                        Text().get().cmds.hook_stats.warns.another_active_hook,
+                        {
+                            'stats_name' : old_hook.stats_name,
+                            'trigger' : HookStatsTriggers[old_hook.trigger].value,
+                            'value' : round(old_hook.target_value, 4),
+                            'watch_for' : old_hook.watch_for,
+                            'end_time' : f'<t:{int(old_hook.end_time.timestamp())}:R>'
+                        }
+                    ),
+                    footer=get_formatted_slot_info(
+                        slot, 
+                        text=Text().get(),
+                        game_account=game_account,
+                        shorted=True,
+                        clear_md=True
+                    )
+                ),
+                view=view
+            )
+            return
+        
+        await self.db.setup_stats_hook(
+            member_id=member.id,
+            slot=slot,
+            hook=hook
+        )
+        await ctx.respond(
+            embed=InfoMSG().custom(
+                locale=Text().get(),
+                text=insert_data(
+                    Text().get().cmds.hook_stats.info.success,
+                    {
+                        'stats_name' : hook.stats_name,
+                        'trigger' : HookStatsTriggers[hook.trigger].value,
+                        'value' : round(hook.target_value, 4),
+                        'watch_for' : watch_for
+                    }
+                ),
+                footer=get_formatted_slot_info(
+                    slot, 
+                    text=Text().get(),
+                    game_account=game_account,
+                    shorted=True,
+                    clear_md=True
                 )
+            )
+        )
+        
+    @commands.slash_command(
+        description=Text().get('en').cmds.hook_stats.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.hook_stats.descr.this,
+            'pl': Text().get('pl').cmds.hook_stats.descr.this,
+            'uk': Text().get('ua').cmds.hook_stats.descr.this
+        }
+    )
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    async def hook_stats_rating(
+        self, 
+        ctx: ApplicationContext, 
+        stats_name: Option(
+            str,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.stats_name,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.stats_name,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.stats_name,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.stats_name
+            },
+            required=True,
+            choices=[stats for stats in _config.image.available_rating_stats],
+        ),
+        trigger: Option(
+            str,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.trigger,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.trigger,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.trigger,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.trigger
+            },
+            required=True,
+            choices=[x.name for x in HookStatsTriggers],
+        ),
+        target_value: Option(
+            float,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.target_value,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.target_value,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.target_value,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.target_value
+            },
+            min_value=-10_000_000_000,
+            max_value=10_000_000_000,
+            required=True
+        ),
+        watch_for: Option(
+            str,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.stats_type,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.stats_type,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.stats_type,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.stats_type
+            },
+            required=True,
+            choices=[x.value for x in HookWatchFor],
+        ),
+        account: Option(
+            int,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            required=False,
+            default=None,
+            choices=[x.value for x in AccountSlotsEnum]),
+        ) -> None:
+        await Text().load_from_context(ctx)
+        check_user(ctx)
+        await ctx.defer()
 
-            if img is not None:
-                await ctx.respond(file=File(img, 'stats.png'))
-                img.close()
-            else:
-                return
+        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account, check_premium=True)
+        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        old_hook = game_account.hook_stats
+        
+        hook = HookStats(
+            active=True,
+            stats_name=stats_name,
+            stats_type='rating',
+            trigger=HookStatsTriggers[trigger].name,
+            target_value=target_value,
+            end_time=datetime.now(pytz.utc) + timedelta(days=2),
+            hook_target_member_id=member.id,
+            hook_target_channel_id=ctx.channel.id,
+            hook_target_guild_id=ctx.guild.id,
+            watch_for=watch_for,
+            lang=Text().get_current_lang(),
+        )
+        
+        if old_hook.active:
+            view = HookOverride(
+                text=Text().get(),
+                member=member,
+                game_account=game_account,
+                slot=slot,
+                hook=hook
+            ).get_view()
+            await ctx.respond(
+                embed=InfoMSG().custom(
+                    locale=Text().get(),
+                    text=insert_data(
+                        Text().get().cmds.hook_stats.warns.another_active_hook,
+                        {
+                            'stats_name' : old_hook.stats_name,
+                            'trigger' : HookStatsTriggers[old_hook.trigger].value,
+                            'value' : round(old_hook.target_value, 4),
+                            'watch_for' : old_hook.watch_for,
+                            'end_time' : f'<t:{int(old_hook.end_time.timestamp())}:R>'
+                        }
+                    ),
+                    footer=get_formatted_slot_info(
+                        slot, 
+                        text=Text().get(),
+                        game_account=game_account,
+                        shorted=True,
+                        clear_md=True
+                    )
+                ),
+                view=view
+            )
+            return
+        
+        await self.db.setup_stats_hook(
+            member_id=member.id,
+            slot=slot,
+            hook=hook
+        )
+        await ctx.respond(
+            embed=InfoMSG().custom(
+                locale=Text().get(),
+                text=insert_data(
+                    Text().get().cmds.hook_stats.info.success,
+                    {
+                        'stats_name' : hook.stats_name,
+                        'trigger' : HookStatsTriggers[hook.trigger].value,
+                        'value' : round(hook.target_value, 4),
+                        'watch_for' : watch_for
+                    }
+                ),
+                footer=get_formatted_slot_info(
+                    slot, 
+                    text=Text().get(),
+                    game_account=game_account,
+                    shorted=True,
+                    clear_md=True
+                )
+            )
+        )
+        
+    @commands.slash_command(
+        description=Text().get('en').cmds.stats.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.stats.descr.this,
+            'pl': Text().get('pl').cmds.stats.descr.this,
+            'uk': Text().get('ua').cmds.stats.descr.this
+        }
+    )
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    async def hook_status(
+            self,
+            ctx: ApplicationContext,
+            account: Option(
+                int,
+                description=Text().get('en').frequent.common.slot,
+                description_localizations={
+                    'ru': Text().get('ru').frequent.common.slot,
+                    'pl': Text().get('pl').frequent.common.slot,
+                    'uk': Text().get('ua').frequent.common.slot
+                },
+                required=False,
+                default=None,
+                choices=[x.value for x in AccountSlotsEnum]
+            ),  
+        ):
+        await Text().load_from_context(ctx)
+        check_user(ctx)
+        await ctx.defer()
+        
+        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account)
+        hook = game_account.hook_stats
+        
+        if hook.active:
+            view = HookDisable(
+                text=Text().get(),
+                member=member,
+                slot=slot,
+                game_account=game_account,
+            ).get_view()
+            await ctx.respond(
+                embed=InfoMSG().custom(
+                    locale=Text().get(),
+                    text=insert_data(
+                        Text().get().cmds.hook_state.info.active,
+                        {
+                            'watch_for' : hook.watch_for,
+                            'stats_name' : hook.stats_name,
+                            'trigger' : HookStatsTriggers[hook.trigger].value,
+                            'value' : round(hook.target_value, 4),
+                            'end_time' : f'<t:{int(hook.end_time.timestamp())}:R>'
+                        }
+                    ),
+                    footer=get_formatted_slot_info(
+                        slot,
+                        text=Text().get(),
+                        game_account=game_account,
+                        shorted=True,
+                        clear_md=True
+                    )
+                ),
+                view=view
+            )
+            return
+        
+        await ctx.respond(
+            embed=InfoMSG().custom(
+                locale=Text().get(),
+                text=Text().get().cmds.hook_state.info.inactive,
+                footer=get_formatted_slot_info(
+                    slot,
+                    text=Text().get(),
+                    game_account=game_account,
+                    shorted=True,
+                    clear_md=True
+                )
+            )
+        )
+        
 
     
     async def get_stats(
             self, 
             ctx: ApplicationContext, 
-            image_settings: ImageSettings, 
-            server_settings: ServerSettings,
             region: str,
+            server: DBServer | None = None,
+            slot: AccountSlotsEnum | None = None,
             game_id: int | None = None,
             nickname: str | None = None,
             requested_by: DBPlayer | None = None
@@ -176,16 +577,16 @@ class Stats(commands.Cog):
             
         if exception is not None:
             await ctx.respond(embed=getattr(self.err_msg, exception)())
-            return None
+            return
         else:
             img_data = self.img_gen.generate(
-                ctx=ctx, 
-                data=data, 
-                image_settings=image_settings, 
-                server_settings=server_settings
-                )
+                data=data,
+                server=server,
+                member=requested_by,
+                slot=slot
+            )
             return img_data
 
 
-def setup(bot):
+def setup(bot: Bot):
     bot.add_cog(Stats(bot))

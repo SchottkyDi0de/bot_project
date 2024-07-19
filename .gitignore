@@ -17,3 +17,6 @@ database_copy.*
 /dump
 model.py
 .nicegui
+/dev_tools
+server_ping.py
+test.py

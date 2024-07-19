@@ -23,7 +23,7 @@ class All(BaseModel):
     dropped_capture_points: int
 
     winrate: Optional[float] = None
-    avg_damage: Optional[float] = None
+    avg_damage: Optional[int] = None
     accuracy: Optional[float] = None
     damage_ratio: Optional[float] = None
     destruction_ratio: Optional[float] = None

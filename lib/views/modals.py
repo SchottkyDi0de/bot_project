@@ -20,7 +20,7 @@ class ReportModal(Modal):
                                 required=True))
 
     async def callback(self, interaction: Interaction):
-        Text().load_from_context(self.ctx)
+        await Text().load_from_context(self.ctx)
 
         rep_type = self.report_type
         rep_data = self.children[0].value

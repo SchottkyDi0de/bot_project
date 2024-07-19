@@ -31,6 +31,13 @@ class InfoResponses:
             'code': 200
         }
     )
+    set_ok = InfoResponse.model_validate(
+        {   
+            'info' : 'Success',
+            'message': 'Ok',
+            'code': 200
+        }
+    )
 
 class ErrorResponses():
     internal_error = ErrorResponse.model_validate(

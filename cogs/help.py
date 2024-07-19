@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.commands import ApplicationContext
 
 from lib.blacklist.blacklist import check_user
+from lib.data_classes.db_player import DBPlayer, UsedCommand
 from lib.database.servers import ServersDB
 from lib.database.players import PlayersDB
 from lib.locale.locale import Text
@@ -45,8 +46,12 @@ class Help(commands.Cog):
         self, 
         ctx: ApplicationContext,
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
+        
+        member = await self.pdb.check_member_exists(ctx.author.id, get_if_exist=True, raise_error=False)
+        if isinstance(member, DBPlayer):
+            await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)
 
         await ctx.defer()
         try:

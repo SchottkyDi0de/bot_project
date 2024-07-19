@@ -23,6 +23,8 @@ class Default(BaseModel):
     locale_aliases: dict = {
         'ru': 'ru',
         'en': 'en',
+        'en-US' : 'en',
+        'en-GB' : 'en',
         'pl': 'pl',
         'uk': 'ua'
     }
@@ -95,7 +97,22 @@ class Dump(BaseModel):
     export_to_id: int
     chunk_size: int
     directory: str
+    
+    
+class PassedServer(BaseModel):
+    premium_roles: List[int]
+    id: int
+    
+class PayLinks(BaseModel):
+    da: str
+    boosty: str
 
+class Premium(BaseModel):
+    passed_server: PassedServer
+    pay_links: PayLinks
+
+class Account(BaseModel):
+    inactive_ttl: int
 
 class ConfigStruct(BaseModel):
     bot_name: str
@@ -113,3 +130,5 @@ class ConfigStruct(BaseModel):
     ds_api: DsApi
     report: Report
     dump: Dump
+    premium: Premium
+    account: Account

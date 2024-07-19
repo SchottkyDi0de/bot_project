@@ -1,17 +1,24 @@
 from discord import Colour, Embed
 
+from lib.data_classes.db_player import AccountSlotsEnum, GameAccount
 from lib.locale.locale import Text
+from lib.utils.slot_info import get_formatted_slot_info
 
 class CommonMSG():
     
-    def verify(self) -> Embed:
+    def verify(self, game_account: GameAccount, slot: AccountSlotsEnum) -> Embed:
         text = Text().get()
         return Embed(
             title=text.cmds.verify.items.verify,
             description=text.cmds.verify.items.message.description
-        ).add_field(
-            name=text.frequent.info.warning,
-            value=text.cmds.verify.items.message.additional_info
+        ).set_footer(
+            text=get_formatted_slot_info(
+                slot=slot, 
+                text=text, 
+                game_account=game_account,
+                shorted=True,
+                clear_md=True
+            )
         )
 
     def custom(

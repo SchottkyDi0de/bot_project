@@ -8,14 +8,14 @@ from lib.database.players import PlayersDB
 from lib.exceptions.database import LastStatsNotFound
 from lib.api.async_wotb_api import API, _log as _api_log
 from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.image.session import ImageGen, ImageOutputType, _log as _image_log
+from lib.image.session import ImageGenSession, ImageOutputType, _log as _image_log
 from lib.data_parser.parse_data import get_session_stats, _log as _parser_log
 from lib.settings.settings import Config
 
 _api = API()
 _config = Config().get()
 _pdb = PlayersDB()
-_img = ImageGen()
+_img = ImageGenSession()
 
 _api_log.setLevel(40)
 _image_log.setLevel(40)

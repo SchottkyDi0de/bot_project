@@ -3,6 +3,8 @@ from discord.ext import commands
 from discord.commands import ApplicationContext
 
 from lib.blacklist.blacklist import check_user
+from lib.data_classes.db_player import DBPlayer, UsedCommand
+from lib.database.players import PlayersDB
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.error_handler.common import hook_exceptions
@@ -16,6 +18,7 @@ class Report(Cog):
     
     def __init__(self, bot):
         self.bot = bot
+        self.db = PlayersDB()
     
     @commands.slash_command(
         description=Text().get('en').cmds.report.descr.this,
@@ -40,13 +43,16 @@ class Report(Cog):
                 choices=["bug_report", "suggestion"]
             )
         ):
-        Text().load_from_context(ctx)
+        await Text().load_from_context(ctx)
         check_user(ctx)
-
+        member = await self.db.check_member_exists(ctx.author.id, get_if_exist=True, raise_error=False)
+        if isinstance(member, DBPlayer):
+            await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+            
         await ctx.send_modal(ViewMeta(self.bot, ctx, 'report', report_type={"bug_report": "b", "suggestion": "s"}[report_type]))
         await ctx.respond("👍", ephemeral=True)
         
 
     
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(Report(bot))

@@ -1,37 +1,57 @@
-from pprint import pprint
-import traceback
-from typing import Annotated
+from datetime import datetime, timedelta
+from typing import Annotated, Dict, List, Literal
 
 from fastapi import FastAPI, Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from pywebio.output import *
-
-from lib.data_classes.db_player import DBPlayer, ImageSettings
+import pytz
+from lib.data_classes.db_player import DBPlayer
+from lib.data_classes.tankopedia import Tank
 from lib.data_classes.internal_api.err_response import ErrorResponse
 from lib.data_classes.internal_api.inf_response import InfoResponse
 from lib.database.players import PlayersDB
-from lib.data_classes.internal_api.restart_session import SessionState
+from lib.database.tankopedia import TankopediaDB
 from lib.internal_api.responses import ErrorResponses, InfoResponses
 from lib.logger.logger import get_logger
 from lib.settings.settings import EnvConfig
 from web.components import session_widget
 from web.components import auth
+from lib.database.internal import InternalDB
 
 _pdb = PlayersDB()
+_tdb = TankopediaDB()
 _env_config = EnvConfig()
 _log = get_logger(__file__, 'ServerLogger', 'logs/server.log')
 
+app = FastAPI(docs_url='/bot/api/docs', redoc_url='/bot/api/redoc', openapi_url='/bot/api/openapi.json')
 
-app = FastAPI(docs_url='/bot/api/docs')
+
+class AddTankopediaData(BaseModel):
+    region: Literal['ru', 'eu']
+    data: Tank
+
+
+class RemoveTankopediaData(BaseModel):
+    region: Literal['ru', 'eu']
+    tank_id: int
+
 
 class AllUsers(BaseModel):
     count: int
 
+class PremiumUsers(BaseModel):
+    data: list[int]
 
 class AllSessions(BaseModel):
     count: int
 
+class Badges(BaseModel):
+    data: Dict[int, List[str]]
+    
+class SetPremium(BaseModel):
+    user: int
+    time: int
+    premium: bool
 
 class Server:
     
@@ -40,7 +60,7 @@ class Server:
         return None
 
     @app.get('/bot', include_in_schema=False)
-    async def root():
+    async def bot_root():
         return None
     
     @app.get('/bot/api/ping',
@@ -56,112 +76,9 @@ class Server:
         return InfoResponses.pong
         
     @app.get('/bot/api', include_in_schema=False)
-    def root(self):
+    def api_root(self):
         pass
-    
-    @app.get('/bot/api/session_state', responses = {
-        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
-        400: {'model' : ErrorResponse, 'description' : 'Player not found'},
-        200: {'model' : InfoResponse, 'description' : 'Data sent successfully'},
-        }
-    )
-    async def session_state(api_key: Annotated[str, Header()], discord_id: int | str):
-        if api_key != _env_config.INTERNAL_API_KEY:
-            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
-        
-        if _pdb.check_member(discord_id):
-            active_session = _pdb.check_member_last_stats(discord_id)
-            state = SessionState.model_validate(
-                {
-                    'active_session' : active_session,
-                    'session_settings' : _pdb.get_member_session_settings(discord_id)
-                }
-            )
-            return JSONResponse(state.model_dump(), status_code=200)
-        
-        return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
-    
-    @app.get('/bot/api/get_player', responses={
-        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
-        400: {'model' : ErrorResponse, 'description' : 'Player not found'},
-        200: {'model' : DBPlayer, 'description' : 'Player data'}
-        }
-    )
-    async def get_player(
-            api_key: Annotated[str, Header()], 
-            discord_id: str | int, 
-            include_image: bool = False,
-            include_session: bool = False,
-            include_traceback: bool = False
-        ) -> DBPlayer | ErrorResponse:
-        
-        if api_key != _env_config.INTERNAL_API_KEY:
-            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
-        
-        player = _pdb.get_member(discord_id)
-
-        if player is not None:
-            try:
-                player = DBPlayer.model_validate(player)
-                
-                if not include_image:
-                    player.image = None
-                if not include_session:
-                    player.last_stats = None
-                
-                return JSONResponse(player.model_dump(), status_code=200)
-            
-            except:
-                _log.error(traceback.format_exc())
-                err_response = ErrorResponses.validation_error
-                if include_traceback:
-                    err_response.traceback = traceback.format_exc()
-                    
-                return JSONResponse(err_response.model_dump(), status_code=err_response.code)
-                
-        else:
-            err_response = ErrorResponses.player_not_found
-            if include_traceback:
-                err_response.traceback = traceback.format_exc()
-                
-            return JSONResponse(err_response.model_dump(), status_code=err_response.code)
-
-    @app.get('/bot/api/get_image_settings', responses={
-        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
-        400: {'model' : ErrorResponse, 'description' : 'Player not found'},
-        200: {'model' : ImageSettings, 'description' : 'Image settings'}
-        }
-    )
-    async def get_image_settings(api_key: Annotated[str, Header()], discord_id: str | int) -> ImageSettings | ErrorResponse:
-        if api_key != _env_config.INTERNAL_API_KEY:
-            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
-        
-        if _pdb.check_member(discord_id):
-            image_settings = _pdb.get_image_settings(discord_id)
-            return JSONResponse(image_settings.model_dump(), status_code=200)
-        
-        else:
-            err_response = ErrorResponses.player_not_found
-            return JSONResponse(err_response.model_dump(), status_code=err_response.code)
-        
-    @app.post('/bot/api/set_image_settings', responses={
-        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
-        400: {'model' : ErrorResponse, 'description' : 'Player not found'},
-        200: {'model' : InfoResponse, 'description' : 'Image settings updated'}
-        }
-    )
-    async def set_image_settings(api_key: Annotated[str, Header()], discord_id: str | int, image_settings: ImageSettings) -> InfoResponse | ErrorResponse:
-        if api_key != _env_config.INTERNAL_API_KEY:
-            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
-        
-        if _pdb.check_member(discord_id):
-            image_settings = _pdb.set_image_settings(discord_id, image_settings)
-            return JSONResponse(InfoResponses.image_settings_updated.model_dump(), status_code=200)
-        
-        else:
-            err_response = ErrorResponses.player_not_found
-            return JSONResponse(err_response.model_dump(), status_code=err_response.code)
-        
+ 
     @app.get('/bot/api/get_all_users', responses={
         418: {'model' : ErrorResponse, 'description' : 'Access denied'},
         200: {'model' : AllUsers, 'description' : 'All users'}    
@@ -171,7 +88,7 @@ class Server:
         if api_key != _env_config.INTERNAL_API_KEY:
             return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
         
-        users = _pdb.count_members()
+        users = await _pdb.get_all_members_count()
         return JSONResponse({'count' : users}, status_code=200)
 
     @app.get('/bot/api/get_all_sessions', responses={
@@ -183,10 +100,95 @@ class Server:
         if api_key != _env_config.INTERNAL_API_KEY:
             return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
         
-        sessions = _pdb.count_sessions()
+        sessions = await _pdb.count_sessions()
         return JSONResponse({'count' : sessions}, status_code=200)
-
     
+    @app.post('/bot/api/update_server_members', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        200: {'model' : InfoResponse, 'description' : 'Members updated'}
+        }
+    )
+    async def update_server_members(api_key: Annotated[str, Header()], premium_users: PremiumUsers) -> InfoResponse | ErrorResponse:
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        await InternalDB().set_actual_premium_users(premium_users.data)
+        return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+    
+    @app.post('/bot/api/set_badges', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        200: {'model' : InfoResponse, 'description' : 'Badges updated'}
+        }
+    )
+    async def set_badges(api_key: Annotated[str, Header()], badges: Badges) -> InfoResponse | ErrorResponse:
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        for member_id, badges_list in badges.data.items():
+            member = await _pdb.check_member_exists(member_id, get_if_exist=True, raise_error=False)
+            if isinstance(member, DBPlayer):
+                await _pdb.set_badges(member_id, badges_list)
+                _log.info(f'Badges updated for {member_id}')
+
+        return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+    
+    @app.post('/bot/api/remove_badges', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        200: {'model' : InfoResponse, 'description' : 'Badges removed'}
+        }
+    )
+    async def remove_badges(api_key: Annotated[str, Header()], badges: Badges) -> InfoResponse | ErrorResponse:
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        for member_id, badges_list in badges.data.items():
+            member = await _pdb.check_member_exists(member_id, get_if_exist=True, raise_error=False)
+            if isinstance(member, DBPlayer):
+                await _pdb.remove_badges(member_id, badges_list)
+                _log.info(f'Badges removed for {member_id}')
+
+        return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+    
+    @app.post('/bot/api/set_premium', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        200: {'model' : InfoResponse, 'description' : 'Premium updated'}
+        }
+    )
+    async def set_premium(api_key: Annotated[str, Header()], set_premium: SetPremium) -> InfoResponse | ErrorResponse:
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        if set_premium.premium:
+            await _pdb.set_premium(set_premium.user, datetime.now(pytz.utc) + timedelta(seconds=set_premium.time))
+            return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+        else:
+            await _pdb.unset_premium(set_premium.user)
+            return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+    
+    @app.post('/bot/api/set_tank', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        200: {'model' : InfoResponse, 'description' : 'Tankopedia updated'}
+        }
+    )
+    async def set_tank(api_key: Annotated[str, Header()], data: AddTankopediaData):
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        await _tdb.set_tank(tank=data.data, region=data.region)
+        return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+    
+    @app.delete('/bot/api/del_tank', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        200: {'model' : InfoResponse, 'description' : 'Tankopedia deleted'}
+        }
+    )
+    async def delete_tank(api_key: Annotated[str, Header()], data: RemoveTankopediaData):
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        await _tdb.del_tank(tank_id=data.tank_id, region=data.region)
+        return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+
 def run():
     session_widget.init_app(app)
     auth.init_app(app)
