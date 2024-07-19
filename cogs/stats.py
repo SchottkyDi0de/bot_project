@@ -83,10 +83,10 @@ class Stats(commands.Cog):
         ):
         await Text().load_from_context(ctx)
         check_user(ctx)
-        await ctx.defer()
         
         member = await self.db.check_member_exists(ctx.author.id, raise_error=False, get_if_exist=True)
         member = None if isinstance(member, bool) else member
+        await ctx.defer()
         
         nickname_type = validate(nick_or_id, 'nickname')
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
