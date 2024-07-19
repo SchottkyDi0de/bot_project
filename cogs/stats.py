@@ -88,11 +88,11 @@ class Stats(commands.Cog):
         member = await self.db.check_member_exists(ctx.author.id, raise_error=False, get_if_exist=True)
         member = None if isinstance(member, bool) else member
         
-        if member is not None:
-            await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
-        
         nickname_type = validate(nick_or_id, 'nickname')
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
+        
+        if member is not None:
+            await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         
         img = await self.get_stats(
             ctx, 
@@ -106,9 +106,6 @@ class Stats(commands.Cog):
         if img is not None:
             await ctx.respond(file=File(img, 'stats.png'))
             img.close()
-        else:
-            _log.error('Image gen returned None')
-            raise RuntimeError('Image gen returned None')
 
     @commands.slash_command(
             description=Text().get('en').cmds.astats.descr.this,
