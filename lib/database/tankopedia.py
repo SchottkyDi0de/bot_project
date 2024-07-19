@@ -34,7 +34,7 @@ class TankopediaDB:
         if data is None:
             return data
         
-        return Tank().model_validate(data)
+        return Tank.model_validate(data)
     
     def get_tank_by_id_sync(self, id: int | str, region: str) -> Tank | None:
         id = int(id)
@@ -42,27 +42,27 @@ class TankopediaDB:
         if region == 'ru':
             data = self.collection_ru_sync.find_one({'id': id})
         else:
-            data = self.collection_ru_sync.find_one({'id': id})
+            data = self.collection_eu_sync.find_one({'id': id})
             
         if data is None:
             _log.warn(f"TankopediaDB: tank with id {id} not found in {region} region")
             return data
         
-        return Tank().model_validate(data)
+        return Tank.model_validate(data)
     
     async def set_tank(self, tank: Tank, region: str):
         if region == 'ru':
-            await self.collection_ru.update_one({'id': tank.id}, {'$set': tank.model_dump()}, upsert=True)
+            await self.collection_ru.update_one({'id': tank.id}, {'$set': tank.model_dump()})
         else:
-            await self.collection_eu.update_one({'id': tank.id}, {'$set': tank.model_dump()}, upsert=True)
+            await self.collection_eu.update_one({'id': tank.id}, {'$set': tank.model_dump()})
             
     async def set_tanks(self, tanks: list[Tank], region: str):
         if region == 'ru':
             for tank in tanks:
-                await self.collection_ru.update_one({'id': tank.id}, {'$set': tank.model_dump()}, upsert=True)
+                await self.collection_ru.update_one({'id': tank.id}, {'$set': tank.model_dump()})
         else:
             for tank in tanks:
-                await self.collection_eu.update_one({'id': tank.id}, {'$set': tank.model_dump()}, upsert=True)
+                await self.collection_eu.update_one({'id': tank.id}, {'$set': tank.model_dump()})
 
     async def del_tank(self, id: int | str, region: str):
         id = int(id)

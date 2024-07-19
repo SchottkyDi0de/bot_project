@@ -514,7 +514,7 @@ class ReplayParser:
                         text=insert_data(
                             text.cmds.parse_replay.items.formenu,
                             {
-                                'tank_name' : player_tank['name'] if player_tank is not None else 'Unknown',
+                                'tank_name' : player_tank.name if player_tank is not None else 'Unknown',
                                 'damage' : selected_player.info.damage_dealt,
                                 'spotted' : selected_player.info.damage_assisted_1,
                                 'xp' : selected_player.info.base_xp,

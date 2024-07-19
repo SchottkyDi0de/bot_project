@@ -65,7 +65,7 @@ class BlocksStack():
             elif self.small_blocks < self.max_small_blocks:
                 self.small_blocks += 1
             else:
-                break
+                pass
             
     def add_block(self):
         if self.blocks < self.max_blocks:
@@ -759,41 +759,78 @@ class ImageGenSession():
         
         self.metadata.blocks = self.blocks
         self.metadata.small_blocks = self.small_blocks
+        
+        if not widget_mode:
 
-        if not (widget_mode and self.game_account.widget_settings.disable_nickname):
             self.draw_nickname(img_draw)
             if not self.image_settings.disable_flag:
                 self.draw_flag()
         
-        if not (widget_mode and (self.game_account.widget_settings.disable_main_stats_block and diff_data.tank_stats is not None)):
             self.draw_main_stats_block(img_draw)
             self.blocks -= 1
             self.current_offset += StatsBlockSize.main_stats + BlockOffsets.block_indent
 
-        if self.include_rating:
-            self.draw_rating_stats_block(img_draw)
-            self.blocks -= 1
-            self.current_offset += StatsBlockSize.rating_stats + BlockOffsets.block_indent
+            if self.include_rating:
+                self.draw_rating_stats_block(img_draw)
+                self.blocks -= 1
+                self.current_offset += StatsBlockSize.rating_stats + BlockOffsets.block_indent
 
-        for _ in range(self.blocks):
-            try:
-                curr_tank = self.diff_data.tank_stats[next(self.tank_iterator)]
-            except StopIteration:
-                break
-            self.draw_tank_stats_block(img_draw, curr_tank)
-            self.current_offset += StatsBlockSize.full_tank_stats + BlockOffsets.block_indent
-            self.blocks -= 1
+            for _ in range(self.blocks):
+                try:
+                    curr_tank = self.diff_data.tank_stats[next(self.tank_iterator)]
+                except StopIteration:
+                    break
+                self.draw_tank_stats_block(img_draw, curr_tank)
+                self.current_offset += StatsBlockSize.full_tank_stats + BlockOffsets.block_indent
+                self.blocks -= 1
         
-        for _ in range(self.small_blocks):
-            try:
-                curr_tank = self.diff_data.tank_stats[next(self.tank_iterator)]
-            except StopIteration:
-                break
-            self.draw_short_tank_stats_block(img_draw, curr_tank)
-            self.small_blocks -= 1
-            self.current_offset += StatsBlockSize.short_tank_stats + BlockOffsets.block_indent
+            for _ in range(self.small_blocks):
+                try:
+                    curr_tank = self.diff_data.tank_stats[next(self.tank_iterator)]
+                except StopIteration:
+                    break
+                self.draw_short_tank_stats_block(img_draw, curr_tank)
+                self.small_blocks -= 1
+                self.current_offset += StatsBlockSize.short_tank_stats + BlockOffsets.block_indent
             
-        self.draw_watermark()
+            self.draw_watermark()
+            
+        else:
+            if not self.game_account.widget_settings.disable_nickname:
+                self.draw_nickname(img_draw)
+                if not self.image_settings.disable_flag:
+                    self.draw_flag()
+            
+            
+            if not self.game_account.widget_settings.disable_main_stats_block:
+                self.draw_main_stats_block(img_draw)
+                self.blocks -= 1
+                self.current_offset += StatsBlockSize.main_stats + BlockOffsets.block_indent
+
+            if self.include_rating:
+                self.draw_rating_stats_block(img_draw)
+                self.blocks -= 1
+                self.current_offset += StatsBlockSize.rating_stats + BlockOffsets.block_indent
+                
+            for _ in range(self.blocks):
+                try:
+                    curr_tank = self.diff_data.tank_stats[next(self.tank_iterator)]
+                except StopIteration:
+                    break
+                self.draw_tank_stats_block(img_draw, curr_tank)
+                self.current_offset += StatsBlockSize.full_tank_stats + BlockOffsets.block_indent
+                self.blocks -= 1
+        
+            for _ in range(self.small_blocks):
+                try:
+                    curr_tank = self.diff_data.tank_stats[next(self.tank_iterator)]
+                except StopIteration:
+                    break
+                self.draw_short_tank_stats_block(img_draw, curr_tank)
+                self.small_blocks -= 1
+                self.current_offset += StatsBlockSize.short_tank_stats + BlockOffsets.block_indent
+            
+            self.draw_watermark()
         
         if debug_label:
             self.draw_debug_label(img_draw)

@@ -337,12 +337,10 @@ class ProfileImageGen:
             time = timedelta(
                 seconds=datetime.now(pytz.utc).timestamp() - command.last_used.timestamp()
             ).total_seconds() // 60
-            time = round(time)
             if time > 999:
                 time = '999+'
             
-            if isinstance(time, int):
-                time = str(time)
+            time = str(int(time))
                 
             nums.append(f'{index + 1}:')
             commands.append(command.name)
@@ -427,7 +425,7 @@ class ProfileImageGen:
         nums, accounts, sessions = [], [], []
         
         for account in AccountSlotsEnum:
-            nums.append(f'{account.value}:')
+            nums.append(f'{account.value}:' if account.name != self.member.current_game_account else f'{account.value} -->')
             
             game_account: GameAccount | None = getattr(self.member.game_accounts, account.name)
             if game_account is None:
@@ -436,7 +434,7 @@ class ProfileImageGen:
                     sessions.append(False)
                     continue
 
-                accounts.append('[-| /set_player |-]')
+                accounts.append('[---/set_player---]')
                 sessions.append(False)
                 continue
             
