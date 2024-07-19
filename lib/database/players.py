@@ -296,7 +296,7 @@ class PlayersDB:
         result = await self.collection.find_one({'id': member_id})
         
         if raise_error and (result is None):
-            _log.error(f'Player with id {member_id} not found')
+            _log.info(f'Player with id {member_id} not found')
             raise database.MemberNotFound()
         
         if get_if_exist:

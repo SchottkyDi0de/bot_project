@@ -9,6 +9,7 @@ from discord.ext import commands
 
 from lib.api import async_wotb_api
 from lib.data_classes.tankopedia import Tank
+from lib.database.players import PlayersDB
 from lib.database.tankopedia import TankopediaDB
 from lib.logger.logger import get_logger
 from lib.exceptions.api import APIError
@@ -59,7 +60,7 @@ class App():
             _log.info('Bot started: %s', self.bot.user)
 
             api = async_wotb_api.API()
-            # await PlayersDB().database_update()
+            await PlayersDB().database_update()
 
             await self.retrieve_tankopedia(api)
             _log.debug('Tankopedia set successful\nBot started: %s', self.bot.user)
