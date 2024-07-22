@@ -337,10 +337,12 @@ class ProfileImageGen:
             time = timedelta(
                 seconds=datetime.now(pytz.utc).timestamp() - command.last_used.timestamp()
             ).total_seconds() // 60
+            
             if time > 999:
                 time = '999+'
             
-            time = str(int(time))
+            if isinstance(time, int):
+                time = str(int(time))
                 
             nums.append(f'{index + 1}:')
             commands.append(command.name)
