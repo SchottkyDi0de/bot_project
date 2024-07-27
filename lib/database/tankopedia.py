@@ -14,8 +14,8 @@ class TankopediaDB:
         self.client = AsyncIOMotorClient("mongodb://localhost:27017")
         self.sync_client = MongoClient('mongodb://localhost:27017/')
         
-        self.db = self.client['TankopediaDB']
-        self.sync_db = self.sync_client['TankopediaDB']
+        self.db = self.client.get_database('TankopediaDB')
+        self.sync_db = self.sync_client.get_database('TankopediaDB')
         
         self.collection_eu_sync = self.sync_db.get_collection('tanks_eu')
         self.collection_ru_sync = self.sync_db.get_collection('tanks_ru')
