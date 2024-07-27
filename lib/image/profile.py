@@ -341,7 +341,7 @@ class ProfileImageGen:
             if time > 999:
                 time = '999+'
             
-            if isinstance(time, int):
+            if isinstance(time, float):
                 time = str(int(time))
                 
             nums.append(f'{index + 1}:')
