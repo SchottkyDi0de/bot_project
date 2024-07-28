@@ -61,7 +61,7 @@ image:
     ]
 
 themes:
-  available: ['default', 'tiger_girl', 'alpine']
+  available: ['default', 'tiger_girl', 'alpine', 'ggame']
 
 internal:
   ignore_tankopedia_failures: true
