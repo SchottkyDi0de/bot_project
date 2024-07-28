@@ -12,10 +12,10 @@ _log = logger.get_logger(__file__, 'TankopediaLogger', 'logs/tankopedia.log')
 class TankopediaDB:
     def __init__(self) -> None:
         self.client = AsyncIOMotorClient("mongodb://localhost:27017")
-        self.sync_client = MongoClient('mongodb://localhost:27017/')
+        self.sync_client = MongoClient('mongodb://localhost:27017')
         
-        self.db = self.client['TankopediaDB']
-        self.sync_db = self.sync_client['TankopediaDB']
+        self.db = self.client.get_database('TankopediaDB')
+        self.sync_db = self.sync_client.get_database('TankopediaDB')
         
         self.collection_eu_sync = self.sync_db.get_collection('tanks_eu')
         self.collection_ru_sync = self.sync_db.get_collection('tanks_ru')
@@ -32,6 +32,7 @@ class TankopediaDB:
             data = await self.collection_eu.find_one({'id': id})
             
         if data is None:
+            _log.warn(f"TankopediaDB: tank with id {id} not found in {region} region")
             return data
         
         return Tank.model_validate(data)
@@ -47,6 +48,9 @@ class TankopediaDB:
         if data is None:
             _log.warn(f"TankopediaDB: tank with id {id} not found in {region} region")
             return data
+        
+        if id == 27137:
+            pass
         
         return Tank.model_validate(data)
     

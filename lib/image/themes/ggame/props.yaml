@@ -1,0 +1,21 @@
+image_settings: 
+    theme: 'ggame'
+    colorize_stats: true
+    hide_nickname: false
+    hide_clan_tag: false
+    disable_flag: false
+    disable_rating_stats: false
+    disable_cache_label: false
+    disable_stats_blocks: false
+    stats_blocks_transparency: 0.25
+    glass_effect: 0
+    nickname_color: "#f0f0f0"
+    clan_tag_color: "#ff5d18"
+    stats_color: "#f0f0f0"
+    main_text_color: "#EA9500"
+    stats_text_color: "#D55149"
+    negative_stats_color: '#c01515'
+    positive_stats_color: '#1eff26'
+
+bg_path: lib/image/themes/ggame/bg.png
+bg: null

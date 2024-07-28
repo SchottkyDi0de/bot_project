@@ -437,16 +437,18 @@ class ImageSize:
 class LayoutDefiner:
     def __init__(
             self, 
-            data: SessionDiffData, 
+            data: SessionDiffData,
+            player_data: PlayerGlobalData,
             image_settings: ImageSettings, 
             extra: ImageGenExtraSettings,
             stats_view_settings: StatsViewSettings,
             widget_settings: WidgetSettings,
             widget_mode: bool
         ) -> None:
+        self.player_data = player_data
         self.stack = BlocksStack()
         self.widget_mode = widget_mode
-        self.data = data
+        self.session_data = data
         self.image_height = ImageSize.min_height
         self.image_width = ImageSize.min_width
         self.blocks = 1
@@ -459,20 +461,24 @@ class LayoutDefiner:
         self.widget_settings = widget_settings
         self.stats_view = stats_view_settings
         
+        self.nickname_box = []
+        self.nickname_params = {}
+        self.clan_tag_params = {}
+    
     def _calculate_stats_blocks(self) -> None:
         self.stack.set_max_blocks(
             self.widget_settings.max_stats_blocks if self.widget_mode else 3,
             self.widget_settings.max_stats_small_blocks if self.widget_mode else 2
         )
-        if self.data.tank_stats is not None:
-            tanks_count = len(self.data.tank_stats)
+        if self.session_data.tank_stats is not None:
+            tanks_count = len(self.session_data.tank_stats)
         else:
             tanks_count = 0
             
         self.stack.add_blocks(tanks_count)
         
         if not self.image_settings.disable_rating_stats:
-            include_rating = self.data.rating_session.battles > 0
+            include_rating = self.session_data.rating_session.battles > 0
         else:
             include_rating = False
             
@@ -556,15 +562,85 @@ class LayoutDefiner:
         
         _log.debug(
             f'img size: {self.image_width}x{self.image_height} blocks: {self.blocks} small: {self.small_blocks}'
-            )
+        )
         drawable_layout = ImageDraw.Draw(self.layout_map)
         current_offset = BlockOffsets.first_indent
+        
+        if self.image_settings.hide_nickname:
+            self.player_data.nickname = 'Player'
+        if self.image_settings.hide_clan_tag:
+            self.player_data.data.clan_tag = None
+        if self.player_data.data.clan_tag is not None:
+            tag = {
+                'text':     f'[{self.player_data.data.clan_stats.tag}]',
+                'font':     Fonts.roboto_30,
+            }
+            nickname = {
+                'text':     self.player_data.nickname,
+                'font':     Fonts.roboto_30,
+            }
+
+            tag_length = drawable_layout.textlength(**tag) + 10
+            nick_length = drawable_layout.textlength(**nickname)
+            full_length = tag_length + nick_length
+            
+            nickname_text_params = {
+                "xy": (ImageSize.max_width//2 - tag_length//2, 20),
+                "text" : self.player_data.nickname,
+                "font" : Fonts.roboto_30,
+                "anchor" : 'ma',
+                "fill" : self.image_settings.nickname_color
+            }
+            
+            self.nickname_params = nickname_text_params
+            
+            clan_tag_text_params = {
+                "xy": (ImageSize.max_width//2 + full_length//2 - tag_length//2, 20),
+                "text" : tag['text'],
+                "font" : Fonts.roboto_30,
+                "anchor" : 'ma',
+                "fill" : self.image_settings.clan_tag_color
+            }
+            
+            self.clan_tag_params = clan_tag_text_params
+            
+        else:
+            nickname = {
+                'text':     self.player_data.nickname,
+                'font':     Fonts.roboto_30,
+            }
+            full_length = drawable_layout.textlength(**nickname)
+
+            nickname_text_params = {
+                "xy": (ImageSize.max_width//2, 20),
+                "text" : self.player_data.nickname,
+                "font" : Fonts.roboto_30,
+                "anchor" : 'ma',
+                "fill" : self.image_settings.nickname_color
+            }
+            
+            self.nickname_params = nickname_text_params
+            
+            del nickname_text_params['fill']
+            
+        
         color = (
             *get_tuple_from_color(self.widget_settings.stats_block_color),
             int(abs(1 - self.widget_settings.background_transparency) * 255)
         )
         if not self.widget_mode:
             color = (255, 255, 255, 255)
+            
+        drawable_layout.rounded_rectangle(
+            [
+                self.image_width//2 - full_length//2 - 10,
+                12,
+                self.image_width//2 + full_length//2 + 10,
+                60
+            ],
+            radius=10,
+            fill=color,
+        )
             
         for block in range(self.blocks):
             drawable_layout.rounded_rectangle(
@@ -709,13 +785,14 @@ class ImageGenSession():
         self.image_settings = self.game_account.image_settings if force_image_settings is None else force_image_settings
         
         self.layout_definer = LayoutDefiner(
+            player_data=data,
             data=diff_data,
             image_settings=self.image_settings,
             extra=extra,
             stats_view_settings=self.game_account.stats_view_settings,
             widget_settings=self.game_account.widget_settings,
             widget_mode=widget_mode
-            )
+        )
         start_time = time()
         self.layout_map = self.layout_definer.create_rectangle_map()
         self.blocks, self.small_blocks = self.layout_definer.get_blocks_count()
@@ -778,6 +855,7 @@ class ImageGenSession():
             for _ in range(self.blocks):
                 try:
                     curr_tank = self.diff_data.tank_stats[next(self.tank_iterator)]
+                    curr_tank.tank_name = curr_tank.tank_id if curr_tank.tank_name == 'Unknown' else curr_tank.tank_name
                 except StopIteration:
                     break
                 self.draw_tank_stats_block(img_draw, curr_tank)
@@ -946,6 +1024,7 @@ class ImageGenSession():
         if widget_mode:
             image = Image.new('RGBA', rectangle_map.size, (0, 0, 0, 0))
             if widget_settings.disable_bg:
+                bg = Image.new('RGBA', rectangle_map.size, (0, 0, 0, 0))
                 self.image = image
                 self.image.paste(rectangle_map, (0, 0), rectangle_map)
                 return
@@ -961,6 +1040,7 @@ class ImageGenSession():
                 self.image.paste(bg, (0, 0), rectangle_map)
 
             else:
+                bg = Image.new('RGBA', rectangle_map.size, (0, 0, 0, 0))
                 self.image.putalpha(int(255 * abs(widget_settings.background_transparency - 1.0)))
 
         else:
@@ -1055,53 +1135,17 @@ class ImageGenSession():
 
     def draw_nickname(self, img: ImageDraw.ImageDraw):
         if self.image_settings.hide_nickname:
-            self.data.nickname = '~nickname hidden~'
+            self.data.nickname = 'Player'
         if self.image_settings.hide_clan_tag:
             self.data.data.clan_tag = None
             
-        if self.data.data.clan_tag is not None:
-            tag = {
-                'text':     f'[{self.data.data.clan_stats.tag}]',
-                'font':     self.fonts.roboto_30,
-            }
-            nickname = {
-                'text':     self.data.nickname,
-                'font':     self.fonts.roboto_30,
-            }
-            
-            tag_length = img.textlength(**tag) + 10
-            nick_length = img.textlength(**nickname)
-            full_length = tag_length + nick_length
-            
-            img.text(
-                xy=(self.img_size[0]//2 - tag_length//2, 20),
-                text=self.data.nickname,
-                font=self.fonts.roboto_30,
-                anchor='ma',
-                fill=self.image_settings.nickname_color)
-            
-            img.text(
-                xy=(self.img_size[0]//2 + full_length//2 - tag_length//2, 20),
-                text=tag['text'],
-                font=self.fonts.roboto_30,
-                anchor='ma',
-                fill=self.image_settings.clan_tag_color)
-        else:
-            img.text(
-                (self.img_size[0]//2, 20),
-                text=self.data.nickname,
-                font=self.fonts.roboto_30,
-                anchor='ma',
-                fill=self.image_settings.nickname_color
-            )
-            
         if not self.image_settings.hide_nickname:
-            img.text(
-                (self.img_size[0]//2, 55),
-                text=f'ID: {str(self.data.id)}',
-                font=self.fonts.roboto_17,
-                anchor='ma',
-                fill=Colors.l_grey)
+            if self.data.data.clan_tag is None:
+                img.text(**self.layout_definer.nickname_params)
+                return
+            
+            img.text(**self.layout_definer.nickname_params)
+            img.text(**self.layout_definer.clan_tag_params)
 
     def draw_main_labels(self, img: ImageDraw.ImageDraw):
         coords = self.coord.main_stats_labels(self.current_offset)

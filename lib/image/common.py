@@ -215,7 +215,7 @@ class Values():
         }
 
 class ImageSize:
-    max_height: int = 1300
+    max_height: int = 1250
     max_width: int = 700
     
 
@@ -228,6 +228,9 @@ class ImageGenReturnTypes(Enum):
 @singleton
 class ImageGenCommon():
     image_settings = ImageSettings()
+    nickname_box = []
+    nickname_params = {}
+    clan_tag_params = {}
     text = None
     fonts = Fonts()
     leagues = LeaguesIcons()
@@ -283,7 +286,6 @@ class ImageGenCommon():
             force_locale: str | None = None,
             return_image: ImageGenReturnTypes = ImageGenReturnTypes.BYTES_IO
         ) -> BytesIO | str | Image.Image:
-
         if force_locale is not None:
             self.text = Text().get(force_locale)
         else:
@@ -305,7 +307,7 @@ class ImageGenCommon():
         self.achievements = data.data.achievements
         
         self._load_image_by_rules(member=member, server=server)
-        self.image = self.image.crop((0, 50, 700, 1300))
+        self.image = center_crop(self.image, (ImageSize.max_width, ImageSize.max_height))
         self.img_size = self.image.size
         self.coord = Coordinates(self.img_size)
         img_draw = ImageDraw.Draw(self.image)
@@ -378,30 +380,69 @@ class ImageGenCommon():
         )
 
     def draw_background(self) -> None:
+        img = ImageDraw.Draw(self.image)
+        
+        if self.image_settings.hide_nickname:
+            self.data.nickname = 'Player'
+        if self.image_settings.hide_clan_tag:
+            self.data.data.clan_tag = None
+        if self.data.data.clan_tag is not None:
+            tag = {
+                'text':     f'[{self.data.data.clan_stats.tag}]',
+                'font':     self.fonts.roboto_30,
+            }
+            nickname = {
+                'text':     self.data.nickname,
+                'font':     self.fonts.roboto_30,
+            }
+
+            tag_length = img.textlength(**tag) + 10
+            nick_length = img.textlength(**nickname)
+            full_length = tag_length + nick_length
+            
+            nickname_text_params = {
+                "xy": (self.img_size[0]//2 - tag_length//2, 20),
+                "text" : self.data.nickname,
+                "font" : self.fonts.roboto_30,
+                "anchor" : 'ma',
+                "fill" : self.image_settings.nickname_color
+            }
+            
+            clan_tag_text_params = {
+                "xy": (self.img_size[0]//2 + full_length//2 - tag_length//2, 20),
+                "text" : tag['text'],
+                "font" : self.fonts.roboto_30,
+                "anchor" : 'ma',
+                "fill" : self.image_settings.clan_tag_color
+            }
+            
+            self.clan_tag_params = clan_tag_text_params
+            
+        else:
+            nickname = {
+                'text':     self.data.nickname,
+                'font':     self.fonts.roboto_30,
+            }
+            full_length = img.textlength(**nickname)
+
+            nickname_text_params = {
+                "xy": (self.img_size[0]//2, 20),
+                "text" : self.data.nickname,
+                "font" : self.fonts.roboto_30,
+                "anchor" : 'ma',
+                "fill" : self.image_settings.nickname_color
+            }
+            
+            del nickname_text_params['fill']
+            
+            self.nickname_box = img.textbbox(**nickname_text_params)
+            
+        self.nickname_params = nickname_text_params
+        
         gaussian_filter = ImageFilter.GaussianBlur(radius=self.image_settings.glass_effect)
-        background_map = Image.new('RGBA', (700, 1250), (0, 0, 0, 0))
+        background_map = Image.new('RGBA', (ImageSize.max_width, ImageSize.max_height), (0, 0, 0, 0))
         img_draw = ImageDraw.Draw(background_map)
         print(f'Image {self.image.mode} size: {self.image.size}')
-
-        # draw nickname rectangle
-        text_box = img_draw.textbbox(
-            (self.img_size[0]//2, 20),
-            text=self.data.data.name_and_tag,
-            font=self.fonts.roboto_25,
-            anchor='ma'
-        )
-
-        text_box = list(text_box)
-        text_box[0] -= 10
-        text_box[2] += 10
-        text_box[1] -= 5
-        text_box[3] += 3
-
-        img_draw.rounded_rectangle(
-            tuple(text_box),
-            radius=10,
-            fill=(0, 0, 0, 20),
-        )
 
         if not self.image_settings.disable_stats_blocks:
         # draw stats rectangles
@@ -409,6 +450,16 @@ class ImageGenCommon():
             img_draw.rounded_rectangle(self.background_rectangles_map.rating, radius=30, fill=(0, 0, 0))
             img_draw.rounded_rectangle(self.background_rectangles_map.medals, radius=30, fill=(0, 0, 0))
             img_draw.rounded_rectangle(self.background_rectangles_map.total, radius=30, fill=(0, 0, 0))
+            img_draw.rounded_rectangle(
+                [
+                    self.image.size[0]//2 - full_length//2 - 10,
+                    12,
+                    self.image.size[0]//2 + full_length//2 + 10,
+                    60
+                ],
+                radius=10,
+                fill=(0, 0, 0),
+            )
 
         bg = self.image.copy()
         if not self.image_settings.glass_effect == 0:
@@ -438,52 +489,11 @@ class ImageGenCommon():
         self.image.paste(rt_img, (326, 460), rt_img)
 
     def draw_nickname(self, img: ImageDraw.ImageDraw):
-        if self.image_settings.hide_nickname:
-            self.data.nickname = 'Player'
-        if self.image_settings.hide_clan_tag:
-            self.data.data.clan_tag = None
-        if not self.data.data.clan_tag is None:
-            tag = {
-                'text':     f'[{self.data.data.clan_stats.tag}]',
-                'font':     self.fonts.roboto_30,
-            }
-            nickname = {
-                'text':     self.data.nickname,
-                'font':     self.fonts.roboto_30,
-            }
-
-            tag_length = img.textlength(**tag) + 10
-            nick_length = img.textlength(**nickname)
-            full_length = tag_length + nick_length
-
-            img.text(
-                xy=(self.img_size[0]//2 - tag_length//2, 20),
-                text=self.data.nickname,
-                font=self.fonts.roboto_30,
-                anchor='ma',
-                fill=self.image_settings.nickname_color)
-
-            img.text(
-                xy=(self.img_size[0]//2 + full_length//2 - tag_length//2, 20),
-                text=tag['text'],
-                font=self.fonts.roboto_30,
-                anchor='ma',
-                fill=self.image_settings.clan_tag_color)
+        if self.data.data.clan_tag is not None:
+            img.text(**self.nickname_params)
+            img.text(**self.clan_tag_params)
         else:
-            img.text(
-                (self.img_size[0]//2, 20),
-                text=self.data.nickname,
-                font=self.fonts.roboto_30,
-                anchor='ma',
-                fill=self.image_settings.nickname_color
-            )
-
-        img.text(
-            (self.img_size[0]//2, 55),
-            text=f'ID: {str(self.data.id)}',
-            font=self.fonts.roboto_17,
-            anchor='ma',
-            fill=Colors.l_grey)
+            img.text(**self.nickname_params)
 
     def draw_nickname_box(self, img: ImageDraw.ImageDraw):
         pass
