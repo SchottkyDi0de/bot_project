@@ -115,7 +115,7 @@ class PDBWorker:
                 game_account = await self.db.get_game_account(slot, member=member)
                 session_state = await self.db.validate_session(member=member, slot=slot)
                 
-                if session_state == SessionStatesEnum.NORMAL:
+                if session_state is SessionStatesEnum.NORMAL:
                     hook = game_account.hook_stats
                     if hook.active:
                         data = await self.api.get_stats(game_id=game_account.game_id, region=game_account.region)
@@ -158,7 +158,7 @@ class PDBWorker:
                             _log.info(f'Closing hook for {member_id} in slot {slot.name} - hook expired')
                             await self.db.disable_stats_hook(member_id, slot)
                 
-                if session_state != SessionStatesEnum.RESTART_NEEDED:
+                if session_state is not SessionStatesEnum.RESTART_NEEDED:
                     continue
                 
                 new_last_stats = await self.api.get_stats(game_id=game_account.game_id, region=game_account.region)
