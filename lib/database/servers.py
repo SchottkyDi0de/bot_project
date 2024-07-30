@@ -8,7 +8,7 @@ from lib.utils.singleton_factory import singleton
 @singleton
 class ServersDB():
     def __init__(self) -> None:
-        self.client = MongoClient('mongodb://localhost:27017/')
+        self.client = MongoClient('mongodb://localhost:27017')
         self.db = self.client['ServersDB']
         self.collection = self.db['servers']
 

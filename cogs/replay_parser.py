@@ -116,7 +116,7 @@ class CogReplayParser(commands.Cog):
                 ).get_view()
             
             await ctx.respond(
-                embed=EmbedReplayBuilder().build_embed(
+                embed=await EmbedReplayBuilder().build_embed(
                     ctx,
                     replay_data,
                     region=region

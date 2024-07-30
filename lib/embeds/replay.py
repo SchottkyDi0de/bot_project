@@ -17,9 +17,9 @@ class EmbedReplayBuilder():
         self.text = Text().get()
         self.tanks_db = TankopediaDB()
 
-    def get_tank_name(self, tank_id: int, region: str) -> str:
+    async def get_tank_name(self, tank_id: int, region: str) -> str:
         try:
-            tank = self.tanks_db.get_tank_by_id_sync(tank_id, region=region)
+            tank = await self.tanks_db.get_tank_by_id(tank_id, region=region)
             if tank is None:
                 raise TankNotFoundInTankopedia
             
@@ -29,9 +29,9 @@ class EmbedReplayBuilder():
         else:
             return tank.name
         
-    def get_tank_tier(self, tank_id: int, region: str) -> str:
+    async def get_tank_tier(self, tank_id: int, region: str) -> str:
         try:
-            tank = self.tanks_db.get_tank_by_id_sync(tank_id, region)
+            tank = await self.tanks_db.get_tank_by_id(tank_id, region)
             if tank is None:
                 raise TankNotFoundInTankopedia
             
@@ -138,7 +138,7 @@ class EmbedReplayBuilder():
         
         return players_str
 
-    def build_embed(self, ctx: ApplicationContext, data: ParsedReplayData, region: str) -> Embed:
+    async def build_embed(self, ctx: ApplicationContext, data: ParsedReplayData, region: str) -> Embed:
         author_id = data.author.account_id
 
         for player_result in data.player_results:
@@ -160,8 +160,8 @@ class EmbedReplayBuilder():
                                                 else self.text.cmds.parse_replay.items.common.lose if data.author.winner is False else \
                                                     self.text.cmds.parse_replay.items.common.draw,
                     'battle_type'       :   self.get_room_type(data.room_name),
-                    'tank_name'         :   self.get_tank_name(data.author.tank_id, region),
-                    'tier'              :   self.get_tank_tier(data.author.tank_id, region),
+                    'tank_name'         :   await self.get_tank_name(data.author.tank_id, region),
+                    'tier'              :   await self.get_tank_tier(data.author.tank_id, region),
                     'map'               :   self.get_map_name(data.map_name),
                     'time'              :   str(data.time_string),
                     'damage_dealt'      :   str(author_stats.info.damage_dealt),

@@ -119,7 +119,7 @@ class PDBWorker:
                     hook = game_account.hook_stats
                     if hook.active:
                         data = await self.api.get_stats(game_id=game_account.game_id, region=game_account.region)
-                        session_diff = get_session_stats(game_account.last_stats, data, True)
+                        session_diff = await get_session_stats(game_account.last_stats, data, True)
                         
                         if HookWatchFor(hook.watch_for) is HookWatchFor.DIFF:
                             stats_type = 'main_diff' if hook.stats_type == 'common' else 'rating_diff'

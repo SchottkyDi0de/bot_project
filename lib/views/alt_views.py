@@ -267,7 +267,7 @@ class UpdateSession:
                         region=game_account.region,
                         game_id=game_account.game_id
                     )
-                    diff_data = get_session_stats(game_account.last_stats, stats)
+                    diff_data = await get_session_stats(game_account.last_stats, stats)
                     
                     await interaction.response.defer()
                     image = ImageGenSession().generate(

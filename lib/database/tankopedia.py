@@ -1,3 +1,5 @@
+from asyncio import get_running_loop
+
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 
@@ -12,13 +14,8 @@ _log = logger.get_logger(__file__, 'TankopediaLogger', 'logs/tankopedia.log')
 class TankopediaDB:
     def __init__(self) -> None:
         self.client = AsyncIOMotorClient("mongodb://localhost:27017")
-        self.sync_client = MongoClient('mongodb://localhost:27017')
         
         self.db = self.client.get_database('TankopediaDB')
-        self.sync_db = self.sync_client.get_database('TankopediaDB')
-        
-        self.collection_eu_sync = self.sync_db.get_collection('tanks_eu')
-        self.collection_ru_sync = self.sync_db.get_collection('tanks_ru')
         
         self.collection_ru = self.db.get_collection('tanks_ru')
         self.collection_eu = self.db.get_collection('tanks_eu')
@@ -37,28 +34,17 @@ class TankopediaDB:
         
         return Tank.model_validate(data)
     
-    def get_tank_by_id_sync(self, id: int | str, region: str) -> Tank | None:
-        id = int(id)
-        
-        if region == 'ru':
-            data = self.collection_ru_sync.find_one({'id': id})
-        else:
-            data = self.collection_eu_sync.find_one({'id': id})
-            
-        if data is None:
-            _log.warn(f"TankopediaDB: tank with id {id} not found in {region} region")
-            return data
-        
-        if id == 27137:
-            pass
-        
-        return Tank.model_validate(data)
-    
     async def set_tank(self, tank: Tank, region: str):
         if region == 'ru':
-            await self.collection_ru.update_one({'id': tank.id}, {'$set': tank.model_dump()})
+            if await self.collection_ru.find_one({'id': tank.id}) is None:
+                await self.collection_ru.insert_one(tank.model_dump())
+            else:
+                await self.collection_ru.update_one({'id': tank.id}, {'$set': tank.model_dump()})
         else:
-            await self.collection_eu.update_one({'id': tank.id}, {'$set': tank.model_dump()})
+            if await self.collection_eu.find_one({'id': tank.id}) is None:
+                await self.collection_eu.insert_one(tank.model_dump())
+            else:
+                await self.collection_eu.update_one({'id': tank.id}, {'$set': tank.model_dump()})
             
     async def set_tanks(self, tanks: list[Tank], region: str):
         if region == 'ru':

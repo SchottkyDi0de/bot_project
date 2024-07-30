@@ -71,7 +71,7 @@ def init_app(app: FastAPI) -> None:
         )
         
         last_diff_battles = diff_battles
-        session_data = get_session_stats(last_stats, stats, zero_bypass=True)
+        session_data = await get_session_stats(last_stats, stats, zero_bypass=True)
 
         session_image = _img.generate(
             data=stats,
