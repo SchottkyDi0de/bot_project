@@ -57,7 +57,7 @@ class Session(commands.Cog):
         server = self.sdb.get_server(ctx)
         
         await self.db.set_session_settings(slot, member.id, session_settings)
-        diff_stats = get_session_stats(last_stats, stats)
+        diff_stats = await get_session_stats(last_stats, stats)
         
         image = ImageGenSession().generate(
             data=game_account.last_stats,

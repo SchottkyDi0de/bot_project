@@ -175,6 +175,7 @@ class Server:
             return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
         
         await _tdb.set_tank(tank=data.data, region=data.region)
+        _log.info(f'Set new tank from API: {data.data}')
         return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
     
     @app.delete('/bot/api/del_tank', responses={

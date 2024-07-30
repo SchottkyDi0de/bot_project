@@ -94,7 +94,7 @@ def get_normalized_data(data: PlayerGlobalData) -> PlayerGlobalData:
     else:
         return data
     
-def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData, zero_bypass: bool = False) -> SessionDiffData:
+async def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData, zero_bypass: bool = False) -> SessionDiffData:
     """
     Calculate the session statistics difference between two PlayerGlobalData objects.
 
@@ -119,7 +119,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData, ze
     """
     try:
         diff_battles = data_new.data.statistics.all.battles - data_old.data.statistics.all.battles
-        tank_stats = _generate_tank_session_dict(data_old, data_new)
+        tank_stats = await _generate_tank_session_dict(data_old, data_new)
         battles_not_updated = True if diff_battles == 0 else False
         r_diff_battles = data_new.data.statistics.rating.battles - data_old.data.statistics.rating.battles
         rating_not_updated = True if r_diff_battles == 0 else False
@@ -322,7 +322,7 @@ def get_session_stats(data_old: PlayerGlobalData, data_new: PlayerGlobalData, ze
     else:
         return SessionDiffData.model_validate(diff_data_dict)
 
-def _generate_tank_session_dict(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> None | dict[str, TankSessionData]:
+async def _generate_tank_session_dict(data_old: PlayerGlobalData, data_new: PlayerGlobalData) -> None | dict[str, TankSessionData]:
     if not isinstance(data_old, PlayerGlobalData) or not isinstance(data_new, PlayerGlobalData):
         raise TypeError('Wrong data type, expected PlayerGlobalData for both data_old and data_new')
     
@@ -354,7 +354,7 @@ def _generate_tank_session_dict(data_old: PlayerGlobalData, data_new: PlayerGlob
     
     for tank_id in diff_tank_id:
         tank_id = str(tank_id)
-        db_tank = TankopediaDB().get_tank_by_id_sync(tank_id, data_new.region)
+        db_tank = await TankopediaDB().get_tank_by_id(tank_id, data_new.region)
         
         if db_tank is not None:
             tank_name = db_tank.name

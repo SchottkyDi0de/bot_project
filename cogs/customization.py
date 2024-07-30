@@ -332,7 +332,7 @@ class Customization(Cog):
         current_image_settings = ImageSettings.model_validate(current_settings)
         
         data = await self.api.get_stats(region=game_account.region, game_id=game_account.game_id)
-        diff_data = get_session_stats(data, data, zero_bypass=True)
+        diff_data = await get_session_stats(data, data, zero_bypass=True)
         
         image = ImageGenSession().generate(
             data=data, 

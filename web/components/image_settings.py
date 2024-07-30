@@ -9,7 +9,7 @@ from lib.exceptions.database import LastStatsNotFound
 from lib.api.async_wotb_api import API, _log as _api_log
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.image.session import ImageGenSession, ImageOutputType, _log as _image_log
-from lib.data_parser.parse_data import get_session_stats, _log as _parser_log
+from lib.data_parser.parse_data import _log as _parser_log
 from lib.settings.settings import Config
 
 _api = API()
