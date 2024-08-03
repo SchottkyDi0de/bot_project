@@ -1,3 +1,4 @@
+import datetime
 from random import randint
 from io import StringIO
 
@@ -87,11 +88,13 @@ class CogReplayParser(commands.Cog):
         if not replay.filename.endswith('.wotbreplay'):
             raise WrongFileType('Wrong file type')
 
-        filename = randint(1000000, 9999999)
+        _file_ts = datetime.datetime.now().timestamp().__str__()
+        filename = _file_ts.replace('.', '')
+
         await replay.save(f'tmp/replay/{filename}.wotbreplay')
 
-        if output_type == 'json':
-            with StringIO(self.parser.parse(f'tmp/replay/{filename}.wotbreplay')) as f:
+        if output_type == 'raw (json)':
+            with StringIO(self.parser.parse(f'tmp/replay/{filename}.wotbreplay').model_dump_json(indent=4)) as f:
                 await ctx.respond(file=File(f, 'replay_data.json'))
                 
         elif output_type == 'embed':
