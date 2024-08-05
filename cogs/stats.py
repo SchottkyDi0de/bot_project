@@ -32,7 +32,6 @@ from lib.utils.nickname_handler import handle_nickname
 from lib.utils.slot_info import get_formatted_slot_info
 from lib.utils.string_parser import insert_data
 from lib.utils.validators import validate
-from lib.utils.standard_account_validate import standard_account_validate
 from lib.views.alt_views import HookOverride, HookDisable
 
 _log = get_logger(__file__, 'CogStatsLogger', 'logs/cog_stats.log')
@@ -164,7 +163,7 @@ class Stats(commands.Cog):
         }
     )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @with_user_context_wrapper('hook_stats')
+    @with_user_context_wrapper('hook_stats', premium=True)
     async def hook_stats(
         self, 
         mixed_ctx: MixedApplicationContext, 
@@ -315,7 +314,7 @@ class Stats(commands.Cog):
         }
     )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    @with_user_context_wrapper('hook_stats_rating')
+    @with_user_context_wrapper('hook_stats_rating', premium=True)
     async def hook_stats_rating(
         self, 
         mixed_ctx: MixedApplicationContext, 

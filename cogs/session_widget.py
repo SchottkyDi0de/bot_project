@@ -1,13 +1,11 @@
 from discord.ui import View, Button
 from discord import Option
 from discord.ext import commands
-from discord.commands import ApplicationContext
 from webcolors import rgb_to_hex
 
 from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.data_classes.member_context import MixedApplicationContext
-from lib.blacklist.blacklist import check_user
-from lib.data_classes.db_player import AccountSlotsEnum, UsedCommand, WidgetSettings
+from lib.data_classes.db_player import AccountSlotsEnum, WidgetSettings
 from lib.database.players import PlayersDB
 from lib.embeds.info import InfoMSG
 from lib.error_handler.common import hook_exceptions
@@ -15,9 +13,7 @@ from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.color_converter import get_tuple_from_color
-from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.string_parser import insert_data
-from lib.exceptions.database import LastStatsNotFound
 from lib.image.utils.color_validator import color_validate
 from lib.utils.slot_info import get_formatted_slot_info
 

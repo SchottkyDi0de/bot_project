@@ -1,5 +1,5 @@
 from discord.ui import Button, View
-from discord import ApplicationContext, Option
+from discord import Option
 from discord.ext import commands
 
 from lib.data_classes.member_context import MixedApplicationContext
@@ -8,14 +8,12 @@ from lib.embeds.info import InfoMSG
 from lib.logger.logger import get_logger
 from lib.error_handler.common import hook_exceptions
 from lib.embeds.common import CommonMSG
-from lib.settings.settings import Config, EnvConfig
+from lib.settings.settings import Config
 from lib.locale.locale import Text
 from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.utils.string_parser import insert_data
 from lib.utils.slot_info import get_formatted_slot_info
-from lib.utils.standard_account_validate import standard_account_validate
-from lib.data_classes.db_player import AccountSlotsEnum, UsedCommand
-
+from lib.data_classes.db_player import AccountSlotsEnum
 _config = Config().get()
 _log = get_logger(__file__, 'AuthCogLogger', 'logs/auth_cog_logs.log')
 

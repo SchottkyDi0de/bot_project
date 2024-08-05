@@ -7,7 +7,6 @@ from lib.api.async_wotb_api import API
 from lib.data_classes.member_context import MixedApplicationContext
 from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.utils.slot_info import get_formatted_slot_info
-from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.string_parser import insert_data
 from lib.views.alt_views import DeleteAccountConfirmation, StartSession, SlotOverride, SwitchAccount
 from lib.blacklist.blacklist import check_user

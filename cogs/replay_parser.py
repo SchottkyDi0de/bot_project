@@ -3,9 +3,7 @@ from io import StringIO
 
 from discord import File, Option, Attachment, SelectOption
 from discord.ext import commands
-from discord.commands import ApplicationContext
 
-from lib.data_classes.db_player import UsedCommand
 from lib.data_classes.member_context import MixedApplicationContext
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
@@ -20,7 +18,6 @@ from lib.exceptions.replay_parser import WrongFileType
 from lib.error_handler.common import hook_exceptions
 from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.utils.replay_player_info import formatted_player_info
-from lib.utils.standard_account_validate import standard_account_validate
 from lib.settings.settings import Config
 from lib.views.alt_views import ReplayParser as ReplayParserView
 
