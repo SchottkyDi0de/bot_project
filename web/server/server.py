@@ -1,3 +1,39 @@
+# ⠁⠀⠀⠀⠀⢠⣷⣼⢿⣇⣤⣶⣿⠛⠛⣿⣤⣷⠀⡿⡄⠀⠀⠀⠀⠀⠀⣿⠀⠀⢰⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⢷⡀⠀⠀⠀⠀⠀⠹⡇⠀⠀⠀⠀⠀⠀⠉⠳⠄⠀⠀
+# ⠀⠀⠀⠀⠀⣾⣻⣿⣾⡟⠃⢰⡇⠀⠀⢿⣿⠿⡆⢻⣇⠀⠀⠀⠀⠀⠀⣿⠀⠀⣽⣳⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠄⠀⠒⠒⠻⣦⡀⠀⠀⠀⠀⢿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+# ⠀⠀⠀⠀⢰⣿⣿⠋⢸⡄⠀⣼⡀⠀⠀⠘⣿⡀⣷⠈⣿⡀⠀⠀⠀⠀⠀⣿⠀⢠⣿⡟⠋⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢷⣄⠀⠀⠀⠈⢻⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+# ⠀⠀⠀⠀⣼⡿⠁⠀⢸⠀⢰⡏⣃⣠⠤⠴⢻⣿⠙⣇⢹⣇⠀⠀⠀⠀⠀⢹⠀⣸⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣷⡀⠀⠀⠀⢷⡀⠀⠀⠀⠀⠀⠀⠀⠀
+# ⠀⠀⠀⢠⡿⠃⠀⣀⣼⡄⢸⠏⠁⠀⠀⠀⠀⢻⡄⢻⡄⣿⡄⠀⠀⠀⠀⢸⡄⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣆⠀⠀⠘⢧⠀⠀⠀⠀⠀⠀⠀⠀
+# ⠀⠀⠀⣿⣧⠔⠋⠁⢸⡇⢼⠀⠀⠀⠀⠀⠀⠀⢻⣾⢷⡘⣷⠀⠀⠀⠀⠘⣧⡿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢷⡀⠀⠘⣇⠀⠀⠀⠀⠀⠀⠀
+# ⠀⠀⢰⡟⠀⠀⠀⠀⠀⣇⣿⠀⠀⠀⠀⠀⠀⠀⠀⢻⣄⢷⡹⣇⠀⠀⠀⠀⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⡀⠹⡆⠀⠀⠀⠀⠀⠀
+# ⠀⠠⣿⠀⠀⠀⠀⠀⠀⢻⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣖⢻⣿⡆⠀⠀⠀⢻⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢷⣄⢻⡄⠀⠀⠀⠀⠀
+# ⠀⣼⣻⡀⠀⠀⠀⠀⠀⠸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣾⣷⡄⠀⠀⠀⠸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢷⣷⡀⠀⠀⠀⠀
+# ⢰⡿⢻⡇⠀⠀⠀⠀⠀⠀⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣿⣿⡄⠀⠀⠀⣷⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⠤⠤⠴⠖⠒⠒⠒⠒⠒⠒⠒⠛⠛⠂⠀⠀⠀⠀⠈⠻⣧⠀⠀⠀⠀
+# ⡿⠠⢰⣷⠀⠀⠀⠀⠀⠀⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⡝⣆⠀⠀⢸⡆⠀⠀⠀⠀⠀⠀⠀⣤⣤⣤⣶⣶⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡀⠙⣇⠀⠀⠀
+# ⣷⠀⠀⣿⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢻⣟⢷⡀⠀⢷⠀⠀⠀⠀⠀⠀⠘⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⢸⡆⠀⠀
+# ⠁⣴⣷⢺⡇⠀⠀⠀⠀⠀⠀⠀⣀⣠⡤⠶⢖⣿⠃⠀⠀⠀⠀⠀⠀⠀⠙⢷⣽⢦⡸⡇⠀⠀⠀⠀⠀⠀⠿⠛⠛⠋⠉⠉⢫⡉⠉⣀⣰⠎⢻⣿⣿⣿⣿⠇⣿⡿⠀⠀⠀⢸⣿⡄⠀
+# ⣤⣿⡰⠀⣧⠀⠀⣀⡤⢶⣚⣭⣵⣶⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣷⣿⣿⡄⠀⠀⠀⠀⠀⠀⣴⠒⠀⠀⠀⠀⢿⣿⣿⣿⠀⠂⠎⢩⠉⠰⣆⡟⠓⡄⠀⠀⢸⣿⣷⠀
+# ⣿⠈⠁⠀⣿⣄⣬⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⣿⡀⠀⠀⠀⠀⠀⠘⢆⣀⣀⣀⣀⣼⠿⠿⠿⠿⠿⠿⠿⠿⠟⠛⠛⠋⠁⠀⠀⢸⡇⡸⣇
+# ⣿⠒⠀⣦⣼⡿⣿⣿⣿⡿⠟⠛⡽⢿⣿⣿⠟⡿⠳⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠛⣷⡀⠀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⣤⡴⠖⠀⠀⠀⠰⣿⠂⢸⡇⠫⣿
+# ⣿⠇⠂⠋⢸⣿⠈⣿⠁⠁⣾⣿⣷⣀⠉⣙⣤⡿⠿⠁⠀⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠋⠀⠙⡁⢀⠀⠀⠀⠀⠀⠀⠀⢸⡃⡇⠈
+# ⣿⠀⡄⠀⠠⣿⡄⠸⡆⢀⣘⡿⠿⠟⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠋⠀⠀⠀⠀⠀⠀⠀⢸⡅⠅⠀
+# ⣿⠀⡇⠀⢠⣸⡇⠀⠙⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⣆⠀
+# ⣿⠀⡇⠀⢠⣸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠇⠀⠀
+# ⣿⠀⡇⠀⠀⣼⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⡀⠀⠀⠀⠀⠀⠀⣀⣤⠾⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀
+# ⣿⠀⡁⠀⠠⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢦⣀⣀⡤⠴⠛⠉⠉⠛⠓⠚⠛⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⢲
+# ⣿⠀⠄⠀⠀⣿⠄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⣨
+# ⡿⠀⠂⠀⠀⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⢠⣼
+# ⣿⠃⠁⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠁⡰⣿
+# ⠧⠃⠁⡆⢠⡇⣿⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⢱⡇
+# ⢧⣐⡀⠃⢀⡇⣿⢻⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⣇⣼⡗
+# ⠈⢿⣬⠄⠈⡇⢸⠀⠘⣿⣶⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣴⠟⢻⣡⡟⠀
+# ⠀⠀⢻⣦⠀⡇⢸⡄⠐⣿⡅⠀⠙⠛⠳⢦⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣴⠾⣿⠛⠛⠛⢻⣿⠃⠀
+# ⠀⠀⠀⠹⣆⣧⠸⡇⠀⣿⡇⠀⠀⠀⠀⠀⠀⢹⡟⠛⠶⢦⣤⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⠴⠞⠋⠁⠀⠀⢿⡀⠀⠀⢸⣿⠃⠀
+# ⠀⠀⠀⠀⠙⣿⠀⣇⢸⣿⣯⠰⠂⠀⠀⠀⠀⣹⡇⠢⢀⠀⣿⠈⠉⠙⠻⠶⢦⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⡤⠶⠚⠋⠁⠀⠀⠀⠀⠀⠀⠀⠘⣇⣠⡴⣾⡟⠀⠀
+# ⠀⠀⠀⠀⠀⠘⠆⢿⢸⡇⣧⠆⠀⠀⠀⠀⠀⢹⡇⠀⠀⢀⣿⠁⠀⠀⠀⠀⠈⠙⢿⡟⢿⡶⢤⣄⣠⣤⠤⠶⠒⢾⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⠴⠋⠁⢠⡿⢷⢀⢀
+# ⠀⢀⡀⠀⠀⠀⠀⢸⣾⡇⠸⡄⠀⢀⡀⠀⠀⣾⡟⠀⠀⢹⣿⡤⠀⠀⢀⡀⠀⠀⢸⣧⣼⣀⣶⢿⠋⠀⠀⠀⠀⠈⡆⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣴⡚⠋⠀⠀⢀⡀⣼⠇⢓⣴⢞
+#
+# Why are you reading this?
+
 from datetime import datetime, timedelta
 from typing import Annotated, Dict, List, Literal
 
@@ -18,28 +54,6 @@ from web.components import session_widget
 from web.components import auth
 from lib.database.internal import InternalDB
 
-# ⠀⠀⠀⠀⢠⡏⠀⠀⠀⠀⠀⠀⢀⡞⠁⠀⡿⣯⡷⡴⢦⣤⡠⣶⡶⠀⢷⠀⠀⠀⠀⢰⡇⠀⠀⠀⠀⠀⠀⡾⠀
-# ⠀⠀⠀⠀⠀⠀⡞⠀⠀⠀⠀⠀⠀⠀⣼⣥⣤⣤⣤⣤⣤⣤⣤⣀⣀⣀⣀⠀⠈⢧⠀⠀⠀⢸⡇⠀⠀⠀⠀⠀⢀⡇⠀
-# ⠀⠀⠀⠀⠀⢸⠁⠀⠀⠀⠀⠀⠀⡼⠁⠀⠀⠀⠀⠉⠙⠻⢿⣿⣿⣿⣿⣿⣿⠛⢦⠀⠀⢸⡇⠀⠀⠀⠀⠀⢸⡇⠀
-# ⠀⠀⠀⠀⢠⡏⠀⠀⠀⠀⠀⠀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⠳⠀⢳⡀⢹⡇⠀⠀⠀⠀⠀⡾⡇⠀
-# ⠀⠀⠀⠀⡞⠀⠀⠀⠀⠀⠀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣿⣿⡿⠘⠀⠀⠹⣼⡇⠀⠀⠀⠀⢠⠇⠀⠀
-# ⠀⠀⠀⣰⠃⠀⠀⠀⠀⠀⡾⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣿⡿⠁⠀⠀⠀⠀⠘⣇⠀⠀⠀⠀⡾⠀⠀⠀
-# ⠀⠀⢠⡏⠀⠀⠀⠀⠀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⠁⠀⠀⠀⠀⠀⠀⠸⡄⠀⠀⢸⠁⠀⠀⠀
-# ⠀⠀⡾⠀⠀⠀⠀⠀⡾⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠀⠀⠀⠀⠀⠀⠀⠀⢻⠀⠀⡟⠀⠀⠀⠀
-# ⠀⣴⠓⣾⣳⣀⢀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⡇⠀⠀⠀⠀⠀⠀⠀⢸⡇⢀⠇⠀⠀⠀⠀
-# ⣾⠃⠀⠀⠀⠑⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⠃⠀⠀⠀⠀⠀⠀⠀⠈⡇⢸⠀⠀⠀⠀⠀
-# ⠹⡀⠀⠀⠀⠀⠹⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⣾⠀⠀⠀⠀⠀
-# ⠀⢳⡄⠀⠀⠀⠀⠘⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡼⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡇⣿⠀⠀⠀⠀⠀
-# ⠀⠀⣷⡄⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡞⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠃⡏⠀⠀⠀⠀⠀
-# ⠀⢀⡇⢹⣄⠀⠀⠀⠀⣀⠉⠓⠶⢄⡀⠀⠀⠀⠀⠀⢀⣠⠴⠋⠣⣄⠀⠀⠀⠀⠀⠀⠀⠀⢠⠟⣸⣧⠀⠀⠀⠀⠀
-# ⠀⣴⣿⠋⠘⣆⠀⢰⠶⠤⢍⣛⣶⠤⠿⣷⣦⡀⠒⠚⡟⠀⠀⠀⠀⠈⠛⠢⠤⡄⠀⠀⢀⡴⢯⠴⣳⠇⠀⠀⠀⠀⠀
-# ⠀⠀⠉⠀⠀⠘⢦⡈⠻⣖⠤⣤⣉⣉⣹⣯⣭⠉⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣾⠛⣫⣼⠃⠀⠀⠀⠀⠀⠀
-# ⠀⠀⠀⠀⠀⠀⠀⠑⣄⠉⢦⡀⠀⠀⠈⠉⠁⠀⠀⣸⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⢿⣷⢚⡝⠁⠀⠀⠀⠀⠀⠀⠀
-# ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⢶⣷⠇⠀⠀⠀⠀⠀⣠⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⣿⠷⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀
-# ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀
-#
-# Why are you reading this?
-
 _pdb = PlayersDB()
 _tdb = TankopediaDB()
 _env_config = EnvConfig()
@@ -52,6 +66,9 @@ class AddTankopediaData(BaseModel):
     region: Literal['ru', 'eu']
     data: Tank
 
+class RequestTankData(BaseModel):
+    region: Literal['ru', 'eu']
+    tank_id: int
 
 class RemoveTankopediaData(BaseModel):
     region: Literal['ru', 'eu']
@@ -211,6 +228,40 @@ class Server:
         
         await _tdb.del_tank(tank_id=data.tank_id, region=data.region)
         return JSONResponse(InfoResponses.set_ok.model_dump(), status_code=200)
+    
+    @app.get('/bot/api/get_tank', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        400: {'model' : ErrorResponse, 'description' : 'Tank not found'},
+        200: {'model' : Tank, 'description' : 'Tankopedia data'}
+        }
+    )
+    async def get_tank(api_key: Annotated[str, Header()], data: RequestTankData):
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        tank = await _tdb.get_tank_by_id(id=data.tank_id, region=data.region)
+        
+        if tank is None:
+            return JSONResponse(ErrorResponses.item_not_found.model_dump(), status_code=ErrorResponses.item_not_found.code)
+        
+        await JSONResponse(tank.model_dump(), status_code=200)
+        
+    @app.get('/bot/api/get_member', responses={
+        418: {'model' : ErrorResponse, 'description' : 'Access denied'},
+        400: {'model' : ErrorResponse, 'description' : 'Member not found'},
+        200: {'model' : DBPlayer, 'description' : 'Member data'}
+        }
+    )
+    async def get_member(api_key: Annotated[str, Header()], id: int):
+        if api_key != _env_config.INTERNAL_API_KEY:
+            return JSONResponse(ErrorResponses.access_denied.model_dump(), status_code=ErrorResponses.access_denied.code)
+        
+        member = await _pdb.get_member(id, False)
+        
+        if isinstance(member, bool):
+            return JSONResponse(ErrorResponses.item_not_found.model_dump(), status_code=ErrorResponses.item_not_found.code)
+        
+        return JSONResponse(member.model_dump_json(), status_code=200)
 
 def run():
     session_widget.init_app(app)

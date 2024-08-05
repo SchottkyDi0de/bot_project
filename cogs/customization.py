@@ -6,6 +6,7 @@ from webcolors import rgb_to_hex
 
 from lib.api.async_wotb_api import API
 from lib.auth.discord import DiscordOAuth
+from lib.data_classes.member_context import MixedApplicationContext
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.data_classes.db_player import AccountSlotsEnum, ImageSettings, UsedCommand
@@ -18,6 +19,7 @@ from lib.logger.logger import get_logger
 from lib.blacklist.blacklist import check_user
 from lib.image.utils.color_validator import color_validate
 from lib.image.settings_represent import SettingsRepresent
+from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
@@ -51,9 +53,10 @@ class Customization(Cog):
             }
         )
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @with_user_context_wrapper('image_settings')
     async def image_settings(
         self,
-        ctx: ApplicationContext,
+        mixed_ctx: MixedApplicationContext,
         colorize_stats: Option(
             bool,
             required=False,
@@ -238,11 +241,12 @@ class Customization(Cog):
             choices=[x.value for x in AccountSlotsEnum]
             )
         ):
-        await Text().load_from_context(ctx)
-
-        game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
-        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
+        
         await ctx.defer()
+        
+        game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
 
         image_settings = await self.db.get_image_settings(slot=slot, member=member)
         color_error_data = []
@@ -338,7 +342,7 @@ class Customization(Cog):
             data=data, 
             diff_data=diff_data, 
             player=member, 
-            server=self.sdb.get_server(ctx), 
+            server=await self.sdb.get_server(ctx), 
             slot=slot,
             force_image_settings=current_image_settings
         )
@@ -473,7 +477,7 @@ class Customization(Cog):
         if not isinstance(member, bool):
             await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
             
-        server_settings = self.sdb.get_server_settings(ctx)
+        server_settings = await self.sdb.get_server_settings(ctx)
         embed = self.inf_msg.custom(
             Text().get(),
             title=Text().get().cmds.server_settings_get.info.get_ok,
@@ -515,7 +519,7 @@ class Customization(Cog):
         
         if server:
             if ctx.author.guild_permissions.administrator:
-                self.sdb.del_server_image(ctx.guild.id)
+                await self.sdb.del_server_image(ctx.guild.id)
                 await ctx.respond(
                     embed=self.inf_msg.custom(
                         Text().get(),
