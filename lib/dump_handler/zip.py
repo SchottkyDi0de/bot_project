@@ -6,7 +6,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 try:
     from lib.settings.settings import Config
-
+    
     _config = Config().get()
 except ImportError:
     ...

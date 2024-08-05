@@ -49,10 +49,16 @@ class TankopediaDB:
     async def set_tanks(self, tanks: list[Tank], region: str):
         if region == 'ru':
             for tank in tanks:
-                await self.collection_ru.update_one({'id': tank.id}, {'$set': tank.model_dump()})
+                if await self.collection_ru.find_one({'id': tank.id}) is None:
+                    await self.collection_ru.insert_one(tank.model_dump())
+                else:
+                    await self.collection_ru.update_one({'id': tank.id}, {'$set': tank.model_dump()})
         else:
             for tank in tanks:
-                await self.collection_eu.update_one({'id': tank.id}, {'$set': tank.model_dump()})
+                if await self.collection_eu.find_one({'id': tank.id}) is None:
+                    await self.collection_eu.insert_one(tank.model_dump())
+                else:
+                    await self.collection_eu.update_one({'id': tank.id}, {'$set': tank.model_dump()})
 
     async def del_tank(self, id: int | str, region: str):
         id = int(id)

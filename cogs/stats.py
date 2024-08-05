@@ -2,8 +2,11 @@ from datetime import datetime, timedelta
 from discord import File, Option, Bot
 from discord.ext import commands
 from discord.commands import ApplicationContext
+
 import pytz
 
+from lib.data_classes.member_context import MixedApplicationContext
+from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.settings.settings import Config
 from lib.image.common import ImageGenCommon
 from lib.locale.locale import Text
@@ -29,7 +32,6 @@ from lib.utils.nickname_handler import handle_nickname
 from lib.utils.slot_info import get_formatted_slot_info
 from lib.utils.string_parser import insert_data
 from lib.utils.validators import validate
-from lib.utils.standard_account_validate import standard_account_validate
 from lib.views.alt_views import HookOverride, HookDisable
 
 _log = get_logger(__file__, 'CogStatsLogger', 'logs/cog_stats.log')
@@ -100,7 +102,7 @@ class Stats(commands.Cog):
             nickname=composite_nickname.nickname,
             game_id=composite_nickname.player_id,
             requested_by=member,
-            server=self.sdb.get_server(ctx)
+            server=await self.sdb.get_server(ctx)
         )
 
         if img is not None:
@@ -116,9 +118,10 @@ class Stats(commands.Cog):
                 }
             )
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @with_user_context_wrapper('astats')
     async def astats(
-        self, 
-        ctx: ApplicationContext,
+        self,
+        mixed_ctx: MixedApplicationContext,
         account: Option(
             int,
             description=Text().get('en').frequent.common.slot,
@@ -129,25 +132,21 @@ class Stats(commands.Cog):
             },
             required=False,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
-            )
+            choices=[x.value for x in AccountSlotsEnum],
+            ),
         ) -> None:
-        await Text().load_from_context(ctx)
-        check_user(ctx)
-        await ctx.defer()
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
         
-        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account)
-        server = self.sdb.get_server(ctx)
-        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
-        
+        server = await self.sdb.get_server(ctx)
         img = await self.get_stats(
             ctx,
-            region=game_account.region,
-            game_id=game_account.game_id, 
-            slot=slot,
+            region=m_ctx.game_account.region,
+            game_id=m_ctx.game_account.game_id, 
+            slot=m_ctx.slot,
             server=server,
-            requested_by=member
-            )
+            requested_by=m_ctx.member
+        )
 
         if img is not None:
             await ctx.respond(file=File(img, 'stats.png'))
@@ -164,9 +163,10 @@ class Stats(commands.Cog):
         }
     )
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @with_user_context_wrapper('hook_stats', premium=True)
     async def hook_stats(
         self, 
-        ctx: ApplicationContext, 
+        mixed_ctx: MixedApplicationContext, 
         stats_name: Option(
             str,
             description=Text().get('en').cmds.hook_stats.descr.sub_descr.stats_name,
@@ -224,13 +224,12 @@ class Stats(commands.Cog):
             default=None,
             choices=[x.value for x in AccountSlotsEnum]),
         ) -> None:
-        await Text().load_from_context(ctx)
-        check_user(ctx)
-        await ctx.defer()
-
-        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account, check_premium=True)
-        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
-        old_hook = game_account.hook_stats
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
+        
+        game_account, slot, member = m_ctx.game_account, m_ctx.slot, m_ctx.member
+        
+        old_hook = m_ctx.game_account.hook_stats
         
         hook = HookStats(
             active=True,
@@ -315,9 +314,10 @@ class Stats(commands.Cog):
         }
     )
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @with_user_context_wrapper('hook_stats_rating', premium=True)
     async def hook_stats_rating(
         self, 
-        ctx: ApplicationContext, 
+        mixed_ctx: MixedApplicationContext, 
         stats_name: Option(
             str,
             description=Text().get('en').cmds.hook_stats.descr.sub_descr.stats_name,
@@ -375,12 +375,11 @@ class Stats(commands.Cog):
             default=None,
             choices=[x.value for x in AccountSlotsEnum]),
         ) -> None:
-        await Text().load_from_context(ctx)
-        check_user(ctx)
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
         await ctx.defer()
 
-        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account, check_premium=True)
-        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         old_hook = game_account.hook_stats
         
         hook = HookStats(
@@ -466,9 +465,10 @@ class Stats(commands.Cog):
         }
     )
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @with_user_context_wrapper('hook_status')
     async def hook_status(
             self,
-            ctx: ApplicationContext,
+            mixed_ctx: MixedApplicationContext,
             account: Option(
                 int,
                 description=Text().get('en').frequent.common.slot,
@@ -482,11 +482,12 @@ class Stats(commands.Cog):
                 choices=[x.value for x in AccountSlotsEnum]
             ),  
         ):
-        await Text().load_from_context(ctx)
-        check_user(ctx)
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
+
         await ctx.defer()
-        
-        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account)
+
+        game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         hook = game_account.hook_stats
         
         if hook.active:

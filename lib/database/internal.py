@@ -25,6 +25,27 @@ class InternalDB():
                 {'name': 'internal_info'},
                 {'$set': {'premium_users': users}},
             )
+            
+    async def set_ban(self, user_id: int) -> None:
+        if await self.collection.find_one({'name': 'internal_info'}) is None:
+            await self.collection.insert_one(
+                {'name': 'internal_info', 'banned_users': [user_id]},
+            )
+        else:
+            await self.collection.update_one(
+                {'name': 'internal_info'},
+                {'$push': {'banned_users': user_id}},
+            )
+    
+    async def remove_ban(self, user_id: int) -> None:
+        await self.collection.update_one(
+            {'name': 'internal_info'},
+            {'$pull': {'banned_users': user_id}},
+        )
+        
+    async def check_ban(self, user_id: int) -> bool:
+        data = await self.collection.find_one({'name': 'internal_info'})
+        return user_id in data['banned_users']
         
     async def get_actual_premium_users(self) -> list[int]:
         data = await self.collection.find_one({'name': 'internal_info'})

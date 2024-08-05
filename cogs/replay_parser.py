@@ -4,9 +4,8 @@ from io import StringIO
 
 from discord import File, Option, Attachment, SelectOption
 from discord.ext import commands
-from discord.commands import ApplicationContext
 
-from lib.data_classes.db_player import UsedCommand
+from lib.data_classes.member_context import MixedApplicationContext
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
 from lib.locale.locale import Text
@@ -18,8 +17,8 @@ from lib.embeds.info import InfoMSG
 from lib.embeds.replay import EmbedReplayBuilder
 from lib.exceptions.replay_parser import WrongFileType
 from lib.error_handler.common import hook_exceptions
+from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.utils.replay_player_info import formatted_player_info
-from lib.utils.standard_account_validate import standard_account_validate
 from lib.settings.settings import Config
 from lib.views.alt_views import ReplayParser as ReplayParserView
 
@@ -47,8 +46,9 @@ class CogReplayParser(commands.Cog):
             }
         )
     @commands.cooldown(1, 15, commands.BucketType.user)
+    @with_user_context_wrapper('parse_replay')
     async def parse_replay(self,
-            ctx: ApplicationContext,
+            mixed_ctx: MixedApplicationContext,
             replay: Option(
                 Attachment,
                 description=Text().get('en').cmds.parse_replay.descr.sub_descr.file,
@@ -78,13 +78,14 @@ class CogReplayParser(commands.Cog):
                 default='embed',
             ),
         ):
-        await Text().load_from_context(ctx)
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
+        
         await ctx.defer()
         
-        _, member, _ = await standard_account_validate(account_id=ctx.author.id, slot=None)
-        await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)
-        
+        member = m_ctx.member
         replay: Attachment = replay
+        
         if not replay.filename.endswith('.wotbreplay'):
             raise WrongFileType('Wrong file type')
 

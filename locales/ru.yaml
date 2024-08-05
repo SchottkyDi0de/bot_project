@@ -232,7 +232,7 @@ cmds:
 # stats command
   stats:
     descr:
-      this: Запрос статитики игрока.
+      this: Запрос статистики игрока.
       sub_descr:
         nickname: Игровой никнейм.
         region: Выбор региона из списка.

@@ -762,6 +762,7 @@ class PlayersDB:
     async def set_analytics(self, analytics: UsedCommand, member: DBPlayer | None = None, member_id: int | str | None = None) -> None:
         member = await self._multi_args_member_checker(member_id, member)
         used_commands: list[dict] = await self.get_analytics(member=member, raw=True)
+        
         if (datetime.now(pytz.utc) - member.profile.last_activity) > timedelta(seconds=10):
             level_exp = exp_add(analytics.name)
         else:
