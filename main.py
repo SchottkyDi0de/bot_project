@@ -24,6 +24,7 @@ class App():
     def __init__(self):
         self.backup = DBBackupWorker()
         self.workers_running = False
+        self.workers_running = False
         self.intents = Intents.default()
         self.pbd_worker = PDBWorker()
         self.bot = commands.Bot(intents=self.intents, command_prefix=_config.default.prefix)
@@ -46,6 +47,10 @@ class App():
             self.bot.reload_extension(i)
             
     async def run_workers(self):
+        if self.workers_running:
+            return
+        
+        self.workers_running = True
         if self.workers_running:
             return
         
@@ -75,6 +80,7 @@ class App():
             await self.run_workers()
         
         self.load_extension(self.extension_names)
+        self.bot.run(EnvConfig.DISCORD_TOKEN_DEV)
         self.bot.run(EnvConfig.DISCORD_TOKEN_DEV)
 
     @staticmethod
