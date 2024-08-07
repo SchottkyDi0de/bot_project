@@ -129,7 +129,7 @@ report:
   bug_channel_id: 1214204057477054464
 
 dump:
-  export_to_id: 1243198882180235344
+  export_to_id: 1243198882180235344 # 628998731500617728 - dakusaido
   chunk_size: 24_117_248  #in bytes(now is 23 MB)
   directory: dump
 

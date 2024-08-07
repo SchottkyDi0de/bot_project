@@ -33,7 +33,7 @@ class App():
         self.bot.remove_command('help')
         self.workers = [
                 self.pbd_worker.run_worker,
-                # self.backup.run_worker,
+                self.backup.run_worker,
             ]
 
         self.extension_names = [

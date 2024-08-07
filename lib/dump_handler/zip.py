@@ -1,8 +1,12 @@
+import os
+
 from io import BytesIO
 from os import path, walk, listdir, remove
 from re import compile as _compile
 from sys import argv
+from typing import Callable
 from zipfile import ZipFile, ZIP_DEFLATED
+from filesplit.split import Split
 
 try:
     from lib.settings.settings import Config
@@ -28,6 +32,7 @@ class Buffer:
 
 class Zip:
     zip_name = "dump.zip"
+    output_dir = "dumpZip"
 
     def _split_zip(self, buffer: BytesIO):
         chunk_size = _config.dump.chunk_size
@@ -42,6 +47,41 @@ class Zip:
             chunk_num += 1
         
         return zips
+    
+    def split_7zip(
+            self,
+            filename: str, outputdir: str, size: int,
+            newline: bool = False, includeheader: bool = False,
+            callback: Callable = None
+        ):
+        splitObj = Split(inputfile=filename, outputdir=outputdir)
+        splitObj.bysize(
+            size=size,
+            newline=newline,
+            includeheader=includeheader,
+            callback=callback
+        )
+
+        os.remove(path=f"{outputdir}/{splitObj.manfilename}")
+
+        return self.get_7zip_files(splitObj)
+    
+    @staticmethod
+    def get_7zip_files(splitObj: Split) -> tuple[list[Buffer], list[str]]:
+        file_names = os.listdir(splitObj.outputdir)
+        require_files = {".gitignore"}
+        
+        for req_file in require_files:
+            file_names.remove(req_file)
+
+        def get_buffer(filename: str) -> Buffer:
+            buf = BytesIO()
+            with open(f"{splitObj.outputdir}/{filename}", 'rb') as _f:
+                buf.write(_f.read())
+            
+            return Buffer(buf)
+        
+        return [get_buffer(filename) for filename in file_names], file_names
 
     def _create_zip(self):
         with ZipFile(self.zip_name, 'w', compression=ZIP_DEFLATED) as zip_file:
@@ -68,18 +108,21 @@ class Zip:
     def get_archive(self, obj) -> list[Buffer]:
         self._create_zip()
         
-        buffer = BytesIO()
-        with open(self.zip_name, 'rb') as file:
-            buffer.write(file.read())
+        # buffer = BytesIO()
+        # with open(self.zip_name, 'rb') as file:
+        #     buffer.write(file.read())
+
+        # if len(buffer.getvalue()) < _config.dump.chunk_size:
+        #     files = [Buffer(buffer)]
+        #     obj.files = files
+        #     return files
+
+        files, filenames = self.split_7zip(self.zip_name, self.output_dir, _config.dump.chunk_size)
 
         remove(self.zip_name)
 
-        if len(buffer.getvalue()) < _config.dump.chunk_size:
-            files = [Buffer(buffer)]
-            obj.files = files
-            return files
-
-        files = self._split_zip(buffer)
+        for filename in filenames:
+            remove(f"{self.output_dir}/{filename}")
 
         obj.files = files
         return files

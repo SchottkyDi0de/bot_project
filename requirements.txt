@@ -20,3 +20,4 @@ dynamic-yaml==2.0.0
 motor==3.4.0
 asgiref==3.8.1
 numpy==2.0.0
+filesplit==4.0.1
