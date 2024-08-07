@@ -1,5 +1,4 @@
 import datetime
-from random import randint
 from io import StringIO
 
 from discord import File, Option, Attachment, SelectOption
