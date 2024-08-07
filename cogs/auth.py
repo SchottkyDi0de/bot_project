@@ -1,5 +1,5 @@
 from discord.ui import Button, View
-from discord import Option
+from discord import InteractionContextType, Option
 from discord.ext import commands
 
 from lib.data_classes.member_context import MixedApplicationContext
@@ -17,7 +17,6 @@ from lib.data_classes.db_player import AccountSlotsEnum
 _config = Config().get()
 _log = get_logger(__file__, 'AuthCogLogger', 'logs/auth_cog_logs.log')
 
-
 class Auth(commands.Cog):
     cog_command_error = hook_exceptions(_log)
     def __init__(self, bot: commands.Bot) -> None:
@@ -26,6 +25,7 @@ class Auth(commands.Cog):
         self.db = PlayersDB()
     
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.verify.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.verify.descr.this,
@@ -35,7 +35,7 @@ class Auth(commands.Cog):
     )
     @with_user_context_wrapper('verify')
     async def verify(
-        self, 
+        self,
         mixed_ctx: MixedApplicationContext,
         account: Option(
             int,

@@ -1,5 +1,5 @@
 from discord.ui import View, Button
-from discord import Option
+from discord import InteractionContextType, Option
 from discord.ext import commands
 from webcolors import rgb_to_hex
 
@@ -29,6 +29,7 @@ class SessionWidget(commands.Cog):
         self.inf_msg = InfoMSG()
 
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.session_widget.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_widget.descr.this,
@@ -90,6 +91,7 @@ class SessionWidget(commands.Cog):
         )
     
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.session_widget_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_widget_settings.descr.this,
@@ -315,6 +317,7 @@ class SessionWidget(commands.Cog):
         )
     
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.session_widget_settings_reset.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_widget_settings_reset.descr.this,

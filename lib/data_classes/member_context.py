@@ -10,8 +10,7 @@ class MemberContext(BaseModel):
     slot: AccountSlotsEnum
 
 
-class MixedApplicationContext(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    m_ctx: MemberContext
-    ctx: ApplicationContext
+class MixedApplicationContext(ApplicationContext):
+    def __init__(self, ctx: ApplicationContext, m_ctx: MemberContext):
+        self.m_ctx: MemberContext = m_ctx
+        self.ctx: ApplicationContext = ctx

@@ -1,5 +1,6 @@
 from collections.abc import Awaitable, Callable
 from functools import wraps
+from pprint import pprint
 from typing import ParamSpec, TypeVar
 
 from discord import ApplicationContext
@@ -45,6 +46,7 @@ def with_user_context_wrapper(
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             ctx: ApplicationContext = args[1]
             await Text().load_from_context(ctx)
+            await ctx.defer()
             account = kwargs.get(slot_param_name, None)
             game_account, member, slot = await standard_account_validate(
                 account_id=ctx.author.id, 

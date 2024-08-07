@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
-from discord import File, Option, Bot
+
+from discord import File, InteractionContextType, Option, Bot
 from discord.ext import commands
 from discord.commands import ApplicationContext
-
 import pytz
 
+from lib.utils.selectors import account_selector
 from lib.data_classes.member_context import MixedApplicationContext
 from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.settings.settings import Config
@@ -50,6 +51,7 @@ class Stats(commands.Cog):
         self.err_msg = ErrorMSG()
         
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.stats.descr.this,
         description_localizations={
             'ru' : Text().get('ru').cmds.stats.descr.this,
@@ -84,7 +86,7 @@ class Stats(commands.Cog):
             ), # type: ignore
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
+        await check_user(ctx)
         
         member = await self.db.check_member_exists(ctx.author.id, raise_error=False, get_if_exist=True)
         member = None if isinstance(member, bool) else member
@@ -110,13 +112,14 @@ class Stats(commands.Cog):
             img.close()
 
     @commands.slash_command(
-            description=Text().get('en').cmds.astats.descr.this,
-            description_localizations={
-                'ru': Text().get('ru').cmds.astats.descr.this,
-                'pl': Text().get('pl').cmds.astats.descr.this,
-                'uk': Text().get('ua').cmds.astats.descr.this
-                }
-            )
+        contexts=InteractionContextType.guild,
+        description=Text().get('en').cmds.astats.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.astats.descr.this,
+            'pl': Text().get('pl').cmds.astats.descr.this,
+            'uk': Text().get('ua').cmds.astats.descr.this
+            }
+        )
     @commands.cooldown(1, 10, commands.BucketType.user)
     @with_user_context_wrapper('astats')
     async def astats(
@@ -133,6 +136,7 @@ class Stats(commands.Cog):
             required=False,
             default=None,
             choices=[x.value for x in AccountSlotsEnum],
+            autocomplete=account_selector,
             ),
         ) -> None:
         ctx = mixed_ctx.ctx
@@ -155,6 +159,7 @@ class Stats(commands.Cog):
             return
     
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.hook_stats.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.hook_stats.descr.this,
@@ -306,6 +311,7 @@ class Stats(commands.Cog):
         )
         
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.hook_stats.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.hook_stats.descr.this,
@@ -457,6 +463,7 @@ class Stats(commands.Cog):
         )
         
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.stats.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.stats.descr.this,

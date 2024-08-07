@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import traceback
 import pytz
 
-from discord import File, Option
+from discord import File, InteractionContextType, Option
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
@@ -74,7 +74,7 @@ class Session(commands.Cog):
         return file
         
     @commands.slash_command(
-        guild_only=True,
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.start_autosession.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.start_autosession.descr.this,
@@ -194,7 +194,7 @@ class Session(commands.Cog):
            
         
     @commands.slash_command(
-        guild_only=True, 
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.start_session.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.start_session.descr.this,
@@ -255,14 +255,14 @@ class Session(commands.Cog):
         )
 
     @commands.slash_command(
-            guild_only=True, 
-            description=Text().get('en').cmds.get_session.descr.this,
-            description_localizations={
-                'ru': Text().get('ru').cmds.get_session.descr.this,
-                'pl': Text().get('pl').cmds.get_session.descr.this,
-                'uk': Text().get('ua').cmds.get_session.descr.this
-                }
-            )
+        contexts=InteractionContextType.guild, 
+        description=Text().get('en').cmds.get_session.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.get_session.descr.this,
+            'pl': Text().get('pl').cmds.get_session.descr.this,
+            'uk': Text().get('ua').cmds.get_session.descr.this
+            }
+        )
     @commands.cooldown(1, 10, commands.BucketType.user)
     @with_user_context_wrapper('get_session', need_session=True)
     async def get_session(
@@ -316,14 +316,14 @@ class Session(commands.Cog):
         await ctx.respond(file=file, view=view, embed=embed)
 
     @commands.slash_command(
-            guild_only=True, 
-            description=Text().get('en').cmds.session_state.descr.this,
-            description_localizations={
-                'ru' : Text().get('ru').cmds.session_state.descr.this,
-                'pl' : Text().get('pl').cmds.session_state.descr.this,
-                'uk' : Text().get('ua').cmds.session_state.descr.this
-                }
-            )
+        contexts=InteractionContextType.guild,
+        description=Text().get('en').cmds.session_state.descr.this,
+        description_localizations={
+            'ru' : Text().get('ru').cmds.session_state.descr.this,
+            'pl' : Text().get('pl').cmds.session_state.descr.this,
+            'uk' : Text().get('ua').cmds.session_state.descr.this
+            }
+        )
     @commands.cooldown(1, 10, commands.BucketType.user)
     @with_user_context_wrapper('session_state')
     async def session_state(

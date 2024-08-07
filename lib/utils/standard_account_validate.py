@@ -81,6 +81,6 @@ async def standard_account_validate(
             raise LastStatsNotFound()
     
     if check_banned:
-        check_user(account_id)
+        await check_user(account_id)
     
     return (game_account, member, slot)
