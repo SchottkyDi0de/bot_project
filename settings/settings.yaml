@@ -19,9 +19,9 @@ bot_name:
   'Blitz Statistics'
 
 server:
-  host: 'blitzhub.eu'
-  port: '443'
-  protocol: 'https'
+  host: '127.0.0.1'
+  port: '8000'
+  protocol: 'http'
 
 session:
   ttl: 3_888_000 # in seconds - 45 days

@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord import ApplicationContext, Bot
+from discord import ApplicationContext, Bot, InteractionContextType
 
 from lib.database.players import PlayersDB
 from lib.data_classes.db_player import UsedCommand
@@ -21,7 +21,15 @@ class Profile(commands.Cog):
         self.bot = bot
         self.db = PlayersDB()
         
-    @commands.slash_command(name="profile", description="Get information about your account")
+    @commands.slash_command(
+        contexts=InteractionContextType.guild,
+        description=Text().get('en').cmds.profile.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.profile.descr.this,
+            'pl': Text().get('pl').cmds.profile.descr.this,
+            'uk': Text().get('ua').cmds.profile.descr.this
+            }
+        )
     async def profile(
         self, 
         ctx: ApplicationContext,

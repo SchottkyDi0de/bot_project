@@ -1,4 +1,4 @@
-from discord import errors
+from discord import InteractionContextType, errors
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
@@ -28,7 +28,7 @@ class Help(commands.Cog):
         self.inf_msg = InfoMSG()
 
     @commands.slash_command(
-            guild_only=True,
+            contexts=InteractionContextType.guild,
             name=Text().get('en').cmds.help.items.help.lower(),
             name_localizations={
                 'ru': Text().get('ru').cmds.help.items.help.lower(),
@@ -47,7 +47,7 @@ class Help(commands.Cog):
         ctx: ApplicationContext,
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
+        await check_user(ctx)
         
         member = await self.pdb.check_member_exists(ctx.author.id, get_if_exist=True, raise_error=False)
         if isinstance(member, DBPlayer):

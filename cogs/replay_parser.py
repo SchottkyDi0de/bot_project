@@ -1,7 +1,7 @@
 import datetime
 from io import StringIO
 
-from discord import File, Option, Attachment, SelectOption
+from discord import File, InteractionContextType, Option, Attachment, SelectOption
 from discord.ext import commands
 
 from lib.data_classes.member_context import MixedApplicationContext
@@ -36,7 +36,7 @@ class CogReplayParser(commands.Cog):
         self.inf_msg = InfoMSG()
 
     @commands.slash_command(
-            guild_only=True, 
+            contexts=InteractionContextType.guild,
             description=Text().get('en').cmds.parse_replay.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.parse_replay.descr.this,

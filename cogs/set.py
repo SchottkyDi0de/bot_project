@@ -1,5 +1,5 @@
 from PIL import UnidentifiedImageError
-from discord import Option, Attachment, SelectOption
+from discord import InteractionContextType, Option, Attachment, SelectOption
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
@@ -44,7 +44,7 @@ class Set(commands.Cog):
         
         
     @commands.slash_command(
-        guild_only=True,
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.set_lang.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.set_lang.descr.this,
@@ -82,7 +82,7 @@ class Set(commands.Cog):
         await ctx.respond(embed=self.inf_msg.set_lang_ok())
         
     @commands.slash_command(
-        guild_only=True,
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.set_player.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.set_player.descr.this,
@@ -171,7 +171,7 @@ class Set(commands.Cog):
         )
         
     @commands.slash_command(
-        guild_only=True,
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.server_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.server_settings.descr.this,
@@ -222,7 +222,7 @@ class Set(commands.Cog):
             )
 
     @commands.slash_command(
-        guild_only=True,
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.set_background.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.set_background.descr.this,
@@ -361,6 +361,7 @@ class Set(commands.Cog):
             )
     
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.session_view_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_view_settings.descr.this,
@@ -461,6 +462,7 @@ class Set(commands.Cog):
         )
 
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.session_view_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_view_settings.descr.this,
@@ -568,6 +570,7 @@ class Set(commands.Cog):
         )
         
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.session_view_settings_reset.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_view_settings_reset.descr.this,
@@ -673,6 +676,7 @@ class Set(commands.Cog):
     #     )
     
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.set_theme.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.set_theme.descr.this,
@@ -734,6 +738,7 @@ class Set(commands.Cog):
         )
         
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.delete_player.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.delete_player.descr.this,
@@ -758,6 +763,7 @@ class Set(commands.Cog):
         )
     
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.switch_account.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.switch_account.descr.this,

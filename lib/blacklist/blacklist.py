@@ -4,7 +4,7 @@ from lib.exceptions.blacklist import UserBanned
 from lib.database.internal import InternalDB
 
 
-def check_user(ctx: ApplicationContext | int):
+async def check_user(ctx: ApplicationContext | int):
     """
     Checks if the user is in the block list and raises UserBanned exception if they are.
 
@@ -17,5 +17,7 @@ def check_user(ctx: ApplicationContext | int):
     Returns:
         None
     """
-    if InternalDB().check_ban(ctx.author.id):
+    p_id = ctx.author.id if isinstance(ctx, ApplicationContext) else ctx
+    
+    if await InternalDB().check_ban(p_id):
         raise UserBanned

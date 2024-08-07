@@ -1,4 +1,4 @@
-from discord import Bot
+from discord import Bot, InteractionContextType
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
@@ -17,6 +17,7 @@ class Premium(commands.Cog):
         self.bot = bot
 
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.premium.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.premium.descr.this,

@@ -1,4 +1,4 @@
-from discord import Option, File, Cog
+from discord import Option, File, Cog, InteractionContextType
 import discord
 from discord.ext import commands
 from discord.commands import ApplicationContext
@@ -45,6 +45,7 @@ class Customization(Cog):
         self.bot = bot
 
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.image_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.image_settings.descr.this,
@@ -367,7 +368,7 @@ class Customization(Cog):
         )
 
     @commands.slash_command(
-        guild_only=True, 
+        contexts=InteractionContextType.guild, 
         description=Text().get('en').cmds.image_settings_get.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.image_settings_get.descr.this,
@@ -415,7 +416,7 @@ class Customization(Cog):
         await ctx.respond(embed=embed, file=file)
             
     @commands.slash_command(
-        guild_only=True,
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.image_settings_reset.descr.this,
         description_localizations = {
             'ru': Text().get('ru').cmds.image_settings_reset.descr.this,
@@ -440,7 +441,7 @@ class Customization(Cog):
             )
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
+        await check_user(ctx)
 
         game_account, member, slot = await standard_account_validate(slot=account, account_id=ctx.author.id)
         await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
@@ -461,7 +462,7 @@ class Customization(Cog):
             )
     
     @commands.slash_command(
-        guild_only=True,
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.server_settings_get.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.server_settings_get.descr.this,
@@ -470,7 +471,7 @@ class Customization(Cog):
         }
     )
     async def server_settings_get(self, ctx: ApplicationContext):
-        check_user(ctx)
+        await check_user(ctx)
 
         await Text().load_from_context(ctx)
         member = await self.db.check_member_exists(member_id=ctx.author.id, raise_error=False, get_if_exist=True)
@@ -491,6 +492,7 @@ class Customization(Cog):
         await ctx.respond(embed=embed)
             
     @commands.slash_command(
+        contexts=InteractionContextType.guild,
         description=Text().get('en').cmds.reset_background.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.reset_background.descr.this,
@@ -515,7 +517,7 @@ class Customization(Cog):
             )
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
+        await check_user(ctx)
         
         if server:
             if ctx.author.guild_permissions.administrator:
