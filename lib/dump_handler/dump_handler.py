@@ -30,7 +30,7 @@ class BackUp:
         member = await bot.fetch_user(send_to_id)
         channel = bot.get_channel(send_to_id)
         time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        files = [File(buffer.buffer, f"content_{index}.zip") for index, buffer in enumerate(self.files, start=1)]
+        files = [File(buffer.buffer, f"dump_{index}.zip") for index, buffer in enumerate(self.files, start=1)]
         
         # if member or channel:
         #     if len(self.files) > 1:
@@ -50,7 +50,7 @@ class BackUp:
         await self._start_and_wait_for_thread(Thread(target=lambda: system(r"mongodump")))
 
         if not exists("dump"):
-            _log.error('Failed to create dump')
+            _log.error('Failed to create dump. Folder "dump" not found')
             return
         
         await self._start_and_wait_for_thread(Thread(target=Zip().get_archive, args=(self,)))

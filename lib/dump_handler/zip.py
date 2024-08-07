@@ -1,20 +1,16 @@
 import os
-
 from io import BytesIO
 from os import path, walk, listdir, remove
 from re import compile as _compile
 from sys import argv
 from typing import Callable
+
 from zipfile import ZipFile, ZIP_DEFLATED
+
 from filesplit.split import Split
-
-try:
-    from lib.settings.settings import Config
+from lib.settings.settings import Config
     
-    _config = Config().get()
-except ImportError:
-    ...
-
+_config = Config().get()
 
 class CompiledRegex:
     file = _compile(r"dump\.zip_part(\d+)")
