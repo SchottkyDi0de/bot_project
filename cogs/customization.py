@@ -45,7 +45,7 @@ class Customization(Cog):
         self.bot = bot
 
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.image_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.image_settings.descr.this,
@@ -245,8 +245,6 @@ class Customization(Cog):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
         
-        await ctx.defer()
-        
         game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
 
         image_settings = await self.db.get_image_settings(slot=slot, member=member)
@@ -368,7 +366,7 @@ class Customization(Cog):
         )
 
     @commands.slash_command(
-        contexts=InteractionContextType.guild, 
+        contexts=[InteractionContextType.guild], 
         description=Text().get('en').cmds.image_settings_get.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.image_settings_get.descr.this,
@@ -394,8 +392,7 @@ class Customization(Cog):
             )
         ):
         await Text().load_from_context(ctx)
-        await ctx.defer()
-
+        
         game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
         await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         image_bytes = SettingsRepresent().draw(game_account.image_settings)
@@ -416,7 +413,7 @@ class Customization(Cog):
         await ctx.respond(embed=embed, file=file)
             
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.image_settings_reset.descr.this,
         description_localizations = {
             'ru': Text().get('ru').cmds.image_settings_reset.descr.this,
@@ -462,7 +459,7 @@ class Customization(Cog):
             )
     
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.server_settings_get.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.server_settings_get.descr.this,
@@ -492,7 +489,7 @@ class Customization(Cog):
         await ctx.respond(embed=embed)
             
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.reset_background.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.reset_background.descr.this,

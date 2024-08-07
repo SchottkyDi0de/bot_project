@@ -51,7 +51,7 @@ class Stats(commands.Cog):
         self.err_msg = ErrorMSG()
         
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.stats.descr.this,
         description_localizations={
             'ru' : Text().get('ru').cmds.stats.descr.this,
@@ -90,7 +90,6 @@ class Stats(commands.Cog):
         
         member = await self.db.check_member_exists(ctx.author.id, raise_error=False, get_if_exist=True)
         member = None if isinstance(member, bool) else member
-        await ctx.defer()
         
         nickname_type = validate(nick_or_id, 'nickname')
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
@@ -112,7 +111,7 @@ class Stats(commands.Cog):
             img.close()
 
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.astats.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.astats.descr.this,
@@ -126,16 +125,14 @@ class Stats(commands.Cog):
         self,
         mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum],
             autocomplete=account_selector,
             ),
         ) -> None:
@@ -159,7 +156,7 @@ class Stats(commands.Cog):
             return
     
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.hook_stats.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.hook_stats.descr.this,
@@ -225,9 +222,9 @@ class Stats(commands.Cog):
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]),
+            autocomplete=account_selector
+            ),
         ) -> None:
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
@@ -311,7 +308,7 @@ class Stats(commands.Cog):
         )
         
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.hook_stats.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.hook_stats.descr.this,
@@ -377,13 +374,12 @@ class Stats(commands.Cog):
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]),
+            autocomplete=account_selector,
+            ),
         ) -> None:
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-        await ctx.defer()
 
         game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         old_hook = game_account.hook_stats
@@ -463,7 +459,7 @@ class Stats(commands.Cog):
         )
         
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.stats.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.stats.descr.this,
@@ -484,15 +480,12 @@ class Stats(commands.Cog):
                     'pl': Text().get('pl').frequent.common.slot,
                     'uk': Text().get('ua').frequent.common.slot
                 },
-                required=False,
                 default=None,
-                choices=[x.value for x in AccountSlotsEnum]
-            ),  
+                autocomplete=account_selector,
+            ),
         ):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-
-        await ctx.defer()
 
         game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         hook = game_account.hook_stats

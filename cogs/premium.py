@@ -17,7 +17,7 @@ class Premium(commands.Cog):
         self.bot = bot
 
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.premium.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.premium.descr.this,

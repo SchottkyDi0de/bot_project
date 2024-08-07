@@ -21,7 +21,7 @@ class Report(Cog):
         self.db = PlayersDB()
     
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.report.descr.this,
         description_localizations={
             'ru' : Text().get('ru').cmds.report.descr.this,

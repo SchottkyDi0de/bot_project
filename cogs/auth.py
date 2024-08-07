@@ -25,7 +25,7 @@ class Auth(commands.Cog):
         self.db = PlayersDB()
     
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.verify.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.verify.descr.this,

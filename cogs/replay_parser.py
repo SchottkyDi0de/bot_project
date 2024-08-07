@@ -36,7 +36,7 @@ class CogReplayParser(commands.Cog):
         self.inf_msg = InfoMSG()
 
     @commands.slash_command(
-            contexts=InteractionContextType.guild,
+            contexts=[InteractionContextType.guild],
             description=Text().get('en').cmds.parse_replay.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.parse_replay.descr.this,
@@ -79,8 +79,6 @@ class CogReplayParser(commands.Cog):
         ):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-        
-        await ctx.defer()
         
         member = m_ctx.member
         replay: Attachment = replay

@@ -29,6 +29,9 @@ class Validatos:
         return CompiledRegex.time.match(time_str) is not None
 
     def validate_nickname(nickname: str):
+        if ' | ' in nickname:
+            nickname = nickname.split(' | ')[0].strip()
+        
         nickname_len = len(nickname)
         player_id = CompiledRegex.player_id.match(nickname)
         nickname_and_id = CompiledRegex.nickname_and_id.match(nickname)

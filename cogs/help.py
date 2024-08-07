@@ -28,7 +28,7 @@ class Help(commands.Cog):
         self.inf_msg = InfoMSG()
 
     @commands.slash_command(
-            contexts=InteractionContextType.guild,
+            contexts=[InteractionContextType.guild],
             name=Text().get('en').cmds.help.items.help.lower(),
             name_localizations={
                 'ru': Text().get('ru').cmds.help.items.help.lower(),
@@ -53,7 +53,6 @@ class Help(commands.Cog):
         if isinstance(member, DBPlayer):
             await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)
 
-        await ctx.defer()
         try:
             match Text().current_lang:
                 case 'ru':

@@ -95,6 +95,13 @@ game_api:
       ?application_id=<app_id>
       &search=<nickname>
       &type=<search_type>
+      
+    search: >
+      https://<reg_url>/wotb/account/list/
+      ?application_id=<app_id>
+      &search=<nickname>
+      &type=<search_type>
+      &limit=<limit>
 
     get_stats:
       "https://<reg_url>/wotb/account/info/\

@@ -8,6 +8,7 @@ from lib.data_classes.member_context import MixedApplicationContext
 from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.utils.slot_info import get_formatted_slot_info
 from lib.utils.string_parser import insert_data
+from lib.utils.selectors import global_players_selector
 from lib.views.alt_views import DeleteAccountConfirmation, StartSession, SlotOverride, SwitchAccount
 from lib.blacklist.blacklist import check_user
 from lib.data_classes.db_player import StatsViewSettings, AccountSlotsEnum, UsedCommand
@@ -44,7 +45,7 @@ class Set(commands.Cog):
         
         
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.set_lang.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.set_lang.descr.this,
@@ -82,7 +83,7 @@ class Set(commands.Cog):
         await ctx.respond(embed=self.inf_msg.set_lang_ok())
         
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.set_player.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.set_player.descr.this,
@@ -100,7 +101,8 @@ class Set(commands.Cog):
                     'pl': Text().get('pl').cmds.set_player.descr.sub_descr.nickname,
                     'uk': Text().get('ua').cmds.set_player.descr.sub_descr.nickname
                 },
-                required=True
+                required=True,
+                autocomplete=global_players_selector
             ),
             region: Option(
                 str,
@@ -171,7 +173,7 @@ class Set(commands.Cog):
         )
         
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.server_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.server_settings.descr.this,
@@ -222,7 +224,7 @@ class Set(commands.Cog):
             )
 
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.set_background.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.set_background.descr.this,
@@ -271,7 +273,6 @@ class Set(commands.Cog):
         ctx = mixed_ctx.ctx
         
         image: Attachment = image
-        await ctx.defer()
 
         if image.content_type not in ['image/png', 'image/jpeg', 'image/jpg']:
             await ctx.respond(
@@ -361,7 +362,7 @@ class Set(commands.Cog):
             )
     
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.session_view_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_view_settings.descr.this,
@@ -462,7 +463,7 @@ class Set(commands.Cog):
         )
 
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.session_view_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_view_settings.descr.this,
@@ -570,7 +571,7 @@ class Set(commands.Cog):
         )
         
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.session_view_settings_reset.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_view_settings_reset.descr.this,
@@ -676,7 +677,7 @@ class Set(commands.Cog):
     #     )
     
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.set_theme.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.set_theme.descr.this,
@@ -738,7 +739,7 @@ class Set(commands.Cog):
         )
         
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.delete_player.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.delete_player.descr.this,
@@ -763,7 +764,7 @@ class Set(commands.Cog):
         )
     
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.switch_account.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.switch_account.descr.this,

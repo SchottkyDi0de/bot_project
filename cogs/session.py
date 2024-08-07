@@ -74,7 +74,7 @@ class Session(commands.Cog):
         return file
         
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.start_autosession.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.start_autosession.descr.this,
@@ -126,7 +126,6 @@ class Session(commands.Cog):
         ):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-        await ctx.defer()
         
         game_account, member, account_slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         
@@ -194,7 +193,7 @@ class Session(commands.Cog):
            
         
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.start_session.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.start_session.descr.this,
@@ -220,8 +219,6 @@ class Session(commands.Cog):
         ):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-        
-        await ctx.defer()
         
         game_account, member, account_slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         
@@ -255,7 +252,7 @@ class Session(commands.Cog):
         )
 
     @commands.slash_command(
-        contexts=InteractionContextType.guild, 
+        contexts=[InteractionContextType.guild], 
         description=Text().get('en').cmds.get_session.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.get_session.descr.this,
@@ -283,8 +280,6 @@ class Session(commands.Cog):
         ):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-        
-        await ctx.defer()
         
         game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         server = await self.sdb.get_server(ctx)
@@ -316,7 +311,7 @@ class Session(commands.Cog):
         await ctx.respond(file=file, view=view, embed=embed)
 
     @commands.slash_command(
-        contexts=InteractionContextType.guild,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.session_state.descr.this,
         description_localizations={
             'ru' : Text().get('ru').cmds.session_state.descr.this,
@@ -345,8 +340,6 @@ class Session(commands.Cog):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
         
-        await ctx.defer()
-        
         game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         
         if isinstance(member, bool):
@@ -363,8 +356,8 @@ class Session(commands.Cog):
         now_time = datetime.now(pytz.utc)
         session_settings = game_account.session_settings
         
-        time_format =   f'%H:' \
-                        f'%M'
+        time_format =   '%H:' \
+                        '%M'
         long_time_format = f'%D{Text().get().frequent.common.time_units.d} | ' \
                         f'%H:' \
                         f'%M'
