@@ -77,7 +77,7 @@ async def standard_account_validate(
             raise MemberNotVerified()
     
     if check_active_session:
-        if not PlayersDB().check_member_last_stats(member=member, slot=slot):
+        if not await PlayersDB().check_member_last_stats(member=member, slot=slot):
             raise LastStatsNotFound()
     
     if check_banned:

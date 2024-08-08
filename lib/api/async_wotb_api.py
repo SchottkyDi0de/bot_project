@@ -46,17 +46,23 @@ class API:
         self.cache = FIFOCache(maxsize=100, ttl=60)
         self.pdb = PlayersDB()
         self.session = aiohttp.ClientSession()
+        self._session = self.session
 
         self.player_stats = {}
         self.player = {}
         
         atexit.register(self.__at_exit__)
+    
+    @property
+    def session(self) -> aiohttp.ClientSession:
+        if self._session.closed:
+            self._session = aiohttp.ClientSession()
         
-    def _get_session(self) -> aiohttp.ClientSession:
-        if self.session.closed:
-            self.session = aiohttp.ClientSession()
-            
-        return self.session
+        return self._session
+
+    @session.setter
+    def session(self, session: aiohttp.ClientSession) -> None:
+        self._session = session
 
     def _get_id_by_reg(self, reg: str) -> str:
         reg = reg.lower()
@@ -180,7 +186,6 @@ class API:
     def get_players_callback(self, task: asyncio.Task) -> PlayerStats:
         self._players_stats.append(task.result())
         
-            
     async def get_players_stats(self, players_id: list[int], region: str) -> list[PlayerStats | bool]:
         """
         Retrieves the statistics of multiple players based on their IDs and region.
@@ -193,16 +198,16 @@ class API:
             list[PlayerStats | bool]: A list of PlayerStats objects representing the statistics of each player. If an error occurs during the retrieval, a boolean value indicating the success of the operation is returned.
         """
         self._players_stats = []
-        session = self._get_session()
         
-        async with session:
+        async with self.session:
             async with asyncio.TaskGroup() as tg:
                 for i in players_id:
-                    tg.create_task(self._get_players_stats(i, region, session))
-        
-        return self._players_stats
-                
-    async def _get_players_stats(self, player_id: int, region: str, session: aiohttp.ClientSession) -> None:
+                    tg.create_task(self._get_players_stats(i, region, self.session))
+            
+            return self._players_stats
+    
+    
+    async def _get_players_stats(self, player_id: int, region: str) -> None:
         """
         Asynchronously gets the player stats for a given player ID and region.
 
@@ -224,7 +229,7 @@ class API:
                 'player_id': player_id
             }
         )
-        async with session.get(url_get_stats, verify_ssl=False) as response:
+        async with self.session.get(url_get_stats, verify_ssl=False) as response:
             try:
                 data = await self.response_handler(response, check_battles=False, check_data=True)
             except api_exceptions.EmptyDataError:
@@ -267,25 +272,23 @@ class API:
             f'-description%2C+-engines%2C+-guns%2C-next_tanks%2C+-prices_xp%2C+'
             f'-suspensions%2C+-turrets%2C+-cost%2C+-default_profile%2C+-modules_tree%2C+-images'
         )
-        session = self._get_session()
-        
-        async with session:
-            async with session.get(url_get_tankopedia, verify_ssl=False) as response:
-                data = await self.response_handler(response, False)
-                tanks = []
-                for key, value in data['data'].items():
-                    tanks.append(
-                        Tank.model_validate(
-                            {
-                                'id': int(key),
-                                'name' : value['name'],
-                                'tier': value['tier'],
-                                'type': value['type'],
-                            }
-                        )
+
+        async with self.session.get(url_get_tankopedia, verify_ssl=False) as response:
+            data = await self.response_handler(response, False)
+            tanks = []
+            for key, value in data['data'].items():
+                tanks.append(
+                    Tank.model_validate(
+                        {
+                            'id': int(key),
+                            'name' : value['name'],
+                            'tier': value['tier'],
+                            'type': value['type'],
+                        }
                     )
-                
-                return tanks
+                )
+            
+            return tanks
     
     @retry(
         expected_exception=(
@@ -295,8 +298,8 @@ class API:
         attempts=3,
         on_exception=retry_callback
     )
+    
     async def get_players_list(self, search: str, limit: int = 20) -> dict[str, str]:
-        session = self._get_session()
         data = {}
         
         for reg in _config.default.available_regions:
@@ -311,7 +314,7 @@ class API:
                 }
             )
             await self.rate_limiter.wait()
-            async with session.get(url_get_players_list, verify_ssl=False) as response:
+            async with self.session.get(url_get_players_list, verify_ssl=False) as response:
                 original_resp_data = await self.response_handler(response, check_battles=False, check_count=False)
                 
                 for resp_data in original_resp_data['data']:
@@ -356,10 +359,9 @@ class API:
         )
 
         region = self._reg_normalizer(region)
-        session = self._get_session()
         await self.rate_limiter.wait()
         
-        async with session.get(url_get_id, verify_ssl=False) as response:
+        async with self.session.get(url_get_id, verify_ssl=False) as response:
             try:
                 data = await self.response_handler(response, check_data=True)
                 data = data['data'][0]
@@ -377,7 +379,7 @@ class API:
             
         await self.rate_limiter.wait()
                 
-        async with session.get(url_get_stats, verify_ssl=False) as response:
+        async with self.session.get(url_get_stats, verify_ssl=False) as response:
             try:
                 if data is None:
                     data = await self.response_handler(response, check_battles=True, check_data=True)
@@ -401,6 +403,14 @@ class API:
     def done_callback(self, task: asyncio.Task):
         pass
 
+    @retry(
+        expected_exception=(
+            api_exceptions.RequestsLimitExceeded,
+            api_exceptions.APISourceNotAvailable
+        ),
+        attempts=3,
+        on_exception=retry_callback
+    )
     async def get_stats(
         self, 
         region: str = None,
@@ -440,11 +450,11 @@ class API:
 
         player = await self.get_player(
             region=region, 
-            nickname=search, 
+            nickname=search,
             game_id=game_id,
             requested_by=requested_by,
             ignore_lock=ignore_lock
-            )
+        )
         
         if not disable_cache:
             cached_data = self.cache.get((str(player['account_id']), region))
@@ -476,10 +486,10 @@ class API:
         default_params = {"account_id": player['account_id'], "region": region}
         self.player, self.player_stats = {}, {}
         _log.debug('start collect data')
-        async with aiohttp.ClientSession() as self.session:
-            async with asyncio.TaskGroup() as tg:
-                for i, task in enumerate(tasks):
-                    self.create_task(tg, task_names[i], task, default_params)
+         
+        async with asyncio.TaskGroup() as tg:
+            for i, task in enumerate(tasks):
+                self.create_task(tg, task_names[i], task, default_params)
             
         self.player['timestamp'] = int(datetime.now().timestamp())
         self.player['end_timestamp'] = int(
@@ -524,6 +534,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
+    
     async def get_player(
         self, 
         region: str, 
@@ -559,34 +570,31 @@ class API:
                 'search_type' : 'exact' if self.exact else 'startswith',
             }
         )
-
-        session = self._get_session()
         
-        async with session:
-            if game_id is None:
-                await self.rate_limiter.wait()
-                async with self.session.get(url_get_id, verify_ssl=False) as response:
-
-                    data = await self.response_handler(response, check_meta=True)
-                    game_id: int = data['data'][0]['account_id']
-                    
-            url_get_stats = insert_data(
-            _config.game_api.urls.get_stats,
-                {
-                    'app_id'  : self._get_id_by_reg(region),
-                    'reg_url' : self._get_url_by_reg(region),
-                    'player_id' : game_id
-                }
-            )
-            
-            # if not ignore_lock:
-            #     if self.pdb.find_lock(game_id, requested_by):
-            #         raise api_exceptions.LockedPlayer()
-            
+        if game_id is None:
             await self.rate_limiter.wait()
-            async with self.session.get(url_get_stats, verify_ssl=False) as response:
-                data = await self.response_handler(response, check_data=True, check_battles=True)
-                return data['data'][str(game_id)]
+            async with self.session.get(url_get_id, verify_ssl=False) as response:
+
+                data = await self.response_handler(response, check_meta=True)
+                game_id: int = data['data'][0]['account_id']
+                
+        url_get_stats = insert_data(
+        _config.game_api.urls.get_stats,
+            {
+                'app_id'  : self._get_id_by_reg(region),
+                'reg_url' : self._get_url_by_reg(region),
+                'player_id' : game_id
+            }
+        )
+        
+        # if not ignore_lock:
+        #     if self.pdb.find_lock(game_id, requested_by):
+        #         raise api_exceptions.LockedPlayer()
+        
+        await self.rate_limiter.wait()
+        async with self.session.get(url_get_stats, verify_ssl=False) as response:
+            data = await self.response_handler(response, check_data=True, check_battles=True)
+            return data['data'][str(game_id)]
             
     @retry(
             expected_exception=(
@@ -596,6 +604,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
+    
     async def get_player_battles(self, region: str, account_id: str, **kwargs) -> tuple[int, int]:
         """
         Retrieves the number of battles played by a player.
@@ -616,11 +625,9 @@ class API:
             f'&extra=statistics.rating'
         )
         await self.rate_limiter.wait()
-        session = self._get_session()
-        
-        async with session:
-            async with session.get(url_get_battles, verify_ssl=False) as response:
-                data = await self.response_handler(response, check_data=True)
+    
+        async with self.session.get(url_get_battles, verify_ssl=False) as response:
+            data = await self.response_handler(response, check_data=True)
 
         return (
             data['data'][str(account_id)]['statistics']['all']['battles'], 
@@ -636,6 +643,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
+    
     async def get_player_stats(self, region: str, account_id: str) -> PlayerStats:
         """
         Retrieves the player statistics for a given region and account ID.
@@ -664,9 +672,8 @@ class API:
         )
 
         await self.rate_limiter.wait()
-        session = self._get_session()
         
-        async with session.get(url_get_stats, verify_ssl=False) as response:
+        async with self.session.get(url_get_stats, verify_ssl=False) as response:
             data = await self.response_handler(response, check_battles=True)
 
         data['data'] = data['data'][str(account_id)]
@@ -684,6 +691,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
+    
     async def get_player_achievements(self, region: str, account_id: str) -> Achievements:
         """
         Retrieves the achievements of a player.
@@ -702,11 +710,9 @@ class API:
         )
 
         await self.rate_limiter.wait()
-        session = self._get_session()
         
-        async with session:
-            async with session.get(url_get_achievements, verify_ssl=False) as response:
-                data = await self.response_handler(response)
+        async with self.session.get(url_get_achievements, verify_ssl=False) as response:
+            data = await self.response_handler(response)
 
         self.player_stats['achievements'] = Achievements.model_validate(data['data'][str(account_id)]['achievements'])
         return self.player_stats['achievements']
@@ -719,6 +725,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
+    
     async def get_player_clan_stats(self, region: str, account_id: str | int) -> None:
         """
         Retrieves clan statistics for a player.
@@ -742,9 +749,8 @@ class API:
         )
 
         await self.rate_limiter.wait()
-        session = self._get_session()
         
-        async with session.get(url_get_clan_stats, verify_ssl=False) as response:
+        async with self.session.get(url_get_clan_stats, verify_ssl=False) as response:
             data = await self.response_handler(response)
 
         if data['data'][str(account_id)] is None:
@@ -768,6 +774,7 @@ class API:
             attempts=3,
             on_exception=retry_callback
     )
+    
     async def get_player_tanks_stats(self, region: str, account_id: str,  **kwargs):
         """
         Retrieves the statistics of the tanks owned by a player.
@@ -792,32 +799,39 @@ class API:
         )
 
         await self.rate_limiter.wait()
-        session = self._get_session()
         
-        async with session.get(url_get_tanks_stats, verify_ssl=False) as response:
+        async with self.session.get(url_get_tanks_stats, verify_ssl=False) as response:
             data = await self.response_handler(response)
 
-        tanks_stats: dict[str, TankStats] = {}
+            tanks_stats: dict[str, TankStats] = {}
 
-        for tank in data['data'][str(account_id)]:
-            tanks_stats[str(tank['tank_id'])] = TankStats.model_validate(tank)
-            
-        self.player_stats['tank_stats'] = tanks_stats
+            for tank in data['data'][str(account_id)]:
+                tanks_stats[str(tank['tank_id'])] = TankStats.model_validate(tank)
+                
+            self.player_stats['tank_stats'] = tanks_stats
 
+    @retry(
+        expected_exception=(
+            api_exceptions.APIError,
+            api_exceptions.RequestsLimitExceeded,
+            api_exceptions.APISourceNotAvailable,
+            api_exceptions.EmptyDataError,
+            ValidationError
+        )
+    )
     async def get_rating_leaderboard_num(self, region: int | str, account_id: int | str) -> None:
         if region not in ["eu", "asia", "na"]:
             self.player_stats['statistics'].rating.leaderboard_position = 0
             return
         
         account_id = int(account_id)
-        session = self._get_session()
 
         if (account_id, region) in self.rating_leaderboard_num_cache:
             return self.rating_leaderboard_num_cache.get((account_id, region))
 
         url = f"https://{region}.wotblitz.com/eu/api/rating-leaderboards/user/{account_id}"
 
-        async with session.get(url) as response:
+        async with self.session.get(url) as response:
             response_data = await response.json()
             try:
                 data = RatingLeaderboardAPIResponse.model_validate(response_data)
