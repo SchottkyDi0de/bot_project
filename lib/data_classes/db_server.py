@@ -20,3 +20,4 @@ class DBServer(BaseModel):
     settings: ServerSettings | None
     premium: bool = False
     custom_background: str | None = None
+    work_channels: list[int] = []

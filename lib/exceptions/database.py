@@ -39,3 +39,6 @@ class SlotIsNotEmpty(DatabaseError):
 
 class SlotIsEmpty(DatabaseError):
     pass
+
+class InvalidSlot(DatabaseError):
+    pass

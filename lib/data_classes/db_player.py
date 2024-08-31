@@ -100,15 +100,18 @@ class WidgetSettings(BaseModel):
 
 class HookStats(BaseModel):
     active: bool = False
+    last_stats: Optional[PlayerGlobalData] = None
     stats_name: Optional[str] = None  # config.image -> available_stats or available_rating_stats accepted
     stats_type: Optional[Literal['common', 'rating']] = None
     trigger: Optional[str] = None
-    check_interval: int = 200
+    check_interval: Literal[200] = 200
     end_time: datetime = datetime.now(pytz.utc) + timedelta(days=1)
     target_value: int | float | None = None
-    hook_target_member_id: Optional[int] = None
-    hook_target_channel_id: Optional[int] = None
-    hook_target_guild_id: Optional[int] = None
+    target_game_id: Optional[int] = None
+    target_game_region: Optional[str] = None
+    target_member_id: Optional[int] = None
+    target_channel_id: Optional[int] = None
+    target_guild_id: Optional[int] = None
     watch_for: Literal['main', 'session', 'diff'] = 'main'
     try_dm_if_failure: bool = True
     lang: Optional[str] = None

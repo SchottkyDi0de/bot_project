@@ -388,7 +388,7 @@ class ImageGenCommon():
             self.data.data.clan_tag = None
         if self.data.data.clan_tag is not None:
             tag = {
-                'text':     f'[{self.data.data.clan_stats.tag}]',
+                'text':     f'[{self.data.data.clan_tag}]',
                 'font':     self.fonts.roboto_30,
             }
             nickname = {

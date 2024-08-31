@@ -19,9 +19,9 @@ bot_name:
   'Blitz Statistics'
 
 server:
-  host: 'blitzhub.eu'
-  port: '443'
-  protocol: 'https'
+  host: '127.0.0.1'
+  port: '8000'
+  protocol: 'http'
 
 session:
   ttl: 3_888_000 # in seconds - 45 days
@@ -95,6 +95,13 @@ game_api:
       ?application_id=<app_id>
       &search=<nickname>
       &type=<search_type>
+      
+    search: >
+      https://<reg_url>/wotb/account/list/
+      ?application_id=<app_id>
+      &search=<nickname>
+      &type=<search_type>
+      &limit=<limit>
 
     get_stats:
       "https://<reg_url>/wotb/account/info/\
@@ -129,7 +136,7 @@ report:
   bug_channel_id: 1214204057477054464
 
 dump:
-  export_to_id: 1243198882180235344
+  export_to_id: 1243198882180235344 # 628998731500617728 - dakusaido
   chunk_size: 24_117_248  #in bytes(now is 23 MB)
   directory: dump
 

@@ -1,9 +1,14 @@
 from datetime import datetime, timedelta
-from discord import File, Option, Bot
+from functools import partial
+
+from discord import File, InteractionContextType, Option, Bot
 from discord.ext import commands
 from discord.commands import ApplicationContext
 import pytz
 
+from lib.utils.selectors import account_selector, global_players_selector
+from lib.data_classes.member_context import MixedApplicationContext
+from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.settings.settings import Config
 from lib.image.common import ImageGenCommon
 from lib.locale.locale import Text
@@ -20,6 +25,7 @@ from lib.data_classes.db_player import (
     UsedCommand, 
     HookWatchFor
 )
+from lib.exceptions.api import NoPlayersFound
 from lib.blacklist.blacklist import check_user
 from lib.exceptions import api, data_parser
 from lib.error_handler.common import hook_exceptions
@@ -28,12 +34,12 @@ from lib.logger.logger import get_logger
 from lib.utils.nickname_handler import handle_nickname
 from lib.utils.slot_info import get_formatted_slot_info
 from lib.utils.string_parser import insert_data
-from lib.utils.validators import validate
-from lib.utils.standard_account_validate import standard_account_validate
+from lib.utils.validators import NickTypes, validate
 from lib.views.alt_views import HookOverride, HookDisable
 
 _log = get_logger(__file__, 'CogStatsLogger', 'logs/cog_stats.log')
 _config = Config().get()
+
 
 class Stats(commands.Cog):
     cog_command_error = hook_exceptions(_log)
@@ -48,6 +54,7 @@ class Stats(commands.Cog):
         self.err_msg = ErrorMSG()
         
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.stats.descr.this,
         description_localizations={
             'ru' : Text().get('ru').cmds.stats.descr.this,
@@ -68,7 +75,8 @@ class Stats(commands.Cog):
                     'uk': Text().get('ua').frequent.common.nickname
                 },
                 required=True,
-            ), # type: ignore
+                autocomplete=global_players_selector
+            ),
             region: Option(
                 str,
                 description=Text().get('en').frequent.common.region,
@@ -78,18 +86,30 @@ class Stats(commands.Cog):
                     'uk': Text().get('ua').frequent.common.region
                 },
                 choices=Config().get().default.available_regions,
-                required=True
-            ), # type: ignore
+                required=False
+            ),
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
+        await check_user(ctx)
         
         member = await self.db.check_member_exists(ctx.author.id, raise_error=False, get_if_exist=True)
         member = None if isinstance(member, bool) else member
-        await ctx.defer()
         
         nickname_type = validate(nick_or_id, 'nickname')
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
+        
+        if composite_nickname.region is not None:
+            region = composite_nickname.region
+        else:
+            if region is None:
+                await ctx.respond(
+                    embed=self.err_msg.custom(
+                        Text().get(),
+                        text=Text().get().frequent.errors.reg_not_set
+                    ),
+                    ephemeral=True
+                )
+                return
         
         if member is not None:
             await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
@@ -100,7 +120,7 @@ class Stats(commands.Cog):
             nickname=composite_nickname.nickname,
             game_id=composite_nickname.player_id,
             requested_by=member,
-            server=self.sdb.get_server(ctx)
+            server=await self.sdb.get_server(ctx)
         )
 
         if img is not None:
@@ -108,46 +128,43 @@ class Stats(commands.Cog):
             img.close()
 
     @commands.slash_command(
-            description=Text().get('en').cmds.astats.descr.this,
-            description_localizations={
-                'ru': Text().get('ru').cmds.astats.descr.this,
-                'pl': Text().get('pl').cmds.astats.descr.this,
-                'uk': Text().get('ua').cmds.astats.descr.this
-                }
-            )
+        contexts=[InteractionContextType.guild],
+        description=Text().get('en').cmds.astats.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.astats.descr.this,
+            'pl': Text().get('pl').cmds.astats.descr.this,
+            'uk': Text().get('ua').cmds.astats.descr.this
+            }
+        )
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @with_user_context_wrapper('astats')
     async def astats(
-        self, 
-        ctx: ApplicationContext,
+        self,
+        mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
-            )
+            autocomplete=account_selector,
+            ),
         ) -> None:
-        await Text().load_from_context(ctx)
-        check_user(ctx)
-        await ctx.defer()
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
         
-        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account)
-        server = self.sdb.get_server(ctx)
-        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
-        
+        server = await self.sdb.get_server(ctx)
         img = await self.get_stats(
             ctx,
-            region=game_account.region,
-            game_id=game_account.game_id, 
-            slot=slot,
+            region=m_ctx.game_account.region,
+            game_id=m_ctx.game_account.game_id, 
+            slot=m_ctx.slot,
             server=server,
-            requested_by=member
-            )
+            requested_by=m_ctx.member
+        )
 
         if img is not None:
             await ctx.respond(file=File(img, 'stats.png'))
@@ -156,6 +173,7 @@ class Stats(commands.Cog):
             return
     
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.hook_stats.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.hook_stats.descr.this,
@@ -164,9 +182,10 @@ class Stats(commands.Cog):
         }
     )
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @with_user_context_wrapper('hook_stats', premium=True)
     async def hook_stats(
         self, 
-        ctx: ApplicationContext, 
+        mixed_ctx: MixedApplicationContext,
         stats_name: Option(
             str,
             description=Text().get('en').cmds.hook_stats.descr.sub_descr.stats_name,
@@ -213,35 +232,68 @@ class Stats(commands.Cog):
             choices=[x.value for x in HookWatchFor],
         ),
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]),
+            autocomplete=partial(account_selector, session_required=True),
+            ),
+        target: Option(
+            str,
+            description=Text().get('en').cmds.hook_stats.descr.sub_descr.target,
+            description_localizations={
+                'ru': Text().get('ru').cmds.hook_stats.descr.sub_descr.target,
+                'pl': Text().get('pl').cmds.hook_stats.descr.sub_descr.target,
+                'uk': Text().get('ua').cmds.hook_stats.descr.sub_descr.target
+            },
+            autocomplete=global_players_selector,
+            default='self'
+            )
         ) -> None:
-        await Text().load_from_context(ctx)
-        check_user(ctx)
-        await ctx.defer()
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
+        
+        target_override = False
+        
+        game_account, slot, member = m_ctx.game_account, m_ctx.slot, m_ctx.member
+        
+        if target != 'self':
+            nickname_type = validate(target, 'nickname')
+            composite_nickname = handle_nickname(target, nickname_type)
+            if nickname_type is not NickTypes.COMPLETION:
+                raise NoPlayersFound
+            
+            player_data = await self.api.get_player(composite_nickname.region, composite_nickname.nickname, ignore_lock=True)
+            composite_nickname.player_id = player_data['account_id']
+        
+        if not target == 'self':
+            target_override = True
 
-        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account, check_premium=True)
-        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
-        old_hook = game_account.hook_stats
+        if target_override:
+            last_stats = await self.api.get_stats(composite_nickname.region, composite_nickname.player_id, ignore_lock=True)
+        else:
+            last_stats = await self.api.get_stats(game_account.region, game_account.game_id, ignore_lock=True)
+            
+        old_hook = m_ctx.game_account.hook_stats
         
         hook = HookStats(
             active=True,
+            last_stats=last_stats,
             stats_name=stats_name,
             stats_type='common',
             trigger=HookStatsTriggers[trigger].name,
             target_value=target_value,
             end_time=datetime.now(pytz.utc) + timedelta(days=2),
-            hook_target_member_id=member.id,
-            hook_target_channel_id=ctx.channel.id,
-            hook_target_guild_id=ctx.guild.id,
+            target_game_id=composite_nickname.player_id if target_override else game_account.game_id,
+            target_game_region=composite_nickname.region if target_override else game_account.region,
+            target_nickname=composite_nickname.nickname if target_override else game_account.nickname,
+            target_member_id=member.id,
+            target_channel_id=ctx.channel.id,
+            target_guild_id=ctx.guild.id,
             watch_for=watch_for,
             lang=Text().get_current_lang(),
         )
@@ -307,6 +359,7 @@ class Stats(commands.Cog):
         )
         
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.hook_stats.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.hook_stats.descr.this,
@@ -315,9 +368,10 @@ class Stats(commands.Cog):
         }
     )
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @with_user_context_wrapper('hook_stats_rating', premium=True)
     async def hook_stats_rating(
         self, 
-        ctx: ApplicationContext, 
+        mixed_ctx: MixedApplicationContext, 
         stats_name: Option(
             str,
             description=Text().get('en').cmds.hook_stats.descr.sub_descr.stats_name,
@@ -364,23 +418,21 @@ class Stats(commands.Cog):
             choices=[x.value for x in HookWatchFor],
         ),
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]),
+            autocomplete=partial(account_selector, session_required=True),
+            ),
         ) -> None:
-        await Text().load_from_context(ctx)
-        check_user(ctx)
-        await ctx.defer()
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
 
-        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account, check_premium=True)
-        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         old_hook = game_account.hook_stats
         
         hook = HookStats(
@@ -390,9 +442,9 @@ class Stats(commands.Cog):
             trigger=HookStatsTriggers[trigger].name,
             target_value=target_value,
             end_time=datetime.now(pytz.utc) + timedelta(days=2),
-            hook_target_member_id=member.id,
-            hook_target_channel_id=ctx.channel.id,
-            hook_target_guild_id=ctx.guild.id,
+            target_member_id=member.id,
+            target_channel_id=ctx.channel.id,
+            target_guild_id=ctx.guild.id,
             watch_for=watch_for,
             lang=Text().get_current_lang(),
         )
@@ -458,6 +510,7 @@ class Stats(commands.Cog):
         )
         
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.stats.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.stats.descr.this,
@@ -466,27 +519,26 @@ class Stats(commands.Cog):
         }
     )
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @with_user_context_wrapper('hook_status')
     async def hook_status(
             self,
-            ctx: ApplicationContext,
+            mixed_ctx: MixedApplicationContext,
             account: Option(
-                int,
+                str,
                 description=Text().get('en').frequent.common.slot,
                 description_localizations={
                     'ru': Text().get('ru').frequent.common.slot,
                     'pl': Text().get('pl').frequent.common.slot,
                     'uk': Text().get('ua').frequent.common.slot
                 },
-                required=False,
                 default=None,
-                choices=[x.value for x in AccountSlotsEnum]
-            ),  
+                autocomplete=account_selector,
+            ),
         ):
-        await Text().load_from_context(ctx)
-        check_user(ctx)
-        await ctx.defer()
-        
-        game_account, member, slot = await standard_account_validate(ctx.author.id, slot=account)
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
+
+        game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         hook = game_account.hook_stats
         
         if hook.active:
@@ -502,6 +554,7 @@ class Stats(commands.Cog):
                     text=insert_data(
                         Text().get().cmds.hook_state.info.active,
                         {
+                            'target_player' : f'{hook.target_nickname} | {hook.target_game_region.upper()}',
                             'watch_for' : hook.watch_for,
                             'stats_name' : hook.stats_name,
                             'trigger' : HookStatsTriggers[hook.trigger].value,

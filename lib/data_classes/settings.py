@@ -1,11 +1,12 @@
-from typing import List
+from typing import Dict, List
 
 from pydantic import BaseModel
 
 
 class Server(BaseModel):
     host: str
-    port: int
+    port: str
+    protocol: str
 
 
 class Session(BaseModel):
@@ -15,19 +16,18 @@ class Session(BaseModel):
 class Autosession(BaseModel):
     ttl: int
 
+
+class Account(BaseModel):
+    inactive_ttl: int
+
+
 class Default(BaseModel):
     prefix: str
     lang: str
     available_locales: List[str]
     available_regions: List[str]
-    locale_aliases: dict = {
-        'ru': 'ru',
-        'en': 'en',
-        'en-US' : 'en',
-        'en-GB' : 'en',
-        'pl': 'pl',
-        'uk': 'ua'
-    }
+    locale_aliases: Dict
+
 
 class Image(BaseModel):
     default_bg_path: str
@@ -53,6 +53,7 @@ class HelpUrls(BaseModel):
 class SessionWidget(BaseModel):
     url: str
 
+
 class Auth(BaseModel):
     wg_redirect_uri: str
     wg_uri: str
@@ -69,6 +70,7 @@ class RegUrls(BaseModel):
 
 class Urls(BaseModel):
     get_id: str
+    search: str
     get_stats: str
     get_achievements: str
     get_clan_stats: str
@@ -97,28 +99,29 @@ class Dump(BaseModel):
     export_to_id: int
     chunk_size: int
     directory: str
-    
-    
+
+
 class PassedServer(BaseModel):
-    premium_roles: List[int]
     id: int
-    
+    premium_roles: List[int]
+
+
 class PayLinks(BaseModel):
     da: str
     boosty: str
+
 
 class Premium(BaseModel):
     passed_server: PassedServer
     pay_links: PayLinks
 
-class Account(BaseModel):
-    inactive_ttl: int
 
 class ConfigStruct(BaseModel):
     bot_name: str
     server: Server
     session: Session
     autosession: Autosession
+    account: Account
     default: Default
     image: Image
     themes: Themes
@@ -131,4 +134,3 @@ class ConfigStruct(BaseModel):
     report: Report
     dump: Dump
     premium: Premium
-    account: Account

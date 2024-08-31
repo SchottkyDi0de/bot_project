@@ -1,11 +1,12 @@
+from functools import partial
 from discord.ui import View, Button
-from discord import Option
+from discord import InteractionContextType, Option
 from discord.ext import commands
-from discord.commands import ApplicationContext
 from webcolors import rgb_to_hex
 
-from lib.blacklist.blacklist import check_user
-from lib.data_classes.db_player import AccountSlotsEnum, UsedCommand, WidgetSettings
+from lib.utils.commands_wrapper import with_user_context_wrapper
+from lib.data_classes.member_context import MixedApplicationContext
+from lib.data_classes.db_player import WidgetSettings
 from lib.database.players import PlayersDB
 from lib.embeds.info import InfoMSG
 from lib.error_handler.common import hook_exceptions
@@ -13,14 +14,14 @@ from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.color_converter import get_tuple_from_color
-from lib.utils.standard_account_validate import standard_account_validate
+from lib.utils.selectors import account_selector
 from lib.utils.string_parser import insert_data
-from lib.exceptions.database import LastStatsNotFound
 from lib.image.utils.color_validator import color_validate
 from lib.utils.slot_info import get_formatted_slot_info
 
 _config = Config().get()
 _log = get_logger(__file__, 'SessionWidgetLogger', 'logs/session_widget.log')
+
 
 class SessionWidget(commands.Cog):
     cog_command_error = hook_exceptions(_log)
@@ -31,6 +32,7 @@ class SessionWidget(commands.Cog):
         self.inf_msg = InfoMSG()
 
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.session_widget.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_widget.descr.this,
@@ -38,31 +40,26 @@ class SessionWidget(commands.Cog):
             'uk': Text().get('ua').cmds.session_widget.descr.this
         }
     )
+    @with_user_context_wrapper('session_widget', need_session=True)
     async def session_widget(
         self, 
-        ctx: ApplicationContext,
+        mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
+            autocomplete=partial(account_selector, session_required=True),
             )
         ):
-        await Text().load_from_context(ctx)
-        check_user(ctx)
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
         
-        game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
-        await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)
-        session = await self.pdb.check_member_last_stats(slot=slot, member=member)
-        
-        if not session:
-            raise LastStatsNotFound(f'Member {member.id} has no last stats in slot {slot.name}')
+        game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         
         _log.debug(f'Sending session widget to {member.id} in slot {slot.name}...')
         url = insert_data(
@@ -96,6 +93,7 @@ class SessionWidget(commands.Cog):
         )
     
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.session_widget_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_widget_settings.descr.this,
@@ -103,134 +101,134 @@ class SessionWidget(commands.Cog):
             'uk': Text().get('ua').cmds.session_widget_settings.descr.this
         }
     )
+    @with_user_context_wrapper('widget_settings')
     async def widget_settings(
-            self, 
-            ctx: ApplicationContext,
-            disable_bg: Option(
-                bool,
-                description=Text().get('en').cmds.session_widget_settings.items.disable_bg,
-                description_localizations={
-                    'ru': Text().get('ru').cmds.session_widget_settings.items.disable_bg,
-                    'pl': Text().get('pl').cmds.session_widget_settings.items.disable_bg,
-                    'uk': Text().get('ua').cmds.session_widget_settings.items.disable_bg
-                    },
-                required=False
-                ),
-            disable_nickname: Option(
-                bool,
-                description=Text().get('en').cmds.session_widget_settings.items.disable_nickname,
-                description_localizations={
-                    'ru': Text().get('ru').cmds.session_widget_settings.items.disable_nickname,
-                    'pl': Text().get('pl').cmds.session_widget_settings.items.disable_nickname,
-                    'uk': Text().get('ua').cmds.session_widget_settings.items.disable_nickname
+        self, 
+        mixed_ctx: MixedApplicationContext,
+        disable_bg: Option(
+            bool,
+            description=Text().get('en').cmds.session_widget_settings.items.disable_bg,
+            description_localizations={
+                'ru': Text().get('ru').cmds.session_widget_settings.items.disable_bg,
+                'pl': Text().get('pl').cmds.session_widget_settings.items.disable_bg,
+                'uk': Text().get('ua').cmds.session_widget_settings.items.disable_bg
                 },
-                required=False
+            required=False
             ),
-            max_stats_blocks: Option(
-                int,
-                description=Text().get('en').cmds.session_widget_settings.items.max_stats_blocks,
-                description_localizations={
-                    'ru': Text().get('ru').cmds.session_widget_settings.items.max_stats_blocks,
-                    'pl': Text().get('pl').cmds.session_widget_settings.items.max_stats_blocks,
-                    'uk': Text().get('ua').cmds.session_widget_settings.items.max_stats_blocks
-                },
-                min_value=1,
-                max_value=3,
-                required=False
-            ),
-            max_stats_small_blocks: Option(
-                int,
-                description=Text().get('en').cmds.session_widget_settings.items.max_stats_small_blocks,
-                description_localizations={
-                    'ru': Text().get('ru').cmds.session_widget_settings.items.max_stats_small_blocks,
-                    'pl': Text().get('pl').cmds.session_widget_settings.items.max_stats_small_blocks,
-                    'uk': Text().get('ua').cmds.session_widget_settings.items.max_stats_small_blocks
-                },
-                min_value=0,
-                max_value=2,
-                required=False
-            ),
-            update_time: Option(
-                int,
-                description=Text().get('en').cmds.session_widget_settings.items.update_per_seconds,
-                description_localizations={
-                    'ru': Text().get('ru').cmds.session_widget_settings.items.update_per_seconds,
-                    'pl': Text().get('pl').cmds.session_widget_settings.items.update_per_seconds,
-                    'uk': Text().get('ua').cmds.session_widget_settings.items.update_per_seconds
-                },
-                min_value=30,
-                max_value=360,
-                required=False
-            ),
-            background_transparency: Option(
-                float,
-                description=Text().get('en').cmds.session_widget_settings.items.background_transparency,
-                description_localizations={
-                    'ru': Text().get('ru').cmds.session_widget_settings.items.background_transparency,
-                    'pl': Text().get('pl').cmds.session_widget_settings.items.background_transparency,
-                    'uk': Text().get('ua').cmds.session_widget_settings.items.background_transparency
-                },
-                min_value=0,
-                max_value=100,
-                required=False
-            ),
-            disable_main_stats_block: Option(
-                bool,
-                description=Text().get('en').cmds.session_widget_settings.items.disable_main_stats_block,
-                description_localizations={
-                    'ru': Text().get('ru').cmds.session_widget_settings.items.disable_main_stats_block,
-                    'pl': Text().get('pl').cmds.session_widget_settings.items.disable_main_stats_block,
-                    'uk': Text().get('ua').cmds.session_widget_settings.items.disable_main_stats_block
-                },
-                required=False
-            ),
-            use_bg_for_stats_blocks: Option(
-                bool,
-                description=Text().get('en').cmds.session_widget_settings.items.use_bg_for_stats_blocks,
-                description_localizations={
-                    'ru': Text().get('ru').cmds.session_widget_settings.items.use_bg_for_stats_blocks,
-                    'pl': Text().get('pl').cmds.session_widget_settings.items.use_bg_for_stats_blocks,
-                    'uk': Text().get('ua').cmds.session_widget_settings.items.use_bg_for_stats_blocks
-                },
-                required=False
-            ),
-            adaptive_width: Option(
-                bool,
-                description=Text().get('en').cmds.session_widget_settings.items.adaptive_width,
-                description_localizations={
-                    'ru': Text().get('ru').cmds.session_widget_settings.items.adaptive_width,
-                    'pl': Text().get('pl').cmds.session_widget_settings.items.adaptive_width,
-                    'uk': Text().get('ua').cmds.session_widget_settings.items.adaptive_width
-                },
-                required=False
-            ),
-            stats_block_color: Option(
-                str,
-                description=Text().get('en').cmds.session_widget_settings.items.stats_block_color,
-                description_localizations={
-                    'ru': Text().get('ru').cmds.session_widget_settings.items.stats_block_color,
-                    'pl': Text().get('pl').cmds.session_widget_settings.items.stats_block_color,
-                    'uk': Text().get('ua').cmds.session_widget_settings.items.stats_block_color
-                },
-                required=False
-            ),
-            account: Option(
-                int,
-                description=Text().get('en').frequent.common.slot,
-                description_localizations={
-                    'ru': Text().get('ru').frequent.common.slot,
-                    'pl': Text().get('pl').frequent.common.slot,
-                    'uk': Text().get('ua').frequent.common.slot
-                },
-                required=False,
-                default=None,
-                choices=[x.value for x in AccountSlotsEnum]
+        disable_nickname: Option(
+            bool,
+            description=Text().get('en').cmds.session_widget_settings.items.disable_nickname,
+            description_localizations={
+                'ru': Text().get('ru').cmds.session_widget_settings.items.disable_nickname,
+                'pl': Text().get('pl').cmds.session_widget_settings.items.disable_nickname,
+                'uk': Text().get('ua').cmds.session_widget_settings.items.disable_nickname
+            },
+            required=False
+        ),
+        max_stats_blocks: Option(
+            int,
+            description=Text().get('en').cmds.session_widget_settings.items.max_stats_blocks,
+            description_localizations={
+                'ru': Text().get('ru').cmds.session_widget_settings.items.max_stats_blocks,
+                'pl': Text().get('pl').cmds.session_widget_settings.items.max_stats_blocks,
+                'uk': Text().get('ua').cmds.session_widget_settings.items.max_stats_blocks
+            },
+            min_value=1,
+            max_value=3,
+            required=False
+        ),
+        max_stats_small_blocks: Option(
+            int,
+            description=Text().get('en').cmds.session_widget_settings.items.max_stats_small_blocks,
+            description_localizations={
+                'ru': Text().get('ru').cmds.session_widget_settings.items.max_stats_small_blocks,
+                'pl': Text().get('pl').cmds.session_widget_settings.items.max_stats_small_blocks,
+                'uk': Text().get('ua').cmds.session_widget_settings.items.max_stats_small_blocks
+            },
+            min_value=0,
+            max_value=2,
+            required=False
+        ),
+        update_time: Option(
+            int,
+            description=Text().get('en').cmds.session_widget_settings.items.update_per_seconds,
+            description_localizations={
+                'ru': Text().get('ru').cmds.session_widget_settings.items.update_per_seconds,
+                'pl': Text().get('pl').cmds.session_widget_settings.items.update_per_seconds,
+                'uk': Text().get('ua').cmds.session_widget_settings.items.update_per_seconds
+            },
+            min_value=30,
+            max_value=360,
+            required=False
+        ),
+        background_transparency: Option(
+            float,
+            description=Text().get('en').cmds.session_widget_settings.items.background_transparency,
+            description_localizations={
+                'ru': Text().get('ru').cmds.session_widget_settings.items.background_transparency,
+                'pl': Text().get('pl').cmds.session_widget_settings.items.background_transparency,
+                'uk': Text().get('ua').cmds.session_widget_settings.items.background_transparency
+            },
+            min_value=0,
+            max_value=100,
+            required=False
+        ),
+        disable_main_stats_block: Option(
+            bool,
+            description=Text().get('en').cmds.session_widget_settings.items.disable_main_stats_block,
+            description_localizations={
+                'ru': Text().get('ru').cmds.session_widget_settings.items.disable_main_stats_block,
+                'pl': Text().get('pl').cmds.session_widget_settings.items.disable_main_stats_block,
+                'uk': Text().get('ua').cmds.session_widget_settings.items.disable_main_stats_block
+            },
+            required=False
+        ),
+        use_bg_for_stats_blocks: Option(
+            bool,
+            description=Text().get('en').cmds.session_widget_settings.items.use_bg_for_stats_blocks,
+            description_localizations={
+                'ru': Text().get('ru').cmds.session_widget_settings.items.use_bg_for_stats_blocks,
+                'pl': Text().get('pl').cmds.session_widget_settings.items.use_bg_for_stats_blocks,
+                'uk': Text().get('ua').cmds.session_widget_settings.items.use_bg_for_stats_blocks
+            },
+            required=False
+        ),
+        adaptive_width: Option(
+            bool,
+            description=Text().get('en').cmds.session_widget_settings.items.adaptive_width,
+            description_localizations={
+                'ru': Text().get('ru').cmds.session_widget_settings.items.adaptive_width,
+                'pl': Text().get('pl').cmds.session_widget_settings.items.adaptive_width,
+                'uk': Text().get('ua').cmds.session_widget_settings.items.adaptive_width
+            },
+            required=False
+        ),
+        stats_block_color: Option(
+            str,
+            description=Text().get('en').cmds.session_widget_settings.items.stats_block_color,
+            description_localizations={
+                'ru': Text().get('ru').cmds.session_widget_settings.items.stats_block_color,
+                'pl': Text().get('pl').cmds.session_widget_settings.items.stats_block_color,
+                'uk': Text().get('ua').cmds.session_widget_settings.items.stats_block_color
+            },
+            required=False
+        ),
+        account: Option(
+            str,
+            description=Text().get('en').frequent.common.slot,
+            description_localizations={
+                'ru': Text().get('ru').frequent.common.slot,
+                'pl': Text().get('pl').frequent.common.slot,
+                'uk': Text().get('ua').frequent.common.slot
+            },
+            default=None,
+            autocomplete=account_selector,
             )
         ):
-        await Text().load_from_context(ctx)
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
         
-        game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
-        await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         widget_settings = await self.pdb.get_widget_settings(slot=slot, member=member)
         
         current_settings = {
@@ -320,6 +318,7 @@ class SessionWidget(commands.Cog):
         )
     
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.session_widget_settings_reset.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_widget_settings_reset.descr.this,
@@ -327,26 +326,26 @@ class SessionWidget(commands.Cog):
             'uk': Text().get('ua').cmds.session_widget_settings_reset.descr.this
         }
     )
+    @with_user_context_wrapper('widget_settings_reset')
     async def widget_settings_reset(
         self, 
-        ctx: ApplicationContext,
+        mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
+            autocomplete=account_selector,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
         )
         ):
-        await Text().load_from_context(ctx)
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
         
-        game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
-        await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)        
+        game_account, slot = m_ctx.game_account, m_ctx.slot      
         await self.pdb.set_widget_settings(slot=slot, member_id=ctx.author.id, settings=WidgetSettings())
         
         await ctx.respond(

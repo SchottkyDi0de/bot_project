@@ -170,6 +170,9 @@ cmds_defs:
   switch_account: '`/switch_account`'
   premium: '`/premium`'
 
+completions:
+  nickname: 'Введите 3 или более символов, чтобы начать поиск игроков'
+
 frequent:
   errors:
     error: Ошибка
@@ -182,6 +185,7 @@ frequent:
     slot_is_empty: В выбранном слоте нет сохранённых данных аккаунта, вы не можете использовать его для записи данных.
     slot_not_accessed: 'для использования слотов 3-5 вам необходим премиум доступ. Больше информации: {cmds_defs.premium}'
     premium_not_found: 'Для использования этой команды а также получения ряда других возможностей вам необходим премиум доступ. Подробнее: {cmds_defs.premium}'
+    reg_not_set: 'Если вы указали никнейм не выбирая его из подсказок вам необходимо выбрать регион.'
 
   info:
     info: Информация
@@ -232,7 +236,7 @@ cmds:
 # stats command
   stats:
     descr:
-      this: Запрос статитики игрока.
+      this: Запрос статистики игрока.
       sub_descr:
         nickname: Игровой никнейм.
         region: Выбор региона из списка.
@@ -793,6 +797,7 @@ cmds:
     descr:
       this: Хук на изменение статистики
       sub_descr:
+        target: Цель для отслеживания
         stats_name: Название статистики
         stats_type: Тип статистики
         trigger: Условие срабатывания
@@ -806,6 +811,7 @@ cmds:
         Ваша статистика проверяется раз в 200 секунд.
       triggered: |-
         Триггер сработал, состояние статистики:
+        `<target_player>`
         `<watch_for> <stats_name> <target_stats> <trigger> <value>`
     warns:
       another_active_hook: |-
@@ -827,6 +833,7 @@ cmds:
     info:
       active: |-
         Хук активен.
+        `Цель: <target_player>`
         Условие: `<watch_for> <stats_name> <trigger> <value>`
         До отключения: <end_time>
       inactive: Хук не активен.

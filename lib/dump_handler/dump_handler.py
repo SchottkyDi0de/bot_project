@@ -2,7 +2,7 @@ from os import system
 from os.path import exists
 from datetime import datetime
 from threading import Thread
-from asyncio import sleep, get_running_loop
+from asyncio import sleep
 
 from discord import File
 from discord.ext.commands import Bot
@@ -30,14 +30,16 @@ class BackUp:
         member = await bot.fetch_user(send_to_id)
         channel = bot.get_channel(send_to_id)
         time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        files = [File(buffer.buffer, f"dump_{index}.zip") for index, buffer in enumerate(self.files, start=1)]
         
-        if member or channel:
-            if len(self.files) > 1:
-                files = []
-                for buffer in self.files:
-                    files += [File(buffer.buffer, f"dump.zip_part{buffer.file_num}")]
-            else:
-                files = [File(self.files[0].buffer, "dump.zip")]
+        # if member or channel:
+        #     if len(self.files) > 1:
+        #         files = []
+        #         for buffer in self.files:
+        #             files += [File(buffer.buffer, f"dump.zip_part{buffer.file_num}")]
+        #     else:
+        #         files = [File(self.files[0].buffer, "dump.zip")]
+
         if member:
             await member.send(f'Dump created {time}', files=files)
         elif channel:
@@ -45,15 +47,13 @@ class BackUp:
     
     async def dump(self, bot: Bot):
         _log.info("Worker: Creating dump")
-        await self._start_and_wait_for_thread(Thread(target=lambda: system(r"lib\dump_handler\bin\mongodump.exe")))
+        await self._start_and_wait_for_thread(Thread(target=lambda: system(r"mongodump")))
 
         if not exists("dump"):
-            _log.error('Failed to create dump')
+            _log.error('Failed to create dump. Folder "dump" not found')
             return
         
         await self._start_and_wait_for_thread(Thread(target=Zip().get_archive, args=(self,)))
         
         _log.info('Dump created. Exporting...')
         await self._export_archive(bot)
-        
-    

@@ -1,21 +1,21 @@
 from discord.ui import Button, View
-from discord import ApplicationContext, Option
+from discord import InteractionContextType, Option
 from discord.ext import commands
 
+from lib.data_classes.member_context import MixedApplicationContext
 from lib.database.players import PlayersDB
 from lib.embeds.info import InfoMSG
 from lib.logger.logger import get_logger
 from lib.error_handler.common import hook_exceptions
 from lib.embeds.common import CommonMSG
-from lib.settings.settings import Config, EnvConfig
+from lib.settings.settings import Config
 from lib.locale.locale import Text
+from lib.utils.commands_wrapper import with_user_context_wrapper
+from lib.utils.selectors import account_selector
 from lib.utils.string_parser import insert_data
 from lib.utils.slot_info import get_formatted_slot_info
-from lib.utils.standard_account_validate import standard_account_validate
-from lib.data_classes.db_player import AccountSlotsEnum, UsedCommand
 
 _config = Config().get()
-_env_config = EnvConfig()
 _log = get_logger(__file__, 'AuthCogLogger', 'logs/auth_cog_logs.log')
 
 
@@ -27,6 +27,7 @@ class Auth(commands.Cog):
         self.db = PlayersDB()
     
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.verify.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.verify.descr.this,
@@ -34,26 +35,26 @@ class Auth(commands.Cog):
             'uk': Text().get('ua').cmds.verify.descr.this
         }
     )
+    @with_user_context_wrapper('verify')
     async def verify(
-        self, 
-        ctx: ApplicationContext,
+        self,
+        mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=False,
+            autocomplete=account_selector,
             default=None
             )
         ):
-        await Text().load_from_context(ctx)
-        
-        game_account, member, slot = await standard_account_validate(ctx.user.id, account)
-        await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
+        ctx = mixed_ctx.ctx
+        m_ctx = mixed_ctx.m_ctx
+                
+        game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         
         if game_account.verified:
             await ctx.respond(

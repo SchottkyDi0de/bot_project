@@ -1,22 +1,34 @@
+"""
+Copyright 2024 vladislawzero@gmail.com | _Zener | https://github.com/SchottkyDi0de
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), 
+  to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+  and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, 
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+  
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+This license applies to all files in this project that contain Python source code unless otherwise specified!
+"""
 import os
 from asyncio import TaskGroup
-from pprint import pprint
-# from time import time
 
-# import aiohttp
 from discord import Intents, Activity, Status, ActivityType
 from discord.ext import commands
 
 from lib.api import async_wotb_api
-from lib.data_classes.tankopedia import Tank
-from lib.database.players import PlayersDB
 from lib.database.tankopedia import TankopediaDB
 from lib.logger.logger import get_logger
 from lib.exceptions.api import APIError
 from lib.settings.settings import Config, EnvConfig
 from workers.pdb_checker import PDBWorker
 from workers.db_backup_worker import DBBackupWorker
-
 
 _log = get_logger(__file__, 'MainLogger', 'logs/main.log')
 _config = Config().get()
@@ -27,13 +39,14 @@ if os.name == 'posix':
 class App():
     def __init__(self):
         self.backup = DBBackupWorker()
+        self.workers_running = False
         self.intents = Intents.default()
         self.pbd_worker = PDBWorker()
         self.bot = commands.Bot(intents=self.intents, command_prefix=_config.default.prefix)
         self.bot.remove_command('help')
         self.workers = [
                 self.pbd_worker.run_worker,
-                # self.backup.run_worker,
+                self.backup.run_worker,
             ]
 
         self.extension_names = [
@@ -49,6 +62,14 @@ class App():
             self.bot.reload_extension(i)
             
     async def run_workers(self):
+        if self.workers_running:
+            return
+        
+        self.workers_running = False
+        if self.workers_running:
+            return
+        
+        self.workers_running = True
         async with TaskGroup() as tg:
             for worker in self.workers:
                 tg.create_task(worker(self.bot))
@@ -60,7 +81,6 @@ class App():
             _log.info('Bot started: %s', self.bot.user)
 
             api = async_wotb_api.API()
-            await PlayersDB().database_update()
 
             await self.retrieve_tankopedia(api)
             _log.debug('Tankopedia set successful\nBot started: %s', self.bot.user)
@@ -75,7 +95,7 @@ class App():
             await self.run_workers()
         
         self.load_extension(self.extension_names)
-        self.bot.run(EnvConfig.DISCORD_TOKEN)
+        self.bot.run(EnvConfig.DISCORD_TOKEN_DEV)
 
     @staticmethod
     async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:

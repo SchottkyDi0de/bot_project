@@ -1,5 +1,5 @@
-from functools import wraps, partial
-from collections.abc import Awaitable, Callable
+from functools import wraps
+from collections.abc import Awaitable
 import logging
 from logging import Logger
 import traceback
@@ -11,10 +11,9 @@ from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.exceptions import api, data_parser
 from lib.exceptions.blacklist import UserBanned, BlackListException
-from lib.utils.singleton_factory import singleton
 
 
-def hook_exceptions(interaction: Interaction, logger: Logger) -> Callable:
+def hook_exceptions(interaction: Interaction, logger: Logger) -> Awaitable:
     """
     Decorator function that catches exceptions raised by an interaction callback and logs them.
     
