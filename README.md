@@ -93,7 +93,7 @@ python3 -m venv .env
 ```
 ### Linux
 ```bash
-source .env\bin\activate
+source .env/bin/activate
 ```
 ## 3: install all required libs
 ```bash
