@@ -69,6 +69,8 @@ filesplit 4.0.1
 # Dependencies
 [Python 3.11](https://www.python.org/downloads/release/python-3110/) or later
 
+[datamodel-code-generator](https://github.com/koxudaxi/datamodel-code-generator/) for `dev_tools/locale_gen.py`
+
 [MongoDB Server](https://www.mongodb.com/try/download/community)
 
 [MongoDB Database Tools](https://www.mongodb.com/try/download/database-tools) (for dumper)
