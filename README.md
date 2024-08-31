@@ -80,9 +80,9 @@ Any linux distribution capable of installing all dependencies (our server was on
 
 Windows 8 or later
 # Deployment
-1: Install all dependencies
+## 1: Install all dependencies
 
-2: Create virtual enviroment for python libs
+## 2: Create virtual enviroment for python libs
 ```bash
 python3 -m venv .env
 ```
@@ -95,15 +95,17 @@ python3 -m venv .env
 ```bash
 source .env\bin\activate
 ```
-3: install all required libs
+## 3: install all required libs
 ```bash
 pip install -r requirements.txt
 ```
 If there are some package conflicts during installation, remove the `nicegui` library from `requirements.txt` and try again, after installation write `pip install nicegui` separately
 
-4: Setup
+## 4: Setup
 Go to `lib/settings/` and create file `.env`
+
 The `.env` file should have the following content (instead of <> text you should specify your data)
+
 ```env
 DISCORD_TOKEN=<your main token>
 DISCORD_TOKEN_DEV=<your test token>
@@ -124,5 +126,6 @@ CLIENT_ID_DEV=<Like CLIENT_ID but for test running>
 CLIENT_SECRET_DEV=<Like CLIENT_SECRET but for test running>
 ```
 create `logs` folder in root of project
-5: Running
+
+## 5: Running
 Run the bot in the order specified in `startup_info.md`
