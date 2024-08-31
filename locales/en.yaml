@@ -167,6 +167,9 @@ cmds_defs:
   switch_account: '`/switch_account`'
   premium: '`/premium`'
 
+completions:
+  nickname: 'Type 3 or more characters for start search'
+
 frequent:
   errors:
     error: Error
@@ -179,6 +182,7 @@ frequent:
     slot_is_empty: The slot you specified does not have a saved account, you cannot save any data to it.
     slot_not_accessed: 'You need premium access to use slots 3-5. More information: {cmds_defs.premium}.'
     premium_not_found: 'To use this command and get access to other features, you need premium access. More information: {cmds_defs.premium}'
+    reg_not_set: 'If you specified a nickname without selecting it from the prompts you need to select a region.'
 
   info:
     info: Information
@@ -785,12 +789,13 @@ cmds:
     descr:
       this: Hook for statistics change
       sub_descr:
+        target: Target for watching
         stats_name: Statistic name
         stats_type: Type of statistics
         trigger: Condition of triggering
         target_value: Target value (+- 10 Mln.)
     info:
-      success: |- 
+      success: |-
         Hook has been set successfully!
         Bot will notify you in this channel when the hook is triggered.
         Condition: `<watch_for> <stats_name> <trigger> <value>`
@@ -798,6 +803,7 @@ cmds:
         Your statistics is checked every 200 seconds.
       triggered: |-
         The trigger has been triggered, the state of the statistics:
+        `<target_player>`
         `<watch_for> <stats_name> <target_stats> <trigger> <value>`
     warns:
       another_active_hook: |-
@@ -819,6 +825,7 @@ cmds:
     info:
       active: |-
         Hook is active.
+        Target: `<target_player>`
         Condition: `<watch_for> <stats_name> <trigger> <value>`
         Will be disabled in: <end_time>
       inactive: Hook is not active.

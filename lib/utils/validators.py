@@ -17,11 +17,12 @@ class NickTypes(Enum):
     NICKNAME = 0
     PLAYER_ID = 1
     NICKNAME_AND_ID = 2
+    COMPLETION = 3
 
 
-class Validatos:
+class Validators:
     def get_validator(type: Literal["nickname", "time"]):
-        return getattr(Validatos, f"validate_{type}")
+        return getattr(Validators, f"validate_{type}")
     def validate_time(time_str: str | None) -> bool:
         if time_str is None:
             return False
@@ -30,7 +31,7 @@ class Validatos:
 
     def validate_nickname(nickname: str):
         if ' | ' in nickname:
-            nickname = nickname.split(' | ')[0].strip()
+            return NickTypes.COMPLETION
         
         nickname_len = len(nickname)
         player_id = CompiledRegex.player_id.match(nickname)
@@ -46,6 +47,6 @@ class Validatos:
         raise NicknameValidationError
 
 
-def validate(data: Any, type: Literal["nickname", "time"]):
-    validator = Validatos.get_validator(type)
+def validate(data: Any, type: Literal["nickname", "time"]) -> NickTypes:
+    validator = Validators.get_validator(type)
     return validator(data)

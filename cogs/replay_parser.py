@@ -24,6 +24,7 @@ from lib.views.alt_views import ReplayParser as ReplayParserView
 _log = get_logger(__file__, 'CogReplayParserLogger', 'logs/cog_replay_parser.log')
 _config = Config().get()
 
+
 class CogReplayParser(commands.Cog):
     cog_command_error = hook_exceptions(_log)
 

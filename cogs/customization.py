@@ -9,7 +9,7 @@ from lib.auth.discord import DiscordOAuth
 from lib.data_classes.member_context import MixedApplicationContext
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.data_classes.db_player import AccountSlotsEnum, ImageSettings, UsedCommand
+from lib.data_classes.db_player import ImageSettings, UsedCommand
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.error_handler.common import hook_exceptions
@@ -20,6 +20,7 @@ from lib.blacklist.blacklist import check_user
 from lib.image.utils.color_validator import color_validate
 from lib.image.settings_represent import SettingsRepresent
 from lib.utils.commands_wrapper import with_user_context_wrapper
+from lib.utils.selectors import account_selector
 from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
@@ -31,6 +32,7 @@ from lib.utils.slot_info import get_formatted_slot_info
 
 _log = get_logger(__file__, 'CogCustomizationLogger', 'logs/cog_customization.log')
 _config = Config().get()
+
 
 class Customization(Cog):
     cog_command_error = hook_exceptions(_log)
@@ -230,16 +232,15 @@ class Customization(Cog):
                 }
             ),
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
+            autocomplete=account_selector,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
             )
         ):
         ctx = mixed_ctx.ctx
@@ -379,16 +380,15 @@ class Customization(Cog):
         self, 
         ctx: discord.commands.ApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
                 },
-            required=False,
+            autocomplete=account_selector,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
             )
         ):
         await Text().load_from_context(ctx)
@@ -425,16 +425,15 @@ class Customization(Cog):
         self, 
         ctx: ApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
                 },
-            required=False,
+            autocomplete=account_selector,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
             )
         ):
         await Text().load_from_context(ctx)

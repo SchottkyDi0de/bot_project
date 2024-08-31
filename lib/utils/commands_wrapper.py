@@ -35,7 +35,7 @@ def with_user_context_wrapper(
         need_session (bool, optional): Whether to check if the user has an active session. Defaults to False.
         allow_empty_slot (bool, optional): Whether to allow an empty slot. Defaults to False.
         slot_param_name (str, optional): The name of the slot parameter. Defaults to 'account'.
-
+        use_defer (bool, optional): Whether to use defer. Defaults to True.
     Returns:
         Callable: A decorator function that wraps the command function with user context validation.
         
@@ -44,7 +44,7 @@ def with_user_context_wrapper(
     """
     def decorator(wrapped_func: Callable[P, T]) -> Callable[P, Awaitable[T]]:
         @wraps(wrapped_func)
-        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> None:
             account = kwargs.get(slot_param_name, None)
             ctx: ApplicationContext = args[1]
             

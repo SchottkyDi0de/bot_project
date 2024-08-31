@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from functools import partial
 import traceback
 import pytz
 
@@ -8,6 +9,7 @@ from discord.commands import ApplicationContext
 
 from lib.data_classes.member_context import MixedApplicationContext
 from lib.utils.commands_wrapper import with_user_context_wrapper
+from lib.utils.selectors import account_selector
 from lib.utils.slot_info import get_formatted_slot_info
 from lib.api.async_wotb_api import API
 from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer
@@ -25,7 +27,6 @@ from lib.utils.bool_to_text import bool_handler
 from lib.utils.time_converter import TimeConverter
 from lib.utils.string_parser import insert_data
 from lib.views.alt_views import UpdateSession
-
 
 _log = get_logger(__file__, 'CogSessionLogger', 'logs/cog_session.log')
 
@@ -112,15 +113,14 @@ class Session(commands.Cog):
             required=False
             ),
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=True,
+            autocomplete=account_selector,
             default=None
             )
         ):
@@ -206,15 +206,15 @@ class Session(commands.Cog):
         self, 
         mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=True
+            autocomplete=account_selector,
+            default=None
             ),
         ):
         ctx = mixed_ctx.ctx
@@ -266,15 +266,14 @@ class Session(commands.Cog):
         self, 
         mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=False,
+            autocomplete=partial(account_selector, session_required=True),
             default=None
             )
         ):
@@ -325,15 +324,14 @@ class Session(commands.Cog):
         self, 
         mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=False,
+            autocomplete=account_selector,
             default=None
             )
         ):

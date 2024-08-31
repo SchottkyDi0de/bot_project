@@ -174,6 +174,9 @@ cmds_defs:
   switch_account: '`/switch_account`'
   premium: '`/premium`'
 
+completions:
+  nickname: 'Wpisz 3 lub więcej znaków, aby rozpocząć wyszukiwanie'
+
 frequent:
   errors:
     error: Błąd
@@ -186,6 +189,7 @@ frequent:
     slot_is_empty: W wybranym slotu nie ma zapisanego konta, nie można tam zapisać danych.
     slot_not_accessed: 'Potrzebujesz dostępu premium, aby korzystać z slotów 3-5. Więcej informacji: {cmds_defs.premium}.'
     premium_not_found: 'Aby korzystać z tej komendy, a także uzyskać dostęp do innych funkcji, musisz posiadać dostęp premium. Więcej informacji: {cmds_defs.premium}'
+    reg_not_set: "Jeśli podałeś pseudonim bez wybrania go z podpowiedzi, musisz wybrać region"
 
   info:
     info: Informacje
@@ -800,6 +804,8 @@ cmds:
       this: # TODO: Auto translated
         Wyzwalacz na zmianę statystyki
       sub_descr:
+        target: # TODO: Auto translated
+          Cel do śledzenia
         stats_name: # TODO: Auto translated
           Nazwa statystyki
         stats_type: # TODO: Auto translated
@@ -817,6 +823,7 @@ cmds:
         Twoje statystyki będą sprawdzane co 200 sekund.
       triggered: |- # <<< TODO: Auto translated
         Trigger został wywołany, stan statystyki:
+        `<target_player>`
         `<watch_for> <stats_name> <target_stats> <trigger> <value>`
     warns:
       another_active_hook: |- # TODO: Auto translated
@@ -843,6 +850,7 @@ cmds:
     info:
       active: |- # TODO: Auto translated
         Wyzwalacz jest aktywny.
+        Cel do śledzenia: `<target_player>`
         Warunek: `<watch_for> <stats_name> <trigger> <value>`
         Do wyłączenia: <end_time>
       inactive: # TODO: Auto translated

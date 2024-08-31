@@ -8,13 +8,22 @@ from lib.utils.slot_info import get_formatted_slot_info
 from lib.api.async_wotb_api import API
 
 
-async def account_selector(ctx: AutocompleteContext) -> list[str]:
+async def account_selector(ctx: AutocompleteContext, _ = None, session_required: bool = False) -> list[str]:
+    if not isinstance(ctx, AutocompleteContext):
+        raise TypeError(f'ctx must be an instance of AutocompleteContext, not {ctx.__class__.__name__}')
+    
     await Text().load_from_interaction(interaction=ctx.interaction)
     
     member_id = ctx.interaction.user.id
     member_ctx = await standard_account_validate(account_id=member_id, slot=None)
     
     possible_accounts = await PlayersDB().get_all_used_slots(member=member_ctx[1])
+    
+    if session_required:
+        for slot in possible_accounts:
+            if not await PlayersDB().check_member_last_stats(member=member_ctx[1], slot=slot):
+                possible_accounts.remove(slot)
+    
     slots_info: list[str] = []
     
     for slot in possible_accounts:
@@ -28,19 +37,19 @@ async def account_selector(ctx: AutocompleteContext) -> list[str]:
                 clear_md=True
             )
         )
-    
-    def check(account: str):
-        if ctx.value.lower() in account.lower():
-            return True
-        return False
-    
-    return [slot for slot in slots_info if check(slot)]
 
+    return slots_info
 
 async def global_players_selector(ctx: AutocompleteContext) -> list[OptionChoice]:
+    await Text().load_from_interaction(interaction=ctx.interaction)
+
     if len(ctx.value) < 3:
-        return ['Type 3 or more characters for start search']
-    
+        return [OptionChoice(
+            Text().get().completions.nickname,
+            value=''
+            )
+        ]
+
     players = await API().get_players_list(ctx.value)
     
     def check(player: str):
@@ -55,7 +64,7 @@ async def global_players_selector(ctx: AutocompleteContext) -> list[OptionChoice
             completions.append(
                 OptionChoice(
                     name=value, 
-                    value=str(key)
+                    value=f'{key} | {value.split(" | ")[0].lower()} | {value.split(" | ")[1].lower()}'
                 )
             )
     

@@ -6,10 +6,8 @@ from lib.embeds.info import InfoMSG
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.views.alt_views import PremiumButtons
-from lib.settings.settings import Config
 
 _log = get_logger(__file__, 'CogHelpLogger', 'logs/cog_help.log')
-_config = Config().get()
 
 
 class Premium(commands.Cog):

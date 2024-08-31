@@ -57,5 +57,3 @@ class BackUp:
         
         _log.info('Dump created. Exporting...')
         await self._export_archive(bot)
-        
-    

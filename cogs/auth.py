@@ -11,11 +11,13 @@ from lib.embeds.common import CommonMSG
 from lib.settings.settings import Config
 from lib.locale.locale import Text
 from lib.utils.commands_wrapper import with_user_context_wrapper
+from lib.utils.selectors import account_selector
 from lib.utils.string_parser import insert_data
 from lib.utils.slot_info import get_formatted_slot_info
-from lib.data_classes.db_player import AccountSlotsEnum
+
 _config = Config().get()
 _log = get_logger(__file__, 'AuthCogLogger', 'logs/auth_cog_logs.log')
+
 
 class Auth(commands.Cog):
     cog_command_error = hook_exceptions(_log)
@@ -38,15 +40,14 @@ class Auth(commands.Cog):
         self,
         mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=False,
+            autocomplete=account_selector,
             default=None
             )
         ):

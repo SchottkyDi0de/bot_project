@@ -8,7 +8,7 @@ from lib.data_classes.member_context import MixedApplicationContext
 from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.utils.slot_info import get_formatted_slot_info
 from lib.utils.string_parser import insert_data
-from lib.utils.selectors import global_players_selector
+from lib.utils.selectors import account_selector, global_players_selector
 from lib.views.alt_views import DeleteAccountConfirmation, StartSession, SlotOverride, SwitchAccount
 from lib.blacklist.blacklist import check_user
 from lib.data_classes.db_player import StatsViewSettings, AccountSlotsEnum, UsedCommand
@@ -68,7 +68,7 @@ class Set(commands.Cog):
         ):
         await Text().load_from_context(ctx)
         await self.db.check_member_exists(ctx.author.id)
-        check_user(ctx)
+        await check_user(ctx)
         
         await Text().load_from_context(ctx)
 
@@ -104,17 +104,6 @@ class Set(commands.Cog):
                 required=True,
                 autocomplete=global_players_selector
             ),
-            region: Option(
-                str,
-                description=Text().get('en').cmds.set_player.descr.sub_descr.region,
-                description_localizations={
-                    'ru': Text().get('ru').cmds.set_player.descr.sub_descr.region,
-                    'pl': Text().get('pl').cmds.set_player.descr.sub_descr.region,
-                    'uk': Text().get('ua').cmds.set_player.descr.sub_descr.region
-                },
-                choices=_config.default.available_regions,
-                required=True
-            ),
             slot: Option(
                 int,
                 description=Text().get('en').frequent.common.slot,
@@ -125,16 +114,41 @@ class Set(commands.Cog):
                 },
                 choices=[x.value for x in AccountSlotsEnum],
                 required=True,
-            )
+            ),
+            region: Option(
+                str,
+                description=Text().get('en').cmds.set_player.descr.sub_descr.region,
+                description_localizations={
+                    'ru': Text().get('ru').cmds.set_player.descr.sub_descr.region,
+                    'pl': Text().get('pl').cmds.set_player.descr.sub_descr.region,
+                    'uk': Text().get('ua').cmds.set_player.descr.sub_descr.region
+                },
+                required=False,
+                choices=_config.default.available_regions
+            ),
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
+        await check_user(ctx)
         await ctx.defer()
         
         slot = AccountSlotsEnum(int(slot))
         nickname_type = validate(nick_or_id, 'nickname')
         composite_nickname = handle_nickname(nick_or_id, nickname_type)
         
+        if composite_nickname.region is not None:
+            region = composite_nickname.region
+        else:
+            if region is None:
+                await ctx.respond(
+                    embed=self.err_msg.custom(
+                        Text().get(),
+                        text=Text().get().frequent.errors.reg_not_set
+                    ),
+                    ephemeral=True
+                )
+                return
+        
+        print(f'{region=}{composite_nickname.nickname=}{composite_nickname.player_id=}')
         game_account = await self.api.check_and_get_player(
             nickname=composite_nickname.nickname,
             region=region,
@@ -196,7 +210,7 @@ class Set(commands.Cog):
             )
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
+        await check_user(ctx)
         
         member = await self.db.check_member_exists(member_id=ctx.author.id, raise_error=False, get_if_exist=True)
         if not isinstance(member, bool):
@@ -395,15 +409,14 @@ class Set(commands.Cog):
             required=True,
             ),
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=False,
+            autocomplete=account_selector,
             default=None
             ),
         ):
@@ -496,15 +509,14 @@ class Set(commands.Cog):
             required=True,
             ),
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=False,
+            autocomplete=account_selector,
             default=None
             ),
         ):
@@ -584,15 +596,14 @@ class Set(commands.Cog):
         self, 
         mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=False,
+            autocomplete=account_selector,
             default=None
             ),
         ):
@@ -700,15 +711,14 @@ class Set(commands.Cog):
             choices=_config.themes.available
             ),
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=False,
+            autocomplete=account_selector,
             default=None
             ),
         ):
@@ -716,7 +726,7 @@ class Set(commands.Cog):
         m_ctx = mixed_ctx.m_ctx
         
         theme: Theme = get_theme(theme)
-        game_account, member, slot = m_ctx.member, m_ctx.member, m_ctx.slot
+        game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         
         await self.db.set_image_settings(
             slot=slot, member_id=member.id, settings=theme.image_settings

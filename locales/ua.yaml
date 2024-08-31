@@ -170,6 +170,9 @@ cmds_defs:
   switch_account: '`/switch_account`'
   premium: '`/premium`'
 
+completions:
+  nickname: 'Введіть 3 або більше символів, щоб почати пошук гравців'
+
 frequent:
   errors:
     error: Помилка.
@@ -182,6 +185,7 @@ frequent:
     slot_is_empty: В обраному слоті немає збережених даних акаунта, ви не можете використовувати його для запису даних. # <<< TODO: Auto translated need to check
     slot_not_accessed: 'Для доступу до слотів 3-5 вам потрібна преміум підписка. Болше інформації: {cmds_defs.premium}.' # <<< TODO: Auto translated need to check
     premium_not_found: 'Для використання цієї команди а також отримання ряду інших можливостей вам необхідний преміум доступ. Детальніше: {cmds_defs.premium}'
+    reg_not_set: 'Якщо ви вказали нікнейм, не вибираючи його з підказок, вам необхідно вибрати регіон.'
 
   info:
     info: Інформація
@@ -794,6 +798,7 @@ cmds:
     descr:
       this: Хук на зміну статистики # <<< TODO: Auto translated
       sub_descr:
+        target: Мета для відстежування # <<< TODO: Auto translated
         stats_name: Назва статистики # <<< TODO: Auto translated
         stats_type: Тип статистики # <<< TODO: Auto translated
         trigger: Умовня спрацювання # <<< TODO: Auto translated
@@ -807,6 +812,7 @@ cmds:
         Ваша статистика перевіряється раз за 200 секунд.
       triggered: |- # <<< TODO: Auto translated
         Триггер сработав, стан статистики:
+        `<target_player>`
         `<watch_for> <stats_name> <target_stats> <trigger> <value>`
     warns:
       another_active_hook: |- # <<< TODO: Auto translated
@@ -828,6 +834,7 @@ cmds:
     info:
       active: |- # <<< TODO: Auto translated
         Хук активний.
+        `Мета для відстежування: <target_player>`
         Умовня: `<watch_for> <stats_name> <trigger> <value>`
         До відключення: <end_time>
       inactive: Хук не активний. # <<< TODO: Auto translated

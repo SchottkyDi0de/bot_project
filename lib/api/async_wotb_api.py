@@ -1,5 +1,6 @@
 import asyncio
 import atexit
+from collections.abc import Awaitable, Callable
 import json
 import traceback
 from datetime import datetime
@@ -299,7 +300,7 @@ class API:
         on_exception=retry_callback
     )
     
-    async def get_players_list(self, search: str, limit: int = 20) -> dict[str, str]:
+    async def get_players_list(self, search: str, limit: int = 8) -> dict[str, str]:
         data = {}
         
         for reg in _config.default.available_regions:
@@ -359,46 +360,36 @@ class API:
         )
 
         region = self._reg_normalizer(region)
-        await self.rate_limiter.wait()
         
-        async with self.session.get(url_get_id, verify_ssl=False) as response:
-            try:
-                data = await self.response_handler(response, check_data=True)
-                data = data['data'][0]
-                game_id = int(data['account_id'])
-            except Exception as e:
-                _log.debug(f'Error check player\n{traceback.format_exc()}')
-                raise e
-                    
-            url_get_stats = (
-                f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
-                f'?application_id={self._get_id_by_reg(region)}'
-                f'&account_id={game_id}'
-                f'&fields=-statistics.clan'
-            )
-            
-        await self.rate_limiter.wait()
-                
-        async with self.session.get(url_get_stats, verify_ssl=False) as response:
-            try:
-                if data is None:
-                    data = await self.response_handler(response, check_battles=True, check_data=True)
-                else:
-                    await self.response_handler(response, check_battles=True, check_data=True)
-            except Exception as e:
-                _log.debug(f'Error check player\n{traceback.format_exc()}')
-                raise e
-            else:
+        if game_id is None:
+            await self.rate_limiter.wait()
+            async with self.session.get(url_get_id, verify_ssl=False) as response:
                 try:
-                    data = data['data'][[*data['data'].keys()][0]]
-                except KeyError:
-                    ...
-                game_account = {
-                    'nickname': data['nickname'],
-                    'game_id': int(data['account_id']),
-                    'region': region,
-                }
-                return GameAccount.model_validate(game_account)
+                    data = await self.response_handler(response, check_data=True)
+                    data = data['data'][0]
+                    game_id = int(data['account_id'])
+                except Exception as e:
+                    _log.debug(f'Error check player\n{traceback.format_exc()}')
+                    raise e
+            
+        url_get_stats = (
+            f'https://{self._get_url_by_reg(region)}/wotb/account/info/'
+            f'?application_id={self._get_id_by_reg(region)}'
+            f'&account_id={game_id}'
+            f'&fields=-statistics.clan'
+        )
+        
+        await self.rate_limiter.wait()
+        async with self.session.get(url_get_stats, verify_ssl=False) as response:
+            data = await self.response_handler(response, check_battles=True, check_data=True)
+            data = data['data'][[*data['data'].keys()][0]]
+            game_account = {
+                'nickname': data['nickname'],
+                'game_id': int(data['account_id']),
+                'region': region,
+            }
+        
+        return GameAccount.model_validate(game_account)
             
     def done_callback(self, task: asyncio.Task):
         pass
@@ -470,26 +461,25 @@ class API:
         
         self.player['id'] = player['account_id']
 
-        tasks = [
+        tasks: list[Callable] = [
             self.get_player_stats,
             self.get_player_clan_stats,
             self.get_player_achievements,
             self.get_player_tanks_stats,
         ]
-        task_names = [
-            'get_player_stats',
-            'get_player_clan_stats',
-            'get_player_achievements',
-            'get_player_tanks_stats',
-        ]
 
+        # TODO Костыль для ру региона
+        if region == 'ru':
+            tasks.pop(1)
+        # Удалить как только леста встанет с колен
+        
         default_params = {"account_id": player['account_id'], "region": region}
         self.player, self.player_stats = {}, {}
         _log.debug('start collect data')
          
         async with asyncio.TaskGroup() as tg:
             for i, task in enumerate(tasks):
-                self.create_task(tg, task_names[i], task, default_params)
+                self.create_task(tg, task.__name__, task, default_params)
             
         self.player['timestamp'] = int(datetime.now().timestamp())
         self.player['end_timestamp'] = int(
@@ -502,7 +492,12 @@ class API:
         self.player['timestamp'] = datetime.now(pytz.utc)
         self.player['nickname'] = player['nickname']
         self.player['data'] = self.player_stats
-
+        
+        # TODO Костыль для ру региона
+        if region == 'ru':
+            self.player['data']['clan_tag'] = 'N/A'
+        # Удалить как только леста встанет с колен
+        
         player_stats = PlayerGlobalData.model_validate(self.player)
 
         if self.raw_dict:
@@ -544,7 +539,7 @@ class API:
         ignore_lock: bool = False
         ) -> dict:
         """
-        Retrieves the account ID of a player by their nickname and region.
+        Get account data for a player.
 
         Args:
             region (str): The region of the player.
@@ -552,7 +547,7 @@ class API:
             **kwargs: Additional keyword arguments.
 
         Returns:
-            int: The account ID of the player.
+            dict: The account data of the player.
 
         Raises:
             api_exceptions.RequestsLimitExceeded: If the API requests limit is exceeded.

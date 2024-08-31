@@ -779,7 +779,6 @@ class ImageGenSession():
         if force_locale is not None:
             self.text = Text().load(lang=force_locale)
         
-        
         self.game_account: GameAccount = getattr(player.game_accounts, slot.name)
         self.player = player
         self.image_settings = self.game_account.image_settings if force_image_settings is None else force_image_settings
