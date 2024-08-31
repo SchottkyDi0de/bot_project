@@ -41,8 +41,6 @@ pydantic 2.4.2
 
 the_retry 0.1.1
 
-asynciolimiter 1.0.0
-
 webcolors 1.13
 
 fastapi 0.109.2
