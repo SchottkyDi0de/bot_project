@@ -1,6 +1,6 @@
 # Blitz Statistics BlitzHUB Project Page:
 
-# License:
+# License: MIT
 Copyright 2024 vladislawzero@gmail.com | discord: _zener_dioder | https://github.com/SchottkyDi0de
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), 
@@ -77,9 +77,11 @@ filesplit 4.0.1
 
 # Supported platform:
 Any linux distribution capable of installing all dependencies (our server was on ubuntu 22.04 LTS)
+
 Windows 8 or later
 # Deployment
 1: Install all dependencies
+
 2: Create virtual enviroment for python libs
 ```bash
 python3 -m venv .env
@@ -98,6 +100,7 @@ source .env\bin\activate
 pip install -r requirements.txt
 ```
 If there are some package conflicts during installation, remove the `nicegui` library from `requirements.txt` and try again, after installation write `pip install nicegui` separately
+
 4: Setup
 Go to `lib/settings/` and create file `.env`
 The `.env` file should have the following content (instead of <> text you should specify your data)
