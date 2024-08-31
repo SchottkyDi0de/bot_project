@@ -1,4 +1,4 @@
-from discord import Bot
+from discord import Bot, InteractionContextType
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
@@ -6,10 +6,8 @@ from lib.embeds.info import InfoMSG
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.views.alt_views import PremiumButtons
-from lib.settings.settings import Config
 
 _log = get_logger(__file__, 'CogHelpLogger', 'logs/cog_help.log')
-_config = Config().get()
 
 
 class Premium(commands.Cog):
@@ -17,6 +15,7 @@ class Premium(commands.Cog):
         self.bot = bot
 
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.premium.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.premium.descr.this,

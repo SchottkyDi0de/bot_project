@@ -1,4 +1,4 @@
-from discord import Option, File, Cog
+from discord import Option, File, Cog, InteractionContextType
 import discord
 from discord.ext import commands
 from discord.commands import ApplicationContext
@@ -9,7 +9,7 @@ from lib.auth.discord import DiscordOAuth
 from lib.data_classes.member_context import MixedApplicationContext
 from lib.database.players import PlayersDB
 from lib.database.servers import ServersDB
-from lib.data_classes.db_player import AccountSlotsEnum, ImageSettings, UsedCommand
+from lib.data_classes.db_player import ImageSettings, UsedCommand
 from lib.embeds.errors import ErrorMSG
 from lib.embeds.info import InfoMSG
 from lib.error_handler.common import hook_exceptions
@@ -20,6 +20,7 @@ from lib.blacklist.blacklist import check_user
 from lib.image.utils.color_validator import color_validate
 from lib.image.settings_represent import SettingsRepresent
 from lib.utils.commands_wrapper import with_user_context_wrapper
+from lib.utils.selectors import account_selector
 from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.string_parser import insert_data
 from lib.utils.bool_to_text import bool_handler
@@ -31,6 +32,7 @@ from lib.utils.slot_info import get_formatted_slot_info
 
 _log = get_logger(__file__, 'CogCustomizationLogger', 'logs/cog_customization.log')
 _config = Config().get()
+
 
 class Customization(Cog):
     cog_command_error = hook_exceptions(_log)
@@ -45,6 +47,7 @@ class Customization(Cog):
         self.bot = bot
 
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.image_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.image_settings.descr.this,
@@ -229,22 +232,19 @@ class Customization(Cog):
                 }
             ),
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
+            autocomplete=account_selector,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
             )
         ):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-        
-        await ctx.defer()
         
         game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
 
@@ -367,7 +367,7 @@ class Customization(Cog):
         )
 
     @commands.slash_command(
-        guild_only=True, 
+        contexts=[InteractionContextType.guild], 
         description=Text().get('en').cmds.image_settings_get.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.image_settings_get.descr.this,
@@ -380,21 +380,19 @@ class Customization(Cog):
         self, 
         ctx: discord.commands.ApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
                 },
-            required=False,
+            autocomplete=account_selector,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
             )
         ):
         await Text().load_from_context(ctx)
-        await ctx.defer()
-
+        
         game_account, member, slot = await standard_account_validate(account_id=ctx.author.id, slot=account)
         await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
         image_bytes = SettingsRepresent().draw(game_account.image_settings)
@@ -415,7 +413,7 @@ class Customization(Cog):
         await ctx.respond(embed=embed, file=file)
             
     @commands.slash_command(
-        guild_only=True,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.image_settings_reset.descr.this,
         description_localizations = {
             'ru': Text().get('ru').cmds.image_settings_reset.descr.this,
@@ -427,20 +425,19 @@ class Customization(Cog):
         self, 
         ctx: ApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
                 },
-            required=False,
+            autocomplete=account_selector,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
             )
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
+        await check_user(ctx)
 
         game_account, member, slot = await standard_account_validate(slot=account, account_id=ctx.author.id)
         await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)
@@ -461,7 +458,7 @@ class Customization(Cog):
             )
     
     @commands.slash_command(
-        guild_only=True,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.server_settings_get.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.server_settings_get.descr.this,
@@ -470,7 +467,7 @@ class Customization(Cog):
         }
     )
     async def server_settings_get(self, ctx: ApplicationContext):
-        check_user(ctx)
+        await check_user(ctx)
 
         await Text().load_from_context(ctx)
         member = await self.db.check_member_exists(member_id=ctx.author.id, raise_error=False, get_if_exist=True)
@@ -491,6 +488,7 @@ class Customization(Cog):
         await ctx.respond(embed=embed)
             
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.reset_background.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.reset_background.descr.this,
@@ -515,7 +513,7 @@ class Customization(Cog):
             )
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
+        await check_user(ctx)
         
         if server:
             if ctx.author.guild_permissions.administrator:

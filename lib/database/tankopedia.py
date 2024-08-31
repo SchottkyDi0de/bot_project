@@ -1,7 +1,4 @@
-from asyncio import get_running_loop
-
 from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo import MongoClient
 
 from lib.data_classes.tankopedia import Tank
 from lib.logger import logger

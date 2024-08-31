@@ -141,6 +141,7 @@ class PDBWorker:
             if member.profile.last_activity < datetime.now(pytz.utc) - timedelta(seconds=_config.account.inactive_ttl):
                 await self.db.delete_member(member_id)
                 _log.warning(f'Deleted inactive member {member_id}')
+                continue
             
             badges = member.profile.badges
             level = get_level(member.profile.level_exp)
@@ -160,48 +161,54 @@ class PDBWorker:
                 game_account = await self.db.get_game_account(slot, member=member)
                 session_state = await self.db.validate_session(member=member, slot=slot)
                 
-                if session_state is SessionStatesEnum.NORMAL:
-                    hook = game_account.hook_stats
-                    if hook.active:
-                        data = await self.api.get_stats(game_id=game_account.game_id, region=game_account.region)
-                        session_diff = await get_session_stats(game_account.last_stats, data, True)
-                        
-                        if HookWatchFor(hook.watch_for) is HookWatchFor.DIFF:
-                            stats_type = 'main_diff' if hook.stats_type == 'common' else 'rating_diff'
-                            target_stats = getattr(getattr(session_diff, stats_type), hook.stats_name)
-                        elif HookWatchFor(hook.watch_for) is HookWatchFor.SESSION:
-                            stats_type = 'main_session' if hook.stats_type == 'common' else 'rating_session'
-                            target_stats = getattr(getattr(session_diff, stats_type), hook.stats_name)
-                        else:
-                            stats_type = 'all' if hook.stats_type == 'common' else hook.stats_type
-                            target_stats = getattr(getattr(data.data.statistics, stats_type), hook.stats_name)
-                        
-                        if eval(f'{target_stats} {HookStatsTriggers[hook.trigger].value} {hook.target_value}'):
-                            _log.info(f'Hook triggered for {member_id} in slot {slot.name}. Closing hook')
-                            await self.db.disable_stats_hook(member_id, slot)
-                            guild = await self.bot.fetch_guild(hook.hook_target_guild_id)
-                            channel = await guild.fetch_channel(hook.hook_target_channel_id)
-                            await channel.send(
-                                f'<@{hook.hook_target_member_id}>',
-                                embed=InfoMSG().custom(
-                                    locale=Text().get(hook.lang),
-                                    text=insert_data(
-                                        Text().get(hook.lang).cmds.hook_stats.info.triggered,
-                                        {
-                                            'watch_for': hook.watch_for,
-                                            'stats_name': hook.stats_name,
-                                            'target_stats': round(target_stats, 4),
-                                            'trigger': HookStatsTriggers[hook.trigger].value,
-                                            'value': round(hook.target_value, 4)
-                                        }
-                                    
-                                    )
+                hook = game_account.hook_stats
+                if hook.active:
+                    try:
+                        data = await self.api.get_stats(game_id=hook.target_game_id, region=hook.target_game_region)
+                    except Exception:
+                        _log.warning(f'Failed to get stats for {member_id} in slot {slot.name}')
+                        await self.db.disable_stats_hook(member_id, slot)
+                        continue
+                    
+                    session_diff = await get_session_stats(hook.last_stats, data, True)
+                    
+                    if HookWatchFor(hook.watch_for) is HookWatchFor.DIFF:
+                        stats_type = 'main_diff' if hook.stats_type == 'common' else 'rating_diff'
+                        target_stats = getattr(getattr(session_diff, stats_type), hook.stats_name)
+                    elif HookWatchFor(hook.watch_for) is HookWatchFor.SESSION:
+                        stats_type = 'main_session' if hook.stats_type == 'common' else 'rating_session'
+                        target_stats = getattr(getattr(session_diff, stats_type), hook.stats_name)
+                    else:
+                        stats_type = 'all' if hook.stats_type == 'common' else hook.stats_type
+                        target_stats = getattr(getattr(data.data.statistics, stats_type), hook.stats_name)
+                    
+                    if eval(f'{target_stats} {HookStatsTriggers[hook.trigger].value} {hook.target_value}'):
+                        _log.info(f'Hook triggered for {member_id} in slot {slot.name}. Closing hook')
+                        await self.db.disable_stats_hook(member_id, slot)
+                        guild = await self.bot.fetch_guild(hook.target_guild_id)
+                        channel = await guild.fetch_channel(hook.target_channel_id)
+                        await channel.send(
+                            f'<@{hook.target_member_id}>',
+                            embed=InfoMSG().custom(
+                                locale=Text().get(hook.lang),
+                                text=insert_data(
+                                    Text().get(hook.lang).cmds.hook_stats.info.triggered,
+                                    {
+                                        'target_player': hook.last_stats.nickname,
+                                        'watch_for': hook.watch_for,
+                                        'stats_name': hook.stats_name,
+                                        'target_stats': round(target_stats, 4),
+                                        'trigger': HookStatsTriggers[hook.trigger].value,
+                                        'value': round(hook.target_value, 4)
+                                    }
                                 )
                             )
-                                    
-                        if hook.end_time < datetime.now(pytz.utc):
-                            _log.info(f'Closing hook for {member_id} in slot {slot.name} - hook expired')
-                            await self.db.disable_stats_hook(member_id, slot)
+                        )
+                        await self.db.disable_stats_hook(member_id, slot)
+                                
+                    if hook.end_time < datetime.now(pytz.utc):
+                        _log.info(f'Closing hook for {member_id} in slot {slot.name} - hook expired')
+                        await self.db.disable_stats_hook(member_id, slot)
                 
                 if session_state is not SessionStatesEnum.RESTART_NEEDED:
                     continue

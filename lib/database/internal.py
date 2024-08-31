@@ -45,7 +45,11 @@ class InternalDB():
         
     async def check_ban(self, user_id: int) -> bool:
         data = await self.collection.find_one({'name': 'internal_info'})
-        return user_id in data['banned_users']
+        
+        try:
+            return user_id in data['banned_users']
+        except KeyError:
+            return False
         
     async def get_actual_premium_users(self) -> list[int]:
         data = await self.collection.find_one({'name': 'internal_info'})

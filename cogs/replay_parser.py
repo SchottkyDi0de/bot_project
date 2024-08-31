@@ -1,7 +1,7 @@
 import datetime
 from io import StringIO
 
-from discord import File, Option, Attachment, SelectOption
+from discord import File, InteractionContextType, Option, Attachment, SelectOption
 from discord.ext import commands
 
 from lib.data_classes.member_context import MixedApplicationContext
@@ -24,6 +24,7 @@ from lib.views.alt_views import ReplayParser as ReplayParserView
 _log = get_logger(__file__, 'CogReplayParserLogger', 'logs/cog_replay_parser.log')
 _config = Config().get()
 
+
 class CogReplayParser(commands.Cog):
     cog_command_error = hook_exceptions(_log)
 
@@ -36,7 +37,7 @@ class CogReplayParser(commands.Cog):
         self.inf_msg = InfoMSG()
 
     @commands.slash_command(
-            guild_only=True, 
+            contexts=[InteractionContextType.guild],
             description=Text().get('en').cmds.parse_replay.descr.this,
             description_localizations={
                 'ru': Text().get('ru').cmds.parse_replay.descr.this,
@@ -79,8 +80,6 @@ class CogReplayParser(commands.Cog):
         ):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-        
-        await ctx.defer()
         
         member = m_ctx.member
         replay: Attachment = replay

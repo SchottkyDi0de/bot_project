@@ -4,11 +4,12 @@ from typing import ParamSpec, TypeVar
 
 from discord import ApplicationContext
 
-from lib.data_classes.db_player import UsedCommand
+from lib.data_classes.db_player import AccountSlotsEnum, UsedCommand
 from lib.data_classes.member_context import MemberContext, MixedApplicationContext
 from lib.utils.standard_account_validate import standard_account_validate
 from lib.locale.locale import Text
 from lib.database.players import PlayersDB
+from lib.exceptions.database import InvalidSlot
 
 P = ParamSpec('P')
 T = TypeVar('T')
@@ -20,7 +21,8 @@ def with_user_context_wrapper(
     ban_check: bool = True,
     need_session: bool = False,
     allow_empty_slot: bool = False,
-    slot_param_name: str = 'account'
+    slot_param_name: str = 'account',
+    use_defer: bool = True
     ) -> Callable[P, Awaitable[T]]:
     """
     Decorator function that wraps a command function with user context validation.
@@ -33,7 +35,7 @@ def with_user_context_wrapper(
         need_session (bool, optional): Whether to check if the user has an active session. Defaults to False.
         allow_empty_slot (bool, optional): Whether to allow an empty slot. Defaults to False.
         slot_param_name (str, optional): The name of the slot parameter. Defaults to 'account'.
-
+        use_defer (bool, optional): Whether to use defer. Defaults to True.
     Returns:
         Callable: A decorator function that wraps the command function with user context validation.
         
@@ -42,10 +44,24 @@ def with_user_context_wrapper(
     """
     def decorator(wrapped_func: Callable[P, T]) -> Callable[P, Awaitable[T]]:
         @wraps(wrapped_func)
-        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            ctx: ApplicationContext = args[1]
-            await Text().load_from_context(ctx)
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> None:
             account = kwargs.get(slot_param_name, None)
+            ctx: ApplicationContext = args[1]
+            
+            await Text().load_from_context(ctx)
+            
+            if use_defer:
+                await ctx.defer()
+            
+            if account is not None:
+                try:
+                    account = int(account[-1])
+                except (IndexError, ValueError, TypeError):
+                    raise InvalidSlot
+                else:
+                    if account not in [x.value for x in AccountSlotsEnum]:
+                        raise InvalidSlot 
+            
             game_account, member, slot = await standard_account_validate(
                 account_id=ctx.author.id, 
                 slot=account, 

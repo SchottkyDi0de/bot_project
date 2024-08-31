@@ -19,9 +19,9 @@ bot_name:
   'Blitz Statistics'
 
 server:
-  host: 'blitzhub.eu'
-  port: '443'
-  protocol: 'https'
+  host: '127.0.0.1'
+  port: '8000'
+  protocol: 'http'
 
 session:
   ttl: 3_888_000 # in seconds - 45 days
@@ -95,6 +95,13 @@ game_api:
       ?application_id=<app_id>
       &search=<nickname>
       &type=<search_type>
+      
+    search: >
+      https://<reg_url>/wotb/account/list/
+      ?application_id=<app_id>
+      &search=<nickname>
+      &type=<search_type>
+      &limit=<limit>
 
     get_stats:
       "https://<reg_url>/wotb/account/info/\

@@ -1,4 +1,4 @@
-from discord import Cog, Option
+from discord import Cog, InteractionContextType, Option
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
@@ -21,6 +21,7 @@ class Report(Cog):
         self.db = PlayersDB()
     
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.report.descr.this,
         description_localizations={
             'ru' : Text().get('ru').cmds.report.descr.this,
@@ -44,7 +45,7 @@ class Report(Cog):
             )
         ):
         await Text().load_from_context(ctx)
-        check_user(ctx)
+        await check_user(ctx)
         member = await self.db.check_member_exists(ctx.author.id, get_if_exist=True, raise_error=False)
         if isinstance(member, DBPlayer):
             await self.db.set_analytics(UsedCommand(name=ctx.command.name), member=member)

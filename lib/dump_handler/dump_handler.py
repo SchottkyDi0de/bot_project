@@ -2,7 +2,7 @@ from os import system
 from os.path import exists
 from datetime import datetime
 from threading import Thread
-from asyncio import sleep, get_running_loop
+from asyncio import sleep
 
 from discord import File
 from discord.ext.commands import Bot
@@ -57,5 +57,3 @@ class BackUp:
         
         _log.info('Dump created. Exporting...')
         await self._export_archive(bot)
-        
-    

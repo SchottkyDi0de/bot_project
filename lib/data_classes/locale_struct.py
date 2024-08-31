@@ -117,6 +117,10 @@ class CmdsDefs(BaseModel):
     premium: str
 
 
+class Completions(BaseModel):
+    nickname: str
+
+
 class Errors(BaseModel):
     error: str
     unknown_error: str
@@ -128,6 +132,7 @@ class Errors(BaseModel):
     slot_is_empty: str
     slot_not_accessed: str
     premium_not_found: str
+    reg_not_set: str
 
 
 class Info(BaseModel):
@@ -798,6 +803,7 @@ class Profile(BaseModel):
 
 
 class SubDescr12(BaseModel):
+    target: str
     stats_name: str
     stats_type: str
     trigger: str
@@ -912,6 +918,7 @@ class Localization(BaseModel):
     map_names: MapNames
     gamemodes: Gamemodes
     cmds_defs: CmdsDefs
+    completions: Completions
     frequent: Frequent
     views: Views
     cmds: Cmds

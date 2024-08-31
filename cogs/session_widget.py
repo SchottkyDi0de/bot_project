@@ -1,11 +1,12 @@
+from functools import partial
 from discord.ui import View, Button
-from discord import Option
+from discord import InteractionContextType, Option
 from discord.ext import commands
 from webcolors import rgb_to_hex
 
 from lib.utils.commands_wrapper import with_user_context_wrapper
 from lib.data_classes.member_context import MixedApplicationContext
-from lib.data_classes.db_player import AccountSlotsEnum, WidgetSettings
+from lib.data_classes.db_player import WidgetSettings
 from lib.database.players import PlayersDB
 from lib.embeds.info import InfoMSG
 from lib.error_handler.common import hook_exceptions
@@ -13,12 +14,14 @@ from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.color_converter import get_tuple_from_color
+from lib.utils.selectors import account_selector
 from lib.utils.string_parser import insert_data
 from lib.image.utils.color_validator import color_validate
 from lib.utils.slot_info import get_formatted_slot_info
 
 _config = Config().get()
 _log = get_logger(__file__, 'SessionWidgetLogger', 'logs/session_widget.log')
+
 
 class SessionWidget(commands.Cog):
     cog_command_error = hook_exceptions(_log)
@@ -29,6 +32,7 @@ class SessionWidget(commands.Cog):
         self.inf_msg = InfoMSG()
 
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.session_widget.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_widget.descr.this,
@@ -41,16 +45,15 @@ class SessionWidget(commands.Cog):
         self, 
         mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
+            autocomplete=partial(account_selector, session_required=True),
             )
         ):
         ctx = mixed_ctx.ctx
@@ -90,6 +93,7 @@ class SessionWidget(commands.Cog):
         )
     
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.session_widget_settings.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_widget_settings.descr.this,
@@ -210,16 +214,15 @@ class SessionWidget(commands.Cog):
             required=False
         ),
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
+            autocomplete=account_selector,
             )
         ):
         ctx = mixed_ctx.ctx
@@ -315,6 +318,7 @@ class SessionWidget(commands.Cog):
         )
     
     @commands.slash_command(
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.session_widget_settings_reset.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.session_widget_settings_reset.descr.this,
@@ -327,16 +331,15 @@ class SessionWidget(commands.Cog):
         self, 
         mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get('en').frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            required=False,
+            autocomplete=account_selector,
             default=None,
-            choices=[x.value for x in AccountSlotsEnum]
         )
         ):
         ctx = mixed_ctx.ctx

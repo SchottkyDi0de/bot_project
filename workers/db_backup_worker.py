@@ -22,6 +22,6 @@ class DBBackupWorker:
     async def run_worker(self, bot: Bot, *args):
         _log.info('WORKERS: DB backup worker started')
         while not self.STOP_FLAG:
-            if datetime.now(pytz.utc).hour == 13:
+            if datetime.now(pytz.utc).hour == 4:
                 await BackUp().dump(bot)
             await sleep(1800)

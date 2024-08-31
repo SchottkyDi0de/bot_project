@@ -1,13 +1,15 @@
 from datetime import datetime, timedelta
+from functools import partial
 import traceback
 import pytz
 
-from discord import File, Option
+from discord import File, InteractionContextType, Option
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
 from lib.data_classes.member_context import MixedApplicationContext
 from lib.utils.commands_wrapper import with_user_context_wrapper
+from lib.utils.selectors import account_selector
 from lib.utils.slot_info import get_formatted_slot_info
 from lib.api.async_wotb_api import API
 from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer
@@ -25,7 +27,6 @@ from lib.utils.bool_to_text import bool_handler
 from lib.utils.time_converter import TimeConverter
 from lib.utils.string_parser import insert_data
 from lib.views.alt_views import UpdateSession
-
 
 _log = get_logger(__file__, 'CogSessionLogger', 'logs/cog_session.log')
 
@@ -74,7 +75,7 @@ class Session(commands.Cog):
         return file
         
     @commands.slash_command(
-        guild_only=True,
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.start_autosession.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.start_autosession.descr.this,
@@ -112,21 +113,19 @@ class Session(commands.Cog):
             required=False
             ),
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=True,
+            autocomplete=account_selector,
             default=None
             )
         ):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-        await ctx.defer()
         
         game_account, member, account_slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         
@@ -194,7 +193,7 @@ class Session(commands.Cog):
            
         
     @commands.slash_command(
-        guild_only=True, 
+        contexts=[InteractionContextType.guild],
         description=Text().get('en').cmds.start_session.descr.this,
         description_localizations={
             'ru': Text().get('ru').cmds.start_session.descr.this,
@@ -207,21 +206,19 @@ class Session(commands.Cog):
         self, 
         mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=True
+            autocomplete=account_selector,
+            default=None
             ),
         ):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-        
-        await ctx.defer()
         
         game_account, member, account_slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         
@@ -255,36 +252,33 @@ class Session(commands.Cog):
         )
 
     @commands.slash_command(
-            guild_only=True, 
-            description=Text().get('en').cmds.get_session.descr.this,
-            description_localizations={
-                'ru': Text().get('ru').cmds.get_session.descr.this,
-                'pl': Text().get('pl').cmds.get_session.descr.this,
-                'uk': Text().get('ua').cmds.get_session.descr.this
-                }
-            )
+        contexts=[InteractionContextType.guild], 
+        description=Text().get('en').cmds.get_session.descr.this,
+        description_localizations={
+            'ru': Text().get('ru').cmds.get_session.descr.this,
+            'pl': Text().get('pl').cmds.get_session.descr.this,
+            'uk': Text().get('ua').cmds.get_session.descr.this
+            }
+        )
     @commands.cooldown(1, 10, commands.BucketType.user)
     @with_user_context_wrapper('get_session', need_session=True)
     async def get_session(
         self, 
         mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=False,
+            autocomplete=partial(account_selector, session_required=True),
             default=None
             )
         ):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-        
-        await ctx.defer()
         
         game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         server = await self.sdb.get_server(ctx)
@@ -316,36 +310,33 @@ class Session(commands.Cog):
         await ctx.respond(file=file, view=view, embed=embed)
 
     @commands.slash_command(
-            guild_only=True, 
-            description=Text().get('en').cmds.session_state.descr.this,
-            description_localizations={
-                'ru' : Text().get('ru').cmds.session_state.descr.this,
-                'pl' : Text().get('pl').cmds.session_state.descr.this,
-                'uk' : Text().get('ua').cmds.session_state.descr.this
-                }
-            )
+        contexts=[InteractionContextType.guild],
+        description=Text().get('en').cmds.session_state.descr.this,
+        description_localizations={
+            'ru' : Text().get('ru').cmds.session_state.descr.this,
+            'pl' : Text().get('pl').cmds.session_state.descr.this,
+            'uk' : Text().get('ua').cmds.session_state.descr.this
+            }
+        )
     @commands.cooldown(1, 10, commands.BucketType.user)
     @with_user_context_wrapper('session_state')
     async def session_state(
         self, 
         mixed_ctx: MixedApplicationContext,
         account: Option(
-            int,
+            str,
             description=Text().get().frequent.common.slot,
             description_localizations={
                 'ru': Text().get('ru').frequent.common.slot,
                 'pl': Text().get('pl').frequent.common.slot,
                 'uk': Text().get('ua').frequent.common.slot
             },
-            choices=[x.value for x in AccountSlotsEnum],
-            required=False,
+            autocomplete=account_selector,
             default=None
             )
         ):
         ctx = mixed_ctx.ctx
         m_ctx = mixed_ctx.m_ctx
-        
-        await ctx.defer()
         
         game_account, member, slot = m_ctx.game_account, m_ctx.member, m_ctx.slot
         
@@ -363,8 +354,8 @@ class Session(commands.Cog):
         now_time = datetime.now(pytz.utc)
         session_settings = game_account.session_settings
         
-        time_format =   f'%H:' \
-                        f'%M'
+        time_format =   '%H:' \
+                        '%M'
         long_time_format = f'%D{Text().get().frequent.common.time_units.d} | ' \
                         f'%H:' \
                         f'%M'
