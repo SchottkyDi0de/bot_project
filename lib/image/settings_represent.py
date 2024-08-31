@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import Any
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
@@ -31,7 +32,7 @@ class SettingsRepresent:
         self.img_draw = None
         
     def draw(self, image_settings: ImageSettings) -> BytesIO:
-        self.image = Image.new('RGBA', (700, 950), (40, 40, 40, 255))
+        self.image = Image.new('RGBA', (700, 1010), (40, 40, 40, 255))
         self.img_draw = ImageDraw.Draw(self.image)
         
         self.draw_text(self.img_draw, image_settings)
@@ -58,7 +59,7 @@ class SettingsRepresent:
                 self.offsets.rect_offset - self.offsets.base_offset,
                 0,
                 self.offsets.rect_offset - self.offsets.base_offset,
-                1000
+                1010
             ),
             fill=Colors.blue,
             width=2
@@ -113,7 +114,7 @@ class SettingsRepresent:
             )
             
     def draw_color_represent(self, img_draw: ImageDraw.ImageDraw, image_settings: ImageSettings):
-        image_settings: dict = image_settings.model_dump()
+        image_settings: dict[str, str] = image_settings.model_dump()
         for index, (key, value) in enumerate(image_settings.items()):
             if '_color' in key:
                 img_draw.rounded_rectangle(
@@ -151,7 +152,7 @@ class SettingsRepresent:
                     font=self.font,
                     anchor='lm',
                     align='center',
-                    fill=Colors.green if value else Colors.red
+                    fill=Colors.l_green if value else Colors.l_red
                 )
             index += 1
     
@@ -196,7 +197,7 @@ class SettingsRepresent:
         bg = self.image.copy()
         img_draw = ImageDraw.Draw(bg)
         for index, (key, value) in enumerate(image_settings.items()):
-            if key == 'blocks_bg_opacity':
+            if key == 'stats_blocks_transparency':
                 self.img_draw.text(
                     (
                         self.offsets.rect_offset + 1, 
@@ -242,12 +243,12 @@ class SettingsRepresent:
                         self.offsets.rect_offset + 30,
                         self.offsets.base_offset_y + index * self.offsets.line_offset_y,
                     ),
-                    fill=Colors.green,
+                    fill=Colors.l_green,
                     width=10
                 )
                 gaussian_filter = ImageFilter.GaussianBlur(value)
                 bg = self.image.copy().filter(gaussian_filter)
-                bg = ImageEnhance.Brightness(bg).enhance(image_settings['blocks_bg_opacity'])
+                bg = ImageEnhance.Brightness(bg).enhance(image_settings['stats_blocks_transparency'])
                 rect_map = Image.new('RGBA', self.image.size, (0, 0, 0, 0))
                 img_draw = ImageDraw.Draw(rect_map)
                 img_draw.rounded_rectangle(

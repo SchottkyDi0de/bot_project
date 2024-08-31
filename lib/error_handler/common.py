@@ -11,6 +11,8 @@ from lib.exceptions import api, data_parser, database, replay_parser
 from lib.exceptions.blacklist import UserBanned
 from lib.exceptions.nickname_validator import NicknameValidationError
 
+from lib.locale.locale import Text
+
 
 def hook_exceptions(_log: Logger) -> Coroutine:
 
@@ -40,14 +42,43 @@ def hook_exceptions(_log: Logger) -> Coroutine:
                 embed = err_msg.api_error()
         elif isinstance(error, database.DatabaseError):
             if isinstance(error, database.LastStatsNotFound):
-                embed = err_msg.session_not_found()
+                embed = inf_msg.custom(
+                    locale=Text().get(),
+                    text=Text().get().cmds.get_session.errors.session_not_found,
+                    colour='orange'
+                )
             elif isinstance(error, database.VerificationNotFound):
                 embed = inf_msg.member_not_verified()
+            elif isinstance(error, database.SlotIsEmpty):
+                embed = inf_msg.custom(
+                    locale=Text().get(),
+                    title=Text().get().frequent.info.warning,
+                    text=Text().get().frequent.errors.slot_is_empty,
+                    colour='orange'
+                )
+            elif isinstance(error, database.PremiumSlotAccessAttempt):
+                embed = inf_msg.custom(
+                    locale=Text().get(),
+                    colour='orange',
+                    text=Text().get().frequent.errors.slot_not_accessed,
+                )
+            elif isinstance(error, database.MemberNotFound):
+                embed = inf_msg.player_not_registered()
+            elif isinstance(error, database.PremiumNotFound):
+                embed = inf_msg.custom(
+                    locale=Text().get(),
+                    text=Text().get().frequent.errors.premium_not_found,
+                    colour='orange',
+                )
             else:
                 embed = err_msg.unknown_error()
         elif isinstance(error, data_parser.DataParserError):
             if isinstance(error, data_parser.NoDiffData):
-                embed = err_msg.session_not_updated()
+                embed = inf_msg.custom(
+                    locale=Text().get(),
+                    text=Text().get().cmds.get_session.errors.session_not_updated,
+                    colour='orange'
+                )
             else:
                 embed = err_msg.parser_error()
         elif isinstance(error, replay_parser.ReplayParserError):

@@ -7,18 +7,16 @@ from enum import Enum
 from io import BytesIO
 from time import time
 
-from discord.ext.commands import Context
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.data_classes.db_player import ImageSettings
-from lib.data_classes.db_server import ServerSettings
-from lib.database.players import PlayersDB
-from lib.database.servers import ServersDB
+from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, GameAccount, ImageSettings
+from lib.data_classes.db_server import DBServer
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
 from lib.image.for_image.medals import Medals
+from lib.image.utils.b64_img_handler import img_to_base64, base64_to_img, img_to_readable_buffer
 from lib.image.themes.theme_loader import get_theme
 from lib.image.for_image.watermark import Watermark
 from lib.image.utils.resizer import center_crop
@@ -28,6 +26,7 @@ from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
 from lib.image.for_image.stats_coloring import colorize
 from lib.image.for_image.icons import LeaguesIcons
+from lib.image.utils.val_normalizer import ValueNormalizer
 
 _log = get_logger(__file__, 'ImageCommonLogger', 'logs/image_common.log')
 _config = Config().get()
@@ -182,108 +181,7 @@ class Coordinates():
 
             'accuracy': (620, 841),
         }
-
-
-class ValueNormalizer():
-    @staticmethod
-    def winrate(val, enable_null=False):
-        """
-        Normalizes a winrate value.
-
-        Args:
-            val (float): The winrate value to normalize.
-
-        Returns:
-            str: The normalized winrate value as a string.
-                  If val is 0, returns '—'.
-                  Otherwise, returns the winrate value formatted as '{:.2f} %'.
-        """
-        if round(val, 2) == 0:
-            if not enable_null:
-                return '—'
-            else:
-                return '0'
-
-        return '{:.2f}'.format(val) + '%'
-
-    @staticmethod
-    def ratio(val, enable_null=False):
-        """
-        Normalizes a ratio value.
-
-        Args:
-            val (float): The ratio value to normalize.
-
-        Returns:
-            str: The normalized ratio value as a string.
-                  If val is 0, returns '—'.
-                  Otherwise, returns the ratio value formatted as '{:.2f}'.
-        """
-        return ValueNormalizer.winrate(val, enable_null).replace('%', '')
-    
-    @staticmethod
-    def other(val, enable_null=False, str_bypass=False):
-        """
-        Normalizes a value based on certain conditions.
-
-        Args:
-            val (float or int): The value to normalize.
-            enable_null (bool): If True, returns '0' for zero values. Defaults to False.
-            str_bypass (bool): If True, returns the value as a string if it's a string. Defaults to False.
-
-        Returns:
-            str:
-            The normalized value as a string.
-            If val is 0 or equal to 0, returns '—' if enable_null is False, else '0'.
-            If val is a string, returns '—'.
-            If val is between 100,000 and 1,000,000, returns the value divided by 1,000
-            rounded to 2 decimal places and appended with 'K'.
-            If val is greater than or equal to 1,000,000, returns the value divided by 1,000,000
-            rounded to 2 decimal places and appended with 'M'.
-            Otherwise, returns the value as a string.
-        """
-        # Convert value to string if str_bypass is True and it's a string
-        if str_bypass and isinstance(val, str):
-            return val
-
-        # Check if value is 0 or equal to 0, return special value if enable_null is False
-        if round(val) == 0:
-            if not enable_null:
-                return '—'
-            else:
-                return '0'
-
-        # Check if value is a string, return special value
-        if isinstance(val, str):
-            return '—'
-
-        # Define the index and round the value based on certain conditions
-        index = ['K', 'M']
-        if val >= 100_000 and val < 1_000_000:
-            val = str(round(val / 1_000, 2)) + index[0]
-        elif val >= 1_000_000:
-            val = str(round(val / 1_000_000, 2)) + index[1]
-        else:
-            return str(val)
-
-        # Return the normalized value
-        return val
-    
-    @staticmethod
-    def adaptive(value):
-        '''
-        Automatically selects the value normalizer based on the type of the value.
-        args:
-            value (float or int): The value to normalize.
-        returns:
-            str: The normalized value as a string.
-        '''
-        if isinstance(value, float):
-            return ValueNormalizer.ratio(value)
-        if isinstance(value, int):
-            return ValueNormalizer.other(value)
         
-
 
 class Values():
     def __init__(self, data: PlayerGlobalData) -> None:
@@ -317,12 +215,22 @@ class Values():
         }
 
 class ImageSize:
-    max_height: int = 1300
+    max_height: int = 1250
     max_width: int = 700
+    
+
+class ImageGenReturnTypes(Enum):
+    PIL_IMAGE = 1
+    BYTES_IO = 2
+    BASE64 = 3
 
 
 @singleton
-class ImageGen():
+class ImageGenCommon():
+    image_settings = ImageSettings()
+    nickname_box = []
+    nickname_params = {}
+    clan_tag_params = {}
     text = None
     fonts = Fonts()
     leagues = LeaguesIcons()
@@ -340,68 +248,66 @@ class ImageGen():
     medals = Medals()
     background_rectangles_map = BackgroundRectangleMap()
     
-    def load_image(self, bytes_ot_path: str | BytesIO) -> None:
-        image = Image.open(bytes_ot_path)
+    def _load_image(self, bytes_ot_path: str | bytes | None) -> None:
+        if bytes_ot_path is not None:
+            image = Image.open(_config.image.default_bg_path, formats=['png'])
+        else:
+            image = Image.open(bytes_ot_path, formats=['png'])
+            
         if image.mode != 'RGBA':
             image = image.convert('RGBA')
 
         self.image = center_crop(image, (ImageSize.max_width, ImageSize.max_height))
 
-    def generate(self,
-                 ctx: Context | None,
-                 data: PlayerGlobalData,
-                 image_settings: ImageSettings,
-                 server_settings: ServerSettings,
-                 debug_label: bool = False,
-                 ) -> BytesIO:
+    def _load_image_by_rules(self, member: DBPlayer | None = None, server: DBServer | None = None) -> None:
+        if server is not None:
+            if not server.settings.allow_custom_backgrounds and server.custom_background is not None:
+                self.image = base64_to_img(server.custom_background)
+                return
+            elif not server.settings.allow_custom_backgrounds:
+                self._load_image(_config.image.default_bg_path)
+                return
+            
+        if member is not None:
+            if (member.image is not None) and member.use_custom_image:
+                self.image = base64_to_img(member.image)
+                return
+                
+        self._load_image(_config.image.default_bg_path)
 
-        self.text = Text().get()
+
+    def generate(
+            self,
+            data: PlayerGlobalData,
+            server: DBServer | None = None,
+            member: DBPlayer | None = None,
+            slot: AccountSlotsEnum | None = None,
+            debug_label: bool = False,
+            force_locale: str | None = None,
+            return_image: ImageGenReturnTypes = ImageGenReturnTypes.BYTES_IO
+        ) -> BytesIO | str | Image.Image:
+        if force_locale is not None:
+            self.text = Text().get(force_locale)
+        else:
+            self.text = Text().get()
+            
         start_time = time()
-        pdb = PlayersDB()
-        sdb = ServersDB()
-        self.image_settings = image_settings
+        
+        if member is not None and slot is not None:
+            game_account: GameAccount = getattr(member.game_accounts, slot.name)
+            image_settings = game_account.image_settings
+        else:
+            image_settings = ImageSettings()
 
-        bin_image = None
+        self.image_settings = image_settings
         self.data = data
         self.values = Values(data)
         self.stat_all = data.data.statistics.all
         self.stat_rating = data.data.statistics.rating
         self.achievements = data.data.achievements
         
-        user_bg = pdb.get_member_image(ctx.author.id) is not None
-        server_bg = sdb.get_server_image(ctx.guild.id) is not None
-        allow_bg = server_settings.allow_custom_backgrounds
-        
-        if image_settings.theme != 'default':
-            theme = get_theme(image_settings.theme)
-            self.image = center_crop(theme.bg, (ImageSize.max_width, ImageSize.max_height))
-            self.image_settings = theme.image_settings
-        elif (image_settings.use_custom_bg or server_bg):
-            if user_bg and allow_bg and image_settings.use_custom_bg:
-                image_bytes = base64.b64decode(pdb.get_member_image(ctx.author.id))
-                if image_bytes != None:
-                    image_buffer = BytesIO(image_bytes)
-                    self.load_image(image_buffer)
-
-            elif server_bg:
-                image_bytes = base64.b64decode(sdb.get_server_image(ctx.guild.id))
-                if image_bytes != None:
-                    image_buffer = BytesIO(image_bytes)
-                    self.load_image(image_buffer)
-            else:
-                self.load_image(_config.image.default_bg_path)
-
-                if self.image.mode != 'RGBA':
-                    self.image.convert('RGBA').save(_config.image.default_bg_path)
-                    self.load_image(_config.image.default_bg_path)
-        else:
-            self.load_image(_config.image.default_bg_path)
-
-            if self.image.mode != 'RGBA':
-                self.image.convert('RGBA').save('res/image/default_image/default_bg.png')
-                self.load_image(_config.image.default_bg_path)
-
-        self.image = self.image.crop((0, 50, 700, 1300))
+        self._load_image_by_rules(member=member, server=server)
+        self.image = center_crop(self.image, (ImageSize.max_width, ImageSize.max_height))
         self.img_size = self.image.size
         self.coord = Coordinates(self.img_size)
         img_draw = ImageDraw.Draw(self.image)
@@ -441,12 +347,15 @@ class ImageGen():
         # self.draw_rating_points(img_draw)
         # self.draw_common_points(img_draw)
 
-        bin_image = BytesIO()
-        self.image.save(bin_image, 'PNG')
-        bin_image.seek(0)
-        _log.debug('Image was sent in %s sec.', round(time() - start_time, 4))
-
-        return bin_image
+        _log.debug(f'Generate common image time: {round(time() - start_time, 4)} sec.')
+        if return_image == ImageGenReturnTypes.PIL_IMAGE:
+            return self.image
+        elif return_image == ImageGenReturnTypes.BASE64:
+            return img_to_base64(self.image)
+        elif return_image == ImageGenReturnTypes.BYTES_IO:
+            return img_to_readable_buffer(self.image)
+        else:
+            raise TypeError(f'return_image must be an instance of ImageGenReturnTypes enum, not {return_image.__class__.__name__}')
 
     def draw_stats_icons(self) -> None:
         for coord_item in IconsCoords:
@@ -471,30 +380,69 @@ class ImageGen():
         )
 
     def draw_background(self) -> None:
+        img = ImageDraw.Draw(self.image)
+        
+        if self.image_settings.hide_nickname:
+            self.data.nickname = 'Player'
+        if self.image_settings.hide_clan_tag:
+            self.data.data.clan_tag = None
+        if self.data.data.clan_tag is not None:
+            tag = {
+                'text':     f'[{self.data.data.clan_tag}]',
+                'font':     self.fonts.roboto_30,
+            }
+            nickname = {
+                'text':     self.data.nickname,
+                'font':     self.fonts.roboto_30,
+            }
+
+            tag_length = img.textlength(**tag) + 10
+            nick_length = img.textlength(**nickname)
+            full_length = tag_length + nick_length
+            
+            nickname_text_params = {
+                "xy": (self.img_size[0]//2 - tag_length//2, 20),
+                "text" : self.data.nickname,
+                "font" : self.fonts.roboto_30,
+                "anchor" : 'ma',
+                "fill" : self.image_settings.nickname_color
+            }
+            
+            clan_tag_text_params = {
+                "xy": (self.img_size[0]//2 + full_length//2 - tag_length//2, 20),
+                "text" : tag['text'],
+                "font" : self.fonts.roboto_30,
+                "anchor" : 'ma',
+                "fill" : self.image_settings.clan_tag_color
+            }
+            
+            self.clan_tag_params = clan_tag_text_params
+            
+        else:
+            nickname = {
+                'text':     self.data.nickname,
+                'font':     self.fonts.roboto_30,
+            }
+            full_length = img.textlength(**nickname)
+
+            nickname_text_params = {
+                "xy": (self.img_size[0]//2, 20),
+                "text" : self.data.nickname,
+                "font" : self.fonts.roboto_30,
+                "anchor" : 'ma',
+                "fill" : self.image_settings.nickname_color
+            }
+            
+            del nickname_text_params['fill']
+            
+            self.nickname_box = img.textbbox(**nickname_text_params)
+            
+        self.nickname_params = nickname_text_params
+        
         gaussian_filter = ImageFilter.GaussianBlur(radius=self.image_settings.glass_effect)
-        background_map = Image.new('RGBA', (700, 1250), (0, 0, 0, 0))
+        background_map = Image.new('RGBA', (ImageSize.max_width, ImageSize.max_height), (0, 0, 0, 0))
         img_draw = ImageDraw.Draw(background_map)
         print(f'Image {self.image.mode} size: {self.image.size}')
-
-        # draw nickname rectangle
-        text_box = img_draw.textbbox(
-            (self.img_size[0]//2, 20),
-            text=self.data.data.name_and_tag,
-            font=self.fonts.roboto_icons,
-            anchor='ma'
-        )
-
-        text_box = list(text_box)
-        text_box[0] -= 10
-        text_box[2] += 10
-        text_box[1] -= 5
-        text_box[3] += 3
-
-        img_draw.rounded_rectangle(
-            tuple(text_box),
-            radius=10,
-            fill=(0, 0, 0, 20),
-        )
 
         if not self.image_settings.disable_stats_blocks:
         # draw stats rectangles
@@ -502,12 +450,22 @@ class ImageGen():
             img_draw.rounded_rectangle(self.background_rectangles_map.rating, radius=30, fill=(0, 0, 0))
             img_draw.rounded_rectangle(self.background_rectangles_map.medals, radius=30, fill=(0, 0, 0))
             img_draw.rounded_rectangle(self.background_rectangles_map.total, radius=30, fill=(0, 0, 0))
+            img_draw.rounded_rectangle(
+                [
+                    self.image.size[0]//2 - full_length//2 - 10,
+                    12,
+                    self.image.size[0]//2 + full_length//2 + 10,
+                    60
+                ],
+                radius=10,
+                fill=(0, 0, 0),
+            )
 
         bg = self.image.copy()
         if not self.image_settings.glass_effect == 0:
             bg = bg.filter(gaussian_filter)
-        if not self.image_settings.blocks_bg_opacity == 100:
-            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.blocks_bg_opacity)
+        if not self.image_settings.stats_blocks_transparency == 100:
+            bg = ImageEnhance.Brightness(bg).enhance(self.image_settings.stats_blocks_transparency)
 
         self.image.paste(bg, (0, 0), background_map)
 
@@ -531,52 +489,11 @@ class ImageGen():
         self.image.paste(rt_img, (326, 460), rt_img)
 
     def draw_nickname(self, img: ImageDraw.ImageDraw):
-        if self.image_settings.hide_nickname:
-            self.data.nickname = 'Player'
-        if self.image_settings.hide_clan_tag:
-            self.data.data.clan_tag = None
-        if not self.data.data.clan_tag is None:
-            tag = {
-                'text':     f'[{self.data.data.clan_stats.tag}]',
-                'font':     self.fonts.roboto,
-            }
-            nickname = {
-                'text':     self.data.nickname,
-                'font':     self.fonts.roboto,
-            }
-
-            tag_length = img.textlength(**tag) + 10
-            nick_length = img.textlength(**nickname)
-            full_length = tag_length + nick_length
-
-            img.text(
-                xy=(self.img_size[0]//2 - tag_length//2, 20),
-                text=self.data.nickname,
-                font=self.fonts.roboto,
-                anchor='ma',
-                fill=self.image_settings.nickname_color)
-
-            img.text(
-                xy=(self.img_size[0]//2 + full_length//2 - tag_length//2, 20),
-                text=tag['text'],
-                font=self.fonts.roboto,
-                anchor='ma',
-                fill=self.image_settings.clan_tag_color)
+        if self.data.data.clan_tag is not None:
+            img.text(**self.nickname_params)
+            img.text(**self.clan_tag_params)
         else:
-            img.text(
-                (self.img_size[0]//2, 20),
-                text=self.data.nickname,
-                font=self.fonts.roboto,
-                anchor='ma',
-                fill=self.image_settings.nickname_color
-            )
-
-        img.text(
-            (self.img_size[0]//2, 55),
-            text=f'ID: {str(self.data.id)}',
-            font=self.fonts.roboto_small2,
-            anchor='ma',
-            fill=Colors.l_grey)
+            img.text(**self.nickname_params)
 
     def draw_nickname_box(self, img: ImageDraw.ImageDraw):
         pass
@@ -586,7 +503,7 @@ class ImageGen():
             img.text(
                 self.coord.category_labels[i],
                 text=getattr(self.text.for_image, i),
-                font=self.fonts.roboto_small,
+                font=self.fonts.roboto_20,
                 anchor='mm',
                 fill=self.image_settings.main_text_color
             )
@@ -596,7 +513,7 @@ class ImageGen():
             img.text(
                 self.coord.medals_labels[i],
                 text=getattr(self.text.for_image, i),
-                font=self.fonts.roboto_small2,
+                font=self.fonts.roboto_17,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -607,7 +524,7 @@ class ImageGen():
             img.text(
                 self.coord.common_stats_labels[i],
                 text=getattr(self.text.for_image, i),
-                font=self.fonts.roboto_small2,
+                font=self.fonts.roboto_17,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -621,7 +538,7 @@ class ImageGen():
             img.text(
                 self.coord.main_labels[i],
                 text=getattr(self.text.for_image, i),
-                font=self.fonts.roboto_small2,
+                font=self.fonts.roboto_17,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -632,7 +549,7 @@ class ImageGen():
             img.text(
                 self.coord.rating_labels[i],
                 text=getattr(self.text.for_image, i),
-                font=self.fonts.roboto_small2,
+                font=self.fonts.roboto_17,
                 anchor='ma',
                 align='center',
                 fill=self.image_settings.stats_text_color
@@ -657,7 +574,7 @@ class ImageGen():
         img.text(
             self.coord.rating_league_label,
             text=text,
-            font=self.fonts.roboto_small2,
+            font=self.fonts.roboto_17,
             anchor='ma',
             # align='center',
             fill=self.image_settings.stats_text_color
@@ -668,7 +585,7 @@ class ImageGen():
             img.text(
                 self.coord.main_stats[i],
                 text=self.values.main[i],
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='mm',
                 fill=colorize(
                     i,
@@ -682,7 +599,7 @@ class ImageGen():
             img.text(
                 self.coord.rating_stats[i],
                 text=self.values.rating[i],
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 fill=colorize(
                     i,
@@ -697,7 +614,7 @@ class ImageGen():
             img.text(
                 self.coord.common_stats[i],
                 text=self.values.common[i],
-                font=self.fonts.roboto,
+                font=self.fonts.roboto_30,
                 anchor='ma',
                 fill=colorize(
                     i,
@@ -711,7 +628,7 @@ class ImageGen():
             img.text(
                 self.coord.medals_count[i],
                 text=str(getattr(self.achievements, i)),
-                font=self.fonts.roboto_small2,
+                font=self.fonts.roboto_17,
                 anchor='ma',
                 fill=self.image_settings.stats_color
             )
@@ -721,7 +638,7 @@ class ImageGen():
             img.text(
                 self.coord.main_stats_points[i],
                 text='.',
-                font=self.fonts.point,
+                font=self.fonts.roboto_100,
                 anchor='mm',
                 fill=self.point_coloring(i, getattr(self.data.data.statistics.all, i))
             )
@@ -731,7 +648,7 @@ class ImageGen():
             img.text(
                 self.coord.main_stats_points[i],
                 text='.',
-                font=self.fonts.point,
+                font=self.fonts.roboto_100,
                 anchor='mm',
                 fill=self.point_coloring(i, getattr(self.data.data.statistics.all, i))
             )
@@ -741,7 +658,7 @@ class ImageGen():
             img.text(
                 self.coord.common_stats_point[i],
                 text='.',
-                font=self.fonts.point,
+                font=self.fonts.roboto_100,
                 anchor='mm',
                 fill=self.point_coloring(
                     i, getattr(self.data.data.statistics.all, i), rating=True)

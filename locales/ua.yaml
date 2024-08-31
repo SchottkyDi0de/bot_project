@@ -7,6 +7,16 @@
 #   srv_id: "server_id: <id>"
 #
 # Please do not change the placeholders names when translating the file.
+#
+# This file use dynamic yaml data.
+# File allow use variables, example:
+#
+# server:
+#   srv_id: 12123434
+#
+# server_settings:
+#   srv_url: https://example.com/server/{server.srv_id}/
+#
 # _Zener
 
 for_image:
@@ -39,9 +49,7 @@ for_image:
     gold: ЗОЛОТО
     platinum: ПЛАТИНА
     brilliant: БРИЛІАНТ
-    no_league: |-
-      НЕМАЄ
-      ЛІГИ
+    no_league: НЕМАЄ ЛІГИ
     calibration: КАЛІБРУВАННЯ
   total: ЗАГАЛЬНІ
   frags_per_battle: |-
@@ -92,6 +100,9 @@ for_image:
   damage_received: |- # TODO: Auto translate, need check
     ОТРИМАНО
     УРОНУ
+  leaderboard_position: |- # TODO: Auto translate, need check
+    МІСЦЯ В 
+    РЕЙТИНГА
   hits: ПОПАДАНЬ # TODO: Auto translate, need check
   frags: ЗНИЩЕНО # TODO: Auto translate, need check
   losses: DEFEATS # TODO: Need translate
@@ -144,6 +155,24 @@ gamemodes:
   burning_games: Возрождення
   unknown: Невідомий
 
+cmds_defs:
+  set_player: '</set_player:1126148623869153443>'
+  stats: '</stats:1125575592486645854>'
+  astats: '</astats:1125575592486645855>'
+  start_session: '</start_session:1131616465490022591>'
+  start_autosession: '</start_autosession:1207032176927834143>'
+  get_session: '</get_session:1144323150226673734>'
+  session_state: '</session_state:1160739497567326290>'
+  image_settings_get: '</image_settings_get:1190367458192801866>'
+  server_settings_get: '</server_settings_get:1190367458192801868>'
+  set_lock: '</set_lock:1221467304890728509>'
+  session_widget_settings: '</session_widget_settings:1221467304450064500>'
+  switch_account: '`/switch_account`'
+  premium: '`/premium`'
+
+completions:
+  nickname: 'Введіть 3 або більше символів, щоб почати пошук гравців'
+
 frequent:
   errors:
     error: Помилка.
@@ -152,13 +181,28 @@ frequent:
     api_error: Помилка при роботі з API.
     parser_error: Помилка обробки даних.
     verify_error: Аккаунт не верифіковано. Сперша проведіть верифікацію для того щоби використовувати цю команду.
-    locked_player: Цей гравець заборонив перегляд своєї статистики. # <<< Auto translated need to check  TODO
+    locked_player: Цей гравець заборонив перегляд своєї статистики. # <<< TODO: Auto translated need to check
+    slot_is_empty: В обраному слоті немає збережених даних акаунта, ви не можете використовувати його для запису даних. # <<< TODO: Auto translated need to check
+    slot_not_accessed: 'Для доступу до слотів 3-5 вам потрібна преміум підписка. Болше інформації: {cmds_defs.premium}.' # <<< TODO: Auto translated need to check
+    premium_not_found: 'Для використання цієї команди а також отримання ряду інших можливостей вам необхідний преміум доступ. Детальніше: {cmds_defs.premium}'
+    reg_not_set: 'Якщо ви вказали нікнейм, не вибираючи його з підказок, вам необхідно вибрати регіон.'
 
   info:
     info: Інформація
-    player_not_registred: Гравець не зареєстрований. Спочатку введіть команду `/set_player`
+    player_not_registred: 'Гравець не зареєстрований. Спочатку введіть команду {cmds_defs.set_player}'
     err_info_sent: Інформація про помилку була відправлена розробнику.
     warning: Увага
+    discard_changes: Ви відмінили зміни.
+    slot_info: |-
+      Інформація про акаунт:
+      ```
+      - слот:     <slot_num>
+      - нікнейм:  <nickname>
+      - регіон:   <region>
+      ```
+    updated_at: 'Оновлено: '
+    short_slot_info: '`<nickname>[<region>] | акаунт: <slot_num>`'
+    session_already_started: Сесія вже запущена, бажаєте її перезапустити?
 
   common:
     'yes': Так
@@ -170,6 +214,7 @@ frequent:
       h: 'г'
       m: 'м'
       s: 'с'
+    slot: Слот аккаунту
       
 views:
   not_owner: Ви не можете використовувати цю кнопку.
@@ -184,7 +229,7 @@ cmds:
     errors:
       player_not_found: Гравець з даним нікнеймом не знайдений.
     info:
-      player_not_registred: Для відображення статистики без введення даних збережіть свої дані за допомогою команди `/set_player`
+      player_not_registred: Для відображення статистики без введення даних збережіть свої дані за допомогою команди </set_player:1126148623869153443>
     items:
       ''
 
@@ -204,7 +249,7 @@ cmds:
     items:
       ''
 
-# Команда set_player
+# set_player
   set_player:
     descr:
       this: Збереження даних для подальших запитань.
@@ -214,9 +259,16 @@ cmds:
     errors:
       player_not_found: Гравець з даним нікнеймом не знайдений.
     info:
-      set_player_ok: 'Інформація про гравця успішно збережена, тепер можете використовувати `/astats` для автоматичного відображення статистики на основі збережених даних.'
-    items:
-      ''
+      set_player_ok: |- # TODO: Auto translated, need to check
+        Інформація про гравця була успішно збережена, тепер ви можете використовувати всі можливості бота.
+        - Для запитання основної статистики за аккаунтом використовуйте {cmds_defs.astats} | {cmds_defs.stats}
+        - Для початку відслідковування сесійної статистики використовуйте {cmds_defs.start_session} | {cmds_defs.start_autosession}
+        - Для отримання сесійної статистики використовуйте {cmds_defs.get_session}
+        - Для отримання інформації про стан сесії використовуйте {cmds_defs.session_state}
+        Натисніть кнопку нижче якщо хочете запустити автосесію прямо зараз.
+      slot_override: |-
+        Ви дійсно хочете замінити дані, записані у вибраному слоті?
+        <slot_data>
 
 # Set lang command
   set_lang:
@@ -226,7 +278,7 @@ cmds:
         lang_list: Список мов.
         to_server: Зберегти для сервера.
     errors:
-      player_not_registred: Для зміни мови спочатку збережіть свої дані за допомогою команди `/set_player`
+      player_not_registred: Для зміни мови спочатку збережіть свої дані за допомогою команди </set_player:1126148623869153443>
       permission_denied: Для зміни мови на всьому сервері ви повинні мати права адміністратора.
     info:
       set_lang_ok: Мова локалізації успішно змінена.
@@ -240,7 +292,7 @@ cmds:
     errors:
       session_not_found: Сесійні дані не знайдені, можливо ви не запустили сесію або прошло більше 24 годин з початку минулої сесії.
     info:
-      player_not_registred: Для перегляду статусу сесії спочатку збережіть свої дані за допомогою команди `/set_player`
+      player_not_registred: Для перегляду статусу сесії спочатку збережіть свої дані за допомогою команди </set_player:1126148623869153443>
     items:
       # The translation will probably change the length of the lines. 
       # In your editor, select monospaced font and try to align everything.
@@ -248,15 +300,15 @@ cmds:
         ```py
         Сесію розпочато.
         +----------------------------------+
-        Автосесія:              <is_autosession>
+        Автосесія:            <is_autosession>
         +__________________________________+
         Час рестарту автосесії:
         <update_time> | UTC + <timezone>
-        Рестарт через:               <restart_in>
+        Рестарт через:        <restart_in>
         +..................................+
         Час сесії:             <time>
-        Боїв зіграно:           <battles>
-        Часу залишилось:           <time_left>
+        Боїв зіграно:          <battles>
+        Часу залишилось:       <time_left>
         +----------------------------------+
         >>> Перезапустити сесію: 
         /start_session
@@ -272,10 +324,10 @@ cmds:
       sub_descr:
         button_update: Оновити сесію
     errors:
-      session_not_found: Сесійні дані не знайдені, можливо ви не запустили сесію або прошло більше 24 годин з початку минулої сесії.
+      session_not_found: 'Немає запущених Сесій, запуск автоматичної сесії: {cmds_defs.start_autosession}.' # TODO: Autotranslated 
       session_not_updated: Не знайдено змінення статистики, можливо ви не робили боїв або API не обновило дані, спробуйте пізніше.
     info:
-      player_not_registred: Для перегляду сесійної статистики спочатку сбережить свої дані за допомоги `/set_player`
+      player_not_registred: Для перегляду сесійної статистики спочатку сбережить свої дані за допомоги </set_player:1126148623869153443>
     items:
       ''
 
@@ -288,8 +340,8 @@ cmds:
     errors:
       ''
     info:
-      player_not_registred: Для запуска сесії спочатку збережіть свої дані за допомогою команди `/set_player`
-      started: Сесія запущена. Тепер можете зіграти декілька боїв та отримати сесійну статистику використовуючи `/get_session`
+      player_not_registred: Для запуска сесії спочатку збережіть свої дані за допомогою команди </set_player:1126148623869153443>
+      started: 'Сесія запущена. Тепер можете зіграти декілька боїв та отримати сесійну статистику використовуючи {cmds_defs.get_session}.'
     items:
       ''
   
@@ -309,8 +361,8 @@ cmds:
         00:20, 03:15, 22:40, 13:20
         Встановлене значення буде проігноровано.
     info:
-      player_not_registred: Щоб розпочати сесії, спочатку збережіть свої дані за допомогою `/set_player`
-      started: Автосесію розпочато. Тепер ви можете зіграти кілька битв і отримати статистику сесії `/get_session`
+      player_not_registred: Щоб розпочати сесії, спочатку збережіть свої дані за допомогою </set_player:1126148623869153443>
+      started: Автосесію розпочато. Тепер ви можете зіграти кілька битв і отримати статистику сесії </get_session:1144323150226673734>
     items:
       ''
 
@@ -318,11 +370,11 @@ cmds:
     descr:
       this: Зміна фону
       sub_descr:
-        image: Завантажте фон у форматі PNG або JPEG (макс. 2 MB) (700 X 1350px)
+        image: Завантажте фон у форматі PNG або JPEG (макс. 2 MB) (800 X 1350px)
         resize_mode: Type of image resizing (if required)
         server: Задати фон за замовчуванням для данного сервера (потрібні права адміністратора).
     errors:
-      player_not_registred: Для зміни фона збережіть свої дані командою `/astats`
+      player_not_registred: 'Для зміни фона збережіть свої дані командою {cmds_defs.set_player}'
       permission_denied: Для встановлення фону на сервері ви повинні мати права адміністратора.
       file_error: Файл не є підходящим зображенням.
       oversize: Файл занадто великий (максимум 2 MB).
@@ -341,7 +393,7 @@ cmds:
         use_custom_bg: Використовувати кастомний фон
         colorize_stats: Кольорова статистика
         glass_effect: Ефект скла 0 - Виключено (0-30)
-        blocks_bg_brightness: Прозорість блоків зі статистикою (0-100)
+        stats_blocks_transparency: Прозорість блоків зі статистикою (0-100)
         nickname_color: 'Кольор нікнейму (HEX або RGB Color)'
         clan_tag_color: 'Кольор клан-тегу (HEX або RGB Color)'
         stats_color: 'Колір основних ститистик (HEX або RGB Color)'
@@ -357,7 +409,7 @@ cmds:
       color_error: 'Неправильно код кольору `<param_name>`, значення: `<value>`'
       changes_not_found: Не знайдено зміни параметрів, змініть хочаб один параметр.
     info:
-      set_ok: 'Налаштування зображення успішно застосовані, отримати поточні налаштування: `/image_settings_get`'
+      set_ok: 'Налаштування зображення успішно застосовані, отримати поточні налаштування: {cmds_defs.image_settings_get}'
       canceled_settings_change: 'Змінення налаштувань зображення відмінено.'
       preview: 'Ви хочете застосувати зміни? Предперегляд статистики:'
     items:
@@ -372,7 +424,7 @@ cmds:
     errors:
       permission_denied: Для змінення налаштувань сервера ви повинні мати права адміністратора.
     info:
-      set_ok: 'Налаштування зображення успішно застосовані, отримати поточні налаштування: `/server_settings_get`'
+      set_ok: 'Налаштування зображення успішно застосовані, отримати поточні налаштування: {cmds_defs.image_settings_get}'
     items:
       ''
 
@@ -390,7 +442,7 @@ cmds:
       use_custom_bg: Використовувати кастомний фон
       colorize_stats: Кольорова статистика
       glass_effect: Ефект скла
-      blocks_bg_opacity: Прозорість блоків зі статистикою
+      stats_blocks_transparency: Прозорість блоків зі статистикою
       nickname_color: Колір нікнейму
       clan_tag_color: Колір тегу клану
       stats_color: Колір основних статистик
@@ -514,19 +566,21 @@ cmds:
         # I recomended VS Code or Sublime Text with monospaced font
         # _Zener
       formenu: |-
-        Нікнейм: `<nickname>`
         ```py
-        Назва танку: <tank_name>
-        Шкоди завдано: <damage>
-        Втрати за допомогою гравця: <spotted>
-        Чистий досвід: <xp>
-        Знищено танків: <frags>
-        Заблоковано шкоди: <blocked>
-        Зроблено пострілів: <shots>
-        Пострілів попало: <shots_hit>
-        Пробиттів: <shots_penetrated>
-        Точність: <accuracy>
-        Коефіцієнт пробитів: <penetration_ratio>
+        танк:          | <tank_name>
+        Чистий досвід  | <xp>
+
+        ефективність
+        --------------------------------
+        Завдано урону...... | <damage>
+        Урон з допомогою... | <spotted>
+        Знищено танків..... | <frags>
+        Заблоковано урону.. | <blocked>
+        Зроблено пострілів. | <shots>
+        Постріли влучили... | <shots_hit>
+        Пробиття........... | <shots_penetrated>
+        Точність........... | <accuracy>
+        Відсоток пробиття.. | <penetration_ratio>
         ```
       description: |-
         ```py
@@ -596,13 +650,13 @@ cmds:
       message:
         title: 'Підтвердити свій аккаунт'
         description: |- 
-          Щоб отримати доступ до спеціальних команд бота (наприклад `/lock`) 
-          Ви маєте верифікувати або зареєструвати верифікований аккаунт.
-        additional_info: |-
-          Якщо Ви вже маєте неподтверджений аккаунт, то при верифікації аккаунт буде перезаписаний! Запущені сесії будуть скинуті.
+          Щоб отримати доступ до спеціальних команд бота (наприклад, {cmds_defs.set_lock}),
+          вам потрібно підтвердити свій аккаунт.
         button_lt: Lesta
         button_wg: WG
       check_dm: Перевірте свої листи, посилання для верифікації була надіслана.
+    info:
+      already_verified: Цей акаунт вже верифікований. Повторно підтверджувати не потрібно.
 
 # Lock command
   set_lock:
@@ -641,14 +695,14 @@ cmds:
     descr:
       this: Запуск сесійного WEB віджета.
     info:
-      success: |- 
+      success: |-
         Ваш віджет сесійної статистики був запущений.
-        Посилання: <link>
+        Посилання: <link> 
         Налаштування CSS для коректного відображення: 
-        ```css
-        body { background-color: rgba(0,0,0,0)!important; overflow: hidden }
-        ```
-        Налаштування віджета: `/session_widget_settings`
+        ```css 
+        body {{ background-color: rgba(0,0,0,0)!important; }}
+        ``` 
+        Налаштування віджета: {cmds_defs.session_widget_settings} 
     errors: 
       ''
     items:
@@ -668,7 +722,7 @@ cmds:
       max_stats_blocks: Максимальне кількість блоків статистики
       max_stats_small_blocks: Максимальне кількість маленьких блоків статистики
       update_per_seconds: Час оновлення в секундах
-      stats_blocks_transparency: Прозорість блоків статистики
+      background_transparency: Прозорість блоків статистики
       disable_main_stats_block: Вимкніть основний блок статистики
       use_bg_for_stats_blocks: Використовувати фон для блоків статистики
       adaptive_width: Адаптивна ширина [ТЕСТОВИЙ Режим]
@@ -691,3 +745,129 @@ cmds:
       success: Тема була успішно вибрана
     items:
       theme: Тема
+
+# delete player
+  delete_player: # <<< TODO: Autotranlsated
+    descr:
+      this: 'Видалити всі дані про себе'
+    info:
+      warn: 'Ви впевнені, що хочете видалити всі свої дані? Ця дія не є незворотною!'
+      success: 'Всі ваші дані повністю видалено з бази даних'
+    items:
+      ''
+
+# switch_account
+  switch_account: # <<< TODO: Autotranlsated
+    descr:
+      this: Переключити обліковий запис
+    info:
+      success: |-
+        Обліковий запис було успішно переключено:
+        <old_account> -> <new_account>
+    items:
+      menu: Оберіть обліковий запис
+    errors:
+      no_slots_for_select: |-
+        У вас зареєстровано лише 1 обліковий запис, щоб з'явилася можливість вибору облікових записів зареєструйте ще 1 
+        {cmds_defs.set_player}
+
+# profile
+  profile: # <<< TODO: Autotranlsated all
+    descr:
+      this: Профіль користувача
+    items:
+      profile: Профіль
+      level: 'Рівень: '
+      exp: 'досвід: '
+      last_commands: 'Останні команди'
+      last_activity: 'Остання активність:'
+      commands_counter: 'команд використано:'
+      accounts_info: 'Інформація про облікові записи'
+      badges: 'Значки профілю'
+      command_name: 'назва команди'
+      last_used_time: 'хв. тому'
+      num: 'номер'
+      account: 'обліковий запис'
+      session: 'сесія'
+      others: 'Інше'
+      premium: 'premium:'
+      premium_time: 'закінчиться через:'
+
+# hook_stats
+  hook_stats:
+    descr:
+      this: Хук на зміну статистики # <<< TODO: Auto translated
+      sub_descr:
+        target: Мета для відстежування # <<< TODO: Auto translated
+        stats_name: Назва статистики # <<< TODO: Auto translated
+        stats_type: Тип статистики # <<< TODO: Auto translated
+        trigger: Умовня спрацювання # <<< TODO: Auto translated
+        target_value: Мета значення (+- 10 Млн.) # <<< TODO: Auto translated
+    info:
+      success: |- # <<< TODO: Auto translated
+        Хук встановлено успішно!
+        Бот повідомить вас у цьому каналі при спрацюванні хука.
+        Умовня: `<watch_for> <stats_name> <trigger> <value>`
+        Через 48 години хук буде автоматично вимкнено.
+        Ваша статистика перевіряється раз за 200 секунд.
+      triggered: |- # <<< TODO: Auto translated
+        Триггер сработав, стан статистики:
+        `<target_player>`
+        `<watch_for> <stats_name> <target_stats> <trigger> <value>`
+    warns:
+      another_active_hook: |- # <<< TODO: Auto translated
+        У вас вже є активний хук.
+        Створення нового хука перезапише старий, ви впевнені що хочете продовжити?
+        інформація про активний хук:
+        Умовня: `<watch_for> <stats_name> <trigger> <value>`
+        Зупиниться через: <end_time>
+    errors:
+      value_out_of_range: Мета значення вийшло за межі діапазону (+- 10 Млн.) # <<< TODO: Auto translated
+    items:
+      btn_override: Перезаписати # <<< TODO: Auto translated
+      btn_cancel: Скасувати # <<< TODO: Auto translated
+
+# hook_state
+  hook_state:
+    descr:
+      this: Стан хука # <<< TODO: Auto translated
+    info:
+      active: |- # <<< TODO: Auto translated
+        Хук активний.
+        `Мета для відстежування: <target_player>`
+        Умовня: `<watch_for> <stats_name> <trigger> <value>`
+        До відключення: <end_time>
+      inactive: Хук не активний. # <<< TODO: Auto translated
+    items:
+      btn_stop: Вимкнути # <<< TODO: Auto translated
+
+# premium
+  premium:
+    descr:
+      this: Преміум
+    items:
+      btn_boosty: Boosty
+      btn_da: Donation Alerts
+      main_msg_title: Преміум-аккаунт
+    info:
+      main_message: |-
+        # Ви можете перевірити стан свого преміум-аккаунту, використовуючи команду `/profile`
+        ### Преміум-аккаунт дає вам додаткові функції у нашому боті і доступ до ексклюзивних команд. Також допомагає нам прекрасно розробляти наш сервер, якщо ви отримаєте преміум-аккаунт через підтримку сервера або оплату через `Boosty` або `Donation Alerts`.
+        ## Додаткові функції:
+        - Зберігайте до 5 незалежних аккаунтів у боті
+        - Використовуйте тригери статистики (`/hook_stats`)
+        - Отримуйте спеціальну нагороду у вашому профілі всередині бота (`/profile`)
+        - Отримуйте ексклюзивний доступ до каналу тестера і доступ до тестового бота будь-який час. Ви також отримаєте пряме підключення з розробниками.
+        - Отримуйте вдячність від розробників)
+        ## Як отримати?
+        ***Є 5 способи отримання преміум-аккаунту в боті:***
+        1 - Бути адміністратором / модератором на цьому сервері
+        2 - Бути стримером і використовувати наш віджет.
+        3 - Датиboost на підтримку сервера
+        4 - Підписатися на нашу Boosty
+        5 - Донати через Donation Alerts
+        ## Призначення преміум-статусу:
+        **Способи з 1 до 4:** *Автоматично протягом 5 хвилин*
+        **Спосіб 5:** *Робочий режим, перевірка до 1 дня.*
+
+        -# Зверніть увагу, що будь-які покупки є добровільними пожертвуваннями, продукт надається "як є" і не гарантує впевненість у його роботі! Реfunds не можливі!

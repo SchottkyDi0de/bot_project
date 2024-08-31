@@ -31,6 +31,14 @@ class InfoResponses:
             'code': 200
         }
     )
+    set_ok = InfoResponse.model_validate(
+        {   
+            'info' : 'Success',
+            'message': 'Ok',
+            'code': 200
+        }
+    )
+    get_ok = set_ok
 
 class ErrorResponses():
     internal_error = ErrorResponse.model_validate(
@@ -80,5 +88,12 @@ class ErrorResponses():
             'error': 'SetNotAllowed', 
             'message': 'Set player not allowed, some fields is read only',
             'code': 405
+        }
+    )
+    item_not_found = ErrorResponse.model_validate(
+        {
+            'error': 'ItemNotFound', 
+            'message': 'Item not found in DB',
+            'code': 400
         }
     )

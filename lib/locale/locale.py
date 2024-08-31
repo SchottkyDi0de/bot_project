@@ -1,7 +1,7 @@
 from typing import Dict
 
 import discord
-import yaml
+import dynamic_yaml
 from discord.commands import ApplicationContext
 
 from lib.data_classes.locale_struct import Localization
@@ -33,9 +33,9 @@ class Text():
             if i == 'auto':
                 continue
             with open(f'locales/{i}.yaml', encoding='utf-8') as f:
-                self.datas |= {i: Localization.model_validate(yaml.safe_load(f))}
+                self.datas |= {i: Localization.model_validate(dynamic_yaml.load(f))}
     
-    def load_from_context(self, ctx: ApplicationContext) -> None:
+    async def load_from_context(self, ctx: ApplicationContext) -> None:
         """
         Loads the language based on the given context.
 
@@ -49,15 +49,38 @@ class Text():
             _log.error(f'ctx must be an instance of discord.commands.ApplicationContext, not {ctx.__class__.__name__}')
             raise TypeError(f'ctx must be an instance of discord.commands.ApplicationContext, not {ctx.__class__.__name__}')
         
-        member_lang = self.pdb.get_member_lang(ctx.author.id)
-        if member_lang is not None:
-            self.load(member_lang)
+        lang = await self.pdb.get_lang(ctx.author.id)
+
+        if lang is not None:
+            self.load(lang)
+        elif ctx.interaction.locale in list(_config.default.locale_aliases.keys()):
+            self.load(_config.default.locale_aliases[ctx.interaction.locale])
         else:
-            if ctx.interaction.locale in list(_config.default.locale_aliases.keys()):
-                self.load(_config.default.locale_aliases[ctx.interaction.locale])
-            else:
-                self.load(self.default_lang)
-    
+            self.load(self.default_lang)
+            
+    async def load_from_interaction(self, interaction: discord.Interaction) -> None:
+        """
+        Loads the language based on the given interaction.
+
+        Args:
+            interaction (discord.Interaction): The interaction object containing information about the user.
+
+        Returns:
+            None
+        """
+        if not isinstance(interaction, discord.Interaction):
+            _log.error(f'interaction must be an instance of discord.Interaction, not {interaction.__class__.__name__}')
+            raise TypeError(f'interaction must be an instance of discord.Interaction, not {interaction.__class__.__name__}')
+        
+        lang = await self.pdb.get_lang(interaction.user.id)
+
+        if lang is not None:
+            self.load(lang)
+        elif interaction.locale in list(_config.default.locale_aliases.keys()):
+            self.load(_config.default.locale_aliases[interaction.locale])
+        else:
+            self.load(self.default_lang)
+
     def load(self, lang: str | None) -> Localization:
         """
         Loads the specified language.
@@ -69,7 +92,7 @@ class Text():
             Localization: The loaded language data.
         """
         if lang not in _config.default.available_locales:
-            lang = _config.default.lang
+            lang = self.default_lang
         if lang is None:
             lang = self.default_lang
             

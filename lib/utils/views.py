@@ -1,4 +1,5 @@
 from typing import Literal
+from asyncio import gather
 
 from discord import ButtonStyle, File, InputTextStyle, Interaction
 from discord.commands import ApplicationContext
@@ -30,7 +31,7 @@ class Modals:
                                     required=True))
 
         async def callback(self, interaction: Interaction):
-            Text().load_from_context(self.ctx)
+            await Text().load_from_context(self.ctx)
 
             rep_type = self.report_type
             rep_data = self.children[0].value
@@ -50,7 +51,7 @@ class Modals:
 
 class Buttons:
     async def save_callback(self, _, interaction: Interaction):
-        Text().load_from_context(self.ctx)
+        await Text().load_from_context(self.ctx)
 
         if self.check_user(interaction):
             await interaction.response.send_message(
@@ -67,7 +68,7 @@ class Buttons:
         await interaction.message.delete()
             
     async def cancel_callback(self, _, interaction: Interaction):
-        Text().load_from_context(self.ctx)
+        await Text().load_from_context(self.ctx)
 
         if self.check_user(interaction):
             await interaction.response.send_message(
@@ -85,7 +86,7 @@ class Buttons:
         await interaction.message.delete()
     
     async def update_callback(self, _, interaction: Interaction):
-        Text().load_from_context(self.ctx)
+        await Text().load_from_context(self.ctx)
         
         if self.cooldown.get_bucket(interaction.message).update_rate_limit():
             await interaction.response.send_message(
@@ -132,7 +133,7 @@ class ViewMeta(type):
 
     def __new__(cls, bot: commands, ctx: ApplicationContext, type: Literal['image_settings', 'session', 'report'], 
                 session_self: Session=None, current_settings: ImageSettings=None, report_type: Literal['b', 's'] = None):
-        Text().load_from_context(ctx)
+        # Text().load_from_context(ctx)
 
         if type in ['image_settings', 'session']:
             attrs = {}

@@ -1,6 +1,7 @@
 from asyncio import sleep
 from datetime import datetime
-from pytz import timezone
+
+import pytz
 
 from discord.ext.commands import Bot
 
@@ -21,6 +22,6 @@ class DBBackupWorker:
     async def run_worker(self, bot: Bot, *args):
         _log.info('WORKERS: DB backup worker started')
         while not self.STOP_FLAG:
-            if datetime.now(timezone('Europe/Moscow')).hour == 12:
+            if datetime.now(pytz.utc).hour == 4:
                 await BackUp().dump(bot)
             await sleep(1800)

@@ -1,9 +1,8 @@
-from discord import Embed
-from discord.ext.commands import Context
+from discord import ApplicationContext, Embed
 
 from lib.data_classes.replay_data_parsed import (ParsedReplayData,
                                                  PlayerResult, Statistics)
-from lib.database.tankopedia import TanksDB
+from lib.database.tankopedia import TankopediaDB
 from lib.exceptions.database import TankNotFoundInTankopedia
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
@@ -11,29 +10,36 @@ from lib.utils.string_parser import insert_data
 
 _log = get_logger(__file__, 'EmbedReplayBuilder', 'logs/embed_replay.log')
 
+
 class EmbedReplayBuilder():
     def __init__(self):
         self.embed = None
         self.text = Text().get()
-        self.tanks_db = TanksDB()
+        self.tanks_db = TankopediaDB()
 
-    def get_tank_name(self, tank_id: int) -> str:
+    async def get_tank_name(self, tank_id: int, region: str) -> str:
         try:
-            tank = self.tanks_db.get_tank_by_id(tank_id)
+            tank = await self.tanks_db.get_tank_by_id(tank_id, region=region)
+            if tank is None:
+                raise TankNotFoundInTankopedia
+            
         except TankNotFoundInTankopedia:
             _log.debug(f'Tank with id {tank_id} not found')
             return 'Unknown'
         else:
-            return tank['name']
+            return tank.name
         
-    def get_tank_tier(self, tank_id: int) -> str:
+    async def get_tank_tier(self, tank_id: int, region: str) -> str:
         try:
-            tank = self.tanks_db.get_tank_by_id(tank_id)
+            tank = await self.tanks_db.get_tank_by_id(tank_id, region)
+            if tank is None:
+                raise TankNotFoundInTankopedia
+            
         except TankNotFoundInTankopedia:
             _log.debug(f'Tank with id {tank_id} not found')
             return '?'
         else:
-            return str(tank['tier'])
+            return str(tank.tier)
 
     def string_len_handler(self, string: str, length: int) -> str:
         len_diff = length - len(string)
@@ -132,7 +138,7 @@ class EmbedReplayBuilder():
         
         return players_str
 
-    def build_embed(self, ctx: Context, data: ParsedReplayData) -> Embed:
+    async def build_embed(self, ctx: ApplicationContext, data: ParsedReplayData, region: str) -> Embed:
         author_id = data.author.account_id
 
         for player_result in data.player_results:
@@ -154,8 +160,8 @@ class EmbedReplayBuilder():
                                                 else self.text.cmds.parse_replay.items.common.lose if data.author.winner is False else \
                                                     self.text.cmds.parse_replay.items.common.draw,
                     'battle_type'       :   self.get_room_type(data.room_name),
-                    'tank_name'         :   self.get_tank_name(data.author.tank_id),
-                    'tier'              :   self.get_tank_tier(data.author.tank_id),
+                    'tank_name'         :   await self.get_tank_name(data.author.tank_id, region),
+                    'tier'              :   await self.get_tank_tier(data.author.tank_id, region),
                     'map'               :   self.get_map_name(data.map_name),
                     'time'              :   str(data.time_string),
                     'damage_dealt'      :   str(author_stats.info.damage_dealt),

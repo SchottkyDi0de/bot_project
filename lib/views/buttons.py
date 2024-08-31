@@ -8,7 +8,7 @@ _log = get_logger(__file__, 'ButtonsLogger', 'logs/buttons.log')
 
 class Buttons:
     async def save_callback(self, _, interaction: Interaction):
-        Text().load_from_context(self.ctx)
+        await Text().load_from_context(self.ctx)
 
         if self.check_user(interaction):
             await interaction.response.send_message(
@@ -28,7 +28,7 @@ class Buttons:
         ))
             
     async def cancel_callback(self, _, interaction: Interaction):
-        Text().load_from_context(self.ctx)
+        await Text().load_from_context(self.ctx)
 
         if self.check_user(interaction):
             await interaction.response.send_message(
@@ -48,7 +48,7 @@ class Buttons:
         )
     
     async def update_callback(self, _, interaction: Interaction):
-        Text().load_from_context(self.ctx)
+        await Text().load_from_context(self.ctx)
         
         if self.cooldown.get_bucket(interaction.message).update_rate_limit():
             await interaction.response.send_message(

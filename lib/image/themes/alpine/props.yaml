@@ -1,0 +1,21 @@
+image_settings: 
+    theme: 'alpine'
+    colorize_stats: false
+    hide_nickname: false
+    hide_clan_tag: false
+    disable_flag: false
+    disable_rating_stats: false
+    disable_cache_label: false
+    disable_stats_blocks: false
+    stats_blocks_transparency: 0.4
+    glass_effect: 0
+    nickname_color: '#b8a9c9'
+    clan_tag_color: '#826ab0'
+    stats_color: '#a589ff'
+    main_text_color: '#9f8fb1'
+    stats_text_color: '#837e9f'
+    negative_stats_color: '#c01515'
+    positive_stats_color: '#1eff26'
+
+bg_path: lib/image/themes/alpine/bg.png
+bg: null

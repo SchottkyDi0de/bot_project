@@ -1,8 +1,9 @@
-from discord import errors
+from discord import InteractionContextType, errors
 from discord.ext import commands
 from discord.commands import ApplicationContext
 
 from lib.blacklist.blacklist import check_user
+from lib.data_classes.db_player import DBPlayer, UsedCommand
 from lib.database.servers import ServersDB
 from lib.database.players import PlayersDB
 from lib.locale.locale import Text
@@ -27,7 +28,7 @@ class Help(commands.Cog):
         self.inf_msg = InfoMSG()
 
     @commands.slash_command(
-            guild_only=True,
+            contexts=[InteractionContextType.guild],
             name=Text().get('en').cmds.help.items.help.lower(),
             name_localizations={
                 'ru': Text().get('ru').cmds.help.items.help.lower(),
@@ -45,10 +46,13 @@ class Help(commands.Cog):
         self, 
         ctx: ApplicationContext,
         ):
-        Text().load_from_context(ctx)
-        check_user(ctx)
+        await Text().load_from_context(ctx)
+        await check_user(ctx)
+        
+        member = await self.pdb.check_member_exists(ctx.author.id, get_if_exist=True, raise_error=False)
+        if isinstance(member, DBPlayer):
+            await self.pdb.set_analytics(UsedCommand(name=ctx.command.name), member=member)
 
-        await ctx.defer()
         try:
             match Text().current_lang:
                 case 'ru':

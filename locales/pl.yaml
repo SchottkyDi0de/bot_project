@@ -7,6 +7,16 @@
 #   srv_id: "server_id: <id>"
 #
 # Please do not change the placeholders names when translating the file.
+#
+# This file use dynamic yaml data.
+# File allow use variables, example:
+#
+# server:
+#   srv_id: 12123434
+#
+# server_settings:
+#   srv_url: https://example.com/server/{server.srv_id}/
+#
 # _Zener
 
 for_image:
@@ -96,6 +106,9 @@ for_image:
   frags: |-  # TODO: Auto translated, need to check
     ZNISZCZENIA
     NA BITWĘ
+  leaderboard_position: |- # TODO: Auto translate, need check
+    POZYCJA
+    RANKINGOWA
   losses: DEFEATS # TODO: Need translate
   wins: WINS # TODO: Need translate
 
@@ -146,6 +159,24 @@ gamemodes:
   burning_games: Burning Games
   unknown: Nieznane
 
+cmds_defs:
+  set_player: '</set_player:1126148623869153443>'
+  stats: '</stats:1125575592486645854>'
+  astats: '</astats:1125575592486645855>'
+  start_session: '</start_session:1131616465490022591>'
+  start_autosession: '</start_autosession:1207032176927834143>'
+  get_session: '</get_session:1144323150226673734>'
+  session_state: '</session_state:1160739497567326290>'
+  image_settings_get: '</image_settings_get:1190367458192801866>'
+  server_settings_get: '</server_settings_get:1190367458192801868>'
+  set_lock: '</set_lock:1221467304890728509>'
+  session_widget_settings: '</session_widget_settings:1221467304450064500>'
+  switch_account: '`/switch_account`'
+  premium: '`/premium`'
+
+completions:
+  nickname: 'Wpisz 3 lub więcej znaków, aby rozpocząć wyszukiwanie'
+
 frequent:
   errors:
     error: Błąd
@@ -154,13 +185,28 @@ frequent:
     api_error: Błąd podczas pracy z API.
     parser_error: Błąd podczas analizowania danych.
     verify_error: Konto nie zostało zweryfikowane. Najpierw wykonaj weryfikację, aby móc użyć tej komendy.
-    locked_player: Ten gracz zablokował wyświetlanie jego statystyk # <<< Auto translated need to check  TODO
+    locked_player: Ten gracz zablokował wyświetlanie jego statystyk # <<< TODO: Auto translated need to check
+    slot_is_empty: W wybranym slotu nie ma zapisanego konta, nie można tam zapisać danych.
+    slot_not_accessed: 'Potrzebujesz dostępu premium, aby korzystać z slotów 3-5. Więcej informacji: {cmds_defs.premium}.'
+    premium_not_found: 'Aby korzystać z tej komendy, a także uzyskać dostęp do innych funkcji, musisz posiadać dostęp premium. Więcej informacji: {cmds_defs.premium}'
+    reg_not_set: "Jeśli podałeś pseudonim bez wybrania go z podpowiedzi, musisz wybrać region"
 
   info:
     info: Informacje
-    player_not_registred: Gracz nie jest zalogowany. Najpierw wprowadź komendę `/set_player`
+    player_not_registred: 'Gracz nie jest zalogowany. Najpierw wprowadź komendę </set_player:1126148623869153443>'
     err_info_sent: Informacja o błędzie została wysłana do dewelopera.
     warning: Warning
+    discard_changes: Anulowano zmiany.
+    slot_info: |-
+      Informacje o koncie:
+      ```
+      - slot:       <slot_num>
+      - pseudonim:  <nickname>
+      - region:     <region>
+      ```
+    updated_at: 'Zaktualizowane o: '
+    short_slot_info: '`<nickname>[<region>] | account: <slot_num>`'
+    session_already_started: Sesja jest już uruchomiona, czy chcesz ją restartować?
 
   common:
     'yes': 'Yes'
@@ -172,6 +218,7 @@ frequent:
       h: 'h'
       m: 'm'
       s: 's'
+    slot: Slot konta
       
 views:
   not_owner: You can't use this button.
@@ -186,7 +233,7 @@ cmds:
     errors:
       player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
     info:
-      player_not_registred: Aby wyświetlić statystyki bez wprowadzania danych, zapisz dane za pomocą opcji `/set_player`.
+      player_not_registred: 'Aby wyświetlić statystyki bez wprowadzania danych, zapisz dane za pomocą opcji </set_player:1126148623869153443>.'
     items:
       ''
 
@@ -216,9 +263,16 @@ cmds:
     errors:
       player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
     info:
-      set_player_ok: 'Informacje o graczu zostały pomyślnie zapisane, możesz teraz użyć `/astats` do automatycznego wyświetlania statystyk na podstawie zapisanych danych.'
-    items:
-      ''
+      set_player_ok: |- # <<< TODO: Auto translated, need to check
+        Informacja o graczey zostaala pomy slnie zapisana, teraz mozecie wykorzystywa c  wszystkie mo liwo ci bota.
+        - Aby zapyta o statystyke podstawow  na koncie, wykorzystuj  {cmds_defs.astats} | {cmds_defs.stats}
+        - Aby zaczac monitorowanie statystyki sesyjnej, wykorzystuj  {cmds_defs.start_session} | {cmds_defs.start_autosession}
+        - Aby zapyta o statystyke sesyjna, wykorzystuj  {cmds_defs.get_session}
+        - Aby zapyta o stan sesji, wykorzystuj  {cmds_defs.session_state}
+        Kliknij przycisk poni ejce, aby zac  automatyczn  sesj .
+      slot_override: |-
+        Chcesz wybra  slot, w którym ju  zapisany jest inny gracz, czy na pewno chcesz nadpisa  te dane?
+        <slot_data>
 
 # Set lang command
   set_lang:
@@ -228,7 +282,7 @@ cmds:
         lang_list: Lista języków.
         to_server: Aplikuj na serwer.
     errors:
-      player_not_registred: Aby zmienić język, należy najpierw zapisać dane za pomocą opcji `/set_player`
+      player_not_registred: 'Aby zmienić język, należy najpierw zapisać dane za pomocą opcji </set_player:1126148623869153443>'
       permission_denied: Musisz mieć uprawnienia administratora, aby zmienić język na całym serwerze.
     info:
       set_lang_ok: Język lokalizacji został pomyślnie zmieniony.
@@ -242,7 +296,7 @@ cmds:
     errors:
       session_not_found: Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęły ponad 24 godziny od ostatniego uruchomienia sesji..
     info:
-      player_not_registred: Aby wyświetlić stan sesji, należy najpierw zapisać dane za pomocą opcji `/set_player`
+      player_not_registred: 'Aby wyświetlić stan sesji, należy najpierw zapisać dane za pomocą opcji </set_player:1126148623869153443>'
     items:
       started: |- 
         ```py
@@ -272,10 +326,10 @@ cmds:
       sub_descr:
         button_update: Update session
     errors:
-      session_not_found: Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęły ponad 24 godziny od ostatniego uruchomienia sesji..
+      session_not_found: 'Nie ma aktywnych sesji, aby uruchomić autoseansję użyj: {cmds_defs.start_autosession}.'
       session_not_updated: Nie wykryto żadnych zmian w statystykach, być może nie stoczyłeś żadnej bitwy lub API nie zaktualizowało danych, spróbuj ponownie później..
     info:
-      player_not_registred: Aby wyświetlić statystyki sesji, najpierw zapisz dane za pomocą  `/set_player`
+      player_not_registred: 'Aby wyświetlić statystyki sesji, najpierw zapisz dane za pomocą  </set_player:1126148623869153443>'
     items:
       ''
 
@@ -288,11 +342,12 @@ cmds:
     errors:
       ''
     info:
-      player_not_registred: Aby rozpocząć sesję, najpierw zapisz dane za pomocą `/set_player`
-      started: Sesja jest uruchomiona. Teraz możesz rozegrać kilka bitew i uzyskać statystyki sesji za pomocą `/get_session`.
+      player_not_registred: 'Aby rozpocząć sesję, najpierw zapisz dane za pomocą </set_player:1126148623869153443>'
+      started: Sesja jest uruchomiona. Teraz możesz rozegrać kilka bitew i uzyskać statystyki sesji za pomocą </get_session:1144323150226673734>.
     items:
       ''
 
+# <- TODO: Need to translate
 # start autosession command
   start_autosession:
     descr:
@@ -309,21 +364,22 @@ cmds:
         00:20, 03:15, 22:40, 13:20
         The set value will be ignored.
     info:
-      player_not_registred: To start a session, first save your data using `/set_player`
-      started: Autosession started. Now you can play several battles and get session statistics using `/get_session`
+      player_not_registred: 'To start a session, first save your data using </set_player:1126148623869153443>'
+      started: Autosession started. Now you can play several battles and get session statistics using </get_session:1144323150226673734>
     items:
       ''
-      
+  
+  # TODO: Need to translate
   # Set background command
   set_background: 
     descr:
       this: Change background
       sub_descr:
-        image: Upload background in PNG or JPEG format (max. 2 MB) (700 X 1350px)
+        image: Upload background in PNG or JPEG format (max. 2 MB) (800 X 1350px)
         resize_mode: Type of image resizing (if required)
         server: Set default background for this server (admin privileges required).
     errors:
-      player_not_registred: To change the background, save your data using the `/astats` command
+      player_not_registred: 'To change the background, save your data using the {cmds_defs.set_player} command'
       permission_denied: You must have administrator rights to set the background for the server.
       file_error: The file is not a valid image.
       oversize: The file is too large (maximum 2 MB).
@@ -334,6 +390,7 @@ cmds:
     items:
       ''
 
+# TODO: Need to translate
 # image_settings command
   image_settings:
     descr:
@@ -342,7 +399,7 @@ cmds:
         use_custom_bg: Use custom background
         colorize_stats: Statystyki kolorów
         glass_effect: Glass effect 0 - Disable (0-30)
-        blocks_bg_brightness: Block background brightness (0-100)
+        stats_blocks_transparency: Block background brightness (0-100)
         nickname_color: 'Nickname color (HEX or RGB Color)'
         clan_tag_color: 'Clan tag color (HEX or RGB Color)'
         stats_color: 'Main statistics color (HEX or RGB Color)'
@@ -358,7 +415,7 @@ cmds:
       changes_not_found: No parameter change detected, change at least one parameter.
       color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
     info:
-      set_ok: 'Image settings applied successfully, get current settings: `/image_settings_get`'
+      set_ok: 'Image settings applied successfully, get current settings: {cmds_defs.image_settings_get}'
       canceled_settings_change: 'Image settings change canceled.'
       preview: 'Do you want to apply the changes? Statistics preview:'
     items:
@@ -373,7 +430,7 @@ cmds:
     errors:
       permission_denied: You must have administrator rights to modify server settings.
     info:
-      set_ok: 'Server settings applied successfully, view current settings: `/server_settings_get`'
+      set_ok: 'Server settings applied successfully, view current settings: {cmds_defs.server_settings_get}'
     items:
       ''
 
@@ -391,7 +448,7 @@ cmds:
       use_custom_bg: Niestandardowe tło
       colorize_stats: Statystyki kolorów
       glass_effect: Efekt szkła
-      blocks_bg_opacity: Przezroczystość bloków ze statystykami
+      stats_blocks_transparency: Przezroczystość bloków ze statystykami
       nickname_color: Kolor nazwy użytkownika
       clan_tag_color: Kolor tagu klanu
       stats_color: Kolor podstawowych statystyk
@@ -408,6 +465,7 @@ cmds:
 
       stats_blocks_disabled: Rysowanie bloków ze statystykami jest wyłączone
 
+  # TODO: Need to translate
   server_settings_get:
     descr:
       this: Get current server settings
@@ -422,7 +480,7 @@ cmds:
         ```Python
         - Allow custom backgrounds:           <allow_custom_backgrounds>
         ```
-
+  # TODO: Need to translate
   server_settings_reset:
     descr:
       this: Reset server settings
@@ -435,6 +493,7 @@ cmds:
     items:
       ''
 
+  # TODO: Need to translate
   reset_background:
     descr:
       this: Reset custom background
@@ -446,7 +505,7 @@ cmds:
       unset_background_ok: Custom background reset successfully
     items:
       ''
-  
+  # TODO: Need to translate
   image_settings_reset:
     descr:
       this: Reset image settings
@@ -458,7 +517,7 @@ cmds:
       reset_ok: Image settings were reset.
     items:
       ''
-
+  # TODO: Need to translate
   report:
     descr:
       this: Bug report or suggestion
@@ -488,6 +547,7 @@ cmds:
     items:
       help: Pomoc
 
+  # TODO: Need to translate
   parse_replay:
     descr:
       this: Wyświetlanie informacji o powtórce.
@@ -511,20 +571,22 @@ cmds:
         # When localizing, use an editor with a monospaced font 
         # and align placeholders relative to each other
         # I recomended VS Code or Sublime Text with monospaced font
-      formenu: |-
-        Nickname: `<nickname>`
+      formenu: |- # TODO: Auto translated, need to check
         ```py
-        Tank name: <tank_name>
-        Damage: <damage>
-        Spotted: <spotted>
-        XP: <xp>
-        Frags: <frags>
-        Blocked: <blocked>
-        Shots: <shots>
-        Shots hit: <shots_hit>
-        Penetrations: <shots_penetrated>
-        Accuracy: <accuracy>
-        Penetration ratio: <penetration_ratio>
+        czołg:               | <tank_name>
+        Czyste doświadczenie | <xp>
+
+        efektywność
+        --------------------------------
+        Zadane obrażenia......  | <damage>
+        Wykrytych przeciwników  | <spotted>
+        Zniszczonych czołgów..  | <frags>
+        Zablokowanych obrażeń.  | <blocked>
+        Oddanych strzałów.....  | <shots>
+        Trafionych strzałów...  | <shots_hit>
+        Penetracji............  | <shots_penetrated>
+        Celność...............  | <accuracy>
+        Procent penetracji ...  | <penetration_ratio>
         ```
       description: |-
         ```py
@@ -573,7 +635,8 @@ cmds:
         Nick:              WR:  Btls:
         ==================+====+=====
         <enemies>
-  
+        ```
+# TODO: Need to translate
 # Cooldown for commands
   cooldown:
     descr:
@@ -592,13 +655,13 @@ cmds:
       message:
         title: 'Potwierdź swój konto'
         description: |- 
-          Aby uzyskać dostęp do specjalnych poleceń bota (np. `/lock`) 
-          musisz zweryfikować lub zarejestrować zweryfikowany konto.
-        additional_info: |-
-          Jeśli już posiadasz niezatwierdzony konto, to w trakcie weryfikacji konto zostanie nadpisane! Rozpoczęte sesje zostaną wyczyszczone.
+          Aby uzyskać dostęp do specjalnych poleceń bota (np. {cmds_defs.set_lock}') 
+          musisz potwierdzić swoje konto.
         button_lt: Lesta
         button_wg: WG
       check_dm: Sprawdź prywatne wiadomości, link do weryfikacji został wysłany.
+    info:
+      already_verified: Konto to jest już weryfikowane. Brak potrzeby weryfikować ponownie.
 
 # Lock command
   set_lock:
@@ -637,14 +700,14 @@ cmds:
     descr:
       this: Rozpoczęcie WEB widżetu statystyk sesji
     info:
-      success: |- 
-        Twój WEB widżet statystyk sesji został rozpoczęty.
-        Link: <link>
+      success: |-
+        Twój WEB widżet statystyk sesji został rozpoczęty. 
+        Link: <link> 
         Ustawienia CSS do prawidłowego wyświetlenia: 
-        ```css
-        body { background-color: rgba(0,0,0,0)!important; overflow: hidden }
-        ```
-        Ustawienia widżetu: `/session_widget_settings`
+        ```css 
+        body {{ background-color: rgba(0,0,0,0)!important; }}
+        ``` 
+        Ustawienia widżetu: {cmds_defs.session_widget_settings}
     errors: 
       ''
     items:
@@ -664,7 +727,7 @@ cmds:
       max_stats_blocks: Maksymalna ilość bloków statystyk
       max_stats_small_blocks: Maksymalna ilość małych bloków statystyk
       update_per_seconds: Czas aktualizacji w sekundach
-      stats_blocks_transparency: Przezroczystość bloków statystyk
+      background_transparency: Przezroczystość bloków statystyk
       disable_main_stats_block: Wyłącz główny blok statystyk
       use_bg_for_stats_blocks: Użyj tła dla bloków statystyk
       adaptive_width: tryb adaptacyjnej szerokości [TRYB TESTOWY]
@@ -687,3 +750,142 @@ cmds:
       success: Motyw został pomyślnie ustawiony
     items:
       theme: Motyw
+
+# delete player
+  delete_player:
+    descr:
+      this: Usuń wszystkie dane o sobie
+    info:
+      warn: Czy na pewno, że chcesz usunąć wszystkie dane o sobie? Ten czyn nie jest odwracalny!
+      success: Wszystkie dane użytkownika zostały całkowicie usunięte z bazy danych
+    items:
+      ''
+
+# switch_account
+  switch_account: # <<< TODO: Auto translated, need check
+    descr:
+      this: Przełącz konto
+    info:
+      success: |-
+        Konto zostało przełączone:
+        <old_account> -> <new_account>
+    items:
+      menu: Wybierz konto
+    errors:
+      no_slots_for_select: |-
+        Masz tylko 1 zarejestrowane konto, zarejestruj jeszcze 1, aby móc wybierać konta.
+        {cmds_defs.set_player}
+
+# profile
+  profile: # <<< TODO: Autotranlsated
+    descr:
+      this: Profil użytkownika
+    items:
+      profile: Profil
+      level: 'Poziom:'
+      exp: 'ekspertyza:'
+      last_commands: 'Ostatnie polecenia'
+      last_activity: 'Ostatnia aktywność:'
+      commands_counter: 'wykorzystanych zespołów:'
+      accounts_info: 'Informacje o kontach'
+      badges: 'Odznaki profilowe'
+      command_name: 'nazwa polecenia'
+      last_used_time: 'min. temu'
+      num: 'numer'
+      account: 'konto'
+      session: 'sesja'
+      others: Różne
+      premium: 'premium:'
+      premium_time: 'wygasa za:'
+
+# hook_stats
+  hook_stats:
+    descr:
+      this: # TODO: Auto translated
+        Wyzwalacz na zmianę statystyki
+      sub_descr:
+        target: # TODO: Auto translated
+          Cel do śledzenia
+        stats_name: # TODO: Auto translated
+          Nazwa statystyki
+        stats_type: # TODO: Auto translated
+          Typ statystyki
+        trigger: # TODO: Auto translated
+          Warunek wyzwalania
+        target_value: # TODO: Auto translated
+          Wartość docelowa (+- 10 Mln.)
+    info:
+      success: |- # TODO: Auto translated
+        Wyzwalacz został ustawiony pomyślnie!
+        Bot ostrzeży Cię w tym kanale przy wyzwoleniu wyzwalacza.
+        Warunek: `<watch_for> <stats_name> <trigger> <value>`
+        Do wyłączenia w ciągu 48 godzin.
+        Twoje statystyki będą sprawdzane co 200 sekund.
+      triggered: |- # <<< TODO: Auto translated
+        Trigger został wywołany, stan statystyki:
+        `<target_player>`
+        `<watch_for> <stats_name> <target_stats> <trigger> <value>`
+    warns:
+      another_active_hook: |- # TODO: Auto translated
+        Masz już aktywny wyzwalacz.
+        Tworzenie nowego wyzwalacza spowoduje zastąpienie starego.
+        Jesteś pewien że chcesz kontynuować?
+        Informacje o aktywnym wyzwalaczu:
+        Warunek: `<watch_for> <stats_name> <trigger> <value>`
+        Wyłączenie za: <end_time>
+    errors:
+      value_out_of_range: # TODO: Auto translated
+        Wartość docelowa przeszła poza zakres (+- 10 Mln.)
+    items:
+      btn_override: # TODO: Auto translated
+        Zastąp
+      btn_cancel: # TODO: Auto translated
+        Anuluj
+
+# hook_state
+  hook_state:
+    descr:
+      this: # TODO: Auto translated
+        Stan wyzwalacza
+    info:
+      active: |- # TODO: Auto translated
+        Wyzwalacz jest aktywny.
+        Cel do śledzenia: `<target_player>`
+        Warunek: `<watch_for> <stats_name> <trigger> <value>`
+        Do wyłączenia: <end_time>
+      inactive: # TODO: Auto translated
+        Wyzwalacz nie jest aktywny.
+    items:
+      btn_stop: # TODO: Auto translated
+        Wyłącz
+
+# premium
+  premium:
+    descr:
+      this: Konto premium # TODO: Auto translated
+    items:
+      btn_boosty: Boosty
+      btn_da: Donation Alerts
+      main_msg_title: Konto premium # TODO: Auto translated
+    info:
+      main_message: |- # TODO: Auto translated
+        # Mo esz sprawdzi  status swojego konta premium za pomoc polecenia `/profile`
+        ### Konto premium daje dost p do dodatkowych funkcji w naszym bocie i dost p do ekskluzywnych polece )
+        ## Dodatkowe funkcje:
+        - Mo esz przechowywa  do 5 niezale nych kont w bocie
+        - Mo esz korzysta  z wyzwalaczy statystyk (`/hook_stats`)
+        - Otrzymujesz specjalny znaczek w swoim profilu w bocie (`/profile`)
+        - Otrzymujesz ekskluzywny dost p do kana u tester w i  po aczenie z deweloperami w dowolnym momencie
+        - Otrzymujesz podziękowanie od dewelopera)
+        ## Jak uzyska  konto premium?
+        ***Istnieje 5 sposob w uzyskania konta premium w bocie:***
+        1 - By  administratorem / moderator / testerem na tym serwerze
+        2 - By  streamer i korzysta  z naszego widgetu
+        3 - Da  boost serwerowi wsparcia
+        4 - Subskrybujesz si  na nasz Boosty
+        5 - Dokonujesz darowizny za pomoc  Donation Alerts
+        ## Przyznawanie statusu premium:
+        **Sposoby 1-4:** *Automatycznie w ci gu 5 minut*
+        **Spos b 5:** *Tryb r czny, sprawdzaj do 1 dnia.*
+
+        -# Please note that any purchases are voluntary donations, the product is provided "as is" and does not give any guarantees of operability! Refunds are not possible!

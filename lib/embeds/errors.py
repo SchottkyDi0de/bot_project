@@ -59,9 +59,9 @@ class ErrorMSG:
     
     def session_not_updated(self) -> Embed:
         return Embed(
-            title=Text().get().frequent.errors.error,
+            title=Text().get().frequent.info.warning,
             description=Text().get().cmds.get_session.errors.session_not_updated,
-            colour=Colour.red()
+            colour=Colour.orange()
         )
     
     def user_banned(self) -> Embed:
@@ -105,8 +105,9 @@ class ErrorMSG:
             text: str,
             title: str = None,
             colour: str = 'red',
-            err_inf_sent: bool = False
-            ) -> Embed:
+            err_inf_sent: bool = False,
+            footer: str = None
+        ) -> Embed:
         embed =  Embed(
             title=title if title is not None else locale.frequent.errors.error,
             description=text,
@@ -114,6 +115,8 @@ class ErrorMSG:
         )
         if err_inf_sent:
             embed.set_footer(text=Text().get().frequent.info.err_info_sent)
+        if footer is not None:
+            embed.set_footer(text=footer)
             
         return embed
     

@@ -4,14 +4,14 @@ from io import BytesIO
 
 from discord import Interaction, File
 
-from lib.image.common import ImageGen
+from lib.image.common import ImageGenCommon
 from lib.data_classes.api.api_data import PlayerGlobalData, Player as PlayerFAPI, Achievements, TankStats, Statistics
 from lib.data_classes.api.player_stats import All as AllPlayer
 from lib.data_classes.api.tanks_stats import All as AllTank
 from lib.data_classes.api.player_clan_stats import Clan
 from lib.data_classes.replay_data_parsed import ParsedReplayData, PlayerResult, Player as PlayerFR, Rating
 from lib.data_parser.parse_data import get_normalized_data
-from lib.database.tankopedia import TanksDB
+from lib.database.tankopedia import TankopediaDB
 from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.utils.string_parser import insert_data
@@ -101,15 +101,15 @@ class SelectMenu:
         return int(temp[:-2])
 
     async def replay_select_callback(self, select, interaction: Interaction):
-        Text().load_from_context(self.ctx)
+        await Text().load_from_context(self.ctx)
         self.data: ParsedReplayData
         _log.debug(f"buildng data for {select.values[0]}")
 
         nickname = select.values[0]
         need_cache = True
 
-        for playerres in self.data.player_results:
-                if playerres.player_info.nickname == nickname:
+        for players in self.data.player_results:
+                if players.player_info.nickname == nickname:
                     break
 
         if nickname in self.cache:
@@ -126,29 +126,29 @@ class SelectMenu:
             _log.debug(f"get achievements for {player.info.nickname}, generate image")
 
             achievements = await self.api.get_player_achievements(player.info.region, player.account_id)
-            bin_image = ImageGen().generate(self.ctx, SelectMenu._build_global_data(player, playerres, achievements), 
+            bin_image = ImageGenCommon().generate(self.ctx, SelectMenu._build_global_data(player, players, achievements), 
                                             image_settings, server_settings)
         
         if need_cache:
             self.cache.set(nickname, base64.b64encode(bin_image.read()))
             bin_image.seek(0)
         
-        tank_dct = TanksDB().safe_get_tank_by_id(playerres.info.tank_id)
+        tank_dct = await TankopediaDB().get_tank_by_id(players.info.tank_id, region=player.info.region)
         tank_name = tank_dct['name'] if tank_dct else "Unknown"
 
         text = insert_data(Text().get().cmds.parse_replay.items.formenu, {
             'tank_name': tank_name,
             'nickname': nickname,
-            'damage': playerres.info.damage_dealt,
-            'spotted': playerres.info.damage_assisted_1,
-            'xp': playerres.info.base_xp,
-            'frags': playerres.info.n_enemies_destroyed,
-            'blocked': playerres.info.damage_blocked,
-            'shots': playerres.info.n_shots,
-            "shots_hit": playerres.info.n_hits_dealt,
-            'shots_penetrated': playerres.info.n_penetrations_dealt,
-            'accuracy': str(SelectMenu._get_normalized_ratio(playerres.info.n_hits_dealt / playerres.info.n_shots * 100)) + '%',
-            'penetration_ratio': str(SelectMenu._get_normalized_ratio(playerres.info.n_penetrations_dealt / playerres.info.n_hits_dealt * 100)) + '%',
+            'damage': players.info.damage_dealt,
+            'spotted': players.info.damage_assisted_1,
+            'xp': players.info.base_xp,
+            'frags': players.info.n_enemies_destroyed,
+            'blocked': players.info.damage_blocked,
+            'shots': players.info.n_shots,
+            "shots_hit": players.info.n_hits_dealt,
+            'shots_penetrated': players.info.n_penetrations_dealt,
+            'accuracy': str(SelectMenu._get_normalized_ratio(players.info.n_hits_dealt / players.info.n_shots * 100)) + '%',
+            'penetration_ratio': str(SelectMenu._get_normalized_ratio(players.info.n_penetrations_dealt / players.info.n_hits_dealt * 100)) + '%',
         })
 
         await interaction.response.send_message(text, file=File(bin_image, 'stats.png'), ephemeral=True)
