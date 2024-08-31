@@ -45,9 +45,13 @@ filesplit 4.0.1
 
 # Dependencies
 [Python 3.11](https://www.python.org/downloads/release/python-3110/) or later
+
 [MongoDB Server](https://www.mongodb.com/try/download/community)
+
 [MongoDB Database Tools](https://www.mongodb.com/try/download/database-tools) (for dumper)
+
 [WOTB Replay parser tool](https://github.com/eigenein/wotbreplay-parser) (project include compiled version for win 10 - 11 and linux)
+
 # Supported platform:
 Any linux distribution capable of installing all dependencies (our server was on ubuntu 22.04 LTS)
 Windows 8 or later
@@ -60,7 +64,7 @@ python3 -m venv .env
 **and activate**
 ### windows:
 ```cmd
-./.env/scripts/activate
+.env/scripts/activate
 ```
 ### Linux
 ```bash
