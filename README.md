@@ -20,28 +20,51 @@ This license applies to all files in this project that contain Python source cod
 
 # Used libriares:
 py-cord 2.6.0
+
 pyyaml 6.0.1
+
 aiohttp 3.8.5
+
 asynciolimiter 1.0.0
+
 python-easy-json 1.1.9
+
 python-dotenv 1.0.0
+
 pillow 10.0.1
+
 elara 0.5.5
+
 cacheout 0.14.1
+
 pydantic 2.4.2
+
 the_retry 0.1.1
+
 asynciolimiter 1.0.0
+
 webcolors 1.13
+
 fastapi 0.109.2
+
 uvicorn 0.23.2
+
 websockets 12.0
+
 nicegui 1.4.24
+
 typer 0.12.3
+
 dynamic-yaml 2.0.0
+
 motor 3.4.0
+
 asgiref 3.8.1
+
 numpy 2.0.0
+
 filesplit 4.0.1
+
 
 # Dependencies
 [Python 3.11](https://www.python.org/downloads/release/python-3110/) or later
