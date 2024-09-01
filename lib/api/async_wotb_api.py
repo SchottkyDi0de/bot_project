@@ -676,7 +676,10 @@ class API:
         data = PlayerStats.model_validate(data)
 
         self.player_stats['statistics'] = data.data.statistics
-        await self.get_rating_leaderboard_num(region, account_id)
+        try:
+            await self.get_rating_leaderboard_num(region, account_id)
+        except Exception:
+            self.player_stats['statistics'].rating.leaderboard_position = 0
 
     @retry(
             expected_exception=(
