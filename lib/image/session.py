@@ -572,7 +572,7 @@ class LayoutDefiner:
             self.player_data.data.clan_tag = None
         if self.player_data.data.clan_tag is not None:
             tag = {
-                'text':     f'[{self.player_data.data.clan_stats.tag}]',
+                'text':     f'[{self.player_data.data.clan_tag}]',
                 'font':     Fonts.roboto_30,
             }
             nickname = {

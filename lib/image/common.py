@@ -2,7 +2,6 @@
 Модуль для генерирования изображения
 со статистикой
 '''
-import base64
 from enum import Enum
 from io import BytesIO
 from time import time
@@ -17,7 +16,6 @@ from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
 from lib.image.for_image.medals import Medals
 from lib.image.utils.b64_img_handler import img_to_base64, base64_to_img, img_to_readable_buffer
-from lib.image.themes.theme_loader import get_theme
 from lib.image.for_image.watermark import Watermark
 from lib.image.utils.resizer import center_crop
 from lib.locale.locale import Text
