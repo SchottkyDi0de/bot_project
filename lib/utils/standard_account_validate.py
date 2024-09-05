@@ -37,6 +37,11 @@ async def standard_account_validate(
         UserBanned: If the account is banned.
 
     """
+    try:
+        slot = int(slot)
+    except (ValueError, TypeError):
+        pass
+    
     if slot is None:
         slot = await PlayersDB().get_current_game_slot(account_id)
     
