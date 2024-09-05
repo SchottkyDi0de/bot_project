@@ -6,7 +6,6 @@ First:
 Second:
 
     main project folder: 
-    >>> python main.py
-
+    >>> python launch.py dev (or prod)
     supporter project folder: 
     >>> python main.py
