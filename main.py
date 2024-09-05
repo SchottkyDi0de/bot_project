@@ -17,6 +17,7 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 This license applies to all files in this project that contain Python source code unless otherwise specified!
 """
 import os
+import sys
 from asyncio import TaskGroup
 
 from discord import Intents, Activity, Status, ActivityType
@@ -26,15 +27,23 @@ from lib.api import async_wotb_api
 from lib.database.tankopedia import TankopediaDB
 from lib.logger.logger import get_logger
 from lib.exceptions.api import APIError
-from lib.settings.settings import Config, EnvConfig
+from lib.settings.settings import Config
 from workers.pdb_checker import PDBWorker
 from workers.db_backup_worker import DBBackupWorker
 
 _log = get_logger(__file__, 'MainLogger', 'logs/main.log')
 _config = Config().get()
 
-if os.name == 'posix':
-    os.system('chmod 777 lib/replay_parser/bin/parser')
+try:
+    sys.argv[1]
+except IndexError:
+    print(
+        'No token provided!\n'
+        'Usage: python main.py <token>\n'
+        '=================================\n'
+        'RECOMMENDED STARTUP:\n'
+        '>>> python launch.py prod (or dev)\n'
+    )
 
 class App():
     def __init__(self):
@@ -95,7 +104,7 @@ class App():
             await self.run_workers()
         
         self.load_extension(self.extension_names)
-        self.bot.run(EnvConfig.DISCORD_TOKEN_DEV)
+        self.bot.run(sys.argv[1])
 
     @staticmethod
     async def retrieve_tankopedia(api: async_wotb_api.API) -> dict:

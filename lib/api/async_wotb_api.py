@@ -1,6 +1,6 @@
 import asyncio
 import atexit
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 import json
 import traceback
 from datetime import datetime

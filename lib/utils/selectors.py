@@ -1,12 +1,16 @@
 from discord import AutocompleteContext, OptionChoice
 
 from lib.locale.locale import Text
+from cacheout import Cache
 
 from lib.database.players import PlayersDB
+from lib.logger.logger import get_logger
 from lib.utils.standard_account_validate import standard_account_validate
 from lib.utils.slot_info import get_formatted_slot_info
 from lib.api.async_wotb_api import API
 
+_p_completion_cache = Cache(maxsize=10000, ttl=1200)
+_log = get_logger(__file__, 'SelectorLogger', 'logs/selector.log')
 
 async def account_selector(ctx: AutocompleteContext, _ = None, session_required: bool = False) -> list[str]:
     if not isinstance(ctx, AutocompleteContext):
@@ -41,6 +45,7 @@ async def account_selector(ctx: AutocompleteContext, _ = None, session_required:
     return slots_info
 
 async def global_players_selector(ctx: AutocompleteContext) -> list[OptionChoice]:
+    need_caching = False
     await Text().load_from_interaction(interaction=ctx.interaction)
 
     if len(ctx.value) < 3:
@@ -50,7 +55,13 @@ async def global_players_selector(ctx: AutocompleteContext) -> list[OptionChoice
             )
         ]
 
-    players = await API().get_players_list(ctx.value)
+    if ctx.value is not None and ctx.value.lower() in _p_completion_cache:
+        _log.debug(f'cache hit {ctx.value.lower()}')
+        return _p_completion_cache.get(ctx.value)
+    else:
+        need_caching = True
+    
+    players = await API().get_players_list(ctx.value.lower())
     
     def check(player: str):
         if ctx.value.lower() in player.lower():
@@ -68,4 +79,11 @@ async def global_players_selector(ctx: AutocompleteContext) -> list[OptionChoice
                 )
             )
     
+    if need_caching:
+        _log.debug(f'cache miss {ctx.value.lower()}')
+        _p_completion_cache.add(ctx.value.lower(), completions)
+
+    if _p_completion_cache.full():
+        _log.debug('cache full')
+
     return completions

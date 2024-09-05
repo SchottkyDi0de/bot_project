@@ -1,0 +1,31 @@
+--- 
+bot_launch_config:
+
+  dev:
+    host: '127.0.0.1'
+    port: '8000'
+    protocol: 'http'
+
+  prod:
+    host: 'blitzhub.eu'
+    port: '443'
+    protocol: 'https'
+
+
+server_launch_config:
+
+  dev: >
+    uvicorn web.server.server:run \
+    --workers 1 \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --factory
+  
+  prod: >
+    uvicorn web.server.server:run \
+    --workers 1 \
+    --host blitzhub.eu \
+    --port 443 \
+    --factory \
+    --ssl-keyfile /etc/letsencrypt/live/blitzhub.eu/privkey.pem \
+    --ssl-certfile /etc/letsencrypt/live/blitzhub.eu/fullchain.pem
