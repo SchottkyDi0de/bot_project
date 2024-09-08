@@ -1,5 +1,5 @@
 # Blitz Statistics BlitzHUB Project Page:
-
+[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?&logo=discord&logoColor=white)]([#](https://discord.gg/24FAU6Gbv2))
 # License: MIT
 Copyright 2024 vladislawzero@gmail.com | discord: _zener_dioder | https://github.com/SchottkyDi0de
 
