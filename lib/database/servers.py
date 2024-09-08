@@ -73,14 +73,14 @@ class ServersDB():
                 {'$set': {'custom_background': base64_image}}
             )
         
-    async def set_server_preium(self, server_id: int) -> None:
+    async def set_server_premium(self, server_id: int) -> None:
         if self.check_server(server_id):
             await self.collection.update_one(
                 {'id': int(server_id)},
                 {'$set': {'premium': True}}
             )
 
-    async def unset_server_preium(self, server_id: int) -> None:
+    async def unset_server_premium(self, server_id: int) -> None:
         if self.check_server(server_id):
             await self.collection.update_one(
                 {'id': int(server_id)},
@@ -112,8 +112,8 @@ class ServersDB():
     async def get_server_settings(self, ctx: ApplicationContext) -> ServerSettings:
         server_id = str(ctx.guild.id)
         if self.check_server(server_id):
-            data = await self.collection.find_one({'id': int(server_id)})['settings']
-            if data is not None:
+            data = await self.collection.find_one({'id': int(server_id)})
+            if data['settings'] is not None:
                 return ServerSettings.model_validate(data)
             else:
                 self.set_server_settings(ctx, ServerSettings.model_validate({}))
