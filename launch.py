@@ -1,6 +1,6 @@
 import os
-from typer import Typer
 
+from typer import Typer
 import yaml
 
 from launch.launch_config import LaunchConfig, env_config
