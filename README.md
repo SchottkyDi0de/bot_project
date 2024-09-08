@@ -1,5 +1,5 @@
 # Blitz Statistics BlitzHUB Project Page:
-[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?&logo=discord&logoColor=white)]([#](https://discord.gg/24FAU6Gbv2))
+Support [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?&logo=discord&logoColor=white)]([#](https://discord.gg/24FAU6Gbv2))
 # License: MIT
 Copyright 2024 vladislawzero@gmail.com | discord: _zener_dioder | https://github.com/SchottkyDi0de
 
@@ -19,7 +19,7 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 This license applies to all files in this project that contain Python source code unless otherwise specified!
 
 # Command documentation
-### Link --> [GitBook](https://app.gitbook.com/o/9RFxNaj85lLDapYNGcmG/s/b4GsEBEoNIIQn6fZtOGp/ru-docs/glavnaya-stranica-ru-dokumentacii/bystryi-start) <-- Link
+View docs in [![GitBook](https://img.shields.io/badge/GitBook-3884FF?logo=gitbook&logoColor=fff)](https://app.gitbook.com/o/9RFxNaj85lLDapYNGcmG/s/b4GsEBEoNIIQn6fZtOGp/ru-docs/glavnaya-stranica-ru-dokumentacii/bystryi-start)
 
 # Used libriares:
 py-cord 2.6.0
