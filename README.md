@@ -18,6 +18,9 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 
 This license applies to all files in this project that contain Python source code unless otherwise specified!
 
+# Command documentation
+### Link --> [GitBook](https://app.gitbook.com/o/9RFxNaj85lLDapYNGcmG/s/b4GsEBEoNIIQn6fZtOGp/ru-docs/glavnaya-stranica-ru-dokumentacii/bystryi-start) <-- Link
+
 # Used libriares:
 py-cord 2.6.0
 
