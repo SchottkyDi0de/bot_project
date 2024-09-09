@@ -1,7 +1,4 @@
-from discord.utils import remove_markdown
-
-
-def insert_data(string: str, key_values: dict[str, str], clear_md: bool = False) -> str:
+def insert_data(string: str, key_values: dict[str, str]) -> str:
     """
     Replaces placeholders in a string with corresponding values.
     
@@ -25,8 +22,5 @@ def insert_data(string: str, key_values: dict[str, str], clear_md: bool = False)
     """
     for key, value in key_values.items():
         string = string.replace(f'<{key}>', str(value), 1)
-        
-    if clear_md:
-        string = remove_markdown(string)
     
     return string

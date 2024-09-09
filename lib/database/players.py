@@ -1,12 +1,20 @@
+import asyncio
 from datetime import datetime, timedelta
-from asyncio import sleep
 from types import NoneType
+from typing import Any
 
 import pytz
 import motor.motor_asyncio
 from bson.codec_options import CodecOptions
 
 from lib.data_classes.api.api_data import PlayerGlobalData
+from lib.exceptions import database
+from lib.logger.logger import get_logger
+from lib.settings.settings import Config
+from lib.utils.calculate_exp import exp_add
+from lib.utils.singleton_factory import singleton
+from lib.utils.validate_badges import validate_badge
+
 from lib.data_classes.db_player import (
     BadgesEnum,
     DBPlayer,
@@ -22,13 +30,6 @@ from lib.data_classes.db_player import (
     UsedCommand,
     SlotAccessState
 )
-from lib.data_classes.db_player_old import DBPlayerOld
-from lib.exceptions import database
-from lib.logger.logger import get_logger
-from lib.settings.settings import Config
-from lib.utils.calculate_exp import exp_add
-from lib.utils.singleton_factory import singleton
-from lib.utils.validate_badges import validate_badge
 
 _config = Config().get()
 _log = get_logger(__file__, 'PlayersDBLogger', 'logs/players_db.log')
@@ -38,7 +39,8 @@ _log = get_logger(__file__, 'PlayersDBLogger', 'logs/players_db.log')
 class PlayersDB:
     def __init__(self) -> None:
         self.client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
-        self.db = self.client['PlayersDB']
+        self.client.get_io_loop = asyncio.get_running_loop
+        self.db = self.client['TgPlayersDB']
         self.collection = self.db.get_collection('players', codec_options=CodecOptions(tz_aware=True, tzinfo=pytz.utc))
     
     async def _multi_args_member_checker(self, member_id: int | str | None = None, member: DBPlayer | None = None, raise_error: bool = True) -> DBPlayer:
@@ -99,19 +101,6 @@ class PlayersDB:
         return await self.collection.count_documents({})
     
     async def count_sessions(self) -> int:
-        """
-        Asynchronously counts the total number of sessions for all members in the collection.
-        
-        This function iterates over all documents in the collection, retrieves the member object,
-        and checks each of their used slots for last stats. The count of sessions is incremented
-        for each slot with last stats.
-        
-        Parameters:
-            self (PlayersDB): The instance of the PlayersDB class.
-        
-        Returns:
-            int: The total count of sessions for all members in the collection.
-        """
         sessions = 0
         cursor = self.collection.find({})
 
@@ -198,17 +187,6 @@ class PlayersDB:
         return member
     
     async def get_slot_state(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> SlotAccessState:
-        """
-        Asynchronously retrieves the state of a game slot for a given member.
-
-        Args:
-            slot (AccountSlotsEnum): The game slot to retrieve the state for.
-            member_id (int | str | None): The ID of the member to retrieve the slot state for. Defaults to None.
-            member (DBPlayer | None): The member object to retrieve the slot state for. Defaults to None.
-
-        Returns:
-            SlotAccessState: The state of the game slot.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         
         if slot is None:
@@ -232,16 +210,6 @@ class PlayersDB:
             return SlotAccessState.used_slot
     
     def get_slot_state_sync(self, slot: AccountSlotsEnum, member: DBPlayer) -> SlotAccessState:
-        """
-        Synchronously retrieves the state of a game slot for a given member.
-
-        Args:
-            slot (AccountSlotsEnum): The game slot to retrieve the state for.
-            member (DBPlayer): The member object to retrieve the slot state for.
-
-        Returns:
-            SlotAccessState: The state of the game slot.
-        """
         if not isinstance(slot, AccountSlotsEnum):
             _log.warning(f'slot must be an instance of AccountSlotsEnum, not {slot.__class__.__name__}')
             return SlotAccessState.invalid_slot
@@ -268,26 +236,6 @@ class PlayersDB:
         set_if_locked: bool = False,
         empty_allowed: bool = False
         ) -> AccountSlotsEnum:
-        """
-        Asynchronously validates a game slot for a given member.
-
-        Args:
-            slot (AccountSlotsEnum | None): The game slot to validate. If None, the current game slot will be used.
-            member_id (int | str | None, optional): The ID of the member to validate the slot for. Defaults to None.
-            member (DBPlayer | None, optional): The member object to validate the slot for. Defaults to None.
-            set_if_locked (bool, optional): Whether to set the current account to slot_1 if the slot is locked. Defaults to False.
-            empty_allowed (bool, optional): Whether to allow empty slots. Defaults to False.
-
-        Returns:
-            AccountSlotsEnum: The validated game slot.
-
-        Raises:
-            TypeError: If the slot is not an instance of AccountSlotsEnum.
-            ValueError: If the slot is invalid.
-            database.PremiumSlotAccessAttempt: If the slot is locked and set_if_locked is False.
-            database.SlotIsEmpty: If the slot is empty and empty_allowed is False.
-            database.SlotIsNotEmpty: If the slot is used and empty_allowed is True.
-        """
         
         if not isinstance(slot, AccountSlotsEnum):
             raise TypeError(f'slot must be an instance of AccountSlotsEnum, not {slot.__class__.__name__}')
@@ -308,20 +256,6 @@ class PlayersDB:
             return slot
         
     async def get_game_account(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> GameAccount:
-        """
-        Asynchronously retrieves the game account associated with the specified member and slot.
-
-        Args:
-            slot (AccountSlotsEnum): The slot of the game account to retrieve.
-            member_id (int | str | None, optional): The ID of the member. Defaults to None.
-            member (DBPlayer | None, optional): The member object. Defaults to None.
-
-        Returns:
-            GameAccount: The game account associated with the specified member and slot.
-
-        Raises:
-            database.SlotIsEmpty: If the member does not have a game account in the specified slot.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
         game_account = getattr(member.game_accounts, slot.name)
@@ -504,42 +438,25 @@ class PlayersDB:
 
         If the member is not premium, False is returned.
         """
-        # TODO: For the premium check to work, remove the return and uncomment the code below
-        #
-        # member = await self._multi_args_member_checker(member_id, member)
+        member = await self._multi_args_member_checker(member_id, member)
         
-        # premium = member.profile.premium
-        # premium_time = member.profile.premium_time
+        premium = member.profile.premium
+        premium_time = member.profile.premium_time
         
-        # if premium:
-        #     if premium_time is None:
-        #         return True
-        #     else:
-        #         if datetime.now(pytz.utc) < premium_time:
-        #             return True
-        #         else:
-        #             _log.debug(f'Unset premium for member {member.id}')
-        #             await self.unset_premium(member.id)
-        #             return False
-        # else:
-        #     return False
-        
-        return True
+        if premium:
+            if premium_time is None:
+                return True
+            else:
+                if datetime.now(pytz.utc) < premium_time:
+                    return True
+                else:
+                    _log.debug(f'Unset premium for member {member.id}')
+                    await self.unset_premium(member.id)
+                    return False
+        else:
+            return False
 
     async def get_current_game_account(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> GameAccount:
-        """
-        Asynchronously retrieves the current game account associated with the specified member.
-
-        Args:
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-
-        Returns:
-            GameAccount: The current game account associated with the specified member.
-
-        Raises:
-            database.SlotIsEmpty: If the member does not have a game account in the current slot.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         game_account: GameAccount | None = getattr(member.game_accounts, member.current_game_account)
         if game_account is None:
@@ -549,32 +466,10 @@ class PlayersDB:
             return game_account
 
     async def get_current_game_slot(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> AccountSlotsEnum:
-        """
-        Asynchronously retrieves the current game slot associated with the specified member.
-
-        Args:
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-
-        Returns:
-            AccountSlotsEnum: The current game slot associated with the specified member.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         return AccountSlotsEnum[member.current_game_account]
         
     async def start_session(self, slot: AccountSlotsEnum, member_id: int | str, last_stats: PlayerGlobalData, session_settings: SessionSettings) -> None:
-        """
-        Starts a new session for a member in a specified game slot.
-
-        Args:
-            slot (AccountSlotsEnum): The game slot to start the session in.
-            member_id (int | str): The ID of the member.
-            last_stats (PlayerGlobalData): The last statistics of the member.
-            session_settings (SessionSettings): The settings for the session.
-
-        Returns:
-            None: This function does not return anything.
-        """
         member = await self.check_member_exists(member_id, get_if_exist=True)
         slot = await self.validate_slot(member=member, slot=slot)
         await self.collection.update_one(
@@ -594,19 +489,6 @@ class PlayersDB:
             member_id: int | str | None = None,
             member: DBPlayer | None = None,
         ) -> GameAccount | None:
-        """
-        Asynchronously searches for a game account by nickname and region.
-
-        Args:
-            self: A reference to the current instance of the class.
-            nickname (str): The nickname of the game account to search for.
-            region (str): The region of the game account to search for.
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-
-        Returns:
-            GameAccount | None: The game account associated with the specified nickname and region, or None if not found.
-        """
         member = self._multi_args_member_checker(member_id, member)
         game_accounts = member.game_accounts
         used_slots: list[AccountSlotsEnum] = await self.get_all_used_slots(member=member)
@@ -621,55 +503,16 @@ class PlayersDB:
         return None
         
     async def get_session_settings(self, slot: AccountSlotsEnum, member_id: int | str, member: DBPlayer) -> SessionSettings:
-        """
-        Asynchronously retrieves the session settings for a specific game account slot.
-
-        Args:
-            self: A reference to the current instance of the class.
-            slot (AccountSlotsEnum): The game account slot to retrieve session settings for.
-            member_id (int | str): The ID of the member.
-            member (DBPlayer): The member object.
-
-        Returns:
-            SessionSettings: The session settings for the specified game account slot.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
         return getattr(member.game_accounts, slot.name).session_settings
     
     async def get_image_settings(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> ImageSettings:
-        """
-        Asynchronously retrieves the image settings for a specific game account slot.
-
-        Args:
-            self: A reference to the current instance of the class.
-            slot (AccountSlotsEnum): The game account slot to retrieve image settings for.
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-
-        Returns:
-            ImageSettings: The image settings for the specified game account slot.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
         return getattr(member.game_accounts, slot.name).image_settings
     
     async def get_last_stats(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> PlayerGlobalData:
-        """
-        Asynchronously retrieves the last game statistics for a specific game account slot.
-
-        Args:
-            self: A reference to the current instance of the class.
-            slot (AccountSlotsEnum): The game account slot to retrieve last statistics for.
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-
-        Returns:
-            PlayerGlobalData: The last game statistics for the specified game account slot.
-
-        Raises:
-            database.LastStatsNotFound: If the member has no last statistics in the specified slot.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
         last_stats = getattr(member.game_accounts, slot.name).last_stats
@@ -680,50 +523,16 @@ class PlayersDB:
             return PlayerGlobalData.model_validate(last_stats)
         
     async def get_stats_view_settings(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> StatsViewSettings:
-        """
-        Asynchronously retrieves the stats view settings for a specific game account slot.
-
-        Args:
-            slot (AccountSlotsEnum): The game account slot to retrieve stats view settings for.
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-
-        Returns:
-            StatsViewSettings: The stats view settings for the specified game account slot.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
         return getattr(member.game_accounts, slot.name).stats_view_settings
 
     async def get_widget_settings(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> WidgetSettings:
-        """
-        Asynchronously retrieves the widget settings for a specific game account slot.
-
-        Args:
-            self: A reference to the current instance of the class.
-            slot (AccountSlotsEnum): The game account slot to retrieve widget settings for.
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-
-        Returns:
-            WidgetSettings: The widget settings for the specified game account slot.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
         return getattr(member.game_accounts, slot.name).widget_settings
     
     async def stop_session(self, slot: AccountSlotsEnum, member_id: int | str) -> None:
-        """
-        Asynchronously stops a session for a specific game account slot.
-
-        Args:
-            self: A reference to the current instance of the class.
-            slot (AccountSlotsEnum): The game account slot to stop the session for.
-            member_id (int | str): The ID of the member.
-
-        Returns:
-            None: This function does not return anything.
-        """
         slot = await self.validate_slot(member_id=member_id, slot=slot)
         await self.collection.update_one(
             {'id': member_id},
@@ -731,18 +540,6 @@ class PlayersDB:
         )
     
     async def check_member_last_stats(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None, premium_bypass: bool = False) -> bool:
-        """
-        Asynchronously checks the last stats of a member's game account slot.
-
-        Args:
-            slot (AccountSlotsEnum): The game account slot to check the last stats for.
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-            premium_bypass (bool): Whether to bypass premium checks. Defaults to False.
-
-        Returns:
-            bool: True if the last stats are valid, False otherwise.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
         game_account: GameAccount = getattr(member.game_accounts, slot.name)
@@ -758,17 +555,6 @@ class PlayersDB:
                 return True
             
     async def session_restart_needed(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> bool:
-        """
-        Asynchronously checks if a session restart is needed for a specific game account slot.
-
-        Args:
-            slot (AccountSlotsEnum): The game account slot to check.
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-
-        Returns:
-            bool: True if a session restart is needed, False otherwise.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
         game_account: GameAccount = getattr(member.game_accounts, slot.name)
@@ -781,18 +567,6 @@ class PlayersDB:
             return False
         
     async def validate_session(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None, premium_bypass: bool = False) -> SessionStatesEnum:
-        """
-        Asynchronously validates the session state for a specific game account slot.
-
-        Args:
-            slot (AccountSlotsEnum): The game account slot to validate the session for.
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-            premium_bypass (bool): Whether to bypass premium checks. Defaults to False.
-
-        Returns:
-            SessionStatesEnum: The current state of the session (NOT_STARTED, RESTART_NEEDED, or NORMAL).
-        """
         member = await self._multi_args_member_checker(member_id, member)
         last_stats = await self.check_member_last_stats(slot, member=member, premium_bypass=premium_bypass)
         if not last_stats:
@@ -809,18 +583,6 @@ class PlayersDB:
             session_settings: SessionSettings,
             last_stats: PlayerGlobalData, 
         ) -> None:
-        """
-        Asynchronously updates the session settings and last stats for a specific game account slot.
-
-        Args:
-            slot (AccountSlotsEnum): The game account slot to update the session for.
-            member_id (int | str): The ID of the member.
-            session_settings (SessionSettings): The session settings to update.
-            last_stats (PlayerGlobalData): The last stats to update.
-
-        Returns:
-            None
-        """
         member = await self._multi_args_member_checker(member_id, None)
         curr_slot = await self.get_current_game_slot(member_id, member) if slot is None else slot
         restart_time = session_settings.time_to_restart + timedelta(days=1)
@@ -836,16 +598,6 @@ class PlayersDB:
         )
         
     async def get_all_used_slots(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> list[AccountSlotsEnum]:
-        """
-        Asynchronously retrieves a list of all used game account slots for a specific member.
-
-        Args:
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-
-        Returns:
-            list[AccountSlotsEnum]: A list of used game account slots.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         premium_user = await self.check_premium(member_id, member)
         slots = []
@@ -860,16 +612,6 @@ class PlayersDB:
         return slots
     
     async def get_lang(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> str | None:
-        """
-        Asynchronously retrieves the language of a specific member.
-
-        Args:
-            member_id (int | str | None): The ID of the member.
-            member (DBPlayer | None): The member object.
-
-        Returns:
-            str | None: The language of the member if it exists, otherwise None.
-        """
         member = await self._multi_args_member_checker(member_id, member, raise_error=False)
         return DBPlayer.model_validate(member).lang if member is not None else None
     
@@ -892,33 +634,11 @@ class PlayersDB:
         )
     
     async def check_member_is_verified(self, slot: AccountSlotsEnum, member_id: int | str | None = None, member: DBPlayer | None = None) -> bool:
-        """
-        Asynchronously checks if a member's game account slot is verified.
-
-        Args:
-            slot (AccountSlotsEnum): The game account slot to check for verification.
-            member_id (int | str | None): The ID of the member. Defaults to None.
-            member (DBPlayer | None): The member object. Defaults to None.
-
-        Returns:
-            bool: True if the member's game account slot is verified, False otherwise.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         slot = await self.validate_slot(member=member, slot=slot)
         return getattr(member.game_accounts, slot.name).verified
     
     async def set_member_lock(self, slot: AccountSlotsEnum, member_id: int | str, lock: bool) -> None:
-        """
-        Asynchronously sets the lock status of a member's game account slot in the database.
-
-        Args:
-            slot (AccountSlotsEnum): The game account slot to set the lock status for.
-            member_id (int | str): The ID of the member.
-            lock (bool): The lock status to set.
-
-        Returns:
-            None: This function does not return anything.
-        """
         member = await self.check_member_exists(member_id, get_if_exist=True)
         slot = await self.validate_slot(slot=slot, member=member)
         await self.collection.update_one(
@@ -953,17 +673,6 @@ class PlayersDB:
         )
         
     async def set_stats_view_settings(self, slot: AccountSlotsEnum | None, member_id: int | str, settings: StatsViewSettings) -> None:
-        """
-        Asynchronously sets the stats view settings of a member's game account slot in the database.
-
-        Args:
-            slot (AccountSlotsEnum | None): The game account slot to set the stats view settings for.
-            member_id (int | str): The ID of the member.
-            settings (StatsViewSettings): The stats view settings to set.
-
-        Returns:
-            None: This function does not return anything.
-        """
         member = await self.check_member_exists(member_id, get_if_exist=True)
         slot = await self.validate_slot(member=member, slot=slot)
         await self.collection.update_one(
@@ -972,17 +681,6 @@ class PlayersDB:
         )
         
     async def set_image_settings(self, slot: AccountSlotsEnum | None, member_id: int | str, settings: ImageSettings) -> None:
-        """
-        Asynchronously sets the image settings of a member's game account slot in the database.
-
-        Args:
-            slot (AccountSlotsEnum | None): The game account slot to set the image settings for.
-            member_id (int | str): The ID of the member.
-            settings (ImageSettings): The image settings to set.
-
-        Returns:
-            None: This function does not return anything.
-        """
         member = await self.check_member_exists(member_id, get_if_exist=True)
         slot = await self.validate_slot(member=member, slot=slot)
         await self.collection.update_one(
@@ -991,16 +689,6 @@ class PlayersDB:
         )
         
     async def get_member_image(self, member_id: int | str | None, member: DBPlayer | None) -> str | None:
-        """
-        Asynchronously retrieves the image of a specific member.
-
-        Args:
-            member_id (int | str | None): The ID of the member.
-            member (DBPlayer | None): The member object.
-
-        Returns:
-            str | None: The image of the member if it exists, otherwise None.
-        """
         member = await self._multi_args_member_checker(member_id, member)
         return member.image
     
@@ -1075,7 +763,6 @@ class PlayersDB:
     async def set_analytics(self, analytics: UsedCommand, member: DBPlayer | None = None, member_id: int | str | None = None) -> None:
         member = await self._multi_args_member_checker(member_id, member)
         used_commands: list[dict] = await self.get_analytics(member=member, raw=True)
-        
         if (datetime.now(pytz.utc) - member.profile.last_activity) > timedelta(seconds=10):
             level_exp = exp_add(analytics.name)
         else:
@@ -1147,69 +834,25 @@ class PlayersDB:
             {'$pull': {'profile.badges': badge}}
         )
         
-    async def disable_stats_hook(self, member_id: int | str, slot: AccountSlotsEnum) -> None:
+    async def disable_stats_hook(self, member_id: int | str) -> None:
         await self.collection.update_one(
             {'id': member_id},
-            {'$set': {f'game_accounts.{slot.name}.hook_stats.active': False}}
+            {'$set': {'hook_stats.active': False}}
         )
 
     async def setup_stats_hook(
         self, 
         member_id: int | str, 
-        slot: AccountSlotsEnum,
         hook: HookStats,
     ) -> None:
         await self.collection.update_one(
             {'id': member_id},
-            {'$set': {f'game_accounts.{slot.name}.hook_stats': hook.model_dump()}}
+            {'$set': {'hook_stats': hook.model_dump()}}
         )
-
-    async def database_update(self):
-        cursor = self.collection.find({})
-        async for member in cursor:
-            try:
-                old_member = DBPlayerOld.model_validate(member)
-            except Exception:
-                continue
-            
-            new_member = {
-                '_id' : member['_id'],
-                'id': old_member.id,
-                'lang' : old_member.lang,
-                'image': old_member.image,
-                'use_custom_bg': old_member.image_settings.use_custom_bg,
-                'game_accounts': {
-                    'slot_1' : {
-                        'nickname' : old_member.nickname,
-                        'game_id' : old_member.game_id,
-                        'region' : old_member.region,
-                        'last_stats' : old_member.last_stats,
-                        'session_settings' : old_member.session_settings.model_dump(),
-                        'image_settings' : old_member.image_settings.model_dump(),
-                        'widget_settings' : old_member.widget_settings.model_dump(),
-                        'stats_view_settings' : old_member.session_settings.stats_view.model_dump(),
-                        'verified' : old_member.verified,
-                        'locked' : old_member.locked,
-                        'hook_stats' : HookStats(),
-                    },
-                    'slot_2' : None,
-                    'slot_3' : None,
-                    'slot_4' : None,
-                    'slot_5' : None,
-                },
-                'profile': Profile.model_validate({}),
-                'current_game_account': 'slot_1',
-            }
-            try:
-                data = DBPlayer.model_validate(new_member).model_dump()
-            except ValueError:
-                new_member['game_accounts']['slot_1']['last_stats'] = None
-                data = DBPlayer.model_validate(new_member).model_dump()
-            
-            await self.collection.replace_one(
-                {'id': old_member.id},
-                replacement=data
-            )
-            
-            _log.debug(f'DB: Player {old_member.id} updated')
-            await sleep(0.01)
+    
+    async def set_one(self, member_id: int | str, path: str, value: Any) -> None:
+        member_id = int(member_id)
+        await self.collection.update_one(
+            {'id': member_id},
+            {'$set': {path: value}}
+        )

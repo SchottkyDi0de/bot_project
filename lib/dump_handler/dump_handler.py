@@ -1,59 +1,55 @@
-from os import system
+from typing import TYPE_CHECKING
+
+from os import system, remove
 from os.path import exists
+from shutil import make_archive
+from asyncio import sleep
 from datetime import datetime
 from threading import Thread
-from asyncio import sleep
 
-from discord import File
-from discord.ext.commands import Bot
+from aiogram.types import BufferedInputFile
 
-from lib.dump_handler.zip import Zip, Buffer
-from lib.settings.settings import Config
 from lib.logger.logger import get_logger
 
-_config = Config().get()
-_log = get_logger(__file__, 'DumpHandlerLogger', 'logs/dump_handler.log')
+from lib.settings import Config
+
+if TYPE_CHECKING:
+    from aiogram import Bot
+
+_config = Config().config
+_log = get_logger(__file__, 'TgDumpHandlerLogger', 'logs/tg_dump_handler.log')
 
 
-class BackUp:
-    def __init__(self):
-        self.files: list[Buffer]
-    
+class BackUp:    
     async def _start_and_wait_for_thread(self, thread: Thread):
         thread.start()
         while thread.is_alive():
             await sleep(0.1)
-
-    async def _export_archive(self, bot: Bot):
-        send_to_id = _config.dump.export_to_id
-
-        member = await bot.fetch_user(send_to_id)
-        channel = bot.get_channel(send_to_id)
-        time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        files = [File(buffer.buffer, f"dump_{index}.zip") for index, buffer in enumerate(self.files, start=1)]
-        
-        # if member or channel:
-        #     if len(self.files) > 1:
-        #         files = []
-        #         for buffer in self.files:
-        #             files += [File(buffer.buffer, f"dump.zip_part{buffer.file_num}")]
-        #     else:
-        #         files = [File(self.files[0].buffer, "dump.zip")]
-
-        if member:
-            await member.send(f'Dump created {time}', files=files)
-        elif channel:
-            await channel.send(f"Dump {time}", files=files)
     
-    async def dump(self, bot: Bot):
-        _log.info("Worker: Creating dump")
-        await self._start_and_wait_for_thread(Thread(target=lambda: system(r"mongodump")))
+    async def _make_archive(self):
+        make_archive('tgdump', 'zip', 'tgdump')
+        with open('tgdump.zip', 'rb') as f:
+            buffer = BufferedInputFile(f.read(), "backup.zip")
 
-        if not exists("dump"):
-            _log.error('Failed to create dump. Folder "dump" not found')
-            return
+        remove('tgdump.zip')
+        return buffer
+
+    async def _export_archive(self, bot: 'Bot'):
+        send_to_id = _config.dump_export_to_id
+        time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
-        await self._start_and_wait_for_thread(Thread(target=Zip().get_archive, args=(self,)))
+        await bot.send_document(send_to_id, await self._make_archive(), caption=f'Dump at {time}')
+    
+    async def dump(self, bot: 'Bot'):
+        _log.info("Worker: Creating dump")
+        command = r"lib\dump_handler\bin\mongodump.exe --db=TgPlayersDB -o=tgdump"
+        await self._start_and_wait_for_thread(Thread(target=lambda: system(command)))
+
+        if not exists("tgdump"):
+            _log.error('Failed to create dump')
+            return
         
         _log.info('Dump created. Exporting...')
         await self._export_archive(bot)
+        
+    

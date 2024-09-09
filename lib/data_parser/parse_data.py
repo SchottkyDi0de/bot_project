@@ -1,9 +1,7 @@
-import asyncio
 import traceback
 
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.session import SessionDiffData, TankSessionData
-from lib.data_classes.tankopedia import Tank
 from lib.database.tankopedia import TankopediaDB
 from lib.exceptions import data_parser
 from lib.logger import logger

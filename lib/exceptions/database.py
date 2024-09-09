@@ -1,7 +1,4 @@
-from discord.ext.commands import CommandError
-
-
-class DatabaseError(CommandError, Exception):
+class DatabaseError(Exception):
     pass
 
 class MemberNotFound(DatabaseError):
@@ -23,9 +20,6 @@ class OperationAccessDenied(DatabaseError):
     pass
 
 class AutosessionNotFound(DatabaseError):
-    pass
-
-class VerificationNotFound(DatabaseError):
     pass
 
 class PremiumSlotAccessAttempt(DatabaseError):

@@ -5,24 +5,32 @@ from typing import Any, Literal
 from lib.exceptions.nickname_validator import NicknameValidationError
 
 
+class RawRegex:
+    nickname_and_id = r'^[("]?([A-Za-z0-9_]{3,24})[)"]?/([0-9]+)$'
+    nickname = r'^[("]?([A-Za-z0-9_]{3,24})[)"]?$'
+    player_id = r'^([0-9]+)$'
+    delete_sym = r'["()]'
+    time = r'\b([01][0-9]|2[0-3]):([0-5][0-9])\b'
+
+
 class CompiledRegex:
-    nickname_and_id = _compile(r'[("]?([A-Za-z0-9_]{3,24})[)"]?/([0-9]+)')
-    nickname = _compile(r'[("]?([A-Za-z0-9_]{3,24})[)"]?')
-    player_id = _compile(r'([0-9]+)')
-    delete_sym = _compile(r'["()]')
-    time = _compile(r'\b([01][0-9]|2[0-3]):([0-5][0-9])\b')
+    nickname_and_id = _compile(RawRegex.nickname_and_id)
+    nickname = _compile(RawRegex.nickname)
+    player_id = _compile(RawRegex.player_id)
+    delete_sym = _compile(RawRegex.delete_sym)
+    time = _compile(RawRegex.time)
+
 
 
 class NickTypes(Enum):
     NICKNAME = 0
     PLAYER_ID = 1
     NICKNAME_AND_ID = 2
-    COMPLETION = 3
 
 
-class Validators:
+class Validatos:
     def get_validator(type: Literal["nickname", "time"]):
-        return getattr(Validators, f"validate_{type}")
+        return getattr(Validatos, f"validate_{type}")
     def validate_time(time_str: str | None) -> bool:
         if time_str is None:
             return False
@@ -31,7 +39,7 @@ class Validators:
 
     def validate_nickname(nickname: str):
         if ' | ' in nickname:
-            return NickTypes.COMPLETION
+            nickname = nickname.split(' | ')[0].strip()
         
         nickname_len = len(nickname)
         player_id = CompiledRegex.player_id.match(nickname)
@@ -47,6 +55,6 @@ class Validators:
         raise NicknameValidationError
 
 
-def validate(data: Any, type: Literal["nickname", "time"]) -> NickTypes:
-    validator = Validators.get_validator(type)
+def validate(data: Any, type: Literal["nickname", "time"]):
+    validator = Validatos.get_validator(type)
     return validator(data)

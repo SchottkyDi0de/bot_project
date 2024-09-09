@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import List, Literal, Optional
+from typing import List, Dict, Literal, Optional
 
 import pytz
 from pydantic import BaseModel
@@ -42,6 +42,7 @@ class SlotAccessState(Enum):
     used_slot = 1
     locked_slot = 2
     invalid_slot = 3
+
 
 class StatsViewSettings(BaseModel):
     common_slots: dict = {
@@ -88,30 +89,33 @@ class ImageSettings(BaseModel):
 class WidgetSettings(BaseModel):
     disable_bg: bool = False
     disable_nickname: bool = False
+    disable_main_stats_block: bool = False
+    use_bg_for_stats_blocks: bool = True
+    adaptive_width: bool = False
     max_stats_blocks: int = 1
     max_stats_small_blocks: int = 0
     update_time: int = 30  # Seconds
     background_transparency: float = 0.5
-    disable_main_stats_block: bool = False
-    use_bg_for_stats_blocks: bool = True
-    adaptive_width: bool = False
     stats_block_color: str = '#f0f0f0'
+
+    @property
+    def is_default(self) -> bool:
+        return self == self.__class__()
 
 
 class HookStats(BaseModel):
     active: bool = False
-    last_stats: Optional[PlayerGlobalData] = None
     stats_name: Optional[str] = None  # config.image -> available_stats or available_rating_stats accepted
     stats_type: Optional[Literal['common', 'rating']] = None
     trigger: Optional[str] = None
-    check_interval: Literal[200] = 200
+    check_interval: int = 200
     end_time: datetime = datetime.now(pytz.utc) + timedelta(days=1)
     target_value: int | float | None = None
-    target_game_id: Optional[int] = None
-    target_game_region: Optional[str] = None
-    target_member_id: Optional[int] = None
-    target_channel_id: Optional[int] = None
-    target_guild_id: Optional[int] = None
+    target_nickname: Optional[str] = None
+    target_region: Optional[str] = None
+    last_stats: Optional[PlayerGlobalData] = None
+    hook_target_member_id: Optional[int] = None
+    hook_target_chat_id: Optional[int] = None
     watch_for: Literal['main', 'session', 'diff'] = 'main'
     try_dm_if_failure: bool = True
     lang: Optional[str] = None
@@ -128,7 +132,6 @@ class GameAccount(BaseModel):
     stats_view_settings: StatsViewSettings = StatsViewSettings()
     verified: bool = False
     locked: bool = False
-    hook_stats: HookStats = HookStats()
 
 
 def set_widget_settings(**kwargs) -> WidgetSettings:
@@ -169,9 +172,29 @@ class GameAccounts(BaseModel):
     slot_4: Optional[GameAccount] = None
     slot_5: Optional[GameAccount] = None
 
+    def get_account_by_slot(self, slot: str | AccountSlotsEnum) -> GameAccount:
+        if isinstance(slot, AccountSlotsEnum):
+            slot = slot.name
+        return getattr(self, slot)
+    
+    def as_list(self) -> List[GameAccount]:
+        dat = []
+        for i in range(1, 6):
+            slot_val = getattr(self, f'slot_{i}')
+            if slot_val is not None:
+                dat.append(slot_val)
+        return dat
+
+    def as_dict(self) -> Dict[str, GameAccount | None]:
+        dat = {}
+        for i in range(1, 6):
+            slot_str = f'slot_{i}'
+            dat[slot_str] = getattr(self, slot_str)
+        return dat
+
 class UsedCommand(BaseModel):
     name: str
-    last_used: datetime = datetime.now(pytz.utc)
+    last_used: datetime
 
 class Profile(BaseModel):
     premium: bool = False
@@ -190,3 +213,20 @@ class DBPlayer(BaseModel):
     game_accounts: GameAccounts
     profile: Profile
     current_game_account: str = AccountSlotsEnum.slot_1.name
+    hook_stats: HookStats = HookStats()
+
+    @property
+    def current_account(self) -> GameAccount:
+        return self.game_accounts.get_account_by_slot(slot=self.current_game_account)
+    
+    @property
+    def current_slot(self) -> AccountSlotsEnum:
+        return getattr(AccountSlotsEnum, self.current_game_account)
+    
+    @property
+    def has_more_than_one_account(self) -> bool:
+        return len(self.game_accounts.as_list()) > 1
+    
+    @property
+    def not_almsman(self) -> bool:
+        return self.profile.premium

@@ -1,5 +1,2 @@
-from discord.ext.commands import CommandError
-
-
-class NicknameValidationError(CommandError, Exception):
+class NicknameValidationError(Exception):
     pass

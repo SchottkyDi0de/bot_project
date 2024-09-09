@@ -1,7 +1,4 @@
-from discord.ext.commands import CommandError
-
-
-class DataParserError(CommandError, Exception):
+class DataParserError(Exception):
     pass
 
 class NoDiffData(DataParserError):

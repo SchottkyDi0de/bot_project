@@ -2,9 +2,14 @@ from re import compile as _compile, Match
 from typing import Callable, Literal
 
 
+class RawRegex:
+    hex = r'^#(?:[0-9a-fA-F]{3}){1,2}$'
+    rgb = r'^[(]?(\d{,3})\W+(\d{,3})\W+(\d{,3})[)]?$'
+
+
 class CompiledRegex:
-    hex = _compile(r'^#(?:[0-9a-fA-F]{3}){1,2}$')
-    rgb = _compile(r'^[(]?(\d{,3})\W+(\d{,3})\W+(\d{,3})[)]?$')
+    hex = _compile(RawRegex.hex)
+    rgb = _compile(RawRegex.rgb)
 
 
 class ColorValidators:

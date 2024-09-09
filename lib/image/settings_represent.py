@@ -1,14 +1,17 @@
 from io import BytesIO
-from typing import Any
+from typing import TYPE_CHECKING
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
-from lib.data_classes.db_player import ImageSettings
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.fonts import Fonts
-from lib.locale.locale import Text
 from lib.utils.bool_to_text import bool_handler
 from lib.utils.singleton_factory import singleton
+
+from lib.locale.locale import Text
+
+if TYPE_CHECKING:
+    from lib.data_classes.db_player import ImageSettings
 
 
 class Offsets:
@@ -31,8 +34,8 @@ class SettingsRepresent:
         self.image = None
         self.img_draw = None
         
-    def draw(self, image_settings: ImageSettings) -> BytesIO:
-        self.image = Image.new('RGBA', (700, 1010), (40, 40, 40, 255))
+    def draw(self, image_settings: 'ImageSettings') -> BytesIO:
+        self.image = Image.new('RGBA', (700, 950), (40, 40, 40, 255))
         self.img_draw = ImageDraw.Draw(self.image)
         
         self.draw_text(self.img_draw, image_settings)
@@ -59,13 +62,13 @@ class SettingsRepresent:
                 self.offsets.rect_offset - self.offsets.base_offset,
                 0,
                 self.offsets.rect_offset - self.offsets.base_offset,
-                1010
+                1000
             ),
             fill=Colors.blue,
             width=2
         )
         
-    def inactive_block_bg_settings(self, image_settings: ImageSettings):
+    def inactive_block_bg_settings(self, image_settings: 'ImageSettings'):
         image_settings: dict = image_settings.model_dump()
         gaussian_filter = ImageFilter.GaussianBlur(2)
         bg = self.image.copy().filter(gaussian_filter)
@@ -92,13 +95,13 @@ class SettingsRepresent:
                         self.image.size[0] // 2,
                         self.offsets.line_offset_y * (index + 2),
                     ), 
-                    text=Text().get().cmds.image_settings_get.items.stats_blocks_disabled.upper(),
+                    text=Text().get().cmds.image_settings.settings_represent_alias.items.stats_blocks_disabled.upper(),
                     anchor='mm',
                     fill=Colors.red,
                     font=self.font
                 )
     
-    def draw_h_lines(self, img_draw: ImageDraw.ImageDraw, image_settings: ImageSettings):
+    def draw_h_lines(self, img_draw: ImageDraw.ImageDraw, image_settings: 'ImageSettings'):
         settings_count = len(image_settings.model_dump())
         for i in range(settings_count):
             i += 1
@@ -113,8 +116,8 @@ class SettingsRepresent:
                 width=2
             )
             
-    def draw_color_represent(self, img_draw: ImageDraw.ImageDraw, image_settings: ImageSettings):
-        image_settings: dict[str, str] = image_settings.model_dump()
+    def draw_color_represent(self, img_draw: ImageDraw.ImageDraw, image_settings: 'ImageSettings'):
+        image_settings: dict = image_settings.model_dump()
         for index, (key, value) in enumerate(image_settings.items()):
             if '_color' in key:
                 img_draw.rounded_rectangle(
@@ -138,7 +141,7 @@ class SettingsRepresent:
                     font=self.font
                 )
         
-    def draw_bool_values(self, img_draw: ImageDraw.ImageDraw, image_settings: ImageSettings):
+    def draw_bool_values(self, img_draw: ImageDraw.ImageDraw, image_settings: 'ImageSettings'):
         image_settings: dict = image_settings.model_dump()
         index = 0
         for index, value in enumerate(image_settings.values()):
@@ -156,7 +159,7 @@ class SettingsRepresent:
                 )
             index += 1
     
-    def draw_theme_repr(self, img_draw: ImageDraw.ImageDraw, image_settings: ImageSettings):
+    def draw_theme_repr(self, img_draw: ImageDraw.ImageDraw, image_settings: 'ImageSettings'):
         image_settings: dict = image_settings.model_dump()
         index = 0
         for index, (key, value) in enumerate(image_settings.items()):
@@ -174,7 +177,7 @@ class SettingsRepresent:
                 )
             index += 1
     
-    def draw_text(self, img_draw: ImageDraw.ImageDraw, image_settings: ImageSettings):
+    def draw_text(self, img_draw: ImageDraw.ImageDraw, image_settings: 'ImageSettings'):
         image_settings_dict = image_settings.model_dump()
         lines = 0
     
@@ -184,7 +187,7 @@ class SettingsRepresent:
                     self.offsets.base_offset, 
                     self.offsets.base_offset_y + lines * self.offsets.line_offset_y
                     ),
-                text=getattr(Text().get().cmds.image_settings_get.items, i).upper(),
+                text=getattr(Text().get().cmds.image_settings.settings_represent_alias.items, i).upper(),
                 font=self.font,
                 anchor='lm',
                 align='center',
@@ -192,7 +195,7 @@ class SettingsRepresent:
             )
             lines += 1
         
-    def draw_block_bg_opacity_repr(self, image_settings: ImageSettings):
+    def draw_block_bg_opacity_repr(self, image_settings: 'ImageSettings'):
         image_settings: dict = image_settings.model_dump()
         bg = self.image.copy()
         img_draw = ImageDraw.Draw(bg)
@@ -230,7 +233,7 @@ class SettingsRepresent:
                 )
         self.image.alpha_composite(bg)
         
-    def draw_glass_effect_repr(self, image_settings: ImageSettings):
+    def draw_glass_effect_repr(self, image_settings: 'ImageSettings'):
         image_settings: dict = image_settings.model_dump()
         bg = None
         rect_map = None

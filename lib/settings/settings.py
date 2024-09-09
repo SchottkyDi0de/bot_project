@@ -5,9 +5,14 @@ from itertools import cycle
 import dynamic_yaml
 from dotenv import find_dotenv, load_dotenv
 
-from lib.data_classes.settings import ConfigStruct
 from lib.logger.logger import get_logger
 from lib.utils.singleton_factory import singleton
+
+from lib.data_classes.settings import ConfigStruct
+
+
+_log = get_logger(__file__, 'TgConfigLogger', 'logs/config.log')
+
 
 _log = get_logger(__file__, 'ConfigLoaderLogger', 'logs/config_loader.log')
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -39,22 +44,23 @@ class EnvConfig():
 
     INTERNAL_API_KEY = os.getenv('INTERNAL_API_KEY')
 
+#   ---------------------------------------------------------------
+    
+    TG_TOKEN = os.getenv('TG_TOKEN')
 
 @singleton
-class Config():
-    def __init__(self) -> None:
-        with open('settings/settings.yaml', encoding='utf-8') as f:
-            try:
-                self.yaml_dict = dynamic_yaml.load(f)
-                self.cfg = ConfigStruct.model_validate(self.yaml_dict)
-            except Exception:
-                _log.critical('Failed to load settings.yaml')
-                _log.critical(traceback.format_exc())
-                raise RuntimeError('Failed to load settings.yaml')
+class Config:
+    config: ConfigStruct
 
+    def __init__(self):
+        with open('settings/settings.yaml', encoding='utf-8') as file:
+            try:
+                self.yaml_dict = dynamic_yaml.load(file)
+                self.config = ConfigStruct.model_validate(self.yaml_dict)
+            except Exception:
+                _log.fatal('Failed to load settings.yaml')
+                _log.fatal(traceback.format_exc())
+                raise RuntimeError('Failed to load settings.yaml')
+    
     def get(self) -> ConfigStruct:
-        """
-        Return settings object.
-        See struct in: `lib/data_classes/settings.py`
-        """
-        return self.cfg
+        return self.config

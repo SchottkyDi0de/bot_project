@@ -12,7 +12,7 @@ _log = get_logger(__file__, 'InternalDBLogger', 'logs/internal_db.log')
 class InternalDB():
     def __init__(self) -> None:
         self.client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
-        self.db = self.client.get_database('InternalDB')
+        self.db = self.client.get_database('TgInternalDB')
         self.collection = self.db.get_collection('internal', codec_options=CodecOptions(tz_aware=True, tzinfo=pytz.utc))
         
     async def set_actual_premium_users(self, users: list[int]) -> None:
@@ -48,7 +48,7 @@ class InternalDB():
         
         try:
             return user_id in data['banned_users']
-        except KeyError:
+        except (KeyError, TypeError):
             return False
         
     async def get_actual_premium_users(self) -> list[int]:

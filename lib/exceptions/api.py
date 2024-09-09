@@ -1,7 +1,4 @@
-from discord.ext.commands import CommandError
-
-
-class APIError(CommandError, Exception):
+class APIError(Exception):
     pass
 
 class UncorrectName(APIError):
@@ -26,7 +23,4 @@ class RequestsLimitExceeded(APIError):
     pass
 
 class APISourceNotAvailable(APIError):
-    pass
-
-class LockedPlayer(APIError):
     pass

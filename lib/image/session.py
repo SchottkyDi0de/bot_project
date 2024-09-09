@@ -1,20 +1,13 @@
+from time import time
 from enum import Enum
 from io import BytesIO
-from time import time
-from typing import Dict
+from typing import TYPE_CHECKING, Dict
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
-from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.data_classes.db_player import (
-    AccountSlotsEnum, DBPlayer, GameAccount, ImageSettings, StatsViewSettings, WidgetSettings
-)
-from lib.data_classes.db_server import DBServer
-from lib.data_classes.image import ImageGenExtraSettings
+from lib.data_classes.image import SessionImageGenExtraSettings
 from lib.data_classes.locale_struct import Localization
-from lib.data_classes.session import SessionDiffData, TankSessionData
 from lib.database.players import PlayersDB
-from lib.database.servers import ServersDB
 from lib.image.utils.b64_img_handler import base64_to_img, img_to_base64, img_to_readable_buffer
 from lib.image.utils.val_normalizer import ValueNormalizer
 from lib.image.for_image.colors import Colors
@@ -23,13 +16,25 @@ from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.icons import StatsIcons
 from lib.image.for_image.stats_coloring import colorize
 from lib.image.for_image.watermark import Watermark
-from lib.locale.locale import Text
 from lib.logger.logger import get_logger
 from lib.utils.color_converter import get_tuple_from_color
 from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
 from lib.image.utils.resizer import center_crop
 from lib.image.for_image.icons import LeaguesIcons
+
+from lib.locale.locale import Text
+
+if TYPE_CHECKING:
+    from lib.data_classes.api.api_data import PlayerGlobalData
+    from lib.data_classes.session import SessionDiffData, TankSessionData
+
+    from lib.data_classes.db_player import (AccountSlotsEnum, 
+                                            DBPlayer, 
+                                            GameAccount, 
+                                            ImageSettings,
+                                            StatsViewSettings,
+                                            WidgetSettings)
 
 _log = get_logger(__file__, 'ImageSessionLogger', 'logs/image_session.log')
 _config = Config().get()
@@ -88,7 +93,7 @@ class Cache():
 
 
 class RelativeCoordinates():
-    def __init__(self, image_size, view_settings: StatsViewSettings):
+    def __init__(self, image_size, view_settings: 'StatsViewSettings'):
         """
         Class to store coordinates for labels and stats in an image.
 
@@ -265,12 +270,12 @@ class RelativeCoordinates():
 
 
 class DiffValues():
-    def __init__(self, diff_data: SessionDiffData, stats_view_settings: StatsViewSettings) -> None:
+    def __init__(self, diff_data: 'SessionDiffData', stats_view_settings: 'StatsViewSettings') -> None:
         """
         Initializes a DiffValues object with the given diff_data.
 
         Args:
-            diff_data (SessionDiffData): The diff_data object containing the differences.
+            diff_data ('SessionDiffData'): The diff_data object containing the differences.
             stats_view (StatsViewSettings): The stats_view object containing the settings.
 
         Returns:
@@ -337,7 +342,7 @@ class DiffValues():
         return result
 
 class SessionValues():
-    def __init__(self, session_data: SessionDiffData, stats_view_settings: StatsViewSettings) -> None:
+    def __init__(self, session_data: 'SessionDiffData', stats_view_settings: 'StatsViewSettings') -> None:
         self.val_normalizer = ValueNormalizer()
         self.session_data = session_data
         self.stats_view = stats_view_settings.common_slots
@@ -371,12 +376,12 @@ class SessionValues():
 
 
 class Values():
-    def __init__(self, data: PlayerGlobalData, session_diff: SessionDiffData, stats_view: StatsViewSettings) -> None:
+    def __init__(self, data: 'PlayerGlobalData', session_diff: 'SessionDiffData', stats_view: 'StatsViewSettings') -> None:
         """
         Initializes a Values object.
 
         Args:
-            data (PlayerGlobalData): The player's global data.
+            data ('PlayerGlobalData'): The player's global data.
             tank_index (int): The index of the tank in the tankopedia_db list.
         """
         if data is None or session_diff is None:
@@ -437,12 +442,12 @@ class ImageSize:
 class LayoutDefiner:
     def __init__(
             self, 
-            data: SessionDiffData,
-            player_data: PlayerGlobalData,
-            image_settings: ImageSettings, 
-            extra: ImageGenExtraSettings,
-            stats_view_settings: StatsViewSettings,
-            widget_settings: WidgetSettings,
+            data: 'SessionDiffData',
+            player_data: 'PlayerGlobalData',
+            image_settings: 'ImageSettings', 
+            extra: SessionImageGenExtraSettings,
+            stats_view_settings: 'StatsViewSettings',
+            widget_settings: 'WidgetSettings',
             widget_mode: bool
         ) -> None:
         self.player_data = player_data
@@ -538,7 +543,7 @@ class LayoutDefiner:
         self, 
         current_block: int,
         include_rating: bool,
-        widget_settings: WidgetSettings, 
+        widget_settings: 'WidgetSettings', 
         widget_mode: bool
         ) -> int:
         
@@ -572,7 +577,7 @@ class LayoutDefiner:
             self.player_data.data.clan_tag = None
         if self.player_data.data.clan_tag is not None:
             tag = {
-                'text':     f'[{self.player_data.data.clan_tag}]',
+                'text':     f'[{self.player_data.data.clan_stats.tag}]',
                 'font':     Fonts.roboto_30,
             }
             nickname = {
@@ -695,12 +700,11 @@ class ImageGenSession():
     leagues = LeaguesIcons()
     colors = Colors()
     pdb = PlayersDB()
-    sdb = ServersDB()
     flags = Flags()
     fonts = Fonts()
-    stats_view: StatsViewSettings = None
+    stats_view: 'StatsViewSettings' = None
     session_values: SessionValues = None
-    diff_data: SessionDiffData = None
+    diff_data: 'SessionDiffData' = None
     diff_values: DiffValues = None
     image: Image.Image = None
     text: Localization = None
@@ -721,15 +725,7 @@ class ImageGenSession():
 
         self.image = center_crop(image, (ImageSize.max_width, ImageSize.max_height))
 
-    def _load_image_by_rules(self, member: DBPlayer | None = None, server: DBServer | None = None) -> None:
-        if server is not None:
-            if not server.settings.allow_custom_backgrounds and (server.custom_background is not None):
-                self.image = base64_to_img(server.custom_background)
-                return
-            elif not server.settings.allow_custom_backgrounds:
-                self._load_image(_config.image.default_bg_path)
-                return
-            
+    def _load_image_by_rules(self, member: 'DBPlayer | None' = None) -> None:
         if member is not None:
             if (member.image is not None) and member.use_custom_image:
                 self.image = base64_to_img(member.image)
@@ -739,13 +735,13 @@ class ImageGenSession():
 
     def generate(
             self, 
-            data: PlayerGlobalData,
-            diff_data: SessionDiffData,
-            player: DBPlayer,
-            server: DBServer | None,
-            slot: AccountSlotsEnum,
-            force_image_settings: ImageSettings | None = None,
-            extra: ImageGenExtraSettings = ImageGenExtraSettings(),
+            data: 'PlayerGlobalData',
+            diff_data: 'SessionDiffData',
+            player: 'DBPlayer',
+            slot: 'AccountSlotsEnum',
+            force_image_settings: 'ImageSettings | None' = None,
+            force_stats_view: 'StatsViewSettings | None' = None,
+            extra: SessionImageGenExtraSettings = SessionImageGenExtraSettings(),
             output_type: ImageGenReturnTypes = ImageGenReturnTypes.BYTES_IO,
             widget_mode: bool = False,
             test = False,
@@ -779,16 +775,18 @@ class ImageGenSession():
         if force_locale is not None:
             self.text = Text().load(lang=force_locale)
         
-        self.game_account: GameAccount = getattr(player.game_accounts, slot.name)
+        
+        self.game_account: 'GameAccount' = getattr(player.game_accounts, slot.name)
         self.player = player
         self.image_settings = self.game_account.image_settings if force_image_settings is None else force_image_settings
+        stats_view_settings = self.game_account.stats_view_settings if force_stats_view is None else force_stats_view
         
         self.layout_definer = LayoutDefiner(
             player_data=data,
             data=diff_data,
             image_settings=self.image_settings,
             extra=extra,
-            stats_view_settings=self.game_account.stats_view_settings,
+            stats_view_settings=stats_view_settings,
             widget_settings=self.game_account.widget_settings,
             widget_mode=widget_mode
         )
@@ -798,9 +796,9 @@ class ImageGenSession():
         self.include_rating = self.layout_definer.include_rating
         self.diff_data = diff_data
         self.data = data
-        self.diff_values = DiffValues(diff_data, self.game_account.stats_view_settings)
-        self.session_values = SessionValues(diff_data, self.game_account.stats_view_settings)
-        self.values = Values(data, diff_data, self.game_account.stats_view_settings)
+        self.diff_values = DiffValues(diff_data, stats_view_settings)
+        self.session_values = SessionValues(diff_data, stats_view_settings)
+        self.values = Values(data, diff_data, stats_view_settings)
         self.current_offset = 0
         self.metadata = ImageGenMetaData()
         
@@ -808,11 +806,11 @@ class ImageGenSession():
             self.tank_iterator = iter(diff_data.tank_stats)
         else: 
             self.tank_iterator = iter([])
-        self.stats_view = self.game_account.stats_view_settings
+        self.stats_view = stats_view_settings
         
         self.metadata.tanks_count = len(diff_data.tank_stats.keys()) if diff_data.tank_stats is not None else 0
 
-        self._load_image_by_rules(player, server)
+        self._load_image_by_rules(player)
         
         if self.image.mode != 'RGBA':
             self.image = self.image.convert('RGBA')
@@ -946,7 +944,7 @@ class ImageGenSession():
         self.draw_rating_session_stats(image_draw)
         self.draw_rating_diff_stats(image_draw)
         
-    def draw_tank_stats_block(self, image_draw: ImageDraw.ImageDraw, curr_tank: TankSessionData) -> None:
+    def draw_tank_stats_block(self, image_draw: ImageDraw.ImageDraw, curr_tank: 'TankSessionData') -> None:
         self.draw_tank_block_label(image_draw, curr_tank)
         self.draw_tank_stats_icons()
         self.draw_tank_labels(image_draw)
@@ -954,7 +952,7 @@ class ImageGenSession():
         self.draw_tank_session_stats(image_draw, curr_tank)
         self.draw_tank_diff_stats(image_draw, curr_tank)
         
-    def draw_short_tank_stats_block(self, image_draw: ImageDraw.ImageDraw, curr_tank: TankSessionData) -> None:
+    def draw_short_tank_stats_block(self, image_draw: ImageDraw.ImageDraw, curr_tank: 'TankSessionData') -> None:
         self.draw_tank_block_label(image_draw, curr_tank)
         self.draw_tank_stats_icons()
         self.draw_short_tank_labels(image_draw)
@@ -1001,7 +999,7 @@ class ImageGenSession():
             fill=self.image_settings.main_text_color
         )
         
-    def draw_tank_block_label(self, img_draw: ImageDraw.ImageDraw, curr_tank: TankSessionData) -> None:
+    def draw_tank_block_label(self, img_draw: ImageDraw.ImageDraw, curr_tank: 'TankSessionData') -> None:
         img_draw.text(
             self.coord.blocks_labels(self.current_offset),
             f'{self.tank_type_handler(curr_tank.tank_type)} {curr_tank.tank_name} {self.tank_tier_handler(curr_tank.tank_tier)}',
@@ -1014,7 +1012,7 @@ class ImageGenSession():
             self, 
             rectangle_map: Image.Image, 
             widget_mode: bool,
-            widget_settings: WidgetSettings
+            widget_settings: 'WidgetSettings'
         ) -> None:
         
         if self.image_settings.disable_stats_blocks:
@@ -1290,7 +1288,7 @@ class ImageGenSession():
                 )
             )
 
-    def draw_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
+    def draw_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: 'TankSessionData'):
         coords = self.coord.tank_stats(self.current_offset)
         tank_stats = self.values.get_tank_stats(curr_tank.tank_id)
         for slot, value in self.stats_view.common_slots.items():
@@ -1307,7 +1305,7 @@ class ImageGenSession():
                 ) if self.image_settings.colorize_stats else self.image_settings.stats_color
             )
     
-    def draw_short_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
+    def draw_short_tank_stats(self, img: ImageDraw.ImageDraw, curr_tank: 'TankSessionData'):
         coords = self.coord.short_tank_stats(self.current_offset)
         tank_stats = self.values.get_tank_stats(curr_tank.tank_id)
         for slot, value in self.stats_view.common_slots.items():
@@ -1324,7 +1322,7 @@ class ImageGenSession():
                     ) if self.image_settings.colorize_stats else self.image_settings.stats_color
             )
 
-    def draw_short_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
+    def draw_short_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: 'TankSessionData'):
         coords = self.coord.short_tank_session_stats(self.current_offset)
         for slot, value in self.stats_view.common_slots.items():
             img.text(
@@ -1338,7 +1336,7 @@ class ImageGenSession():
                 fill=self.value_colors(getattr(curr_tank, f'd_{value}'))
             )
                 
-    def draw_tank_diff_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
+    def draw_tank_diff_stats(self, img: ImageDraw.ImageDraw, curr_tank: 'TankSessionData'):
         coords = self.coord.tank_diff_stats(self.current_offset)
         tank_stats = self.diff_values.tank_stats(curr_tank.tank_id)
         for slot, value in self.stats_view.common_slots.items():
@@ -1351,7 +1349,7 @@ class ImageGenSession():
                 fill=self.value_colors(getattr(curr_tank, f'd_{value}'))
             )
 
-    def draw_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: TankSessionData):
+    def draw_tank_session_stats(self, img: ImageDraw.ImageDraw, curr_tank: 'TankSessionData'):
         coords = self.coord.tank_session_stats(self.current_offset)
         tank_stats = self.session_values.tank_stats(curr_tank.tank_id)
         for slot, value in self.stats_view.common_slots.items():

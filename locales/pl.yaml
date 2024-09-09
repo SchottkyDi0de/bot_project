@@ -1,24 +1,3 @@
----
-
-# This localization file use placeholders:
-# format: <key_name>
-#
-# Example:
-#   srv_id: "server_id: <id>"
-#
-# Please do not change the placeholders names when translating the file.
-#
-# This file use dynamic yaml data.
-# File allow use variables, example:
-#
-# server:
-#   srv_id: 12123434
-#
-# server_settings:
-#   srv_url: https://example.com/server/{server.srv_id}/
-#
-# _Zener
-
 for_image:
   main: GŁÓWNE
   winrate: ZWYCIĘSTWA
@@ -159,144 +138,93 @@ gamemodes:
   burning_games: Burning Games
   unknown: Nieznane
 
-cmds_defs:
-  set_player: '</set_player:1126148623869153443>'
-  stats: '</stats:1125575592486645854>'
-  astats: '</astats:1125575592486645855>'
-  start_session: '</start_session:1131616465490022591>'
-  start_autosession: '</start_autosession:1207032176927834143>'
-  get_session: '</get_session:1144323150226673734>'
-  session_state: '</session_state:1160739497567326290>'
-  image_settings_get: '</image_settings_get:1190367458192801866>'
-  server_settings_get: '</server_settings_get:1190367458192801868>'
-  set_lock: '</set_lock:1221467304890728509>'
-  session_widget_settings: '</session_widget_settings:1221467304450064500>'
-  switch_account: '`/switch_account`'
-  premium: '`/premium`'
-
-completions:
-  nickname: 'Wpisz 3 lub więcej znaków, aby rozpocząć wyszukiwanie'
-
 frequent:
-  errors:
-    error: Błąd
-    unknown_error: Nieznany błąd.
-    user_banned: Jesteś zablokowany i nie możesz używać poleceń tego bota.
-    api_error: Błąd podczas pracy z API.
-    parser_error: Błąd podczas analizowania danych.
-    verify_error: Konto nie zostało zweryfikowane. Najpierw wykonaj weryfikację, aby móc użyć tej komendy.
-    locked_player: Ten gracz zablokował wyświetlanie jego statystyk # <<< TODO: Auto translated need to check
-    slot_is_empty: W wybranym slotu nie ma zapisanego konta, nie można tam zapisać danych.
-    slot_not_accessed: 'Potrzebujesz dostępu premium, aby korzystać z slotów 3-5. Więcej informacji: {cmds_defs.premium}.'
-    premium_not_found: 'Aby korzystać z tej komendy, a także uzyskać dostęp do innych funkcji, musisz posiadać dostęp premium. Więcej informacji: {cmds_defs.premium}'
-    reg_not_set: "Jeśli podałeś pseudonim bez wybrania go z podpowiedzi, musisz wybrać region"
-
-  info:
-    info: Informacje
-    player_not_registred: 'Gracz nie jest zalogowany. Najpierw wprowadź komendę </set_player:1126148623869153443>'
-    err_info_sent: Informacja o błędzie została wysłana do dewelopera.
-    warning: Warning
-    discard_changes: Anulowano zmiany.
-    slot_info: |-
-      Informacje o koncie:
-      ```
-      - slot:       <slot_num>
-      - pseudonim:  <nickname>
-      - region:     <region>
-      ```
-    updated_at: 'Zaktualizowane o: '
-    short_slot_info: '`<nickname>[<region>] | account: <slot_num>`'
-    session_already_started: Sesja jest już uruchomiona, czy chcesz ją restartować?
-
   common:
     'yes': 'Yes'
     'no': 'No'
-    nickname: Pseudonim
+    nickname: Nickname
     region: Region
     time_units:
       d: 'd'
       h: 'h'
       m: 'm'
       s: 's'
-    slot: Slot konta
-      
-views:
-  not_owner: You can't use this button.
+  info:
+    info: Informacje
+    unregistred_player: Save your data with `/set_player`, for use this command
+    is_channel: This command can be used only in private messages with bot
+    try_again: Try again
+    good_button_respoce: "👍"
+    premium_only: This command can be used only with premium status
+    err_info_sent: Informacja o błędzie została wysłana do dewelopera.
+    warning: Warning
+    discard_changes: Anulowano zmiany.
+    short_slot_info: '`<nickname>[<region>] | account: <slot_num>`'
+    session_already_started: Sesja jest już uruchomiona, czy chcesz ją restartować?
+  errors:
+    error: Błąd
+    unknown_error: Nieznany błąd.
+    user_banned: Jesteś zablokowany i nie możesz używać poleceń tego bota.
+    api_error: Błąd podczas pracy z API.
+    parser_error: Błąd podczas analizowania danych.
+    missing_argument: Missing required argument
+    too_many_arguments: Too many arguments
+    invalid_argument: Invalid argument
+    bad_button_responce: "🔴"
+    wrong_file_type: "Wrong file type"
+    cooldown: Wait <time> seconds before next use
 
 cmds:
-# astats command
-  astats:
-    descr:
-      this: Wyświetlanie statystyk gracza bez wprowadzania danych.
-      sub_descr:
-        ''
-    errors:
-      player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
-    info:
-      player_not_registred: 'Aby wyświetlić statystyki bez wprowadzania danych, zapisz dane za pomocą opcji </set_player:1126148623869153443>.'
-    items:
-      ''
+  start:
+    descr: |- 
+              Hi ✋
+              see /help for available commands
+  help:
+    descr: |-
+      available commands: /help, /set_player, /lang, /settings, /stats, /session_widget
+        /session_state, /start_session, /start_autosession, /get_session, /hook, /parse_replay
+      /help: this message
+      /set_player: set information about player, just use command in private chat with bot, or use /set_player <nickname> <region> <slot_num>
+      /lang: set your language
+      /settings: settings menu
+      /stats: if you register with /set_player, you can use /stats to see your statistics, or use /stats <nickname> <region>
+      /session_widget: use command to get link to session widget
+      /session_state: display session state(if started)
+      /start_session: start session
+      /start_autosession: start auto session(auto restart session)
+      /get_session: get session (if started)
+      /hook: you can put a hook on a player, and after the trigger is triggered, bot will be sent statistics
+      /parse_replay: parse replay file
 
-# stats command
+      There is also an inline mode, use button for example, write as per the example and then wait a second
+    
+  set_player:
+    descr: Set information about player
+    sub_descr:
+      get_nickname: Now write your nickname👇
+      get_region: Choose account region
+    info:
+      invalid_nickname: Incorrect nickname. Try again
+      choosed_region: "Choosed region: "
+      set_player_ok: 'Player information has been successfully saved, you can now use /stats, without any arguments, to automatically display statistics based on the saved data.'
+      choose_slot: "Choose slot: "
+
   stats:
-    descr:
-      this: Prośba o statystyki graczy.
-      sub_descr:
-        nickname: Pseudonim gracza.
-        region: Wybieranie regionu z listy.
     errors:
       player_not_found: No player with this nickname/id has been found.
-      uncorrect_nickname: Nieprawidłowy pseudonim gracza. Pseudonim może składać się z łacińskich liter A-Z, cyfr 0-9 i symbolu '_'.
-      no_battles: Need more than 100 battles on account.
-    info:
-      ''
-    items:
-      ''
-
-# Set player command
-  set_player:
-    descr:
-      this: Zapisuje dane na potrzeby przyszłych zapytań.
-      sub_descr:
-        nickname: Pseudonim gracza.
-        region: Wybieranie regionu z listy.
-    errors:
-      player_not_found: Nie znaleziono żadnego gracza o tym pseudonimie.
-    info:
-      set_player_ok: |- # <<< TODO: Auto translated, need to check
-        Informacja o graczey zostaala pomy slnie zapisana, teraz mozecie wykorzystywa c  wszystkie mo liwo ci bota.
-        - Aby zapyta o statystyke podstawow  na koncie, wykorzystuj  {cmds_defs.astats} | {cmds_defs.stats}
-        - Aby zaczac monitorowanie statystyki sesyjnej, wykorzystuj  {cmds_defs.start_session} | {cmds_defs.start_autosession}
-        - Aby zapyta o statystyke sesyjna, wykorzystuj  {cmds_defs.get_session}
-        - Aby zapyta o stan sesji, wykorzystuj  {cmds_defs.session_state}
-        Kliknij przycisk poni ejce, aby zac  automatyczn  sesj .
-      slot_override: |-
-        Chcesz wybra  slot, w którym ju  zapisany jest inny gracz, czy na pewno chcesz nadpisa  te dane?
-        <slot_data>
-
-# Set lang command
+      uncorrect_nickname: Incorrect player nickname. The nickname can consist of Latin letters A-Z, numbers 0-9 and the symbol '_'.
+      no_battles: Need more than 100 battles on account
+    
   set_lang:
-    descr:
-      this: Zmiana języka.
-      sub_descr:
-        lang_list: Lista języków.
-        to_server: Aplikuj na serwer.
-    errors:
-      player_not_registred: 'Aby zmienić język, należy najpierw zapisać dane za pomocą opcji </set_player:1126148623869153443>'
-      permission_denied: Musisz mieć uprawnienia administratora, aby zmienić język na całym serwerze.
+    descr: Set your language
     info:
-      set_lang_ok: Język lokalizacji został pomyślnie zmieniony.
-
-# Session state command
+      set_lang_ok: Localisation language has been successfully changed.
+    sub_descr:
+      choose_lang: Choose text lang
+    
   session_state:
-    descr:
-      this: Status sesji
-      sub_descr:
-        ''
     errors:
-      session_not_found: Nie znaleziono danych sesji, być może sesja nie została uruchomiona lub minęły ponad 24 godziny od ostatniego uruchomienia sesji..
-    info:
-      player_not_registred: 'Aby wyświetlić stan sesji, należy najpierw zapisać dane za pomocą opcji </set_player:1126148623869153443>'
+      session_not_found: Session not found
     items:
       started: |- 
         ```py
@@ -312,92 +240,44 @@ cmds:
         Battles played:           <battles>
         Time remaining:           <time_left>
         +----------------------------------+
+        ```
+      started_part2: |-
         >>> Reset session: 
         /start_session
         >>> Reset autosession:
         /start_autosession
-        ```
-      not_started: "Session not started."
+      not_started: Session is not started
 
-# Get session command
-  get_session:
-    descr:
-      this: Pobierz sesję
-      sub_descr:
-        button_update: Update session
-    errors:
-      session_not_found: 'Nie ma aktywnych sesji, aby uruchomić autoseansję użyj: {cmds_defs.start_autosession}.'
-      session_not_updated: Nie wykryto żadnych zmian w statystykach, być może nie stoczyłeś żadnej bitwy lub API nie zaktualizowało danych, spróbuj ponownie później..
-    info:
-      player_not_registred: 'Aby wyświetlić statystyki sesji, najpierw zapisz dane za pomocą  </set_player:1126148623869153443>'
-    items:
-      ''
-
-# Start session command
-  start_session:
-    descr:
-      this: Rozpoczęcie sesji
-      sub_descr:
-        ''
-    errors:
-      ''
-    info:
-      player_not_registred: 'Aby rozpocząć sesję, najpierw zapisz dane za pomocą </set_player:1126148623869153443>'
-      started: Sesja jest uruchomiona. Teraz możesz rozegrać kilka bitew i uzyskać statystyki sesji za pomocą </get_session:1144323150226673734>.
-    items:
-      ''
-
-# <- TODO: Need to translate
-# start autosession command
   start_autosession:
-    descr:
-      this: Start autosession
-      sub_descr:
-        timezone: Time zone (0 - 12)
-        restart_time: 'Restart time in the format HH:MM'
+    info:
+      started: Autosession is running. Now you can play some battles and get session statistics using /get_session
+    sub_descr:
+      get_timezone: Type timezone(num 0-12)
+      get_restart_time: Now type restart time in format `HH:MM`
     errors:
+      uncorrect_tz: Uncorrect timezone. Try again
       uncorrect_r_time: |-
         Incorrect restart time.
-        Expected time format: "HH:MM"
+        Expected time format: "hh:mm"
         Received: <time>
         Examples of correct time:
         00:20, 03:15, 22:40, 13:20
-        The set value will be ignored.
-    info:
-      player_not_registred: 'To start a session, first save your data using </set_player:1126148623869153443>'
-      started: Autosession started. Now you can play several battles and get session statistics using </get_session:1144323150226673734>
-    items:
-      ''
-  
-  # TODO: Need to translate
-  # Set background command
-  set_background: 
-    descr:
-      this: Change background
-      sub_descr:
-        image: Upload background in PNG or JPEG format (max. 2 MB) (800 X 1350px)
-        resize_mode: Type of image resizing (if required)
-        server: Set default background for this server (admin privileges required).
-    errors:
-      player_not_registred: 'To change the background, save your data using the {cmds_defs.set_player} command'
-      permission_denied: You must have administrator rights to set the background for the server.
-      file_error: The file is not a valid image.
-      oversize: The file is too large (maximum 2 MB).
-      overresolution: The image has too high resolution (maximum 2048x2048).
-      small_resolution: The image has too low resolution (minimum 256x256).
-    info:
-      set_background_ok: Background successfully changed.
-    items:
-      ''
+        Try again.
 
-# TODO: Need to translate
-# image_settings command
+  start_session:
+    info:
+      started: Sesja jest uruchomiona. Teraz możesz rozegrać kilka bitew i uzyskać statystyki sesji za pomocą /get_session
+  
+  get_session:
+    errors:
+      session_not_found: No change in stats detected, maybe you haven't done any fights or the API hasn't updated the data, try again later.
+
   image_settings:
     descr:
       this: Image settings
       sub_descr:
         use_custom_bg: Use custom background
-        colorize_stats: Statystyki kolorów
+        colorize_stats: Colorize statistics
         glass_effect: Glass effect 0 - Disable (0-30)
         stats_blocks_transparency: Block background brightness (0-100)
         nickname_color: 'Nickname color (HEX or RGB Color)'
@@ -411,219 +291,256 @@ cmds:
         disable_stats_blocks: 'Disable statistics blocks rendering'
         disable_rating_stats: 'Disable rating statistics'
         disable_cache_label: 'Disable cache label'
-    errors:
-      changes_not_found: No parameter change detected, change at least one parameter.
-      color_error: 'Invalid color code for `<param_name>`, value: `<value>`'
     info:
-      set_ok: 'Image settings applied successfully, get current settings: {cmds_defs.image_settings_get}'
-      canceled_settings_change: 'Image settings change canceled.'
-      preview: 'Do you want to apply the changes? Statistics preview:'
+      set_ok: 'Image settings applied successfully, try `/stats`'
+    sub_descr:
+      set_bg: "👍\nSend me background, formats - png/jpeg"
+      main_text: |-
+        current image settings(picture update when you back to main menu) ⬆
+        select what you want to change ⬇
+      preview: "Preview(picture update when you back to main menu):"
+      choose_color2change: "Choose color to change:"
+      type_new_color: "Type new color (HEX or RGB):"
+      choose_param2change: "Choose parameter to change:"
+      glass_effect: "Type glass effect. 0 - Disable (0-30)"
+      reset_bg: "🔃 Reset background"
+      available_themes: "Available themes: "
     items:
-      color_error_note: 'All invalid values will be ignored.'
       color_error_footer: 'Color code format(HEX): #rrggbb or #rgb. Example of valid color: #FF9900 - Orange. Color code format(RGB): r;g;b. Example of valid color: 255;165;0 - Orange.'
-
-  server_settings:
-    descr:
-      this: Server settings
-      sub_descr:
-        allow_custom_backgrounds: 'Allow custom backgrounds'
-    errors:
-      permission_denied: You must have administrator rights to modify server settings.
-    info:
-      set_ok: 'Server settings applied successfully, view current settings: {cmds_defs.server_settings_get}'
-    items:
-      ''
-
-  image_settings_get:
-    descr:
-      this: Get current image settings
-      sub_descr:
+      background:
+        oversize: The file is too large (maximum 2 MB)
+        small_resolution: The image has too low resolution (minimum 256x256)
+      main_buttons:
+        bg: "🖼️ Background"
+        theme: "🌟 Theme"
+        colors: "🎨 Colors"
+        other: "✨ Other"
+        reset: "🔄 Reset settings"
+        save: "💾 Save"
+        back: "↩️ Back"
+      colors_buttons:
+        nickname_color: "Nickname"
+        clan_tag_color: "Clan tag"
+        stats_color: "Main stats"
+        main_text_color: "Main text"
+        stats_text_color: "Statistics text"
+        negative_stats_color: "Negative stats"
+        positive_stats_color: "Postive stats"
+      others_buttons:
+        use_custom_bg: "Use custom background"
+        colorize_stats: "Colorize statistics"
+        disable_flag: "Disable flag"
+        hide_nickname: "Hide nickname"
+        hide_clan_tag: "Hide clan tag"
+        disable_stats_blocks: "Disable statistics blocks"
+        disable_rating_stats: "Disable rating statistics"
+        disable_cache_label: "Disable cache label"
+        glass_effect: "Glass effect"
+        blocks_bg_brightness: "Block background brightness"
+        on_: "On"
+        off_: "Off"
+    settings_represent_alias:
+      descr:
+        this: Get current image settings
+        sub_descr:
+          ''
+      errors:
         ''
-    errors:
-      ''
-    info:
-      get_ok: 'Current image settings:'
-    items:
-      theme: Temat
-      use_custom_bg: Niestandardowe tło
-      colorize_stats: Statystyki kolorów
-      glass_effect: Efekt szkła
-      stats_blocks_transparency: Przezroczystość bloków ze statystykami
-      nickname_color: Kolor nazwy użytkownika
-      clan_tag_color: Kolor tagu klanu
-      stats_color: Kolor podstawowych statystyk
-      main_text_color: Kolor głównego tekstu
-      stats_text_color: Kolor tekstu statystyk
-      negative_stats_color: Kolor negatywnych statystyk
-      positive_stats_color: Kolor pozytywnych statystyk
-      disable_flag: Wyłącz wyświetlanie flagi
-      hide_nickname: Ukryj nazwę użytkownika
-      hide_clan_tag: Ukryj tag klanu
-      disable_stats_blocks: Ukryj bloki ze statystykami
-      disable_rating_stats: Ukryj statystyki rankingowe
-      disable_cache_label: Ukryj ikonkę pamięci podręcznej
+      info:
+        get_ok: 'Current image settings:'
+      items:
+        theme: Theme
+        use_custom_bg: Custom background
+        colorize_stats: Colorize statistics
+        glass_effect: Glass effect
+        stats_blocks_transparency: Statistics blocks transparency
+        nickname_color: Nickname color
+        clan_tag_color: Clan tag color
+        stats_color: Main statistics color
+        main_text_color: Main text color
+        stats_text_color: Statistics text color
+        negative_stats_color: Negative statistics color
+        positive_stats_color: Positive statistics color
+        disable_flag: Hide region flag
+        hide_nickname: Hide nickname
+        hide_clan_tag: Hide clan tag
+        disable_stats_blocks: Hide statistics blocks
+        disable_rating_stats: Hide rating statistics
+        disable_cache_label: Hide cache icon
 
-      stats_blocks_disabled: Rysowanie bloków ze statystykami jest wyłączone
-
-  # TODO: Need to translate
-  server_settings_get:
+        stats_blocks_disabled: Drawing of blocks with statistics is disabled
+  
+  stats_view_settings:
     descr:
-      this: Get current server settings
-      sub_descr:
-        ''
-    errors:
-      ''
+      mtext: what slot do you want to change?
+      success: Stats view settings successfully applied
+    sub_descr:
+      main_button: "Stats view settings"
+      preview_text: "Preview"
+      save: "Save"
+  
+  session_widget:
+    descr:
+      this: Start session Web widget.
     info:
-      get_ok: 'Current server settings:'
-    items:
-      settings_list: |-
-        ```Python
-        - Allow custom backgrounds:           <allow_custom_backgrounds>
+      success: |- 
+        Your session statistics widget has been launched\.
+        Link: 
+        `<link>`
+        Press to copy
+        CSS settings for correct display: 
+        ```css
+        body {{ background-color: rgba(0,0,0,0)!important; overflow: hidden }}
         ```
-  # TODO: Need to translate
-  server_settings_reset:
-    descr:
-      this: Reset server settings
-      sub_descr:
-        ''
-    errors:
-      ''
-    info:
-      reset_ok: Server settings were reset.
-    items:
-      ''
+    settings:
+      descr: |-
+        ```py
+        <settings>
+        ```
+        Currently widget settings ↑
+      info:
+        success: Session widget settings have been applied.
+      edit:
+        descr: What do you want to change?
+        io_change: Enter a new value for the `<param>`, based on the constraints(x - entered value) - <limits>
+        io_success: "Successfully set `<param>` to <value>"
+        success_onoff: "Successfully set"
+        bool_change: "Choose value for <param> ↓"
+      buttons:
+        _on: 'On'
+        _off: 'Off'
+        edit: "🛠 Edit"
+        reset: "🔄 Reset settings"
+        save: "💾 Save"
+        back: "↩️ Back"
+        edit_buttons:
+          max_stats_blocks: "Max stats blocks"
+          max_stats_small_blocks: "Max stats small blocks"
+          background_transparency: "Background transparency"
+          adaptive_width: "Adaptive width [TEST MODE]"
+          stats_block_color: "Stats block color"
+          disable_main_stats_block: "Disable main stats block"
+          use_bg_for_stats_blocks: "Use background for stats blocks"
+          disable_nickname: "Disable nickname"
+          disable_bg: "Disable background"
+          update_time: "Update per seconds"
+            
+  settings:
+    descr: Settings
+    sub_descr:
+      main_text: What do you want to change?🛠
+      buttons:
+        profile: Profile 👤
+        image: Image 🖼️
+        session_widget: Session widget 📊
+      validators:
+        session_widget:
+          stats_block_color: x - color in hex or rgb format
+      profile_text: |-
+        Current account is <nickname>(<region>)
+        Switch account ⬇
+      profile_switch_success: |-
+        Successfully switched account to <nickname>(<region>)
 
-  # TODO: Need to translate
-  reset_background:
-    descr:
-      this: Reset custom background
-      sub_descr:
-        server: Reset default background for this server (admin privileges required).
-    errors:
-      permission_denied: You must have administrator rights to reset the background on the server.
+  hook:
     info:
-      unset_background_ok: Custom background reset successfully
-    items:
-      ''
-  # TODO: Need to translate
-  image_settings_reset:
-    descr:
-      this: Reset image settings
-      sub_descr:
-        ''
-    errors:
-      ''
-    info:
-      reset_ok: Image settings were reset.
-    items:
-      ''
-  # TODO: Need to translate
-  report:
-    descr:
-      this: Bug report or suggestion
-      sub_descr:
-        label: ' '
-        title: 'Report'
-        placeholder: 10 sym minimum, 500 sym maximum, express your thoughts correctly
-        type_placeholder: Type 'b' for bug report, 's' for suggestion
-        type_label: Write the message type
-        bug_report: Bug report
-        suggestion: Suggestion
-        type: Choose report type
-    info:
-      suggestion_send_ok: Suggestion has been sent to developers.
-      bug_report_send_ok: Bug report has been sent to developers.
+      active_descr: You has already active hook
+      choose_target_stats: Choose target statistics
+      activated: Succes start new hook🥳
+      hook_ended: "[Hook ended](tg://user?id=<user_id>)"
+      disabled: "Hook successfully has been disabled"
+    sub_descr:
+      type_nickname: Type target nickname
+      choose_trigger: "Choose stats trigger(pattern for better understanding: {{old stats}} {{trigger}} {{new stats}})"
+      type_value: Type target value
+      choose_target_region: Choose target region
+      watch_for: "Watch for"
+      hook_state: |-
+        Hook started for <nickname>(<region>)
+        ```py
+        Mode: <stats_type>
+        Trigger: <trigger>
+        Trigger value: <target_value>
+        Starting value: <starting_value>
+        Current value: <current_value>
+        Watch for: <watch_for>
+        Ends in: <time_left>
+        ```
+    buttons:
+      new_hook: Start new hook
+      hook_state: Hook state
+      disable_hook: Disable hook
+      main: Main stats
+      sess: Session stats
+      diff: Difference stats
 
-  help: 
-    descr:
-      this: Pomoc
-      sub_descr:
-        ''
-    errors:
-      ''
-    info:
-      send_ok: Wiadomość pomocy została wysłana.
-      send_ok_dm: Help message sent to your DM.
-    items:
-      help: Pomoc
-
-  # TODO: Need to translate
   parse_replay:
-    descr:
-      this: Wyświetlanie informacji o powtórce.
-      sub_descr:
-        file: Załącz plik powtórki (.wotbreplay)
-    errors:
-      parsing_error: Błąd podczas analizowania powtórki.
-      uncorrect_file_format: Nieprawidłowy format pliku.
     info:
-      ''
+      send_file: Now send replay
+      choose_region: Choose region where was battle
     items:
-      avg_stats: Średnia
-      empty_player: '[brak danych]'
+      avg_stats: Average
+      empty_player: '[no data]'
       title: |-
-        Replay data from <member_id>
+        Replay data from `<member_name>`
         Account: `<nickname>`
       common:
-        win: Wygrana
-        lose: Przegrana
+        win: Win
+        lose: Lose
         draw: Draw
-        # When localizing, use an editor with a monospaced font 
-        # and align placeholders relative to each other
-        # I recomended VS Code or Sublime Text with monospaced font
-      formenu: |- # TODO: Auto translated, need to check
+      formenu: |-
         ```py
-        czołg:               | <tank_name>
-        Czyste doświadczenie | <xp>
+        Tank:     | <tank_name>
+        Pure exp  | <xp>
 
-        efektywność
+        efficiency
         --------------------------------
-        Zadane obrażenia......  | <damage>
-        Wykrytych przeciwników  | <spotted>
-        Zniszczonych czołgów..  | <frags>
-        Zablokowanych obrażeń.  | <blocked>
-        Oddanych strzałów.....  | <shots>
-        Trafionych strzałów...  | <shots_hit>
-        Penetracji............  | <shots_penetrated>
-        Celność...............  | <accuracy>
-        Procent penetracji ...  | <penetration_ratio>
+        Damage dealt....... | <damage>
+        Assistance damage.. | <spotted>
+        Tanks destroyed.... | <frags>
+        Damage blocked..... | <blocked>
+        Shots made......... | <shots>
+        Shots hit.......... | <shots_hit>
+        Penetrations....... | <shots_penetrated>
+        Accuracy........... | <accuracy>
+        Penetration rate... | <penetration_ratio>
         ```
       description: |-
         ```py
         Main battle info:
         +---------------------------+
-        Outcome:         <battle_result>
-        Battle type:     <battle_type>
-        Tier:            <tier>
-        Map:             <map>
-        Battle played:   
+        Outcome:       <battle_result>
+        Battle type:   <battle_type>
+        Tier:          <tier>
+        Map:           <map>
+        Battle played: 
         <time>
         +---------------------------+
 
         Damage:
         +---------------------------+
-        Dealt:          <damage_dealt>
-        Assisted:       <damage_assisted>
-        Blocked:        <damage_blocked>
+        Dealt:         <damage_dealt>
+        Assisted:      <damage_assisted>
+        Blocked:       <damage_blocked>
         +---------------------------+
 
         Capture points:
         +---------------------------+
-        Earned:         <point_captured>
-        Seized:         <point_defended>
+        Earned:        <point_captured>
+        Seized:        <point_defended>
         +---------------------------+
 
         Shots:
         +---------------------------+
-        Fired:          <shots_fired>
-        Hits:           <shots_hit>
-        Penetrations:   <shots_penetrated>
+        Fired:         <shots_fired>
+        Hits:          <shots_hit>
+        Penetrations:  <shots_penetrated>
         +---------------------------+
 
         Efficiency:
         +---------------------------+
-        Accuracy:       <accuracy>
-        Penetrations:   <penetration>
+        Accuracy:      <accuracy>
+        Penetrations:  <penetration>
 
         Allies:
         +---------------------------+
@@ -636,256 +553,30 @@ cmds:
         ==================+====+=====
         <enemies>
         ```
-# TODO: Need to translate
-# Cooldown for commands
-  cooldown:
-    descr:
-      this: Prevents commands from being used too often.
-      
-    info:
-      cooldown_not_expired: Wait a little before next use.
-
-# All commands below are subject to translation validation
-# Verify command
-  verify: 
-    descr:
-      this: Weryfikacja konta
-    items:
-      verify: Weryfikacja
-      message:
-        title: 'Potwierdź swój konto'
-        description: |- 
-          Aby uzyskać dostęp do specjalnych poleceń bota (np. {cmds_defs.set_lock}') 
-          musisz potwierdzić swoje konto.
-        button_lt: Lesta
-        button_wg: WG
-      check_dm: Sprawdź prywatne wiadomości, link do weryfikacji został wysłany.
-    info:
-      already_verified: Konto to jest już weryfikowane. Brak potrzeby weryfikować ponownie.
-
-# Lock command
-  set_lock:
-    descr:
-      this: Zabronić wyświetlanie statystyk swojego konta dla innych.
-      sub_descr:
-        lock: Zabronić / Zezwolić na wyświetlanie statystyk swojego konta.
-    info:
-      set_true: Statystyka Twojego konta jest teraz dostępna tylko Tobie.
-      set_false: Statystyka Twojego konta jest teraz dostępna wszystkim.
-    items:
-      ''
-
-# session_view_settings command
-  session_view_settings:
-    descr:
-      this: Ustawienia wyświetlania statystyk sesji
-    info:
-      success: Ustawienia wyświetlania statystyk zostały zastosowane.
-    errors: 
-      empty_slots: Nie dopuszczalne ustawienie wszystkich pustych slotów, musi być ustawiony przynajmniej jeden slot.
-    items:
-      ''
-
-# session_view_settings_reset command
-  session_view_settings_reset:
-    descr:
-      this: Reset ustawień wyświetlania statystyk sesji
-    info:
-      success: Ustawienia wyświetlania statystyk zostały wyczyszczone.
-    items:
-      ''
-
-# session_widget command
-  session_widget:
-    descr:
-      this: Rozpoczęcie WEB widżetu statystyk sesji
-    info:
-      success: |-
-        Twój WEB widżet statystyk sesji został rozpoczęty. 
-        Link: <link> 
-        Ustawienia CSS do prawidłowego wyświetlenia: 
-        ```css 
-        body {{ background-color: rgba(0,0,0,0)!important; }}
-        ``` 
-        Ustawienia widżetu: {cmds_defs.session_widget_settings}
-    errors: 
-      ''
-    items:
-      btn: Open
-
-# session_widget_settings command
-  session_widget_settings:
-    descr:
-      this: Ustawienia widżetu statystyk sesji
-    info:
-      success: Ustawienia widżetu statystyk sesji zostały zastosowane.
+      buttons:
+        main_back: ↩Cancel
+        back: "↩back"
     errors:
-      nothing_changed: Zmień co najmniej jedno ustawienie.
-    items:
-      disable_bg: Wyłącz tło
-      disable_nickname: Wyłącz nick
-      max_stats_blocks: Maksymalna ilość bloków statystyk
-      max_stats_small_blocks: Maksymalna ilość małych bloków statystyk
-      update_per_seconds: Czas aktualizacji w sekundach
-      background_transparency: Przezroczystość bloków statystyk
-      disable_main_stats_block: Wyłącz główny blok statystyk
-      use_bg_for_stats_blocks: Użyj tła dla bloków statystyk
-      adaptive_width: tryb adaptacyjnej szerokości [TRYB TESTOWY]
-      stats_block_color: Kolor bloków statystyk
-
-# session_widget_settings_reset command
-  session_widget_settings_reset:
-    descr:
-      this: Zresetuj ustawienia widżetu statystyk sesji
-    info:
-      success: Ustawienia widżetu statystyk sesji zostały wyczyszczone.
-    items:
-      ''
-
-# set theme command
-  set_theme:
-    descr:
-      this: Wybierz motyw
-    info:
-      success: Motyw został pomyślnie ustawiony
-    items:
-      theme: Motyw
-
-# delete player
-  delete_player:
-    descr:
-      this: Usuń wszystkie dane o sobie
-    info:
-      warn: Czy na pewno, że chcesz usunąć wszystkie dane o sobie? Ten czyn nie jest odwracalny!
-      success: Wszystkie dane użytkownika zostały całkowicie usunięte z bazy danych
-    items:
-      ''
-
-# switch_account
-  switch_account: # <<< TODO: Auto translated, need check
-    descr:
-      this: Przełącz konto
-    info:
-      success: |-
-        Konto zostało przełączone:
-        <old_account> -> <new_account>
-    items:
-      menu: Wybierz konto
-    errors:
-      no_slots_for_select: |-
-        Masz tylko 1 zarejestrowane konto, zarejestruj jeszcze 1, aby móc wybierać konta.
-        {cmds_defs.set_player}
+      parsing_error: Parsing error
 
 # profile
-  profile: # <<< TODO: Autotranlsated
+  profile:
     descr:
-      this: Profil użytkownika
+      this: User profile
     items:
-      profile: Profil
-      level: 'Poziom:'
-      exp: 'ekspertyza:'
-      last_commands: 'Ostatnie polecenia'
-      last_activity: 'Ostatnia aktywność:'
-      commands_counter: 'wykorzystanych zespołów:'
-      accounts_info: 'Informacje o kontach'
-      badges: 'Odznaki profilowe'
-      command_name: 'nazwa polecenia'
-      last_used_time: 'min. temu'
-      num: 'numer'
-      account: 'konto'
-      session: 'sesja'
-      others: Różne
+      profile: Profile
+      level: 'Level:'
+      exp: 'experience:'
+      last_commands: 'Last commands'
+      last_activity: 'Last activity:'
+      commands_counter: 'commands used:'
+      accounts_info: 'Accounts information'
+      badges: Profile badges
+      command_name: 'command name'
+      last_used_time: 'min. ago.'
+      num: 'number'
+      account: 'account'
+      session: 'session'
+      others: Others
       premium: 'premium:'
-      premium_time: 'wygasa za:'
-
-# hook_stats
-  hook_stats:
-    descr:
-      this: # TODO: Auto translated
-        Wyzwalacz na zmianę statystyki
-      sub_descr:
-        target: # TODO: Auto translated
-          Cel do śledzenia
-        stats_name: # TODO: Auto translated
-          Nazwa statystyki
-        stats_type: # TODO: Auto translated
-          Typ statystyki
-        trigger: # TODO: Auto translated
-          Warunek wyzwalania
-        target_value: # TODO: Auto translated
-          Wartość docelowa (+- 10 Mln.)
-    info:
-      success: |- # TODO: Auto translated
-        Wyzwalacz został ustawiony pomyślnie!
-        Bot ostrzeży Cię w tym kanale przy wyzwoleniu wyzwalacza.
-        Warunek: `<watch_for> <stats_name> <trigger> <value>`
-        Do wyłączenia w ciągu 48 godzin.
-        Twoje statystyki będą sprawdzane co 200 sekund.
-      triggered: |- # <<< TODO: Auto translated
-        Trigger został wywołany, stan statystyki:
-        `<target_player>`
-        `<watch_for> <stats_name> <target_stats> <trigger> <value>`
-    warns:
-      another_active_hook: |- # TODO: Auto translated
-        Masz już aktywny wyzwalacz.
-        Tworzenie nowego wyzwalacza spowoduje zastąpienie starego.
-        Jesteś pewien że chcesz kontynuować?
-        Informacje o aktywnym wyzwalaczu:
-        Warunek: `<watch_for> <stats_name> <trigger> <value>`
-        Wyłączenie za: <end_time>
-    errors:
-      value_out_of_range: # TODO: Auto translated
-        Wartość docelowa przeszła poza zakres (+- 10 Mln.)
-    items:
-      btn_override: # TODO: Auto translated
-        Zastąp
-      btn_cancel: # TODO: Auto translated
-        Anuluj
-
-# hook_state
-  hook_state:
-    descr:
-      this: # TODO: Auto translated
-        Stan wyzwalacza
-    info:
-      active: |- # TODO: Auto translated
-        Wyzwalacz jest aktywny.
-        Cel do śledzenia: `<target_player>`
-        Warunek: `<watch_for> <stats_name> <trigger> <value>`
-        Do wyłączenia: <end_time>
-      inactive: # TODO: Auto translated
-        Wyzwalacz nie jest aktywny.
-    items:
-      btn_stop: # TODO: Auto translated
-        Wyłącz
-
-# premium
-  premium:
-    descr:
-      this: Konto premium # TODO: Auto translated
-    items:
-      btn_boosty: Boosty
-      btn_da: Donation Alerts
-      main_msg_title: Konto premium # TODO: Auto translated
-    info:
-      main_message: |- # TODO: Auto translated
-        # Mo esz sprawdzi  status swojego konta premium za pomoc polecenia `/profile`
-        ### Konto premium daje dost p do dodatkowych funkcji w naszym bocie i dost p do ekskluzywnych polece )
-        ## Dodatkowe funkcje:
-        - Mo esz przechowywa  do 5 niezale nych kont w bocie
-        - Mo esz korzysta  z wyzwalaczy statystyk (`/hook_stats`)
-        - Otrzymujesz specjalny znaczek w swoim profilu w bocie (`/profile`)
-        - Otrzymujesz ekskluzywny dost p do kana u tester w i  po aczenie z deweloperami w dowolnym momencie
-        - Otrzymujesz podziękowanie od dewelopera)
-        ## Jak uzyska  konto premium?
-        ***Istnieje 5 sposob w uzyskania konta premium w bocie:***
-        1 - By  administratorem / moderator / testerem na tym serwerze
-        2 - By  streamer i korzysta  z naszego widgetu
-        3 - Da  boost serwerowi wsparcia
-        4 - Subskrybujesz si  na nasz Boosty
-        5 - Dokonujesz darowizny za pomoc  Donation Alerts
-        ## Przyznawanie statusu premium:
-        **Sposoby 1-4:** *Automatycznie w ci gu 5 minut*
-        **Spos b 5:** *Tryb r czny, sprawdzaj do 1 dnia.*
-
-        -# Please note that any purchases are voluntary donations, the product is provided "as is" and does not give any guarantees of operability! Refunds are not possible!
+      premium_time: 'expires in:'

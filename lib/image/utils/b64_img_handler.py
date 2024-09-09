@@ -3,29 +3,10 @@ from io import BytesIO
 from os import PathLike
 
 from PIL import Image
-from discord import Attachment, File
 
 from lib.data_classes.themes import FakeImage
 
-
-def attachment_to_base64(attachment: Attachment) -> str:
-    """
-    Converts an attachment to a base64 string representation.
-    
-    Args:
-        attachment (Attachment): The attachment to convert.
-    
-    Returns:
-        str: The base64 string representation of the attachment.
-    """
-    buffer = BytesIO()
-    attachment.save(buffer)
-    buffer.seek(0)
-    base_64_img = base64.b64encode(buffer.read()).decode()
-    buffer.close()
-    return base_64_img
-
-def attachment_to_img(attachment_bytes: bytes, content_type: str | None) -> Image.Image:
+def bytes_to_img(img_bytes: bytes, content_type: str | None) -> Image.Image:
     """
     Converts an attachment.read() bytes to an image.
     
@@ -35,7 +16,7 @@ def attachment_to_img(attachment_bytes: bytes, content_type: str | None) -> Imag
     Returns:
         Image.Image: The image representation of the attachment.
     """
-    with BytesIO(attachment_bytes) as buffer:
+    with BytesIO(img_bytes) as buffer:
         buffer.seek(0)
         image = Image.open(buffer, formats=['PNG' if content_type == 'image/png' else 'JPEG']).copy()
         if image.mode != 'RGBA':
@@ -92,12 +73,6 @@ def base64_to_img(base64_string: str) -> Image.Image:
         image = Image.open(buffer, formats=['PNG']).copy()
         
     return image
-
-
-def base64_to_ds_file(base64_string: str, filename: str) -> File:
-    with BytesIO(base64.b64decode(base64_string)) as buffer:
-        buffer.seek(0)
-        return File(buffer, filename=filename)
 
 
 def img_to_readable_buffer(image: Image.Image) -> BytesIO:

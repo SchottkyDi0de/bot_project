@@ -1,25 +1,30 @@
-from datetime import datetime, timedelta
 from time import time
+from io import BytesIO
+from typing import TYPE_CHECKING
+from datetime import datetime, timedelta
 
+import pytz
 import numpy
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
-from discord import ApplicationContext
-import pytz
 
-from lib.database.players import PlayersDB
 from lib.data_classes.api.api_data import PlayerGlobalData
-from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer, GameAccount, SlotAccessState
 from lib.data_classes.locale_struct import Localization
-from lib.image.utils.b64_img_handler import img_to_base64
-from lib.utils.calculate_exp import get_level
-from lib.utils.singleton_factory import singleton
-from lib.locale.locale import Text
 from lib.image.for_image.fonts import Fonts
 from lib.image.for_image.colors import Colors
 from lib.image.for_image.stats_coloring import colorize
-from lib.utils.bool_to_text import bool_handler
 from lib.utils.safe_divide import safe_divide
 from lib.utils.validate_badges import sort_badges
+from lib.utils.calculate_exp import get_level
+from lib.utils.singleton_factory import singleton
+
+
+from lib.database.players import PlayersDB
+from lib.data_classes.db_player import AccountSlotsEnum, SlotAccessState
+from lib.locale.locale import Text
+from lib.utils.bool_to_text import bool_handler
+
+if TYPE_CHECKING:
+    from lib.data_classes.db_player import DBPlayer, GameAccount
 
 
 class ProfileImage:
@@ -266,10 +271,10 @@ class ProfileImageGen:
         self.text: Localization = None
         self.img: Image.Image = None
         self.img_draw: ImageDraw.ImageDraw = None
-        self.member: DBPlayer = None
+        self.member: 'DBPlayer' = None
         self.opposite_bg_brightness = 0.5
         
-    def generate(self, member: DBPlayer, username: str) -> str:
+    def generate(self, member: 'DBPlayer', username: str) -> BytesIO:
         s_time = time()
         self.member = member
         self.username = username
@@ -289,7 +294,10 @@ class ProfileImageGen:
         self.draw_level_text()
         
         print(f'Generate image in {round(time() - s_time, 6)} seconds')
-        return img_to_base64(self.img)
+        buffer = BytesIO()
+        self.img.save(buffer, format='png')
+        buffer.seek(0)
+        return buffer
     
     def draw_layout_map(self):
         layout = Image.new('RGBA', (ProfileImage.width, ProfileImage.height))
@@ -429,7 +437,7 @@ class ProfileImageGen:
         for account in AccountSlotsEnum:
             nums.append(f'{account.value}:' if account.name != self.member.current_game_account else f'{account.value} -->')
             
-            game_account: GameAccount | None = getattr(self.member.game_accounts, account.name)
+            game_account: 'GameAccount | None' = getattr(self.member.game_accounts, account.name)
             if game_account is None:
                 if account.value > 2 and not self.member.profile.premium:
                     accounts.append('[-----/premium----]')
@@ -461,7 +469,7 @@ class ProfileImageGen:
         offset = 0
         
         for slot in AccountSlotsEnum:
-            game_account: GameAccount | None = getattr(self.member.game_accounts, slot.name)
+            game_account: 'GameAccount | None' = getattr(self.member.game_accounts, slot.name)
             last_stats: PlayerGlobalData | None = game_account.last_stats if game_account is not None else None
             slot_state = PlayersDB().get_slot_state_sync(slot=slot, member=self.member)
             

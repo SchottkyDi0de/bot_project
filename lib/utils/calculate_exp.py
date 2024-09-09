@@ -1,4 +1,3 @@
-from enum import Enum
 from random import randint
 
 INITIAL_LEVEL_EXP = 40
@@ -23,26 +22,20 @@ def exp_add(command_name: str) -> int:
     """
     if command_name == 'report':
         return randint(10, 80)
-    elif command_name in ['profile', 'set_lang', 'switch_account']:
+    elif command_name in ['profile', 'lang']:
         return 1
     elif command_name == 'help':
         return 2
-    elif command_name in ['stats', 'astats']:
+    elif command_name == 'stats':
         return randint(5, 20)
     elif command_name == 'get_session':
         return randint(10, 25)
     elif command_name == 'start_session':
         return randint(5, 15)
-    elif command_name == "parse_replay":
+    elif command_name == "replay":
         return randint(2, 40)
-    elif command_name == 'set_background':
-        return randint(10, 35)
     elif command_name == 'set_player':
         return 20
-    elif command_name == 'verify':
-        return 5
-    elif command_name == 'set_lock':
-        return randint(5, 10)
     else:
         return randint(1, 15)
     

@@ -1,18 +1,19 @@
 from typing import Dict
 
-import discord
 import dynamic_yaml
-from discord.commands import ApplicationContext
+
+from aiogram.types import Message, User, CallbackQuery
 
 from lib.data_classes.locale_struct import Localization
-from lib.database.players import PlayersDB
-from lib.database.servers import ServersDB
+from lib.data_classes.db_player import DBPlayer
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config
 from lib.utils.singleton_factory import singleton
 
+from .debug import Locale
+
 _config = Config().get()
-_log = get_logger(__file__, 'LocaleLogger', 'logs/locale.log')
+_log = get_logger(__file__, 'LocaleLogger', 'logs/tg_locale.log')
 
 
 @singleton
@@ -24,64 +25,65 @@ class Text():
         Returns:
             None
         """
-        self.sdb = ServersDB()
-        self.pdb = PlayersDB()
         self.default_lang = _config.default.lang
         self.current_lang = self.default_lang
-        self.datas: Dict[str, Localization] = {}
+        self.datas: Dict[str, Localization | Locale] = {}
         for i in _config.default.available_locales:
             if i == 'auto':
                 continue
             with open(f'locales/{i}.yaml', encoding='utf-8') as f:
-                self.datas |= {i: Localization.model_validate(dynamic_yaml.load(f))}
+                data = dynamic_yaml.load(f)
+                if __debug__:
+                    self.datas |= {i: Locale(data)}
+                else:
+                    self.datas |= {i: Localization.model_validate(data)}
     
-    async def load_from_context(self, ctx: ApplicationContext) -> None:
+    async def load_by_data(self, data: Message | User | CallbackQuery, member: DBPlayer | None) -> None:
         """
-        Loads the language based on the given context.
+        Loads the language based on the given Message | User obj.
 
         Args:
-            ctx (Context): The context object containing information about the user.
+            data: The Message | User | CallbackQuery object containing information about the user.
 
         Returns:
             None
         """
-        if not isinstance(ctx, discord.commands.ApplicationContext):
-            _log.error(f'ctx must be an instance of discord.commands.ApplicationContext, not {ctx.__class__.__name__}')
-            raise TypeError(f'ctx must be an instance of discord.commands.ApplicationContext, not {ctx.__class__.__name__}')
+        if not isinstance(data, Message | User | CallbackQuery):
+            _log.error('data must be an instance of aiogram.types.Message | aiogram.types.User ' \
+                       f'| aiogram.types.CallbackQuery, not {data.__class__.__name__}')
+            raise TypeError('data must be an instance of aiogram.types.Message | aiogram.types.User ' \
+                            f'| aiogram.types.CallbackQuery, not {data.__class__.__name__}')
         
-        lang = await self.pdb.get_lang(ctx.author.id)
-
-        if lang is not None:
-            self.load(lang)
-        elif ctx.interaction.locale in list(_config.default.locale_aliases.keys()):
-            self.load(_config.default.locale_aliases[ctx.interaction.locale])
+        member_lang = member.lang if member else None
+        if member_lang is not None:
+            self.load(member_lang)
         else:
-            self.load(self.default_lang)
-            
-    async def load_from_interaction(self, interaction: discord.Interaction) -> None:
+            language_code = data.language_code if isinstance(data, User) else data.from_user.language_code
+            if language_code is not None:
+                language_code = language_code.split("-")[0]
+                language_code = language_code if language_code in _config.default.available_locales else None
+            self.load(language_code or self.default_lang)
+    
+    async def load_by_id(self, member: DBPlayer | None, language_code: None | str=None) -> None:
         """
-        Loads the language based on the given interaction.
+        Loads the language based on the given ID.
 
         Args:
-            interaction (discord.Interaction): The interaction object containing information about the user.
+            id (int): The ID of the user.
 
         Returns:
             None
         """
-        if not isinstance(interaction, discord.Interaction):
-            _log.error(f'interaction must be an instance of discord.Interaction, not {interaction.__class__.__name__}')
-            raise TypeError(f'interaction must be an instance of discord.Interaction, not {interaction.__class__.__name__}')
+        if member is None:
+            member = type("Placeholder", (), {"lang": None})
+        if isinstance(language_code, str):
+            language_code = language_code.split("-")[0]
         
-        lang = await self.pdb.get_lang(interaction.user.id)
-
-        if lang is not None:
-            self.load(lang)
-        elif interaction.locale in list(_config.default.locale_aliases.keys()):
-            self.load(_config.default.locale_aliases[interaction.locale])
-        else:
-            self.load(self.default_lang)
-
-    def load(self, lang: str | None) -> Localization:
+        self.load(member.lang or \
+                  (language_code if language_code in _config.default.available_locales else \
+                    None or self.default_lang))
+    
+    def load(self, lang: str | None) -> Localization | Locale:
         """
         Loads the specified language.
 
@@ -92,9 +94,7 @@ class Text():
             Localization: The loaded language data.
         """
         if lang not in _config.default.available_locales:
-            lang = self.default_lang
-        if lang is None:
-            lang = self.default_lang
+            lang = _config.default.lang
             
         self.current_lang = lang
         return self.datas[lang]
@@ -108,7 +108,7 @@ class Text():
         """
         return self.current_lang
     
-    def get(self, lang: str | None = None) -> Localization:
+    def get(self, lang: str | None = None) -> Localization | Locale:
         """
         Gets the language data for the specified language.
 
