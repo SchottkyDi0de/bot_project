@@ -218,7 +218,7 @@ class PlayersDB:
             _log.warning(f'slot must be an instance of AccountSlotsEnum, not {slot.__class__.__name__}')
             return SlotAccessState.invalid_slot
         
-        if slot.value > 2 and not member.profile.premium:
+        if slot.value > 2 and not self.check_premium(member=member):
             return SlotAccessState.locked_slot
         
         try:
