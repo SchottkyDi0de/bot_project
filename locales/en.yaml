@@ -173,9 +173,17 @@ completions:
 frequent:
   errors:
     error: Error
-    unknown_error: Unknown error.
     user_banned: You are blocked and cannot use this bot's commands.
-    api_error: Error when working with API.
+    unknown_error: |-
+      Unknown error
+      Leave a bug report on [support server](https://discord.gg/4GKYhjHm7U)
+    api_error: |-
+      Error while working with the API.
+      Additional information:
+      ``py
+      <real_exc>
+      ```
+      For more information, go to [support server](https://discord.gg/4GKYhjHm7U)
     parser_error: Error when parsing data.
     verify_error: Account not verified. First, you need to go through verification to use this command.
     locked_player: This player has blocked viewing their statistics.

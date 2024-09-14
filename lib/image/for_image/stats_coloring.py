@@ -1,4 +1,3 @@
-from lib.data_classes.db_player import ImageSettings
 from lib.image.for_image.colors import StatsColors as Colors
 
 def colorize(stats_type: str, stats_value: str | float | int, default_color: tuple[int], rating: bool = False) -> tuple | None:

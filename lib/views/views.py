@@ -111,12 +111,12 @@ class ViewMeta(type):
                 view_name = view.__name__
                 attrs[view_name] = button(label=cls._get_label(type)[view_name],
                                           **KeyWordArgs[type][view_name])(view)
-            new_cls = super().__new__(cls, f'View', (ViewBase,), attrs)
+            new_cls = super().__new__(cls, 'View', (ViewBase,), attrs)
         elif type in ["replay"]:
             option = []
             for player in sorted(replay_data.players, key=lambda x: x.info.nickname):
                 option.append(SelectOption(label=player.info.nickname))
-            new_cls = super().__new__(cls, f'View', (ViewBase,), {'replay_select_callback': select(options=option, max_values=1)(Views[type])})
+            new_cls = super().__new__(cls, 'View', (ViewBase,), {'replay_select_callback': select(options=option, max_values=1)(Views[type])})
         else:
             new_cls = Views[type]
         

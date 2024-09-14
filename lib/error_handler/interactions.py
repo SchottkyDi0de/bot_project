@@ -84,7 +84,7 @@ def hook_exceptions(interaction: Interaction, logger: Logger) -> Awaitable:
                         return
                     else:
                         await interaction.response.send_message(
-                            embed=ErrorMSG().api_error(), ephemeral=True
+                            embed=ErrorMSG().api_error(real_exc=exception.real_exc), ephemeral=True
                         )
                         log_error(exception)
                         return

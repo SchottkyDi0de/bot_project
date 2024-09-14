@@ -20,6 +20,7 @@ import os
 import sys
 from asyncio import TaskGroup
 
+from aiohttp import ClientError
 from discord import Intents, Activity, Status, ActivityType
 from discord.ext import commands
 
@@ -44,9 +45,11 @@ except IndexError:
         'RECOMMENDED STARTUP:\n'
         '>>> python launch.py prod (or dev)\n'
     )
+    quit(1)
 
 class App():
     def __init__(self):
+        self.api = async_wotb_api.API()
         self.backup = DBBackupWorker()
         self.workers_running = False
         self.intents = Intents.default()
@@ -74,10 +77,6 @@ class App():
         if self.workers_running:
             return
         
-        self.workers_running = False
-        if self.workers_running:
-            return
-        
         self.workers_running = True
         async with TaskGroup() as tg:
             for worker in self.workers:
@@ -89,9 +88,7 @@ class App():
         async def on_ready():
             _log.info('Bot started: %s', self.bot.user)
 
-            api = async_wotb_api.API()
-
-            await self.retrieve_tankopedia(api)
+            await self.retrieve_tankopedia(self.api)
             _log.debug('Tankopedia set successful\nBot started: %s', self.bot.user)
             
             await self.bot.change_presence(
@@ -113,7 +110,7 @@ class App():
         for region in tankopedia_server_list:
             try:
                 data = await api.get_tankopedia(region=region)
-            except APIError:
+            except (APIError, ClientError):
                 _log.error(f'Failed to get tankopedia data in {region}, trying next server...')
                 fail_counter += 1
             else:
