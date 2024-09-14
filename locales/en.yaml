@@ -180,7 +180,7 @@ frequent:
     api_error: |-
       Error while working with the API.
       Additional information:
-      ``py
+      ```py
       <real_exc>
       ```
       For more information, go to [support server](https://discord.gg/4GKYhjHm7U)
