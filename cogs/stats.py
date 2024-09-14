@@ -1,5 +1,4 @@
 from collections.abc import Callable
-import functools
 from datetime import datetime, timedelta
 from functools import partial
 
