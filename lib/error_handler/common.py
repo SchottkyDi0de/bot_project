@@ -20,7 +20,7 @@ def hook_exceptions(_log: Logger) -> Coroutine:
         inf_msg = InfoMSG()
         err_msg = ErrorMSG()
         kwargs = {}
-
+        
         if isinstance(error, commands.CommandOnCooldown):
             embed = inf_msg.cooldown_not_expired()
             kwargs |= {"ephemeral": True}
@@ -39,7 +39,7 @@ def hook_exceptions(_log: Logger) -> Coroutine:
                 embed = err_msg.locked_player()
             else:
                 _log.error(traceback.format_exc())
-                embed = err_msg.api_error()
+                embed = err_msg.api_error(real_exc=error.real_exc)
         elif isinstance(error, database.DatabaseError):
             if isinstance(error, database.LastStatsNotFound):
                 embed = inf_msg.custom(

@@ -1,5 +1,4 @@
 from typing import Literal
-from asyncio import gather
 
 from discord import ButtonStyle, File, InputTextStyle, Interaction
 from discord.commands import ApplicationContext
@@ -141,7 +140,7 @@ class ViewMeta(type):
                 view_name = view.__name__
                 attrs[view_name] = button(label=cls._get_label(type)[view_name],
                                           **cls.kwargs[type][view_name])(view)
-            new_cls = super().__new__(cls, f'View', (ButtonBase,), attrs)
+            new_cls = super().__new__(cls, 'View', (ButtonBase,), attrs)
         else:
             new_cls = cls.views[type]
         

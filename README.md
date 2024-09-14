@@ -1,7 +1,7 @@
 # Blitz Statistics BlitzHUB Project Page:
 Support [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?&logo=discord&logoColor=white)](https://discord.gg/24FAU6Gbv2)
 # License: MIT
-Copyright 2024 vladislawzero@gmail.com | discord: _zener_dioder | https://github.com/SchottkyDi0de
+Copyright 2024 vladislawzero@gmail.com | discord: _zener_diode | https://github.com/SchottkyDi0de
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), 
   to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 

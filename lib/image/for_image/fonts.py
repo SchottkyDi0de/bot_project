@@ -1,6 +1,4 @@
-from typing import Literal
 from PIL import ImageFont
-from PIL.ImageFont import FreeTypeFont
 
 
 class Fonts():

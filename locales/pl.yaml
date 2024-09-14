@@ -180,9 +180,17 @@ completions:
 frequent:
   errors:
     error: Błąd
-    unknown_error: Nieznany błąd.
     user_banned: Jesteś zablokowany i nie możesz używać poleceń tego bota.
-    api_error: Błąd podczas pracy z API.
+    unknown_error: |-
+      Nieznany błąd
+      Zostaw raport o błędzie na [serwerze wsparcia](https://discord.gg/4GKYhjHm7U)
+    api_error: |-
+      Błąd podczas pracy z interfejsem API.
+      Dodatkowe informacje:
+      ``py
+      <real_exc>
+      ```
+      Aby uzyskać więcej informacji, przejdź do [serwerze wsparcia](https://discord.gg/4GKYhjHm7U)
     parser_error: Błąd podczas analizowania danych.
     verify_error: Konto nie zostało zweryfikowane. Najpierw wykonaj weryfikację, aby móc użyć tej komendy.
     locked_player: Ten gracz zablokował wyświetlanie jego statystyk # <<< TODO: Auto translated need to check

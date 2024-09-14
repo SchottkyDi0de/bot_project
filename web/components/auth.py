@@ -8,7 +8,7 @@ from nicegui import ui, Client
 from lib.api.async_discord_api import DiscordApi
 from lib.api.async_wotb_api import API
 from lib.auth.discord import DiscordOAuth
-from lib.data_classes.db_player import AccountSlotsEnum, DBPlayer
+from lib.data_classes.db_player import AccountSlotsEnum
 from lib.database.players import PlayersDB
 from lib.logger.logger import get_logger
 from lib.settings.settings import Config, EnvConfig
