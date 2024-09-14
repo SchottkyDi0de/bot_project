@@ -3,15 +3,21 @@ from discord import Colour, Embed
 from lib.data_classes.locale_struct import Localization
 from lib.locale.locale import Text
 from lib.utils.singleton_factory import singleton
+from lib.utils.string_parser import insert_data
 
 
 @singleton
 class ErrorMSG:
 
-    def api_error(self) -> Embed:
+    def api_error(self, real_exc: Exception) -> Embed:
         return Embed(
             title=Text().get().frequent.errors.error,
-            description=Text().get().frequent.errors.api_error,
+            description=insert_data(
+                Text().get().frequent.errors.api_error,
+                {
+                    'real_exc': real_exc
+                }
+            ),
             colour=Colour.red()
         ).set_footer(text=Text().get().frequent.info.err_info_sent)
     

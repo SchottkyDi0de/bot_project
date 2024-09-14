@@ -1,18 +1,19 @@
-import asyncio
-import atexit
 from collections.abc import Callable
-import json
-import traceback
+from typing import Dict, Union
 from datetime import datetime
 from time import time
-from typing import Dict, Union
+import traceback
+import asyncio
+import atexit
+import json
 
-import aiohttp
 import pytz
-from asynciolimiter import Limiter
-from cacheout import FIFOCache, Cache
+import aiohttp
 from the_retry import retry
+from asynciolimiter import Limiter
 from pydantic import ValidationError
+from cacheout import FIFOCache, Cache
+from aiohttp.client_exceptions import ClientConnectionError
 
 from lib.data_classes.api.api_data import PlayerGlobalData
 from lib.data_classes.api.player_achievements import Achievements
@@ -20,7 +21,6 @@ from lib.data_classes.api.player_clan_stats import ClanStats
 from lib.data_classes.api.player_stats import PlayerStats
 from lib.data_classes.api.rating_leaderboard import RatingLeaderboardAPIResponse
 from lib.data_classes.api.tanks_stats import TankStats
-# from lib.data_classes.api.players_list import PlayerSearchResult
 from lib.data_classes.db_player import DBPlayer, GameAccount
 from lib.data_classes.tankopedia import Tank
 from lib.database.players import PlayersDB
@@ -30,9 +30,11 @@ from lib.logger.logger import get_logger
 from lib.settings.settings import Config, EnvConfig
 from lib.utils.singleton_factory import singleton
 from lib.utils.string_parser import insert_data
+from lib.utils.api_timeout_handler import timeout_handler
 
 _log = get_logger(__file__, 'AsyncWotbAPILogger', 'logs/async_wotb_api.log')
 _config = Config().get()
+_custom_timeout = aiohttp.ClientTimeout(total=10, connect=4, sock_read=2, sock_connect=4)
 
 
 @singleton
@@ -186,7 +188,7 @@ class API:
     
     def get_players_callback(self, task: asyncio.Task) -> PlayerStats:
         self._players_stats.append(task.result())
-        
+    
     async def get_players_stats(self, players_id: list[int], region: str) -> list[PlayerStats | bool]:
         """
         Retrieves the statistics of multiple players based on their IDs and region.
@@ -207,7 +209,7 @@ class API:
             
             return self._players_stats
     
-    
+    @timeout_handler()
     async def _get_players_stats(self, player_id: int, region: str) -> None:
         """
         Asynchronously gets the player stats for a given player ID and region.
@@ -230,7 +232,7 @@ class API:
                 'player_id': player_id
             }
         )
-        async with self.session.get(url_get_stats, verify_ssl=False) as response:
+        async with self.session.get(url_get_stats, verify_ssl=False, timeout=_custom_timeout) as response:
             try:
                 data = await self.response_handler(response, check_battles=False, check_data=True)
             except api_exceptions.EmptyDataError:
@@ -250,11 +252,13 @@ class API:
     @retry(
         expected_exception=(
             api_exceptions.RequestsLimitExceeded,
-            api_exceptions.APISourceNotAvailable
+            api_exceptions.APISourceNotAvailable,
+            ClientConnectionError
         ),
         attempts=3,
         on_exception=retry_callback
     )
+    @timeout_handler()
     async def get_tankopedia(self, region: str) -> list[Tank]:
         """
         Get tankopedia data.
@@ -274,7 +278,7 @@ class API:
             f'-suspensions%2C+-turrets%2C+-cost%2C+-default_profile%2C+-modules_tree%2C+-images'
         )
 
-        async with self.session.get(url_get_tankopedia, verify_ssl=False) as response:
+        async with self.session.get(url_get_tankopedia, verify_ssl=False, timeout=_custom_timeout) as response:
             data = await self.response_handler(response, False)
             tanks = []
             for key, value in data['data'].items():
@@ -294,13 +298,14 @@ class API:
     @retry(
         expected_exception=(
             api_exceptions.RequestsLimitExceeded,
-            api_exceptions.APISourceNotAvailable
+            api_exceptions.APISourceNotAvailable,
+            ClientConnectionError
         ),
         attempts=3,
         on_exception=retry_callback
     )
-    
-    async def get_players_list(self, search: str, limit: int = 8) -> dict[str, str]:
+    @timeout_handler()
+    async def get_players_list(self, search: str, limit: int = 8, peer_reg_timeout: int = 0.75) -> dict[str, str]:
         data = {}
         
         for reg in _config.default.available_regions:
@@ -315,22 +320,27 @@ class API:
                 }
             )
             await self.rate_limiter.wait()
-            async with self.session.get(url_get_players_list, verify_ssl=False) as response:
-                original_resp_data = await self.response_handler(response, check_battles=False, check_count=False)
-                
-                for resp_data in original_resp_data['data']:
-                    data.setdefault(resp_data['account_id'], f'{resp_data["nickname"]} | {reg.upper()}')
+            try:
+                async with self.session.get(url_get_players_list, verify_ssl=False, timeout=aiohttp.ClientTimeout(total=peer_reg_timeout)) as response:
+                    original_resp_data = await self.response_handler(response, check_battles=False, check_count=False)
                     
+                    for resp_data in original_resp_data['data']:
+                        data.setdefault(resp_data['account_id'], f'{resp_data["nickname"]} | {reg.upper()}')
+            except asyncio.TimeoutError:
+                pass
+                
         return data
 
     @retry(
         expected_exception=(
             api_exceptions.RequestsLimitExceeded,
-            api_exceptions.APISourceNotAvailable
+            api_exceptions.APISourceNotAvailable,
+            ClientConnectionError
         ),
         attempts=3,
         on_exception=retry_callback
     )
+    @timeout_handler()
     async def check_and_get_player(
         self, 
         region: str, 
@@ -363,7 +373,7 @@ class API:
         
         if game_id is None:
             await self.rate_limiter.wait()
-            async with self.session.get(url_get_id, verify_ssl=False) as response:
+            async with self.session.get(url_get_id, verify_ssl=False, timeout=_custom_timeout) as response:
                 try:
                     data = await self.response_handler(response, check_data=True)
                     data = data['data'][0]
@@ -380,7 +390,7 @@ class API:
         )
         
         await self.rate_limiter.wait()
-        async with self.session.get(url_get_stats, verify_ssl=False) as response:
+        async with self.session.get(url_get_stats, verify_ssl=False, timeout=_custom_timeout) as response:
             data = await self.response_handler(response, check_battles=True, check_data=True)
             data = data['data'][[*data['data'].keys()][0]]
             game_account = {
@@ -394,14 +404,6 @@ class API:
     def done_callback(self, task: asyncio.Task):
         pass
 
-    @retry(
-        expected_exception=(
-            api_exceptions.RequestsLimitExceeded,
-            api_exceptions.APISourceNotAvailable
-        ),
-        attempts=3,
-        on_exception=retry_callback
-    )
     async def get_stats(
         self, 
         region: str = None,
@@ -439,13 +441,16 @@ class API:
 
         self.start_time = time()
 
-        player = await self.get_player(
-            region=region, 
-            nickname=search,
-            game_id=game_id,
-            requested_by=requested_by,
-            ignore_lock=ignore_lock
-        )
+        try:
+            player = await self.get_player(
+                region=region, 
+                nickname=search,
+                game_id=game_id,
+                requested_by=requested_by,
+                ignore_lock=ignore_lock
+            )
+        except (ClientConnectionError, TimeoutError) as e:
+            raise api_exceptions.APIError(real_exc = e)
         
         if not disable_cache:
             cached_data = self.cache.get((str(player['account_id']), region))
@@ -476,11 +481,14 @@ class API:
         default_params = {"account_id": player['account_id'], "region": region}
         self.player, self.player_stats = {}, {}
         _log.debug('start collect data')
-         
-        async with asyncio.TaskGroup() as tg:
-            for i, task in enumerate(tasks):
-                self.create_task(tg, task.__name__, task, default_params)
-            
+        
+        try:
+            async with asyncio.TaskGroup() as tg:
+                for i, task in enumerate(tasks):
+                    self.create_task(tg, task.__name__, task, default_params)
+        except ClientConnectionError as e:
+            raise api_exceptions.APIError(real_exc=e)
+
         self.player['timestamp'] = int(datetime.now().timestamp())
         self.player['end_timestamp'] = int(
             datetime.now().timestamp() +
@@ -524,12 +532,13 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.APISourceNotAvailable,
+                ClientConnectionError
             ),
             attempts=3,
             on_exception=retry_callback
     )
-    
+    @timeout_handler()
     async def get_player(
         self, 
         region: str, 
@@ -568,7 +577,7 @@ class API:
         
         if game_id is None:
             await self.rate_limiter.wait()
-            async with self.session.get(url_get_id, verify_ssl=False) as response:
+            async with self.session.get(url_get_id, verify_ssl=False, timeout=_custom_timeout) as response:
 
                 data = await self.response_handler(response, check_meta=True)
                 game_id: int = data['data'][0]['account_id']
@@ -587,19 +596,20 @@ class API:
         #         raise api_exceptions.LockedPlayer()
         
         await self.rate_limiter.wait()
-        async with self.session.get(url_get_stats, verify_ssl=False) as response:
+        async with self.session.get(url_get_stats, verify_ssl=False, timeout=_custom_timeout) as response:
             data = await self.response_handler(response, check_data=True, check_battles=True)
             return data['data'][str(game_id)]
             
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.APISourceNotAvailable,
+                ClientConnectionError
             ),
             attempts=3,
             on_exception=retry_callback
     )
-    
+    @timeout_handler()
     async def get_player_battles(self, region: str, account_id: str, **kwargs) -> tuple[int, int]:
         """
         Retrieves the number of battles played by a player.
@@ -621,7 +631,7 @@ class API:
         )
         await self.rate_limiter.wait()
     
-        async with self.session.get(url_get_battles, verify_ssl=False) as response:
+        async with self.session.get(url_get_battles, verify_ssl=False, timeout=_custom_timeout) as response:
             data = await self.response_handler(response, check_data=True)
 
         return (
@@ -633,12 +643,13 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.APISourceNotAvailable,
+                ClientConnectionError
             ),
             attempts=3,
             on_exception=retry_callback
     )
-    
+    @timeout_handler()
     async def get_player_stats(self, region: str, account_id: str) -> PlayerStats:
         """
         Retrieves the player statistics for a given region and account ID.
@@ -668,7 +679,7 @@ class API:
 
         await self.rate_limiter.wait()
         
-        async with self.session.get(url_get_stats, verify_ssl=False) as response:
+        async with self.session.get(url_get_stats, verify_ssl=False, timeout=_custom_timeout) as response:
             data = await self.response_handler(response, check_battles=True)
 
         data['data'] = data['data'][str(account_id)]
@@ -684,12 +695,13 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.APISourceNotAvailable,
+                ClientConnectionError
             ),
             attempts=3,
             on_exception=retry_callback
     )
-    
+    @timeout_handler()
     async def get_player_achievements(self, region: str, account_id: str) -> Achievements:
         """
         Retrieves the achievements of a player.
@@ -709,7 +721,7 @@ class API:
 
         await self.rate_limiter.wait()
         
-        async with self.session.get(url_get_achievements, verify_ssl=False) as response:
+        async with self.session.get(url_get_achievements, verify_ssl=False, timeout=_custom_timeout) as response:
             data = await self.response_handler(response)
 
         self.player_stats['achievements'] = Achievements.model_validate(data['data'][str(account_id)]['achievements'])
@@ -718,12 +730,13 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.APISourceNotAvailable,
+                ClientConnectionError
             ),
             attempts=3,
             on_exception=retry_callback
     )
-    
+    @timeout_handler()
     async def get_player_clan_stats(self, region: str, account_id: str | int) -> None:
         """
         Retrieves clan statistics for a player.
@@ -748,7 +761,7 @@ class API:
 
         await self.rate_limiter.wait()
         
-        async with self.session.get(url_get_clan_stats, verify_ssl=False) as response:
+        async with self.session.get(url_get_clan_stats, verify_ssl=False, timeout=_custom_timeout) as response:
             data = await self.response_handler(response)
 
         if data['data'][str(account_id)] is None:
@@ -767,12 +780,13 @@ class API:
     @retry(
             expected_exception=(
                 api_exceptions.RequestsLimitExceeded,
-                api_exceptions.APISourceNotAvailable
+                api_exceptions.APISourceNotAvailable,
+                ClientConnectionError
             ),
             attempts=3,
             on_exception=retry_callback
     )
-    
+    @timeout_handler()
     async def get_player_tanks_stats(self, region: str, account_id: str,  **kwargs):
         """
         Retrieves the statistics of the tanks owned by a player.
@@ -798,7 +812,7 @@ class API:
 
         await self.rate_limiter.wait()
         
-        async with self.session.get(url_get_tanks_stats, verify_ssl=False) as response:
+        async with self.session.get(url_get_tanks_stats, verify_ssl=False, timeout=_custom_timeout) as response:
             data = await self.response_handler(response)
 
             tanks_stats: dict[str, TankStats] = {}
@@ -814,6 +828,7 @@ class API:
             api_exceptions.RequestsLimitExceeded,
             api_exceptions.APISourceNotAvailable,
             api_exceptions.EmptyDataError,
+            ClientConnectionError,
             ValidationError
         )
     )
@@ -836,8 +851,8 @@ class API:
                 self.rating_leaderboard_num_cache.set((account_id, region), data)
                 self.player_stats['statistics'].rating.leaderboard_position = data.number if data.number is not None else 0
             except ValidationError:
-                _log.warn(f"RatingLeaderboardAPI: {traceback.format_exc()}")
-                _log.warn(f"RatingLeaderboardAPI: error while validating model, response data:\n{response_data}")
+                _log.warning(f"RatingLeaderboardAPI: {traceback.format_exc()}")
+                _log.warning(f"RatingLeaderboardAPI: error while validating model, response data:\n{response_data}")
                 self.player_stats['statistics'].rating.leaderboard_position = 0
 
     def __at_exit__(self):

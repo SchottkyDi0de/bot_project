@@ -1,4 +1,3 @@
-from enum import Enum
 from random import randint
 
 INITIAL_LEVEL_EXP = 40

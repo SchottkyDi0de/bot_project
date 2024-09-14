@@ -1,3 +1,5 @@
+from collections.abc import Callable
+import functools
 from datetime import datetime, timedelta
 from functools import partial
 
@@ -89,6 +91,7 @@ class Stats(commands.Cog):
                 required=False
             ),
         ):
+        await ctx.defer()
         await Text().load_from_context(ctx)
         await check_user(ctx)
         
@@ -601,6 +604,7 @@ class Stats(commands.Cog):
             requested_by: DBPlayer | None = None
         ):
         exception = None
+        real_exc = None
         try:
             data = await self.api.get_stats(
                 game_id=game_id,
@@ -622,12 +626,16 @@ class Stats(commands.Cog):
             exception = 'parser_error'
         except* api.LockedPlayer:
             exception = 'locked_player'
-        except* api.APIError:
+        except* api.APIError as e:
             exception = 'api_error'
+            real_exc = e.exceptions[0].real_exc
             
         if exception is not None:
-            await ctx.respond(embed=getattr(self.err_msg, exception)())
-            return
+            embed_func: Callable = getattr(self.err_msg, exception)
+            if embed_func.__name__ == 'api_error':
+                await ctx.respond(embed=embed_func(real_exc=real_exc))
+            else:
+                await ctx.respond(embed=embed_func())
         else:
             img_data = self.img_gen.generate(
                 data=data,
