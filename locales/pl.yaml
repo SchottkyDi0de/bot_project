@@ -187,7 +187,7 @@ frequent:
     api_error: |-
       Błąd podczas pracy z interfejsem API.
       Dodatkowe informacje:
-      ``py
+      ```py
       <real_exc>
       ```
       Aby uzyskać więcej informacji, przejdź do [serwerze wsparcia](https://discord.gg/4GKYhjHm7U)
