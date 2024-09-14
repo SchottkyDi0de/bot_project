@@ -1,7 +1,7 @@
 # Blitz Statistics BlitzHUB Project Page:
-
+Support [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?&logo=discord&logoColor=white)](https://discord.gg/24FAU6Gbv2)
 # License: MIT
-Copyright 2024 vladislawzero@gmail.com | discord: _zener_dioder | https://github.com/SchottkyDi0de
+Copyright 2024 vladislawzero@gmail.com | discord: _zener_diode | https://github.com/SchottkyDi0de
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), 
   to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
@@ -17,6 +17,9 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 This license applies to all files in this project that contain Python source code unless otherwise specified!
+
+# Command documentation
+View docs in [![GitBook](https://img.shields.io/badge/GitBook-3884FF?logo=gitbook&logoColor=fff)](https://app.gitbook.com/o/9RFxNaj85lLDapYNGcmG/s/b4GsEBEoNIIQn6fZtOGp/ru-docs/glavnaya-stranica-ru-dokumentacii/bystryi-start)
 
 # Used libriares:
 py-cord 2.6.0
@@ -67,6 +70,8 @@ filesplit 4.0.1
 # Dependencies
 [Python 3.11](https://www.python.org/downloads/release/python-3110/) or later
 
+[datamodel-code-generator](https://github.com/koxudaxi/datamodel-code-generator/) for `dev_tools/locale_gen.py`
+
 [MongoDB Server](https://www.mongodb.com/try/download/community)
 
 [MongoDB Database Tools](https://www.mongodb.com/try/download/database-tools) (for dumper)
@@ -91,7 +96,7 @@ python3 -m venv .env
 ```
 ### Linux
 ```bash
-source .env\bin\activate
+source .env/bin/activate
 ```
 ## 3: install all required libs
 ```bash
