@@ -148,7 +148,6 @@ class Set(commands.Cog):
                 )
                 return
         
-        print(f'{region=}{composite_nickname.nickname=}{composite_nickname.player_id=}')
         game_account = await self.api.check_and_get_player(
             nickname=composite_nickname.nickname,
             region=region,
