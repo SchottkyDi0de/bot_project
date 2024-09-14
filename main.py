@@ -1,5 +1,5 @@
 """
-Copyright 2024 vladislawzero@gmail.com | _Zener | https://github.com/SchottkyDi0de
+Copyright 2024 vladislawzero@gmail.com | _zener_diode | https://github.com/SchottkyDi0de
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), 
   to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
@@ -110,7 +110,7 @@ class App():
         for region in tankopedia_server_list:
             try:
                 data = await api.get_tankopedia(region=region)
-            except (APIError, ClientError):
+            except (APIError, ClientError, TimeoutError):
                 _log.error(f'Failed to get tankopedia data in {region}, trying next server...')
                 fail_counter += 1
             else:
