@@ -7,6 +7,7 @@ from lib.utils.string_parser import insert_data
 from lib.api import API
 from lib.locale.locale import Text
 from lib.buttons import Buttons
+from lib.buttons.functions import Functions
 from lib.states import HookStates
 from lib.cooldown import CooldownStorage
 from lib.exceptions.common import HookExceptions
@@ -28,6 +29,10 @@ def _get_target_stats(data: PlayerGlobalData, stats_type: str, stats_name: str):
 class HookHandlers:
     api: API
     pdb: PlayersDB
+    
+    @HookExceptions().hook()
+    async def new_hook_handle(self, data: 'CallbackQuery', state: 'FSMContext', **_):
+        await Functions.new_hook(data.message, state)
 
     @HookExceptions().hook()
     async def hook_region_handle(self, data: 'CallbackQuery', state: 'FSMContext', **_):
@@ -98,12 +103,12 @@ class HookHandlers:
         text = insert_data(Text().get().cmds.hook.sub_descr.hook_state, {
             "nickname": hook.last_stats.nickname,
             "region": hook.last_stats.region,
-            "starting_value": starting_value,
-            "current_value": current_value,
+            "starting_value": f"{starting_value:.2f}",
+            "current_value": f"{current_value:.2f}",
             "time_left": hook.end_time.strftime("%H:%M:%S"),
             **{key: getattr(hook, key) for key in ["stats_type", "trigger", "target_value", "watch_for"]},
         })
-        await data.message.edit_text(text=text)
+        await data.message.edit_text(text=text, parse_mode="MarkdownV2")
     
     @HookExceptions().hook()
     async def disable_hook_handle(self, data: 'CallbackQuery', **_):

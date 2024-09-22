@@ -40,7 +40,7 @@ class SessionButtons:
     @staticmethod
     def session_timezone_buttons() -> ButtonList[InlineKeyboardButton]:
         buttons = ButtonList()
-        for i in range(-12, 13):
+        for i in range(13):
             buttons.append(InlineKeyboardButton(text=str(i), callback_data=f"session_set_timezone:{i}"))
         return buttons.format_data(6) + SessionButtons.session_back_buttons()
     
@@ -54,7 +54,7 @@ class SessionButtons:
     @staticmethod
     def session_back_buttons() -> ButtonList[InlineKeyboardButton]:
         return ButtonList([InlineKeyboardButton(text=Text().get().cmds.session.sub_descr.buttons.back,
-                                                callback_data="session_back")])
+                                                callback_data="session_back")]).format_data(1)
 
     @staticmethod
     def get_session_buttons(author_id: int) -> ButtonList[InlineKeyboardButton]:

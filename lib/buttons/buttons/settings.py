@@ -14,3 +14,8 @@ class SettingsButtongs:
                                (locale.session_widget, "session_widget")):
             data.append(InlineKeyboardButton(text=text, callback_data=callback))
         return ButtonList(data)
+    
+    @staticmethod
+    def profile_reg_buttons() -> ButtonList:
+        return ButtonList([InlineKeyboardButton(text=Text().get().cmds.settings.sub_descr.buttons.profile_reg, 
+                                                callback_data="profile_reg")])

@@ -274,7 +274,7 @@ class ImageGenCommon():
             data: PlayerGlobalData,
             member: 'DBPlayer | None' = None,
             slot: 'AccountSlotsEnum | None' = None,
-            force_image_setting: ImageSettings = None,
+            force_image_settings: ImageSettings = None,
             force_image: BytesIO | None = None,
             extra: 'CommonImageGenExtraSettings | None' = None,
             debug_label: bool = False,
@@ -290,7 +290,7 @@ class ImageGenCommon():
         else:
             image_settings = ImageSettings()
 
-        temp_im = force_image_setting if force_image_setting is not None else image_settings
+        temp_im = force_image_settings if force_image_settings is not None else image_settings
         if extra:
             temp_im = deepcopy(temp_im)
             for name in extra.model_fields:

@@ -60,7 +60,7 @@ class StatsViewSettings(BaseModel):
 
 
 class SessionSettings(BaseModel):
-    is_autosession: Optional[bool] = None
+    is_autosession: bool = False
     last_get: datetime = datetime.now(pytz.utc)
     timezone: int = 0
     time_to_restart: datetime = datetime.now(pytz.utc) + timedelta(days=1)
@@ -106,7 +106,7 @@ class WidgetSettings(BaseModel):
 class HookStats(BaseModel):
     active: bool = False
     stats_name: Optional[str] = None  # config.image -> available_stats or available_rating_stats accepted
-    stats_type: Optional[Literal['common', 'rating']] = None
+    stats_type: Literal['common', 'rating'] = 'common'
     trigger: Optional[str] = None
     check_interval: int = 200
     end_time: datetime = datetime.now(pytz.utc) + timedelta(days=1)

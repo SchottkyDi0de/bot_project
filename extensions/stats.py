@@ -42,7 +42,7 @@ class Stats(ExtensionsSetup):
     @analytics("stats")
     @parse_message(max_args=2, min_args=0)
     async def stats(self, msg: 'Message', splitted_message: list[str], bot: 'Bot', **_):
-        member = await self.pdb.check_member_exists(msg.from_user.id, raise_error=False)
+        member = await self.pdb.check_member_exists(msg.from_user.id, get_if_exist=True, raise_error=False)
         member = member if member else None
 
         if len(splitted_message) == 2:

@@ -473,6 +473,7 @@ class Buttons1(BaseModel):
     profile: str
     image: str
     session_widget: str
+    profile_reg: str
 
 
 class SessionWidget1(BaseModel):

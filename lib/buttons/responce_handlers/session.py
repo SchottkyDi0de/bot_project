@@ -102,6 +102,15 @@ class SessionHandlers:
         await self.pdb.start_session(member.current_slot, data.from_user.id, 
                                      last_stats, state_data.session_settings)
         await data.message.edit_text(text=Text().get().cmds.session.sub_descr.success_started)
+    
+    @HookExceptions().hook()
+    async def session_back_handle(self, data: 'CallbackQuery', state: 'FSMContext', **_):
+        state_data: SessionStateData = (await state.get_data())["data"]
+
+        await data.message.edit_text(text=Functions.session_start_text(state_data),
+                                     reply_markup=Buttons.session_start_session_buttons(state_data.session_settings.is_autosession) \
+                                     .get_keyboard(1),
+                                     parse_mode="MarkdownV2")
 
     @HookExceptions().hook()
     @Activities.upload_photo

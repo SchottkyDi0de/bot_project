@@ -164,9 +164,10 @@ class PDBWorker:
                 target_value = getattr(target_stats, hook.stats_name)
 
                 if eval(f'{target_value} {HookStatsTriggers[hook.trigger].value} {hook.target_value}'):
-                    _log.info(f'Hook triggered for {member_id} in slot {slot.name}. Closing hook')
+                    _log.info(f'Hook triggered for {member_id}. Closing hook')
                     await self.db.disable_stats_hook(member_id)
-                    image = SessionImageGen().generate(data, session_diff, member, member.current_slot)
+                    image = SessionImageGen().generate(data, session_diff, member, 
+                                                       member.current_slot, hide_nickname=False)
                     buffered_image = BufferedInputFile(image.read(), "hook.png")
                     lang = await self.db.get_lang(member_id)
                     lang = lang if lang != "auto" else hook.lang

@@ -173,8 +173,7 @@ cmds:
               see /help for available commands
   help:
     descr: |-
-      available commands: /help, /set_player, /lang, /settings, /stats, /session_widget
-        /session_state, /session, /start_session, /start_autosession, /get_session, /hook, /parse_replay
+      available commands: /help, /set_player, /lang, /settings, /stats, /session_widget, /session_state, /session, /start_session, /start_autosession, /get_session, /hook, /replay
       /help: this message
       /set_player: set information about player, just use command in private chat with bot, or use /set_player <nickname> <region> <slot_num>
       /lang: set your language
@@ -186,7 +185,7 @@ cmds:
       /start_autosession: start auto session(auto restart session)
       /get_session: get session (if started)
       /hook: you can put a hook on a player, and after the trigger is triggered, bot will be sent statistics
-      /parse_replay: parse replay file
+      /replay: parse replay file
 
       There is also an inline mode, use button for example, write as per the example and then wait a second
     
@@ -445,6 +444,7 @@ cmds:
         profile: Profile 👤
         image: Image 🖼️
         session_widget: Session widget 📊
+        profile_reg: New account
       validators:
         session_widget:
           stats_block_color: x - color in hex or rgb format
@@ -468,7 +468,7 @@ cmds:
       choose_target_region: Choose target region
       watch_for: "Watch for"
       hook_state: |-
-        Hook started for <nickname>(<region>)
+        Hook started for <nickname>\(<region>\)
         ```py
         Mode: <stats_type>
         Trigger: <trigger>
@@ -483,7 +483,7 @@ cmds:
       hook_state: Hook state
       disable_hook: Disable hook
       main: Main stats
-      sess: Session stats
+      session: Session stats
       diff: Difference stats
 
   parse_replay:

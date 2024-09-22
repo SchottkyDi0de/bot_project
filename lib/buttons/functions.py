@@ -230,7 +230,7 @@ class Functions:
 
     @staticmethod
     async def session_back(msg: 'Message', state: 'FSMContext'):
-        state_data = await state.get_data()
+        state_data = (await state.get_data())["data"]
         await msg.edit_text(text=Functions.session_start_text(state_data),
                             reply_markup=Buttons.session_start_session_buttons(state_data.session_settings.is_autosession) \
                             .get_keyboard(1),

@@ -30,8 +30,8 @@ class Common(ExtensionsSetup):
     async def start(self, msg: 'Message', bot: 'Bot', state: 'FSMContext', **_):
         await bot.send_message(msg.chat.id, Text().get().cmds.start.descr)
         if msg.chat.type == "private" and not await self.pdb.get_member(msg.from_user.id, False):
-            await bot.send_message(msg.chat.id, Text().get().cmds.set_player.sub_descr.get_nickname)
-            await state.set_state(SetPlayerStates.set_nick)
+            await bot.send_message(msg.chat.id, Text().get().cmds.set_player.sub_descr.get_region,
+                                   reply_markup=Buttons.set_player_buttons().get_keyboard(4))
     
     @HookExceptions().hook()
     @analytics()

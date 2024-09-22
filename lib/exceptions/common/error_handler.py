@@ -28,7 +28,7 @@ class HookExceptions:
     def hook(hself, _log: Logger=err_logger, del_message_on_error: bool = False) -> Callable:
         def inner1(func: Callable) -> Callable:
             async def inner2(fself, data: Message | CallbackQuery, bot: Bot, *args, **kwargs):
-                await Text().load_by_data(data, await hself.pdb.get_member(data.from_user.id))
+                await Text().load_by_data(data, await hself.pdb.get_member(data.from_user.id, raise_error=False))
 
                 try:
                     return await func(fself, data, bot=bot, *args, **kwargs)

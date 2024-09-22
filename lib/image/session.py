@@ -1,6 +1,7 @@
 from time import time
 from enum import Enum
 from io import BytesIO
+from copy import deepcopy
 from typing import TYPE_CHECKING, Dict
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
@@ -746,8 +747,8 @@ class ImageGenSession():
             widget_mode: bool = False,
             test = False,
             debug_label = False,
-            force_locale: str | None = None
-            ) -> BytesIO | Image.Image | str:
+            force_locale: str | None = None,
+            **extra_image_settings) -> BytesIO | Image.Image | str:
         """
         Generates an image based on the provided data and settings.
 
@@ -778,8 +779,11 @@ class ImageGenSession():
         
         self.game_account: 'GameAccount' = getattr(player.game_accounts, slot.name)
         self.player = player
-        self.image_settings = self.game_account.image_settings if force_image_settings is None else force_image_settings
+        self.image_settings = deepcopy(self.game_account.image_settings if force_image_settings is None else force_image_settings)
         stats_view_settings = self.game_account.stats_view_settings if force_stats_view is None else force_stats_view
+
+        for settings_name in extra_image_settings:
+            setattr(self.image_settings, settings_name, extra_image_settings[settings_name])
         
         self.layout_definer = LayoutDefiner(
             player_data=data,

@@ -438,23 +438,24 @@ class PlayersDB:
 
         If the member is not premium, False is returned.
         """
-        member = await self._multi_args_member_checker(member_id, member)
+        #member = await self._multi_args_member_checker(member_id, member)
         
-        premium = member.profile.premium
-        premium_time = member.profile.premium_time
+        #premium = member.profile.premium
+        #premium_time = member.profile.premium_time
         
-        if premium:
-            if premium_time is None:
-                return True
-            else:
-                if datetime.now(pytz.utc) < premium_time:
-                    return True
-                else:
-                    _log.debug(f'Unset premium for member {member.id}')
-                    await self.unset_premium(member.id)
-                    return False
-        else:
-            return False
+        #if premium:
+        #    if premium_time is None:
+        #        return True
+        #    else:
+        #        if datetime.now(pytz.utc) < premium_time:
+        #            return True
+        #        else:
+        #            _log.debug(f'Unset premium for member {member.id}')
+        #            await self.unset_premium(member.id)
+        #            return False
+        #else:
+        #    return False   #TODO: check
+        return True
 
     async def get_current_game_account(self, member_id: int | str | None = None, member: DBPlayer | None = None) -> GameAccount:
         member = await self._multi_args_member_checker(member_id, member)

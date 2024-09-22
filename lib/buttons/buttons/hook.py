@@ -82,7 +82,7 @@ class HookButtons:
     @staticmethod
     def hook_watch_for_buttons() -> ButtonList[InlineKeyboardButton]:
         buttons = ButtonList()
-        for name in ["main", "sess", "diff"]:
+        for name in ["main", "session", "diff"]:
             buttons.append(InlineKeyboardButton(text=getattr(Text().get().cmds.hook.buttons, name), 
                                                 callback_data=f"hook_watch_for:{name}"))
         return buttons
