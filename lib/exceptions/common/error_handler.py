@@ -72,7 +72,7 @@ class HookExceptions:
                 text = locale.cmds.session_state.errors.session_not_found
         elif isinstance(error, data_parser.DataParserError):
             if isinstance(error, data_parser.NoDiffData):
-                text = locale.cmds.get_session.errors.session_not_updated
+                text = locale.cmds.get_session.errors.session_not_found
             else:
                 text = locale.cmds.parse_replay.errors.parsing_error
         elif isinstance(error, replay_parser.ReplayParserError):

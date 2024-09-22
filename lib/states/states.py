@@ -2,7 +2,6 @@ from aiogram.fsm.state import State, StatesGroup
 
 
 class SetPlayerStates(StatesGroup):
-    set_region = State()
     set_nick = State()
 
 

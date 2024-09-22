@@ -92,7 +92,7 @@ class Set(ExtensionsSetup):
     
     @HookExceptions().hook(_log)
     @Activities.typing
-    @check(in_db=False, private_only=False)
+    @check(in_db=False)
     @analytics("set_player")
     @parse_message(max_args=3, min_args=2, raise_error=False)
     async def set_player(self, msg: 'Message', splitted_message: list[str], state: 'FSMContext', bot: 'Bot', **_):
@@ -110,13 +110,12 @@ class Set(ExtensionsSetup):
             if not (msg.chat.type == "private"):
                 await bot.send_message(msg.chat.id, Text().get().frequent.errors.missing_argument)
                 return
-            await state.set_state(SetPlayerStates.set_region)
             await msg.reply(Text().get().cmds.set_player.sub_descr.get_region, 
                             reply_markup=Buttons.set_player_buttons().get_keyboard(4))
             
     @HookExceptions().hook(_log)
     @Activities.typing
-    @check(private_only=False)
+    @check()
     async def lang(self, msg: 'Message', bot: 'Bot', **_):
         await bot.send_message(msg.chat.id, Text().get().cmds.set_lang.sub_descr.choose_lang,
                                     reply_markup=Buttons.set_lang_buttons().get_keyboard(4))

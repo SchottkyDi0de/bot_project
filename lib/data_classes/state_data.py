@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from cacheout import Cache
 from aiogram.types import Message
 
-from .db_player import ImageSettings, WidgetSettings, StatsViewSettings
+from .db_player import ImageSettings, WidgetSettings, StatsViewSettings, SessionSettings
 from .replay_data_parsed import ParsedReplayData, Player
 from lib.utils.stats_preview import StatsPreview, SVPreview
 from lib.utils.delete_message import DeleteMessage
@@ -79,4 +79,12 @@ class ReplayParserStateData(BaseModel):
 
     def __init__(self, *args, **kwargs):
         kwargs |= {"cache": Cache()}
+        super().__init__(*args, **kwargs)
+
+
+class SessionStateData(BaseModel):
+    session_settings: SessionSettings
+
+    def __init__(self, *args, **kwargs):
+        kwargs |= {"session_settings": SessionSettings()}
         super().__init__(*args, **kwargs)

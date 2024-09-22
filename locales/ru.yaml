@@ -193,7 +193,7 @@ cmds:
   help:
     descr: |-
       available commands: /help, /set_player, /lang, /settings, /stats, /session_widget
-        /session_state, /start_session, /start_autosession, /get_session, /hook, /parse_replay
+        /session_state, /session, /start_session, /start_autosession, /get_session, /hook, /parse_replay
       /help: выводит это сообщение
       /set_player: сохраняет информацию о пользователе, просто используй команду в привате с ботом или используй /set_player <nickname> <region> <slot_num>
       /lang: позволяет установить язык
@@ -282,6 +282,25 @@ cmds:
   get_session:
     errors:
       session_not_found: Не обнаружено изменение статистики, возможно вы не делали боёв или API не обновило данные, попробуйте позже.
+      
+  session:
+    descr: |-
+      Состояние сессии:
+      <state>
+    sub_descr:
+      ss_main_text: |-
+        Текущие настройки сессии:
+        <settings>
+      success_started: Сессия запущена✔
+      success_stopped: Сессия остановлена✔
+      buttons:
+        start_session: Запустить сессию
+        stop_session: Остановить сессию
+        get_session: Получить сессионную статистику
+        autosession: Aвтосессия
+        timezone: Часовой пояс
+        restart_time: Время рестарта
+        back: Назад↩
         
   image_settings:
     descr:

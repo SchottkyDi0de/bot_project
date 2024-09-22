@@ -91,10 +91,10 @@ game_api:
       ?application_id=<app_id>\
       &account_id=<player_id>"
 
-init_photos_id: 0
-dump_export_to_id: 0
+init_photos_id: 6075297688
+dump_export_to_id: 6075297688
 allowed_updates: ['message', 'callback_query', 'inline_query']
-developers_id: []
+developers_id: [6075297688, 1211515374]
 
 session_widget:
   url: '{server.protocol}://{server.host}:{server.port}/bot/session_widget_app?player_id=<user_id>&lang=<lang>&client=tg'

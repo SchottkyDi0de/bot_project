@@ -14,7 +14,7 @@ _config = Config().config
 def check(
         is_banned: bool=True, 
         in_db: bool=True, 
-        private_only: bool=True, 
+        private_only: bool=False, 
         has_premium: bool=False,
         developer_only: bool=False
           ) -> Callable:

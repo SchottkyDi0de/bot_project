@@ -67,7 +67,7 @@ class SessionFunc:
                 'timezone' : session_settings.timezone,
                 'time': TimeConverter.formatted_from_secs(int(session_time.total_seconds()), long_time_format),
                 'time_left': TimeConverter.formatted_from_secs(int(time_left.total_seconds()), long_time_format),
-                'battles': str(battles_after - battles_before)
+                'battles': str(battles_after[0] - battles_before)
             }
         )
         return text

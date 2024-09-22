@@ -7,11 +7,12 @@ from aiogram.filters import Command
 from pydantic import BaseModel
 
 from extensions.setup import ExtensionsSetup
-from lib import Buttons, PlayersDB, HookExceptions, Text, analytics, check
+from lib import Buttons, PlayersDB, HookExceptions, SetPlayerStates, Text, analytics, check
 
 if TYPE_CHECKING:
     from aiogram import Bot
     from aiogram.types import Message
+    from aiogram.fsm.context import FSMContext
 
 
 class Common(ExtensionsSetup):
@@ -26,8 +27,11 @@ class Common(ExtensionsSetup):
 
     @HookExceptions().hook()
     @analytics()
-    async def start(self, msg: 'Message', bot: 'Bot', **_):
+    async def start(self, msg: 'Message', bot: 'Bot', state: 'FSMContext', **_):
         await bot.send_message(msg.chat.id, Text().get().cmds.start.descr)
+        if msg.chat.type == "private" and not await self.pdb.get_member(msg.from_user.id, False):
+            await bot.send_message(msg.chat.id, Text().get().cmds.set_player.sub_descr.get_nickname)
+            await state.set_state(SetPlayerStates.set_nick)
     
     @HookExceptions().hook()
     @analytics()

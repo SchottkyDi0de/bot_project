@@ -174,7 +174,7 @@ cmds:
   help:
     descr: |-
       available commands: /help, /set_player, /lang, /settings, /stats, /session_widget
-        /session_state, /start_session, /start_autosession, /get_session, /hook, /parse_replay
+        /session_state, /session, /start_session, /start_autosession, /get_session, /hook, /parse_replay
       /help: this message
       /set_player: set information about player, just use command in private chat with bot, or use /set_player <nickname> <region> <slot_num>
       /lang: set your language
@@ -263,6 +263,25 @@ cmds:
   get_session:
     errors:
       session_not_found: No change in stats detected, maybe you haven't done any fights or the API hasn't updated the data, try again later.
+    
+  session:
+    descr: |-
+      Session state:
+      <state>
+    sub_descr:
+      ss_main_text: |-
+        Current session settings:
+        <settings>
+      success_started: Session started✔
+      success_stopped: Session stopped✔
+      buttons:
+        start_session: Start session
+        stop_session: Stop session
+        get_session: Get session stats
+        autosession: Autosession
+        timezone: Timezone
+        restart_time: Restart time
+        back: Back ↩
   
   image_settings:
     descr:

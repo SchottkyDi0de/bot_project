@@ -35,7 +35,7 @@ class Stats(ExtensionsSetup):
         router.inline_query.register(self.inline_stats)
     
     @HookExceptions().hook()
-    @check(private_only=False, in_db=False)
+    @check(in_db=False)
     @CooldownStorage.cooldown(10, "gen_stats")
     @multi_accounts("stats_macc", "send_photo")
     @Activities.upload_photo

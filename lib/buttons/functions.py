@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from lib.data_classes.locale_struct import Localization
     from lib.data_classes.api.player_stats import Statistics
     from lib.data_classes.replay_data_parsed import ParsedReplayData, PlayerResult
-    from lib.data_classes.state_data import ImageSettingsStateData, WidgetSettingsStateData
+    from lib.data_classes.state_data import ImageSettingsStateData, WidgetSettingsStateData, SessionStateData
 
 
 class ReplayParseSupport:
@@ -218,4 +218,20 @@ class Functions:
     
         await msg.edit_text(text, 
                             reply_markup=Buttons.pr_main_buttons(replay_data).get_keyboard(1), 
+                            parse_mode="MarkdownV2")
+    
+    @staticmethod
+    def session_start_text(state_data: 'SessionStateData') -> str:
+        ttr = state_data.session_settings.time_to_restart
+        return f"```py\n" + insert_data(Text().get().cmds.session.sub_descr.ss_main_text,
+                                        {"settings": '\n'.join([f"{param}: {getattr(state_data.session_settings, param)}" 
+                                                                for param in ['is_autosession', "timezone"]] + \
+                                                                [f"next restart: {ttr.hour}:{ttr.minute}"])}) + "\n```"
+
+    @staticmethod
+    async def session_back(msg: 'Message', state: 'FSMContext'):
+        state_data = await state.get_data()
+        await msg.edit_text(text=Functions.session_start_text(state_data),
+                            reply_markup=Buttons.session_start_session_buttons(state_data.session_settings.is_autosession) \
+                            .get_keyboard(1),
                             parse_mode="MarkdownV2")

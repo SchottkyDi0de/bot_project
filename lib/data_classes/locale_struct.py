@@ -246,6 +246,28 @@ class GetSession(BaseModel):
     errors: Errors4
 
 
+class Buttons4(BaseModel):
+    start_session: str
+    stop_session: str
+    get_session: str
+    autosession: str
+    timezone: str
+    restart_time: str
+    back: str
+
+
+class SubDescr8(BaseModel):
+    ss_main_text: str
+    success_started: str
+    success_stopped: str
+    buttons: Buttons4
+
+
+class Session(BaseModel):
+    descr: str
+    sub_descr: SubDescr8
+
+
 class SubDescr3(BaseModel):
     use_custom_bg: str
     colorize_stats: str
@@ -576,6 +598,7 @@ class Cmds(BaseModel):
     start_session: StartSession
     start_autosession: StartAutosession
     get_session: GetSession
+    session: Session
     image_settings: ImageSettings
     stats_view_settings: StatsViewSettings
     session_widget: SessionWidget

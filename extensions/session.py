@@ -13,7 +13,7 @@ from lib.utils.validators import RawRegex
 from extensions.setup import ExtensionsSetup
 from ex_func import SessionFunc, SessionImageGenFunc
 from lib import (API, Buttons, CooldownStorage, PlayersDB, HookExceptions,
-                    AutoSessionStates, Text, Activities, analytics, check)
+                 AutoSessionStates, Text, Activities, analytics, check)
 
 if TYPE_CHECKING:
     from aiogram import Bot
@@ -29,6 +29,7 @@ class Session(ExtensionsSetup):
         ("start_session", (Command("start_session"),)),
         ("session_state", (Command("session_state"),)),
         ("get_session", (Command("get_session"),)),
+        ("session", (Command("session"),)),
         ("start_autosession", (Command("start_autosession"),)),
         ("start_autossesion_timezone", (F.text.in_([f"{i}" for i in range(13)]), AutoSessionStates.set_timezone)),
         ("invalid_timezone", (AutoSessionStates.set_timezone,),),
@@ -131,12 +132,27 @@ class Session(ExtensionsSetup):
             game_id=account.game_id,
             requested_by=member
         )
-        
-        session_settings.is_autosession = True
         await self.pdb.start_session(member.current_slot, msg.from_user.id, last_stats, session_settings)
         await msg.reply(Text().get().cmds.start_autosession.info.started, 
                         reply_markup=Buttons.remove_buttons("reply"))
         await state.set_state()
+    
+    @HookExceptions().hook(_log)
+    @Activities.typing
+    @check()
+    async def session(self, msg: 'Message', **_):
+        member = await self.pdb.get_member(msg.from_user.id)
+        last_stats = await self.pdb.check_member_last_stats(member.current_slot, msg.from_user.id, member)
+        if last_stats:
+            s_state = await SessionFunc.session_state(member.current_slot, member)
+        else:
+            s_state = f"```py\n{Text().get().cmds.session_state.items.not_started}```"
+        
+        await msg.reply(insert_data(Text().get().cmds.session.descr,
+                                    {"state": s_state}), 
+                        parse_mode='MarkdownV2',
+                        reply_markup=Buttons.session_main_buttons(last_stats).get_keyboard(1))
+
     
     @HookExceptions().hook(_log)
     @Activities.typing

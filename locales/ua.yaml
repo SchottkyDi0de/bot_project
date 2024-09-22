@@ -191,7 +191,7 @@ cmds:
   help:
     descr: |-
       available commands: /help, /set_player, /lang, /settings, /stats, /session_widget
-        /session_state, /start_session, /start_autosession, /get_session, /hook, /parse_replay
+        /session_state, /session, /start_session, /start_autosession, /get_session, /hook, /parse_replay
       /help: це повідомлення
       /set_player: зберігає інформацію про користувача, просто використовуй команду в приваті з ботом або використовуй /set_player <nickname> <region> <slot_num>
       /lang: дозволяє встановити мову
@@ -280,6 +280,25 @@ cmds:
   get_session:
     errors:
       session_not_updated: Не знайдено змінення статистики, можливо ви не робили боїв або API не обновило дані, спробуйте пізніше.
+      
+  session:
+    descr: |-
+      Стан сесії:
+      <state>
+    sub_descr:
+      ss_main_text: |-
+        Поточні налаштування сесії:
+        <settings>
+      success_started: Сесію успішно запущено✔
+      success_stopped: Сесію успішно зупинено✔
+      buttons:
+        start_session: Запустити сесію
+        stop_session: Зупинити сесію
+        get_session: Отримати сесійну статистику
+        autosession: Aвтосесія
+        timezone: Часовий пояс
+        restart_time: Час рестарта
+        back: Назад↩
       
   image_settings:
     descr:

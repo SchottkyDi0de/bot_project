@@ -23,7 +23,7 @@ class SessionWidget(ExtensionsSetup):
 
     @HookExceptions().hook()
     @Activities.typing
-    @check(private_only=False)
+    @check()
     @analytics()
     async def session_widget(self, msg: 'Message', **_):
         author_id = msg.from_user.id
